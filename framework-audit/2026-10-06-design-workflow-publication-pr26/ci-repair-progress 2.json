@@ -1,0 +1,750 @@
+{
+  "conclusion": "",
+  "headSha": "a7a0d535f25d82702083c78718d2c619ddfc778a",
+  "jobs": [
+    {
+      "completedAt": "0001-01-01T00:00:00Z",
+      "conclusion": "",
+      "databaseId": 112181153837,
+      "name": "Validate Framework Logic",
+      "startedAt": "2026-10-06T08:34:22Z",
+      "status": "in_progress",
+      "steps": [
+        {
+          "completedAt": "2026-10-06T08:34:24Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-06T08:34:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:26Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v5",
+          "number": 2,
+          "startedAt": "2026-10-06T08:34:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:26Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v5",
+          "number": 3,
+          "startedAt": "2026-10-06T08:34:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:26Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-python@v6",
+          "number": 4,
+          "startedAt": "2026-10-06T08:34:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:28Z",
+          "conclusion": "success",
+          "name": "Install Python deps (PyYAML)",
+          "number": 5,
+          "startedAt": "2026-10-06T08:34:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:39Z",
+          "conclusion": "success",
+          "name": "Install shell tools for Hook and assertion regressions",
+          "number": 6,
+          "startedAt": "2026-10-06T08:34:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:40Z",
+          "conclusion": "success",
+          "name": "Install Node dependencies",
+          "number": 7,
+          "startedAt": "2026-10-06T08:34:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:35:02Z",
+          "conclusion": "success",
+          "name": "Install Chromium and Firefox for browser gates",
+          "number": 8,
+          "startedAt": "2026-10-06T08:34:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:35:18Z",
+          "conclusion": "success",
+          "name": "Hook runtime side-effect tests",
+          "number": 9,
+          "startedAt": "2026-10-06T08:35:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:35:44Z",
+          "conclusion": "success",
+          "name": "Route-guard golden tests",
+          "number": 10,
+          "startedAt": "2026-10-06T08:35:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:35:45Z",
+          "conclusion": "success",
+          "name": "Matt38 offline fixture and synthetic oracle contracts",
+          "number": 11,
+          "startedAt": "2026-10-06T08:35:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:36:06Z",
+          "conclusion": "success",
+          "name": "Project-scope guard conformance",
+          "number": 12,
+          "startedAt": "2026-10-06T08:35:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:36:29Z",
+          "conclusion": "success",
+          "name": "Project identity transaction conformance",
+          "number": 13,
+          "startedAt": "2026-10-06T08:36:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:36:30Z",
+          "conclusion": "success",
+          "name": "Observability writer concurrency + recovery",
+          "number": 14,
+          "startedAt": "2026-10-06T08:36:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:36:30Z",
+          "conclusion": "success",
+          "name": "Quality-gate verdict recorder authority contract",
+          "number": 15,
+          "startedAt": "2026-10-06T08:36:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:36:47Z",
+          "conclusion": "success",
+          "name": "Design workflow core contracts",
+          "number": 16,
+          "startedAt": "2026-10-06T08:36:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:36:48Z",
+          "conclusion": "success",
+          "name": "Routing-map coverage + skill SSOT consistency",
+          "number": 17,
+          "startedAt": "2026-10-06T08:36:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:36:49Z",
+          "conclusion": "success",
+          "name": "Agent root kernel, pointers, discovery, and Static Fallback",
+          "number": 18,
+          "startedAt": "2026-10-06T08:36:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:37:58Z",
+          "conclusion": "success",
+          "name": "Agent context mutation proof-it-bites",
+          "number": 19,
+          "startedAt": "2026-10-06T08:36:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Motion registration, exact delivery and actual browser gates",
+          "number": 20,
+          "startedAt": "2026-10-06T08:37:58Z",
+          "status": "in_progress"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Current-instance, source receipts and assertion exit contracts",
+          "number": 21,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Reconstruct frozen G5 offline fixtures",
+          "number": 22,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Host Launch broker and control-plane regression",
+          "number": 23,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "A/B evaluator adversarial self-test",
+          "number": 24,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Conditional context resolution canaries",
+          "number": 25,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Project routing dry-run",
+          "number": 26,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Coding discipline contracts",
+          "number": 27,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Quality gate contracts",
+          "number": 28,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Quality gate scope isolation",
+          "number": 29,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Retired design entry guard and preserved paths",
+          "number": 30,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Design handoff imports, authorization and readback",
+          "number": 31,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Page-library identities, carrier contracts and asset profiles",
+          "number": 32,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Page-library browser preview and exact-original isolation",
+          "number": 33,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Retired design context stays out of active rules and search",
+          "number": 34,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Agent orchestration + verdict/recorder separation contracts",
+          "number": 35,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Memory system tests",
+          "number": 36,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Memory stable-facts health",
+          "number": 37,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "luca-open --url shim regression",
+          "number": 38,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Memory root cross-language parity + split-brain discriminator",
+          "number": 39,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Project identity single-adjudication (4 sites canonical + JS/py parity)",
+          "number": 40,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "AGENTS.md governance parity (memory gate / SF cross-source / stale regression)",
+          "number": 41,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Harness detection + Codex viability registry",
+          "number": 42,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Codex projection static wiring (CI-safe host checks)",
+          "number": 43,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Verify composition contract and mutation counterexamples",
+          "number": 44,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Evolution adjudication default-deny contracts",
+          "number": 45,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "CI blocking/coverage/gatherer contract",
+          "number": 46,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Framework HTML debt-baseline checker contract",
+          "number": 47,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "CI contract proof-it-bites",
+          "number": 48,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Root adapter byte budgets (B1 remote)",
+          "number": 49,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Capability-parity anchors (S18 remote)",
+          "number": 50,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Cross-harness semantic projection proof-it-bites (S40 remote)",
+          "number": 51,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Skill registration sync (S19 remote)",
+          "number": 52,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Former mega-appendix absent from runtime context (S31 remote)",
+          "number": 53,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "CONTEXT red-line gate (S32 remote)",
+          "number": 54,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Model-table alias sync (S33 remote)",
+          "number": 55,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "MEMORY_STANDALONE opt-in not leaked into tracked settings",
+          "number": 56,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Post Run actions/setup-python@v6",
+          "number": 110,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Post Run actions/setup-node@v5",
+          "number": 111,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        },
+        {
+          "completedAt": "0001-01-01T00:00:00Z",
+          "conclusion": "",
+          "name": "Post Run actions/checkout@v5",
+          "number": 112,
+          "startedAt": "0001-01-01T00:00:00Z",
+          "status": "pending"
+        }
+      ],
+      "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181153837"
+    },
+    {
+      "completedAt": "2026-10-06T08:34:39Z",
+      "conclusion": "success",
+      "databaseId": 112181154132,
+      "name": "Validate Markdown",
+      "startedAt": "2026-10-06T08:34:23Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-06T08:34:25Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-06T08:34:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:28Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v5",
+          "number": 2,
+          "startedAt": "2026-10-06T08:34:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:33Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v5",
+          "number": 3,
+          "startedAt": "2026-10-06T08:34:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:35Z",
+          "conclusion": "success",
+          "name": "Install markdownlint",
+          "number": 4,
+          "startedAt": "2026-10-06T08:34:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:36Z",
+          "conclusion": "success",
+          "name": "Lint docs",
+          "number": 5,
+          "startedAt": "2026-10-06T08:34:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:36Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v5",
+          "number": 9,
+          "startedAt": "2026-10-06T08:34:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:36Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v5",
+          "number": 10,
+          "startedAt": "2026-10-06T08:34:36Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:36Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 11,
+          "startedAt": "2026-10-06T08:34:36Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181154132"
+    },
+    {
+      "completedAt": "2026-10-06T08:34:30Z",
+      "conclusion": "success",
+      "databaseId": 112181154176,
+      "name": "Validate Skill Definitions",
+      "startedAt": "2026-10-06T08:34:23Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-06T08:34:24Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-06T08:34:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:27Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v5",
+          "number": 2,
+          "startedAt": "2026-10-06T08:34:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:28Z",
+          "conclusion": "success",
+          "name": "Check all skills have SKILL.md",
+          "number": 3,
+          "startedAt": "2026-10-06T08:34:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:28Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v5",
+          "number": 6,
+          "startedAt": "2026-10-06T08:34:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:28Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 7,
+          "startedAt": "2026-10-06T08:34:28Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181154176"
+    },
+    {
+      "completedAt": "2026-10-06T08:34:33Z",
+      "conclusion": "success",
+      "databaseId": 112181154212,
+      "name": "Validate HTML Prototypes",
+      "startedAt": "2026-10-06T08:34:23Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-06T08:34:24Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-06T08:34:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:27Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v5",
+          "number": 2,
+          "startedAt": "2026-10-06T08:34:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:28Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-node@v5",
+          "number": 3,
+          "startedAt": "2026-10-06T08:34:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:28Z",
+          "conclusion": "success",
+          "name": "Check framework HTML files exist",
+          "number": 4,
+          "startedAt": "2026-10-06T08:34:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:31Z",
+          "conclusion": "success",
+          "name": "Validate HTML syntax",
+          "number": 5,
+          "startedAt": "2026-10-06T08:34:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:32Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-node@v5",
+          "number": 9,
+          "startedAt": "2026-10-06T08:34:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:32Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v5",
+          "number": 10,
+          "startedAt": "2026-10-06T08:34:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:32Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 11,
+          "startedAt": "2026-10-06T08:34:32Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181154212"
+    },
+    {
+      "completedAt": "2026-10-06T08:34:31Z",
+      "conclusion": "success",
+      "databaseId": 112181154275,
+      "name": "Validate YAML Files",
+      "startedAt": "2026-10-06T08:34:22Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-06T08:34:24Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-06T08:34:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:27Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v5",
+          "number": 2,
+          "startedAt": "2026-10-06T08:34:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:29Z",
+          "conclusion": "success",
+          "name": "Install yamllint",
+          "number": 3,
+          "startedAt": "2026-10-06T08:34:27Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:29Z",
+          "conclusion": "success",
+          "name": "Lint YAML files",
+          "number": 4,
+          "startedAt": "2026-10-06T08:34:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:30Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v5",
+          "number": 8,
+          "startedAt": "2026-10-06T08:34:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-06T08:34:30Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 9,
+          "startedAt": "2026-10-06T08:34:30Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181154275"
+    }
+  ],
+  "status": "in_progress"
+}

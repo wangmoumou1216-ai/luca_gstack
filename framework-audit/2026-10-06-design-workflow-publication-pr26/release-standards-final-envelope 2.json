@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "wf-20261006-release-standards-retry",
+  "subject": {
+    "skill": "code-hygiene:Standards",
+    "topic": "design-workflow-repairs",
+    "scene": "unknown",
+    "input_summary": "Independent read-only Standards review of the frozen 77-file release diff; verified source hashes, reviewed changed hunks and ran the two authorized runtime checks.",
+    "output_paths": [
+      "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/scripts/test-design-workflow-contract.mjs"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 6,
+    "total": 6,
+    "findings": []
+  }
+}
