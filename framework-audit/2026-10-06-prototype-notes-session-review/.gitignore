@@ -1,0 +1,5 @@
+# Detailed conversation, native-agent and browser evidence stays local.
+*
+!.gitignore
+!REVIEW.md
+!PLAN.md

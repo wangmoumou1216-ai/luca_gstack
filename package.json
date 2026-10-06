@@ -76,7 +76,8 @@
     "test:prototype-notes": "node scripts/test-prototype-notes.mjs",
     "test:prototype-notes-browser": "node scripts/test-prototype-notes-browser.mjs",
     "test:prototype-notes-browser:ci": "node scripts/test-prototype-notes-browser.mjs --fixtures --engines chromium --suite ci",
-    "test:prototype-notes-registration": "node scripts/test-prototype-notes-registration.mjs"
+    "test:prototype-notes-registration": "node scripts/test-prototype-notes-registration.mjs",
+    "test:prototype-notes-release": "node scripts/test-prototype-notes-release.mjs"
   },
   "dependencies": {
     "acorn": "8.15.0",

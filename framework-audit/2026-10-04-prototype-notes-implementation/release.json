@@ -1,0 +1,17 @@
+{
+  "artifact": {
+    "path": "u008/ui-final-compact-04/artifact/current-department-notes.html",
+    "sha256": "d79346d7ef104a5e757f03cd7d3459e293e29955dc71952155e42435878e738e"
+  },
+  "source_sha256": "ca2748d4bd3f36788940067134b49fa707696b5aefd49d84bb94c977990ce7f3",
+  "notes_revision": 6,
+  "annotation_count": 13,
+  "manual_count": 2,
+  "ai_scope": [
+    "project-management"
+  ],
+  "previous_artifact": {
+    "path": "u008/ui-final-compact-03/artifact/current-department-notes.html",
+    "sha256": "20b2ba076195f20a7852af02e59df7b3f8542d31d181f2c62d43c88781933787"
+  }
+}

@@ -273,6 +273,7 @@ check S56 "文档断言真实失败/工具错误退出码契约" "npm run test:v
 check S57 "原型说明数据/生成范围/合并/完整包回归" "npm run test:prototype-notes --silent"
 check S58 "原型说明实际 Chromium CI 子集" "npm run test:prototype-notes-browser:ci --silent"
 check S59 "原型说明入口/注册/真实消费者合同" "npm run test:prototype-notes-registration --silent"
+check S60 "实际交付 HTML 与共享运行时一致、重绑取消/保存双浏览器回归" "npm run test:prototype-notes-release --silent"
 # S45 对**发布提交的不可变 blob** 求证，而不是工作树：CANDIDATE-MANIFEST 是发布记录，
 # 断言工作树等于它会把这 81 个 runtime 文件（含 route-guard.mjs / codex-hook-adapter.mjs /
 # verify.sh / CLAUDE.md）永久冻结——任何一次合法修改都让本检查变红，且无被支持的变更路径。
