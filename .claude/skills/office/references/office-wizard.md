@@ -276,6 +276,10 @@ luca_gstack — 一级可见 Skill 列表
 
 /motion-polish A B C D 已有 HTML 的动效与微交互：保留真实产品行为，返回精确产物给独立验收；不生成新 UI
 
+/prototype-notes —     给已有本地 HTML 加交互说明、标注和人工编辑入口，可单独调用
+               输入模式：standalone / workflow / internal；真实当前版本确认后按新增范围生成，
+               人工可编辑整个支持原型；独立验收后返回父 caller 或完成本次 notes 调用
+
 /html-prototype A B C  生成可在浏览器查看的 HTML 原型（用户明确选择或已批准的本地 HTML 备用路径）
                输入模式：standalone 或 workflow。可接 design-brief / ux-audit /
                screenshot_delta / figma-demo blueprint / standalone brief

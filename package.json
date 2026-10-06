@@ -4,7 +4,7 @@
   "description": "AI Design Workflow OS for CRM product design",
   "private": true,
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.19.0"
   },
   "scripts": {
     "test:matt-adaptation": "node scripts/test-matt-skills-adaptation.mjs --all",
@@ -72,9 +72,15 @@
     "check:framework-html": "node scripts/check-framework-html.mjs",
     "test:controlled-change": "node scripts/test-controlled-change.mjs --all",
     "test:engineering-delivery": "node scripts/test-engineering-delivery-skills.mjs --all",
-    "check:skill-integration-receipt": "node scripts/validate-skill-integration-receipt.mjs --final"
+    "check:skill-integration-receipt": "node scripts/validate-skill-integration-receipt.mjs --final",
+    "test:prototype-notes": "node scripts/test-prototype-notes.mjs",
+    "test:prototype-notes-browser": "node scripts/test-prototype-notes-browser.mjs",
+    "test:prototype-notes-browser:ci": "node scripts/test-prototype-notes-browser.mjs --fixtures --engines chromium --suite ci",
+    "test:prototype-notes-registration": "node scripts/test-prototype-notes-registration.mjs"
   },
   "dependencies": {
+    "acorn": "8.15.0",
+    "parse5": "8.0.1",
     "playwright": "^1.61.1"
   }
 }

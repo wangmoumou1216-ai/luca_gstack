@@ -1,0 +1,1630 @@
+{
+  "argv": [
+    "/Users/luca/.hermes/node/bin/node",
+    "/Users/luca/.codex/worktrees/ec43/luca_gstack/framework-audit/2026-10-04-prototype-notes-implementation/u003/independent-counter-07/probe.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/ec43/luca_gstack",
+  "input": {
+    "source": "<!doctype html><html><head><meta charset=\"utf-8\"></head><body><script>document.body.innerHTML=`<section id=\"C\"><button id=\"c\" data-instance-key=\"C\">保存</button><button id=\"swap1\" onclick=\"document.querySelector('#C').hidden=true;document.querySelector('#portal').hidden=false\">Next</button></section><section id=\"portal\" hidden><button id=\"p\" data-instance-key=\"C\">保存</button><button id=\"swap2\" onclick=\"document.querySelector('#C').hidden=false;document.querySelector('#portal').hidden=true\">Back</button></section>`;</script></body></html>",
+    "proposed": {
+      "schema_version": 1,
+      "runtime_version": "1.0.0",
+      "content_guideline_version": "1.0.0",
+      "document_id": "10000000-0000-0000-0000-000000000999",
+      "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+      "notes_revision": 0,
+      "next_display_number": 3,
+      "generation_scope": {
+        "id": "10000000-0000-0000-0000-000000000100",
+        "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+        "source_refs": [
+          "SPEC"
+        ],
+        "units": [
+          {
+            "id": "C",
+            "title": "新增流程",
+            "contexts": [
+              "page",
+              "modal"
+            ],
+            "root_anchor_ids": [
+              "10000000-0000-0000-0000-000000000101",
+              "10000000-0000-0000-0000-000000000102"
+            ]
+          }
+        ],
+        "required_behavior_ids": [
+          "C:SAVE",
+          "C:MODAL"
+        ]
+      },
+      "annotations": [
+        {
+          "id": "10000000-0000-0000-0000-000000000001",
+          "display_number": 1,
+          "revision": 1,
+          "binding_revision": 1,
+          "title": "保存修改",
+          "kind": "interaction",
+          "body": "点击保存后更新结果。",
+          "details": {
+            "feedback": "更新结果"
+          },
+          "source_refs": [
+            "SPEC"
+          ],
+          "behavior_ids": [
+            "C:SAVE"
+          ],
+          "evidence_status": "confirmed",
+          "implementation_status": "not_demonstrated",
+          "creation_origin": "ai",
+          "generation_scope_id": "10000000-0000-0000-0000-000000000100",
+          "scope_unit_id": "C",
+          "page_or_state_context": {
+            "id": "page",
+            "title": "当前页面",
+            "entry_steps": []
+          },
+          "anchor": {
+            "id": "10000000-0000-0000-0000-000000000011",
+            "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+            "strategy": "semantic",
+            "root_identity": "#C",
+            "locator": "#c",
+            "context_id": "page",
+            "instance_key": "C",
+            "fingerprint": {
+              "tag": "button",
+              "role": null,
+              "semantic_name": "保存"
+            },
+            "requires_rebind": false
+          },
+          "field_origins": {
+            "title": {
+              "last_ai_value": "保存修改",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "body": {
+              "last_ai_value": "点击保存后更新结果。",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "details.feedback": {
+              "last_ai_value": "更新结果",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            }
+          },
+          "tombstone": null
+        },
+        {
+          "id": "10000000-0000-0000-0000-000000000002",
+          "display_number": 2,
+          "revision": 1,
+          "binding_revision": 1,
+          "title": "保存修改",
+          "kind": "interaction",
+          "body": "点击保存后更新结果。",
+          "details": {
+            "feedback": "更新结果"
+          },
+          "source_refs": [
+            "SPEC"
+          ],
+          "behavior_ids": [
+            "C:MODAL"
+          ],
+          "evidence_status": "confirmed",
+          "implementation_status": "not_demonstrated",
+          "creation_origin": "ai",
+          "generation_scope_id": "10000000-0000-0000-0000-000000000100",
+          "scope_unit_id": "C",
+          "page_or_state_context": {
+            "id": "modal",
+            "title": "需先打开弹窗",
+            "entry_steps": [
+              "点击新增区进入弹窗"
+            ]
+          },
+          "anchor": {
+            "id": "10000000-0000-0000-0000-000000000012",
+            "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+            "strategy": "semantic",
+            "root_identity": "#portal",
+            "locator": "#p",
+            "context_id": "modal",
+            "instance_key": "C",
+            "fingerprint": {
+              "tag": "button",
+              "role": null,
+              "semantic_name": "保存"
+            },
+            "requires_rebind": false
+          },
+          "field_origins": {
+            "title": {
+              "last_ai_value": "保存修改",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "body": {
+              "last_ai_value": "点击保存后更新结果。",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "details.feedback": {
+              "last_ai_value": "更新结果",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            }
+          },
+          "tombstone": null
+        }
+      ],
+      "provenance": {
+        "source_title": "合成适用分母",
+        "source_revision": "SPEC-v1",
+        "business_revision": "e7c7ab74f3e1ad56811a761970c30b0ef6a4bda6cbe707ecc29c0394654356ee"
+      },
+      "validation_status": "unreviewed"
+    },
+    "before": null,
+    "scope": {
+      "id": "10000000-0000-0000-0000-000000000100",
+      "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+      "source_refs": [
+        "SPEC"
+      ],
+      "units": [
+        {
+          "id": "C",
+          "title": "新增流程",
+          "contexts": [
+            "page",
+            "modal"
+          ],
+          "root_anchor_ids": [
+            "10000000-0000-0000-0000-000000000101",
+            "10000000-0000-0000-0000-000000000102"
+          ]
+        }
+      ],
+      "required_behavior_ids": [
+        "C:SAVE",
+        "C:MODAL"
+      ]
+    },
+    "bindings": {
+      "version": 1,
+      "roots": [
+        {
+          "anchor_id": "10000000-0000-0000-0000-000000000101",
+          "unit_id": "C",
+          "context_id": "page",
+          "root_identity": "#C",
+          "evidence_refs": [
+            "fixture:actual-C-root"
+          ]
+        },
+        {
+          "anchor_id": "10000000-0000-0000-0000-000000000102",
+          "unit_id": "C",
+          "context_id": "modal",
+          "root_identity": "#portal",
+          "evidence_refs": [
+            "fixture:actual-portal-root"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "id": "10000000-0000-0000-0000-000000000011",
+          "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+          "strategy": "semantic",
+          "root_identity": "#C",
+          "locator": "#c",
+          "context_id": "page",
+          "instance_key": "C",
+          "fingerprint": {
+            "tag": "button",
+            "role": null,
+            "semantic_name": "保存"
+          },
+          "requires_rebind": false,
+          "anchor_id": "10000000-0000-0000-0000-000000000011",
+          "unit_id": "C",
+          "root_anchor_id": "10000000-0000-0000-0000-000000000101",
+          "evidence_refs": [
+            "fixture:source-node-offset"
+          ]
+        },
+        {
+          "id": "10000000-0000-0000-0000-000000000012",
+          "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+          "strategy": "semantic",
+          "root_identity": "#portal",
+          "locator": "#p",
+          "context_id": "modal",
+          "instance_key": "C",
+          "fingerprint": {
+            "tag": "button",
+            "role": null,
+            "semantic_name": "保存"
+          },
+          "requires_rebind": false,
+          "anchor_id": "10000000-0000-0000-0000-000000000012",
+          "unit_id": "C",
+          "root_anchor_id": "10000000-0000-0000-0000-000000000102",
+          "evidence_refs": [
+            "fixture:source-node-offset"
+          ]
+        }
+      ]
+    },
+    "behaviors": [
+      {
+        "id": "C:SAVE",
+        "unit_id": "C",
+        "context_id": "page",
+        "action": "点击保存",
+        "expected": "更新结果",
+        "source_refs": [
+          "SPEC"
+        ],
+        "critical": true
+      },
+      {
+        "id": "C:MODAL",
+        "unit_id": "C",
+        "context_id": "modal",
+        "action": "点击保存",
+        "expected": "关闭弹窗",
+        "source_refs": [
+          "SPEC"
+        ],
+        "critical": true
+      }
+    ],
+    "sources": [
+      {
+        "id": "SPEC",
+        "title": "确认规则",
+        "kind": "设计规格",
+        "locator": "fixture:spec-v1"
+      },
+      {
+        "id": "USER",
+        "title": "人工决定",
+        "kind": "用户确认",
+        "locator": "fixture:user-v1"
+      },
+      {
+        "id": "OBS",
+        "title": "原型观察",
+        "kind": "原型观察",
+        "locator": "fixture:observation-v1"
+      }
+    ]
+  },
+  "source_sha256": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+  "production_sha256": "d036b76ed8c002f6f1b4047e915c2e1ac4790095cd49ee3e3cf6bbdd21e8b04f",
+  "observations": [
+    {
+      "engine": "chromium",
+      "version": "149.0.7827.55",
+      "checks": [
+        {
+          "seam": "scope",
+          "observe": true,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "merge",
+          "observe": true,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "build",
+          "observe": true,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "scope",
+          "observe": false,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "merge",
+          "observe": false,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "build",
+          "observe": false,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "state": "simultaneous",
+          "coverage": [
+            {
+              "behavior_id": "C:SAVE",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000001"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            },
+            {
+              "behavior_id": "C:MODAL",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000002"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            }
+          ],
+          "scope": true,
+          "merge": true,
+          "build": true,
+          "source_exact": true,
+          "notes_exact": true
+        },
+        {
+          "state": "hidden",
+          "coverage": [
+            {
+              "behavior_id": "C:SAVE",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000001"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            },
+            {
+              "behavior_id": "C:MODAL",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000002"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            }
+          ],
+          "scope": true,
+          "merge": true,
+          "build": true,
+          "source_exact": true,
+          "notes_exact": true
+        },
+        {
+          "state": "unmounted",
+          "coverage": [
+            {
+              "behavior_id": "C:SAVE",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000001"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            },
+            {
+              "behavior_id": "C:MODAL",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000002"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            }
+          ],
+          "scope": true,
+          "merge": true,
+          "build": true,
+          "source_exact": true,
+          "notes_exact": true
+        },
+        {
+          "mixed": true,
+          "drift": false,
+          "actual": {
+            "contextVisible": false,
+            "targetVisible": false,
+            "targetParent": "SECTION"
+          },
+          "scope": {
+            "ok": true,
+            "coverage": [
+              {
+                "behavior_id": "C:SAVE",
+                "annotation_ids": [
+                  "10000000-0000-0000-0000-000000000001"
+                ],
+                "source_refs": [
+                  "SPEC"
+                ],
+                "states": [
+                  {
+                    "evidence_status": "confirmed",
+                    "implementation_status": "not_demonstrated"
+                  }
+                ],
+                "disposition": null
+              },
+              {
+                "behavior_id": "C:MODAL",
+                "annotation_ids": [
+                  "10000000-0000-0000-0000-000000000002"
+                ],
+                "source_refs": [
+                  "SPEC"
+                ],
+                "states": [
+                  {
+                    "evidence_status": "confirmed",
+                    "implementation_status": "not_demonstrated"
+                  }
+                ],
+                "disposition": null
+              }
+            ],
+            "assistance": [
+              {
+                "annotation_id": "10000000-0000-0000-0000-000000000003",
+                "context_id": "page",
+                "anchor_id": "10000000-0000-0000-0000-000000000013",
+                "target_verified": true,
+                "source_refs": []
+              }
+            ]
+          },
+          "merge": {
+            "ok": true,
+            "body": "点击保存后更新结果。",
+            "suggested": "明确单条协助建议"
+          },
+          "build": {
+            "ok": true,
+            "extract_ok": true
+          }
+        },
+        {
+          "mixed": true,
+          "drift": true,
+          "actual": {
+            "contextVisible": false,
+            "targetVisible": true,
+            "targetParent": "BODY"
+          },
+          "scope": {
+            "ok": true,
+            "coverage": [
+              {
+                "behavior_id": "C:SAVE",
+                "annotation_ids": [
+                  "10000000-0000-0000-0000-000000000001"
+                ],
+                "source_refs": [
+                  "SPEC"
+                ],
+                "states": [
+                  {
+                    "evidence_status": "confirmed",
+                    "implementation_status": "not_demonstrated"
+                  }
+                ],
+                "disposition": null
+              },
+              {
+                "behavior_id": "C:MODAL",
+                "annotation_ids": [
+                  "10000000-0000-0000-0000-000000000002"
+                ],
+                "source_refs": [
+                  "SPEC"
+                ],
+                "states": [
+                  {
+                    "evidence_status": "confirmed",
+                    "implementation_status": "not_demonstrated"
+                  }
+                ],
+                "disposition": null
+              }
+            ],
+            "assistance": [
+              {
+                "annotation_id": "10000000-0000-0000-0000-000000000003",
+                "context_id": "page",
+                "anchor_id": "10000000-0000-0000-0000-000000000013",
+                "target_verified": true,
+                "source_refs": []
+              }
+            ]
+          },
+          "merge": {
+            "ok": true,
+            "body": "点击保存后更新结果。",
+            "suggested": "明确单条协助建议"
+          },
+          "build": {
+            "ok": true,
+            "extract_ok": true
+          }
+        }
+      ],
+      "identity": {
+        "page": "page@6bac3bfdb6893666398ebca7ef8fb4d8",
+        "context": "browser-context@898ea270c8ad869c29813fe0e526d65a"
+      },
+      "requests": [],
+      "cleanup": true
+    },
+    {
+      "engine": "firefox",
+      "version": "151.0",
+      "checks": [
+        {
+          "seam": "scope",
+          "observe": true,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "merge",
+          "observe": true,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "build",
+          "observe": true,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "scope",
+          "observe": false,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "merge",
+          "observe": false,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "seam": "build",
+          "observe": false,
+          "result": {
+            "ok": false,
+            "code": "SCOPE_VIOLATION",
+            "message": "无法完成说明加工，请保留原件。",
+            "details": [
+              "actual current target root/instance/fingerprint mismatch"
+            ]
+          }
+        },
+        {
+          "state": "simultaneous",
+          "coverage": [
+            {
+              "behavior_id": "C:SAVE",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000001"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            },
+            {
+              "behavior_id": "C:MODAL",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000002"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            }
+          ],
+          "scope": true,
+          "merge": true,
+          "build": true,
+          "source_exact": true,
+          "notes_exact": true
+        },
+        {
+          "state": "hidden",
+          "coverage": [
+            {
+              "behavior_id": "C:SAVE",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000001"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            },
+            {
+              "behavior_id": "C:MODAL",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000002"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            }
+          ],
+          "scope": true,
+          "merge": true,
+          "build": true,
+          "source_exact": true,
+          "notes_exact": true
+        },
+        {
+          "state": "unmounted",
+          "coverage": [
+            {
+              "behavior_id": "C:SAVE",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000001"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            },
+            {
+              "behavior_id": "C:MODAL",
+              "annotation_ids": [
+                "10000000-0000-0000-0000-000000000002"
+              ],
+              "source_refs": [
+                "SPEC"
+              ],
+              "states": [
+                {
+                  "evidence_status": "confirmed",
+                  "implementation_status": "not_demonstrated"
+                }
+              ],
+              "disposition": null
+            }
+          ],
+          "scope": true,
+          "merge": true,
+          "build": true,
+          "source_exact": true,
+          "notes_exact": true
+        },
+        {
+          "mixed": true,
+          "drift": false,
+          "actual": {
+            "contextVisible": false,
+            "targetVisible": false,
+            "targetParent": "SECTION"
+          },
+          "scope": {
+            "ok": true,
+            "coverage": [
+              {
+                "behavior_id": "C:SAVE",
+                "annotation_ids": [
+                  "10000000-0000-0000-0000-000000000001"
+                ],
+                "source_refs": [
+                  "SPEC"
+                ],
+                "states": [
+                  {
+                    "evidence_status": "confirmed",
+                    "implementation_status": "not_demonstrated"
+                  }
+                ],
+                "disposition": null
+              },
+              {
+                "behavior_id": "C:MODAL",
+                "annotation_ids": [
+                  "10000000-0000-0000-0000-000000000002"
+                ],
+                "source_refs": [
+                  "SPEC"
+                ],
+                "states": [
+                  {
+                    "evidence_status": "confirmed",
+                    "implementation_status": "not_demonstrated"
+                  }
+                ],
+                "disposition": null
+              }
+            ],
+            "assistance": [
+              {
+                "annotation_id": "10000000-0000-0000-0000-000000000003",
+                "context_id": "page",
+                "anchor_id": "10000000-0000-0000-0000-000000000013",
+                "target_verified": true,
+                "source_refs": []
+              }
+            ]
+          },
+          "merge": {
+            "ok": true,
+            "body": "点击保存后更新结果。",
+            "suggested": "明确单条协助建议"
+          },
+          "build": {
+            "ok": true,
+            "extract_ok": true
+          }
+        },
+        {
+          "mixed": true,
+          "drift": true,
+          "actual": {
+            "contextVisible": false,
+            "targetVisible": true,
+            "targetParent": "BODY"
+          },
+          "scope": {
+            "ok": true,
+            "coverage": [
+              {
+                "behavior_id": "C:SAVE",
+                "annotation_ids": [
+                  "10000000-0000-0000-0000-000000000001"
+                ],
+                "source_refs": [
+                  "SPEC"
+                ],
+                "states": [
+                  {
+                    "evidence_status": "confirmed",
+                    "implementation_status": "not_demonstrated"
+                  }
+                ],
+                "disposition": null
+              },
+              {
+                "behavior_id": "C:MODAL",
+                "annotation_ids": [
+                  "10000000-0000-0000-0000-000000000002"
+                ],
+                "source_refs": [
+                  "SPEC"
+                ],
+                "states": [
+                  {
+                    "evidence_status": "confirmed",
+                    "implementation_status": "not_demonstrated"
+                  }
+                ],
+                "disposition": null
+              }
+            ],
+            "assistance": [
+              {
+                "annotation_id": "10000000-0000-0000-0000-000000000003",
+                "context_id": "page",
+                "anchor_id": "10000000-0000-0000-0000-000000000013",
+                "target_verified": true,
+                "source_refs": []
+              }
+            ]
+          },
+          "merge": {
+            "ok": true,
+            "body": "点击保存后更新结果。",
+            "suggested": "明确单条协助建议"
+          },
+          "build": {
+            "ok": true,
+            "extract_ok": true
+          }
+        }
+      ],
+      "identity": {
+        "page": "page@e07b1e2ae6762826856a10e5121dc483",
+        "context": "browser-context@c6a0608b616b7f2406363152d3ce3790"
+      },
+      "requests": [],
+      "cleanup": true
+    }
+  ],
+  "mixed_input": {
+    "source": "<!doctype html><html><head><meta charset=\"utf-8\"></head><body><script>document.body.innerHTML=`<section id=\"C\"><button id=\"c\" data-instance-key=\"C\">保存</button><button id=\"swap1\" onclick=\"document.querySelector('#C').hidden=true;document.querySelector('#portal').hidden=false\">Next</button></section><section id=\"portal\" hidden><button id=\"p\" data-instance-key=\"C\">保存</button><button id=\"swap2\" onclick=\"document.querySelector('#C').hidden=false;document.querySelector('#portal').hidden=true\">Back</button></section>`;</script></body></html>",
+    "proposed": {
+      "schema_version": 1,
+      "runtime_version": "1.0.0",
+      "content_guideline_version": "1.0.0",
+      "document_id": "10000000-0000-0000-0000-000000000999",
+      "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+      "notes_revision": 0,
+      "next_display_number": 4,
+      "generation_scope": {
+        "id": "10000000-0000-0000-0000-000000000100",
+        "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+        "source_refs": [
+          "SPEC"
+        ],
+        "units": [
+          {
+            "id": "C",
+            "title": "新增流程",
+            "contexts": [
+              "page",
+              "modal"
+            ],
+            "root_anchor_ids": [
+              "10000000-0000-0000-0000-000000000101",
+              "10000000-0000-0000-0000-000000000102"
+            ]
+          }
+        ],
+        "required_behavior_ids": [
+          "C:SAVE",
+          "C:MODAL"
+        ]
+      },
+      "annotations": [
+        {
+          "id": "10000000-0000-0000-0000-000000000001",
+          "display_number": 1,
+          "revision": 1,
+          "binding_revision": 1,
+          "title": "保存修改",
+          "kind": "interaction",
+          "body": "点击保存后更新结果。",
+          "details": {
+            "feedback": "更新结果"
+          },
+          "source_refs": [
+            "SPEC"
+          ],
+          "behavior_ids": [
+            "C:SAVE"
+          ],
+          "evidence_status": "confirmed",
+          "implementation_status": "not_demonstrated",
+          "creation_origin": "ai",
+          "generation_scope_id": "10000000-0000-0000-0000-000000000100",
+          "scope_unit_id": "C",
+          "page_or_state_context": {
+            "id": "page",
+            "title": "当前页面",
+            "entry_steps": []
+          },
+          "anchor": {
+            "id": "10000000-0000-0000-0000-000000000011",
+            "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+            "strategy": "semantic",
+            "root_identity": "#C",
+            "locator": "#c",
+            "context_id": "page",
+            "instance_key": "C",
+            "fingerprint": {
+              "tag": "button",
+              "role": null,
+              "semantic_name": "保存"
+            },
+            "requires_rebind": false
+          },
+          "field_origins": {
+            "title": {
+              "last_ai_value": "保存修改",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "body": {
+              "last_ai_value": "点击保存后更新结果。",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "details.feedback": {
+              "last_ai_value": "更新结果",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            }
+          },
+          "tombstone": null
+        },
+        {
+          "id": "10000000-0000-0000-0000-000000000002",
+          "display_number": 2,
+          "revision": 1,
+          "binding_revision": 1,
+          "title": "保存修改",
+          "kind": "interaction",
+          "body": "点击保存后更新结果。",
+          "details": {
+            "feedback": "更新结果"
+          },
+          "source_refs": [
+            "SPEC"
+          ],
+          "behavior_ids": [
+            "C:MODAL"
+          ],
+          "evidence_status": "confirmed",
+          "implementation_status": "not_demonstrated",
+          "creation_origin": "ai",
+          "generation_scope_id": "10000000-0000-0000-0000-000000000100",
+          "scope_unit_id": "C",
+          "page_or_state_context": {
+            "id": "modal",
+            "title": "需先打开弹窗",
+            "entry_steps": [
+              "点击新增区进入弹窗"
+            ]
+          },
+          "anchor": {
+            "id": "10000000-0000-0000-0000-000000000012",
+            "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+            "strategy": "semantic",
+            "root_identity": "#portal",
+            "locator": "#p",
+            "context_id": "modal",
+            "instance_key": "C",
+            "fingerprint": {
+              "tag": "button",
+              "role": null,
+              "semantic_name": "保存"
+            },
+            "requires_rebind": false
+          },
+          "field_origins": {
+            "title": {
+              "last_ai_value": "保存修改",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "body": {
+              "last_ai_value": "点击保存后更新结果。",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "details.feedback": {
+              "last_ai_value": "更新结果",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            }
+          },
+          "tombstone": null
+        },
+        {
+          "id": "10000000-0000-0000-0000-000000000003",
+          "display_number": 3,
+          "revision": 1,
+          "binding_revision": 1,
+          "title": "保存修改",
+          "kind": "interaction",
+          "body": "明确单条协助建议",
+          "details": {
+            "feedback": "更新结果"
+          },
+          "source_refs": [],
+          "behavior_ids": [],
+          "evidence_status": "proposed",
+          "implementation_status": "not_demonstrated",
+          "creation_origin": "manual",
+          "generation_scope_id": null,
+          "scope_unit_id": null,
+          "page_or_state_context": {
+            "id": "page",
+            "title": "当前页面",
+            "entry_steps": []
+          },
+          "anchor": {
+            "id": "10000000-0000-0000-0000-000000000013",
+            "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+            "strategy": "semantic",
+            "root_identity": "#C",
+            "locator": "#swap1",
+            "context_id": "page",
+            "instance_key": null,
+            "fingerprint": {
+              "tag": "button",
+              "role": null,
+              "semantic_name": "Next"
+            },
+            "requires_rebind": false
+          },
+          "field_origins": {
+            "title": {
+              "last_ai_value": null,
+              "human_touched": true,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "body": {
+              "last_ai_value": null,
+              "human_touched": true,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "details.feedback": {
+              "last_ai_value": null,
+              "human_touched": true,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            }
+          },
+          "tombstone": null
+        }
+      ],
+      "provenance": {
+        "source_title": "合成适用分母",
+        "source_revision": "SPEC-v1",
+        "business_revision": "e7c7ab74f3e1ad56811a761970c30b0ef6a4bda6cbe707ecc29c0394654356ee"
+      },
+      "validation_status": "unreviewed"
+    },
+    "before": {
+      "schema_version": 1,
+      "runtime_version": "1.0.0",
+      "content_guideline_version": "1.0.0",
+      "document_id": "10000000-0000-0000-0000-000000000999",
+      "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+      "notes_revision": 0,
+      "next_display_number": 4,
+      "generation_scope": {
+        "id": "10000000-0000-0000-0000-000000000100",
+        "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+        "source_refs": [
+          "SPEC"
+        ],
+        "units": [
+          {
+            "id": "C",
+            "title": "新增流程",
+            "contexts": [
+              "page",
+              "modal"
+            ],
+            "root_anchor_ids": [
+              "10000000-0000-0000-0000-000000000101",
+              "10000000-0000-0000-0000-000000000102"
+            ]
+          }
+        ],
+        "required_behavior_ids": [
+          "C:SAVE",
+          "C:MODAL"
+        ]
+      },
+      "annotations": [
+        {
+          "id": "10000000-0000-0000-0000-000000000001",
+          "display_number": 1,
+          "revision": 1,
+          "binding_revision": 1,
+          "title": "保存修改",
+          "kind": "interaction",
+          "body": "点击保存后更新结果。",
+          "details": {
+            "feedback": "更新结果"
+          },
+          "source_refs": [
+            "SPEC"
+          ],
+          "behavior_ids": [
+            "C:SAVE"
+          ],
+          "evidence_status": "confirmed",
+          "implementation_status": "not_demonstrated",
+          "creation_origin": "ai",
+          "generation_scope_id": "10000000-0000-0000-0000-000000000100",
+          "scope_unit_id": "C",
+          "page_or_state_context": {
+            "id": "page",
+            "title": "当前页面",
+            "entry_steps": []
+          },
+          "anchor": {
+            "id": "10000000-0000-0000-0000-000000000011",
+            "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+            "strategy": "semantic",
+            "root_identity": "#C",
+            "locator": "#c",
+            "context_id": "page",
+            "instance_key": "C",
+            "fingerprint": {
+              "tag": "button",
+              "role": null,
+              "semantic_name": "保存"
+            },
+            "requires_rebind": false
+          },
+          "field_origins": {
+            "title": {
+              "last_ai_value": "保存修改",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "body": {
+              "last_ai_value": "点击保存后更新结果。",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "details.feedback": {
+              "last_ai_value": "更新结果",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            }
+          },
+          "tombstone": null
+        },
+        {
+          "id": "10000000-0000-0000-0000-000000000002",
+          "display_number": 2,
+          "revision": 1,
+          "binding_revision": 1,
+          "title": "保存修改",
+          "kind": "interaction",
+          "body": "点击保存后更新结果。",
+          "details": {
+            "feedback": "更新结果"
+          },
+          "source_refs": [
+            "SPEC"
+          ],
+          "behavior_ids": [
+            "C:MODAL"
+          ],
+          "evidence_status": "confirmed",
+          "implementation_status": "not_demonstrated",
+          "creation_origin": "ai",
+          "generation_scope_id": "10000000-0000-0000-0000-000000000100",
+          "scope_unit_id": "C",
+          "page_or_state_context": {
+            "id": "modal",
+            "title": "需先打开弹窗",
+            "entry_steps": [
+              "点击新增区进入弹窗"
+            ]
+          },
+          "anchor": {
+            "id": "10000000-0000-0000-0000-000000000012",
+            "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+            "strategy": "semantic",
+            "root_identity": "#portal",
+            "locator": "#p",
+            "context_id": "modal",
+            "instance_key": "C",
+            "fingerprint": {
+              "tag": "button",
+              "role": null,
+              "semantic_name": "保存"
+            },
+            "requires_rebind": false
+          },
+          "field_origins": {
+            "title": {
+              "last_ai_value": "保存修改",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "body": {
+              "last_ai_value": "点击保存后更新结果。",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "details.feedback": {
+              "last_ai_value": "更新结果",
+              "human_touched": false,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            }
+          },
+          "tombstone": null
+        },
+        {
+          "id": "10000000-0000-0000-0000-000000000003",
+          "display_number": 3,
+          "revision": 1,
+          "binding_revision": 1,
+          "title": "保存修改",
+          "kind": "interaction",
+          "body": "点击保存后更新结果。",
+          "details": {
+            "feedback": "更新结果"
+          },
+          "source_refs": [],
+          "behavior_ids": [],
+          "evidence_status": "proposed",
+          "implementation_status": "not_demonstrated",
+          "creation_origin": "manual",
+          "generation_scope_id": null,
+          "scope_unit_id": null,
+          "page_or_state_context": {
+            "id": "page",
+            "title": "当前页面",
+            "entry_steps": []
+          },
+          "anchor": {
+            "id": "10000000-0000-0000-0000-000000000013",
+            "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+            "strategy": "semantic",
+            "root_identity": "#C",
+            "locator": "#swap1",
+            "context_id": "page",
+            "instance_key": null,
+            "fingerprint": {
+              "tag": "button",
+              "role": null,
+              "semantic_name": "Next"
+            },
+            "requires_rebind": false
+          },
+          "field_origins": {
+            "title": {
+              "last_ai_value": null,
+              "human_touched": true,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "body": {
+              "last_ai_value": null,
+              "human_touched": true,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            },
+            "details.feedback": {
+              "last_ai_value": null,
+              "human_touched": true,
+              "suggested_value": null,
+              "suggestion_meta": null,
+              "resolved_suggestion_keys": []
+            }
+          },
+          "tombstone": null
+        }
+      ],
+      "provenance": {
+        "source_title": "合成适用分母",
+        "source_revision": "SPEC-v1",
+        "business_revision": "e7c7ab74f3e1ad56811a761970c30b0ef6a4bda6cbe707ecc29c0394654356ee"
+      },
+      "validation_status": "unreviewed"
+    },
+    "scope": {
+      "id": "10000000-0000-0000-0000-000000000100",
+      "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+      "source_refs": [
+        "SPEC"
+      ],
+      "units": [
+        {
+          "id": "C",
+          "title": "新增流程",
+          "contexts": [
+            "page",
+            "modal"
+          ],
+          "root_anchor_ids": [
+            "10000000-0000-0000-0000-000000000101",
+            "10000000-0000-0000-0000-000000000102"
+          ]
+        }
+      ],
+      "required_behavior_ids": [
+        "C:SAVE",
+        "C:MODAL"
+      ]
+    },
+    "bindings": {
+      "version": 1,
+      "roots": [
+        {
+          "anchor_id": "10000000-0000-0000-0000-000000000101",
+          "unit_id": "C",
+          "context_id": "page",
+          "root_identity": "#C",
+          "evidence_refs": [
+            "fixture:actual-C-root"
+          ]
+        },
+        {
+          "anchor_id": "10000000-0000-0000-0000-000000000102",
+          "unit_id": "C",
+          "context_id": "modal",
+          "root_identity": "#portal",
+          "evidence_refs": [
+            "fixture:actual-portal-root"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "id": "10000000-0000-0000-0000-000000000011",
+          "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+          "strategy": "semantic",
+          "root_identity": "#C",
+          "locator": "#c",
+          "context_id": "page",
+          "instance_key": "C",
+          "fingerprint": {
+            "tag": "button",
+            "role": null,
+            "semantic_name": "保存"
+          },
+          "requires_rebind": false,
+          "anchor_id": "10000000-0000-0000-0000-000000000011",
+          "unit_id": "C",
+          "root_anchor_id": "10000000-0000-0000-0000-000000000101",
+          "evidence_refs": [
+            "fixture:source-node-offset"
+          ]
+        },
+        {
+          "id": "10000000-0000-0000-0000-000000000012",
+          "base_revision": "58ec66c779e1652d379ea442c8fa54747098c74c8885f78657a00ef9d5080f02",
+          "strategy": "semantic",
+          "root_identity": "#portal",
+          "locator": "#p",
+          "context_id": "modal",
+          "instance_key": "C",
+          "fingerprint": {
+            "tag": "button",
+            "role": null,
+            "semantic_name": "保存"
+          },
+          "requires_rebind": false,
+          "anchor_id": "10000000-0000-0000-0000-000000000012",
+          "unit_id": "C",
+          "root_anchor_id": "10000000-0000-0000-0000-000000000102",
+          "evidence_refs": [
+            "fixture:source-node-offset"
+          ]
+        }
+      ]
+    },
+    "behaviors": [
+      {
+        "id": "C:SAVE",
+        "unit_id": "C",
+        "context_id": "page",
+        "action": "点击保存",
+        "expected": "更新结果",
+        "source_refs": [
+          "SPEC"
+        ],
+        "critical": true
+      },
+      {
+        "id": "C:MODAL",
+        "unit_id": "C",
+        "context_id": "modal",
+        "action": "点击保存",
+        "expected": "关闭弹窗",
+        "source_refs": [
+          "SPEC"
+        ],
+        "critical": true
+      }
+    ],
+    "sources": [
+      {
+        "id": "SPEC",
+        "title": "确认规则",
+        "kind": "设计规格",
+        "locator": "fixture:spec-v1"
+      },
+      {
+        "id": "USER",
+        "title": "人工决定",
+        "kind": "用户确认",
+        "locator": "fixture:user-v1"
+      },
+      {
+        "id": "OBS",
+        "title": "原型观察",
+        "kind": "原型观察",
+        "locator": "fixture:observation-v1"
+      }
+    ],
+    "assisted_ids": [
+      "10000000-0000-0000-0000-000000000003"
+    ],
+    "request_kind": "mixed"
+  }
+}

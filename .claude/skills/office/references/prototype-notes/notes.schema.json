@@ -1,0 +1,1018 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:luca:prototype-notes:notes:1",
+  "title": "Prototype Notes Document v1",
+  "$comment": "Structural validation alone is insufficient. Consumers MUST run x-luca-semantic-validation and refuse unsupported rule profiles before accepting a write. Unknown fields are rejected at every object boundary.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "runtime_version",
+    "content_guideline_version",
+    "document_id",
+    "base_revision",
+    "notes_revision",
+    "next_display_number",
+    "generation_scope",
+    "annotations",
+    "provenance",
+    "validation_status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "runtime_version": {
+      "const": "1.0.0"
+    },
+    "content_guideline_version": {
+      "const": "1.0.0"
+    },
+    "document_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "base_revision": {
+      "$ref": "#/$defs/sha256"
+    },
+    "notes_revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "next_display_number": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "generation_scope": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/scope"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "annotations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/annotation"
+      },
+      "minItems": 0,
+      "maxItems": 2000
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "validation_status": {
+      "enum": [
+        "unreviewed",
+        "reviewed_at_source"
+      ]
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "$comment": "Canonical lowercase UUID spelling avoids case aliases; no UUID version is inferred."
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "sourceRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/identifier"
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "evidenceStatus": {
+      "enum": [
+        "confirmed",
+        "observed",
+        "proposed"
+      ]
+    },
+    "implementationStatus": {
+      "enum": [
+        "demonstrated",
+        "not_demonstrated",
+        "differs",
+        "not_applicable"
+      ]
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "entry_steps"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "entry_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "minItems": 0
+        }
+      }
+    },
+    "fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag",
+        "role",
+        "semantic_name"
+      ],
+      "properties": {
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "semantic_name": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "suggestionMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "base_revision",
+        "binding_revision",
+        "source_refs",
+        "evidence_status",
+        "implementation_status"
+      ],
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/sha256"
+        },
+        "base_revision": {
+          "$ref": "#/$defs/sha256"
+        },
+        "binding_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "source_refs": {
+          "$ref": "#/$defs/sourceRefs"
+        },
+        "evidence_status": {
+          "$ref": "#/$defs/evidenceStatus"
+        },
+        "implementation_status": {
+          "$ref": "#/$defs/implementationStatus"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "evidence_status": {
+                "enum": [
+                  "confirmed",
+                  "observed"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source_refs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "titleOrigin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "last_ai_value",
+        "human_touched",
+        "suggested_value",
+        "suggestion_meta",
+        "resolved_suggestion_keys"
+      ],
+      "properties": {
+        "last_ai_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "human_touched": {
+          "type": "boolean"
+        },
+        "suggested_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "suggestion_meta": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/suggestionMeta"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resolved_suggestion_keys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sha256"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "suggested_value": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "suggestion_meta": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "suggestion_meta": {
+                "$ref": "#/$defs/suggestionMeta"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "textOrigin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "last_ai_value",
+        "human_touched",
+        "suggested_value",
+        "suggestion_meta",
+        "resolved_suggestion_keys"
+      ],
+      "properties": {
+        "last_ai_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "human_touched": {
+          "type": "boolean"
+        },
+        "suggested_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "suggestion_meta": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/suggestionMeta"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resolved_suggestion_keys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sha256"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "suggested_value": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "suggestion_meta": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "suggestion_meta": {
+                "$ref": "#/$defs/suggestionMeta"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "scopeUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "contexts",
+        "root_anchor_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "root_anchor_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uuid"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "base_revision",
+        "source_refs",
+        "units",
+        "required_behavior_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "base_revision": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scopeUnit"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "required_behavior_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "base_revision",
+        "strategy",
+        "root_identity",
+        "locator",
+        "context_id",
+        "instance_key",
+        "fingerprint",
+        "requires_rebind"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "base_revision": {
+          "$ref": "#/$defs/sha256"
+        },
+        "strategy": {
+          "enum": [
+            "semantic",
+            "injected",
+            "scoped"
+          ]
+        },
+        "root_identity": {
+          "$ref": "#/$defs/identifier"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "$comment": "Declarative verified ID or controlled selector only. Scope/selector grammar and actual unique DOM target are mandatory external validation, never eval."
+        },
+        "context_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "instance_key": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/fingerprint"
+        },
+        "requires_rebind": {
+          "type": "boolean"
+        }
+      }
+    },
+    "details": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "conditions": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "feedback": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "exceptions": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "recovery": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "visual": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "keyboard": {
+          "type": "string",
+          "maxLength": 20000
+        }
+      }
+    },
+    "fieldOrigins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "body"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/titleOrigin"
+        },
+        "body": {
+          "$ref": "#/$defs/textOrigin"
+        },
+        "details.conditions": {
+          "$ref": "#/$defs/textOrigin"
+        },
+        "details.feedback": {
+          "$ref": "#/$defs/textOrigin"
+        },
+        "details.exceptions": {
+          "$ref": "#/$defs/textOrigin"
+        },
+        "details.recovery": {
+          "$ref": "#/$defs/textOrigin"
+        },
+        "details.visual": {
+          "$ref": "#/$defs/textOrigin"
+        },
+        "details.keyboard": {
+          "$ref": "#/$defs/textOrigin"
+        }
+      }
+    },
+    "tombstone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deleted_revision",
+        "deleted_by"
+      ],
+      "properties": {
+        "deleted_revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "deleted_by": {
+          "const": "manual"
+        }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "display_number",
+        "revision",
+        "binding_revision",
+        "title",
+        "kind",
+        "body",
+        "details",
+        "source_refs",
+        "behavior_ids",
+        "evidence_status",
+        "implementation_status",
+        "creation_origin",
+        "generation_scope_id",
+        "scope_unit_id",
+        "page_or_state_context",
+        "anchor",
+        "field_origins",
+        "tombstone"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "display_number": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "binding_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "kind": {
+          "enum": [
+            "interaction",
+            "ui",
+            "rule"
+          ]
+        },
+        "body": {
+          "type": "string",
+          "maxLength": 20000,
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "details": {
+          "$ref": "#/$defs/details"
+        },
+        "source_refs": {
+          "$ref": "#/$defs/sourceRefs"
+        },
+        "behavior_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "evidence_status": {
+          "$ref": "#/$defs/evidenceStatus"
+        },
+        "implementation_status": {
+          "$ref": "#/$defs/implementationStatus"
+        },
+        "creation_origin": {
+          "enum": [
+            "ai",
+            "manual"
+          ]
+        },
+        "generation_scope_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope_unit_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "page_or_state_context": {
+          "$ref": "#/$defs/context"
+        },
+        "anchor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/anchor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "field_origins": {
+          "$ref": "#/$defs/fieldOrigins"
+        },
+        "tombstone": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/tombstone"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "evidence_status": {
+                "enum": [
+                  "confirmed",
+                  "observed"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source_refs": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "creation_origin": {
+                "const": "ai"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "generation_scope_id": {
+                "$ref": "#/$defs/uuid"
+              },
+              "scope_unit_id": {
+                "$ref": "#/$defs/identifier"
+              },
+              "behavior_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "anchor": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "const": "rule"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "binding_revision": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "generation_scope_id": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "scope_unit_id": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_title",
+        "source_revision",
+        "business_revision"
+      ],
+      "properties": {
+        "source_title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "source_revision": {
+          "$ref": "#/$defs/identifier"
+        },
+        "business_revision": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  },
+  "x-luca-semantic-validation": {
+    "profile": "prototype-notes-semantic-v1",
+    "required": true,
+    "unknown_rule": "reject",
+    "contract": "contract.md#3-两级机器校验不可只跑-json-schema",
+    "rules": [
+      {
+        "id": "PN-S01",
+        "stage": "document",
+        "operation": "unique-projections",
+        "projections": [
+          {
+            "array": "/annotations",
+            "keys": [
+              "id"
+            ]
+          },
+          {
+            "array": "/annotations",
+            "keys": [
+              "display_number"
+            ]
+          },
+          {
+            "array": "/generation_scope/units",
+            "keys": [
+              "id"
+            ],
+            "when": "generation_scope != null"
+          }
+        ],
+        "include_tombstones": true
+      },
+      {
+        "id": "PN-S02",
+        "stage": "document",
+        "operation": "allocation-high-watermark",
+        "counter": "/next_display_number",
+        "greater_than_each": "/annotations/*/display_number"
+      },
+      {
+        "id": "PN-S03",
+        "stage": "document",
+        "operation": "suggestion-history",
+        "path": "/annotations/*/field_origins/*/resolved_suggestion_keys",
+        "unique": true,
+        "sort": "lexicographic",
+        "eviction": false,
+        "value_meta_nullity": "paired"
+      },
+      {
+        "id": "PN-S04",
+        "stage": "document",
+        "operation": "anchor-consistency",
+        "context_equals": "annotation.page_or_state_context.id",
+        "stale_base_requires_rebind": true,
+        "bound_revision_minimum": 1
+      },
+      {
+        "id": "PN-S05",
+        "stage": "document",
+        "operation": "field-and-tombstone-consistency",
+        "required_origin_paths": [
+          "title",
+          "body",
+          "details.* when present"
+        ],
+        "deleted_revision_maximum": "annotation.revision",
+        "text_limits": {
+          "title": 200,
+          "body": 20000,
+          "details.*": 20000
+        }
+      },
+      {
+        "id": "PN-S06",
+        "stage": "document",
+        "operation": "scope-base-consistency",
+        "scope_base_equals": "document.base_revision",
+        "preserve_historical_scopes": true
+      },
+      {
+        "id": "PN-S07",
+        "stage": "source-context",
+        "operation": "resolve-all-source-refs",
+        "registry_kinds": [
+          "用户确认",
+          "设计规格",
+          "原型观察"
+        ],
+        "required_registry_fields": [
+          "id",
+          "title",
+          "kind",
+          "locator"
+        ],
+        "allow_unknown_ids": false
+      },
+      {
+        "id": "PN-S08",
+        "stage": "source-context",
+        "operation": "evidence-kind",
+        "confirmed": [
+          "用户确认",
+          "设计规格"
+        ],
+        "observed": [
+          "原型观察"
+        ],
+        "proposed_may_have_no_source": true,
+        "include_suggestions": true
+      },
+      {
+        "id": "PN-S09",
+        "stage": "scope-context",
+        "operation": "generation-ownership-and-coverage",
+        "actual_binding_evidence": true,
+        "complete_required_behaviors": true,
+        "apply_to_manual_permission": false
+      },
+      {
+        "id": "PN-S10",
+        "stage": "transition",
+        "operation": "stable-identity-and-human-protection",
+        "ai_may_revive_tombstone": false,
+        "outside_scope_content": "preserve",
+        "id_and_display_number": "immutable"
+      },
+      {
+        "id": "PN-S11",
+        "stage": "transition",
+        "operation": "binding-invalidation",
+        "target_context_or_base_change": "increment binding_revision and clear all resolved_suggestion_keys",
+        "unchanged_target_redraw": "preserve",
+        "stale_suggestion_adoption": "reject",
+        "validation_status": "unreviewed"
+      },
+      {
+        "id": "PN-S12",
+        "stage": "transition",
+        "operation": "merge-history-transactions",
+        "contract": "contract.md#5-字段合并历史与修订",
+        "persist_all_resolved_keys": true,
+        "undo": "last suggestion resolution only; no intervening human transaction",
+        "same_resolved_key": "preserve current text and last_ai_value"
+      },
+      {
+        "id": "PN-S13",
+        "stage": "package",
+        "operation": "static-input-integrity",
+        "max_notes_utf8_bytes": 16777216,
+        "duplicate_json_keys": "reject",
+        "unknown_version": "reject",
+        "execute_input_html": false
+      }
+    ]
+  }
+}

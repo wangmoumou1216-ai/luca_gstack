@@ -133,6 +133,20 @@ skills:
     quality_gates: ["base_html_bound", "scope_and_authority_bound", "product_facts_preserved", "motion_gap_resolved", "runtime_evidence_for_final_html", "single_final_artifact", "caller_resumed"]
     notes: "已有HTML的真实动效增强；正式DB不是standalone前置，真实源/用户期望仍须绑定。内部OD输入可为机械回收raw/receipt与源期望，不要求raw semantic PASS或未来OD DONE handoff。postprocess_plan仅编码已批准本地范围，不授读写/浏览器效果；独立验收与caller恢复不可省。"
 
+  prototype-notes:
+    modes:
+      standalone:
+        required: ["actual_html_artifact", "requested_notes_scope"]
+        optional: ["existing_notes", "confirmed_product_source", "source_handoff", "exact_accepted_ref", "confirmed_prototype_revision", "authorized_delivery_root"]
+      workflow:
+        required: ["actual_html_artifact", "requested_notes_scope", "source_handoff"]
+        optional: ["existing_notes", "confirmed_product_source", "exact_accepted_ref", "confirmed_prototype_revision", "authorized_delivery_root"]
+      internal:
+        required: ["caller", "actual_html_artifact", "requested_notes_scope", "condition_evidence", "inherited_authority", "authority_effect_intersection"]
+        optional: ["original_u_id", "existing_notes", "confirmed_product_source", "source_handoff", "exact_accepted_ref", "confirmed_prototype_revision", "authorized_delivery_root"]
+    quality_gates: ["preflight", "input", "semantic", "source-scope", "HTML-behavior", "final-identity", "completion"]
+    notes: "已有本地HTML说明加工，独立使用不要求Brief/OD receipt；声明OD来源时验证真实provenance。缺确认仅intake/display，不生成或注入。AI仅当前新增scope，manual-only允许空AI scope且人工编辑整个支持原型。internal继承真实当前确认与权限交集并只返回父caller，独立PREACCEPT/seal/当前exact final后完成一次；checkpoint不签发许可，恢复重取当前权限。业务修改走共享E6，保留上传当前bytes并重新确认，不恢复旧snapshot。"
+
   idea:
     modes:
       standalone:

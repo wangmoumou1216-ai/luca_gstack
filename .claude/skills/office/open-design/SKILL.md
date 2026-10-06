@@ -315,17 +315,80 @@ required FAIL/UNKNOWN 保持本 Phase 未完成，不进 TS；完整 final gate 
 若将进开发链，以 accepted final 的实际 DOM/CSS/JS/WAAPI/gesture 重新抽取四维并绑定 final spec，
 不从 raw spec 猜最终参数。
 
+**完成前交互说明（同一父 Phase 内）：** 可交互 HTML 的本次交付默认启用 notes；用户明确关闭说明、
+只回收归档或没有交互交付意图时沿原分支。默认启用只选择路径，不授予项目读取、copy/edit/metadata/
+browser 或新 delivery root 权限。裸 STAGED、未回收、缺来源或局部效果授权停止依赖它的加工。
+上述 motion internal 若适用先由其 owner 完成；只有当前 exact accepted motion 可派生 notes。
+
+先展示 UI/交互/动效迭代后的当前业务版本，继承或等待真实用户确认。确认绑定
+`user_confirmation{source_ref,confirmed_prototype_revision,input_artifact_sha256}` 与当前业务闭包；
+recover、raw QA、motion PASS 不代签。业务字节变化回原 owner 重核确认；仅改说明不重置业务确认，
+但新 notes 修订重新验收。只读技术检查可提前，实际文案/绑定/组包均在确认后。原 raw FAIL 保留，
+不是加工先决 PASS，也不能借说明消除仍失败的原行为。
+
+调用前完整读共享 `.claude/skills/office/references/prototype-notes/contract.md`、
+`.claude/skills/office/references/prototype-notes/generation.md`、
+`.claude/skills/office/references/prototype-notes/content-guidelines.md`
+和 delivery runtime。生成与独立内容审阅绑定同一 guideline 版本和实读 SHA；同版本异字节拒绝。
+从现有真实源/位置映射冻结本次新增或明确授权变化的 scope、全部适用 behaviors、来源登记和最新说明。
+按规范 §2.1 判断有源大模块布局/宽高适配，含连续伸缩/填满剩余空间，不要求跨断点；小控件规则归父模块，
+无需求不补空段，不猜尺寸/断点/移动版/业务规则。AI 不顺带标注旧模板；人工整份支持原型的编辑、删除、
+撤销、重绑、合并与历史处置保持。独立 UX/前端按同 hash 规范与原始规则作语义审阅，机器或 regex 不作 A-11 PASS。
+
+在 caller 当前真实读取/浏览器权限下调用公开 `validateGenerationScope`、`mergeNotes`、`buildAnnotatedHtml`，
+生成前后重核 source/context/root/instance、来源与完整适用覆盖；动态/互斥状态沿 generation 的真实观察 session。
+越界、漏项、stale 确认或加工失败保留原件/旧说明及问题，不扩大 scope、不交付半包。
+普通 raw 按 E7.2 用已获准同项目日期/topic 的相邻 notes 根，实路径互不包含，以 `bindBase` +
+`prepareCopy(...,processor_id:'prototype-notes')`；motion 用 `deriveFromAccepted`，helper 自己 resolve exact parent，
+不传任意 base 进入例外，不扩大 raw.asset_root，不从 metadata 发权限。原资产/raw spec/receipt/parent 全保留。
+caller 在独占 attempt 写当前 final HTML、新 observation spec、逐文件 before/after patch，以及 content 外、
+不同于 spec 的 `notes_manifest_ref{path,sha256}`。manifest 绑定 scope、输入数据、runtime/guideline path+SHA+version、
+完整行为映射与 NOTES 实例。新 spec 写 final/data/runtime/guideline/scope/mapping、实际表现/未演示/差异和证据；
+raw/parent spec 只作 provenance。
+`required_behavior_refs = 原 source D/STATE/AC/KEEP 全分母 ∪ parent motion required ∪ 适用 NOTES:<case-id>`；
+AI scope、生成条数或不适用说明不能缩原源/父级分母。
+`checkCandidate` 后 caller 派发真实独立 PREACCEPT，核原票身份、候选 SHA 和完整分母再记录 report、seal、resolve。
+最新 notes accepted ref 为 `notes_final_ref{path,sha256}`，本分支 `final_artifact_ref` 必须等于它，不能选 raw/旧 motion。
+缺浏览器/真人确认 NEEDS_CONTEXT，required FAIL/UNKNOWN 或引用漂移保持父 Phase 未完成。
+internal 只经既有 outputs 返回候选/最终 ref/证据，无新 NODE/STATUS/handoff，不重开历史 OD/motion DONE；父完成一次。
+
+**固定 caller（生产调用体，仓库根 Node ES module 直接执行）：** 以下是唯一有限接线，非示例或测试分支。
+`host` 只由已核项目/session/native caller 提供当前 phase、recover receipt、真实确认来源、冻结分母与读/effect
+context；不能从 `request.proposed`、candidate 或 metadata 构造。`confirmation.source_ref` 是 caller 已核原生
+消息/记录的精确 ref，不能传 boolean 或 AI 自报。夹具传合成记录只证明消费逻辑，不能升级为真人/双 harness PASS。
+host 的 `current_notes` 来自最新完整 HTML 提取（首次为 caller 建的空文档），bindings/scope/behaviors 在生成前冻结；
+`source_required` 必须由原始源逐项取得，内容语义与完整源分母仍由冷 QG 独立核对。
+`raw_gate.kind="mechanical-current-version"` 的 PASS 只证明该精确输入的机械恢复/当前版本资格；
+它不要求 raw semantic PASS。`raw_semantic_status=FAIL` 原样进入 notes-input/返回证据，最终仍按
+完整原 source 分母独立验收，原行为仍 FAIL 时不完成。同版本 guideline 的冻结 SHA 不得替换，
+prepare→review→resolve 的 guideline/runtime refs 必须逐字节一致，返回 refs 是独立快照。
+从以下唯一模块入口调用 `prepareODNotesCandidate(request,host)`；它只返回 PREACCEPT 候选。
+owner 核真实独立原票并用 delivery helper 记录/seal 后，调用 `resolveODNotesFinal(exactNotesRef,prepared,host)`。
+返回最终绑定后才进入 Phase 5/6 的单次父完成，不能用代码返回代替独立或人类验收。
+
+<!-- OD_NOTES_CALLER:START -->
+```javascript
+import { prepareODNotesCandidate, resolveODNotesFinal } from './scripts/od-prototype-notes-caller.mjs';
+```
+<!-- OD_NOTES_CALLER:END -->
+
 ---
 
 ## Phase 5：落盘交付 → 迭代主体在用户（OD 桌面端）
 
 只有 Phase 4 的 scoped recover receipt 通过、且独立语义验收不再待确认时才可标 DONE。
+**notes-enabled 的唯一确认例外：** 原“不阻塞提问”不适用于尚待当前业务版本确认的说明分支。
+先展示精确业务版本，继承/等待真实确认，再在 Phase 4 内加工；业务确认尚非 notes 最终接受。
+确认后变化、仅 staged、缺来源、加工失败或原行为仍 FAIL/UNKNOWN 时不进 Phase 6。
+notes PREACCEPT 核全部原源/parent motion/适用 notes 与内容语义；caller seal 后实际 resolve 最新
+`notes_final_ref`，返回 processor 必须为 prototype-notes、`final_artifact_ref` 同 path+SHA，才可交付。
+disabled/只回收分支保留原“不阻塞提问”与完成条件。
 若触发已批准 postprocess 分支，独立 `MR-004` PREACCEPT 对当前 exact candidate 执行完整
 原源语义与 motion required set；不是只测修改项。caller 验证原票 provenance 后 seal，再在
 当前真实 `read_paths`/`read_roots` 下 `resolveFinal` 重验同一 `final_artifact_ref`。只有完整独立
 PASS 才交付最终 accepted 入口并进入 Phase 6；保留 raw FAIL，不把机械回收冒充语义 PASS。
 未触发分支继续交付原 raw；触发后缺失/漂移证书不回退 raw，所需浏览器不可用 NEEDS_CONTEXT。
-落盘后 `open` 产物给用户，一句话告知（**不阻塞提问、不 AskUserQuestion**）：
+落盘后 `open` 产物给用户，一句话告知（**除上述 notes-enabled 确认例外外，不阻塞提问、不 AskUserQuestion**）：
 1. 普通分支：产物已从 `<handoff-id>/output/index.html` 回收至 `docs/prototype/YYYY-MM-DD-<topic>/index.html`；
    composite 分支：展示已 resolve 的实际 `final_entry` 和 `spec_path` 作为最终交付，另注明上述 raw
    recovery 路径及保留来源，不把 raw index.html 当本次最终入口；
@@ -369,6 +432,10 @@ flags 可重复，仅编码 caller 当前获准读范围；JSON 不授读权。�
 完成赋值再改输出，也不能按目录/latest/名字猜证书；父级 handoff/state 仅完成一次。
 composite 分支完全跳过下列普通分支代码块：caller 按成功解析的 JSON 程序化设置这三个变量，
 然后仅调用一次既有 `python3 .claude/skills/office/references/write_state.py`，不再执行 raw 赋值。
+notes-enabled（含 motion→notes）只解析最新 `notes_final_ref`；`final_artifact_ref` 与之同 path+SHA，
+返回 processor=prototype-notes、candidate/notes_manifest/parent（如有）及当前 source/base/raw provenance 均精确。
+Phase 4 的固定 `resolveODNotesFinal` 返回这一绑定；caller 核真实独立原票后将 `_OUTPUT` 绑定返回 final_entry。
+引用失败即停，不回退 raw/旧 motion；NODE/STATUS/writer 及 disabled/只回收原路径不变。
 
 **仅普通回收分支执行以下原代码；composite 分支禁止执行：**
 ```bash
@@ -385,6 +452,9 @@ composite handoff 另携带 exact `final_artifact_ref{path,sha256}`、accepted f
 和独立 acceptance_ref；保留 raw entry/spec、recovery receipt path+SHA、OD project/handoff ID、
 output root/bundle provenance。raw 与 postprocess 双来源不能相互替代；内部 certificate 由
 父级这一份 handoff 运输，未完成 raw 无需先造 DONE handoff。
+notes 分支在同一 handoff 携带 `notes_final_ref=final_artifact_ref`、processor、notes_manifest、完整
+source/parent/NOTES required 集与同版同 hash guideline/data/runtime。raw/parent 仅为来源，不替代新 final。
+以后仅改说明或人工新完整 HTML 由 standalone prototype-notes owner 接单，不改历史 OD/motion DONE。
 
 ---
 

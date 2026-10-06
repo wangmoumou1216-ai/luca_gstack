@@ -168,6 +168,11 @@ project_skills:
     weight: 8
     triggers: [motion-polish, 完善HTML动效, 补足HTML微交互, 润色已有HTML动效]
 
+  prototype_notes:
+    invoke: "/prototype-notes"
+    weight: 8
+    triggers: [prototype-notes, 给这个HTML补交互说明, 给已有原型加标注, 更新原型中的说明]
+
   tech_spec:
     invoke: "/tech-spec"
     weight: 7

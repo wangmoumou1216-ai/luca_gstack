@@ -112,12 +112,24 @@ node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-handoff.
 
 ## 下游 skill 的读取协议
 
-当交接选择了 motion-polish/OD composite 最终原型时，在 intake/完成前完整读取
+当交接选择了 motion-polish/prototype-notes/OD composite 最终原型时，在 intake/完成前完整读取
 `.claude/skill-os/runtime/prototype-delivery.md`，传递并实际 resolve 精确
 `final_artifact_ref{path,sha256}` 和返回的 final/spec/source/raw provenance；当前 caller 读界限
-必须真实获准，handoff 不授读权。standalone 写普通 motion-polish handoff；内部子单元在既有
+必须真实获准，handoff 不授读权。standalone 按当前 processor 写普通 motion-polish 或 prototype-notes handoff；内部子单元在既有
 outputs 返回 certificate，由同一 OD caller 最终交接一次，不要求未来 raw OD DONE handoff。
 承诺原型引用无效时不按时间或旧 raw 路径回退；下列摘要读取纪律不免除该精确证据重验。
+
+notes-enabled OD 的唯一固定 caller 位于 open-design Phase 4–6；原 owner 在真实精确版本确认、
+独立 PREACCEPT 与 seal 后，以 `resolveODNotesFinal` 返回的最新 exact
+`notes_final_ref = final_artifact_ref{path,sha256}` 完成一次父级 handoff。下游必须消费同一证书的
+processor=`prototype-notes`、current final HTML/new spec/patch、hash-bound notes_manifest_ref、
+required_behavior_refs（原 source 全分母 ∪ parent motion ∪ 适用 NOTES 实例）、generation scope
+及同版同 hash 的 content-guidelines/runtime 引用；accepted motion→notes 还重验 exact 当前
+parent 链。raw/spec/recovery receipt/parent 是 provenance，不是权限或成功回退。AI scope 不得
+缩减 source 分母，人工全原型及合并历史保留。PREACCEPT 不要求尚未产生的父 DONE handoff；
+未确认、stale、STAGED、缺来源、机械 raw gate FAIL/processing FAIL、最终原行为仍 FAIL 或失效引用
+阻断本次交接；保留 raw semantic FAIL，不能要求加工前 raw semantic PASS。不另写
+NODE/STATUS/handoff，不重开历史 OD/motion DONE；关闭/只回收分支保留原消费合同。
 
 skill 启动时，Orchestrator（或 skill 自身在 standalone 模式下）按以下顺序读取：
 

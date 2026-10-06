@@ -1,0 +1,17 @@
+# Prototype notes release handoff
+
+Date: 2026-10-06. Framework scope: NO_PIN. Frozen plan: [plan](../2026-10-04-prototype-notes-plan.md), [execution](../2026-10-04-prototype-notes-execution.md), [decision](../2026-10-04-prototype-notes-decision.md), [review](../2026-10-04-prototype-notes-review.md).
+
+The nine-unit implementation sequence is U001 → U002 → U003 → U004 → U005 → U006 → U009 → U007 → U008. U001–U007 and U009 have accepted implementation records. U008 has a current HTML artifact and machine evidence; its original full acceptance evidence remains incomplete. The user stated on 2026-10-06 that the product work is complete for them and authorized commit, publication, push, and pull after a prepublication review. This is user acceptance and release authority, not evidence that unperformed tests passed.
+
+## Deliverable
+
+[Annotated interactive HTML](u008/ui-final-compact-02/artifact/current-department-notes.html), SHA-256 `0efa5a9fc6937e591ee42a257b43643a508178fab91df37b362e011b0be26b62`. It contains 13 notes (11 generated within `project-management`, 2 manual), revision 6. Open the file in a browser, use the notes sidebar to locate and edit annotations, and use its download control to save a new complete HTML after edits. A downloaded revision needs its own acceptance record if re-entered into the engineering flow.
+
+## Prepublication checks
+
+Current local checks passed: core mutation 64/64; registration 11/11; CI contract and negative cases; agent context and its A/B evaluator; self-model consistency; skill validator; prototype delivery; motion registration and browser; design flow handoff; engineering delivery; Chromium CI notes fixture. The pre-commit check exposed a missing `prototype-notes` key in the A/B evaluator's finite registry and a stale generated self-model; both were repaired and their focused checks now pass. A local ignore rule for generated evidence reduced Git's untracked inventory from more than 327,000 entries to fewer than 100, fixing the diagnostic runner's buffer overflow without deleting evidence. Open Design's executable notes caller was moved from its SKILL.md into `scripts/od-prototype-notes-caller.mjs` to keep the skill under the existing 45 KB context budget; the skill retains the exact executable import entry. Existing evidence for the exact HTML reports Chromium and Firefox current sample 35/35, full fixture 49/49, and source rejection 16/16. The independent prepublication review found no reproducible technical blocker in its bounded static scope and recorded conditional pass. The staged whitespace check reports Markdown hard line breaks in frozen review documents and two whitespace-only lines in the shared core / derived HTML; these source bytes were retained to preserve the exact tested artifact identity.
+
+## Evidence limits
+
+The original U008 gate still lacks a real frontend recipient's five-task recount, native OS Chinese IME and browser zoom observation, three genuine Codex lifecycle receipts, and complete four-role cold review closure for this exact HTML. Claude runtime was explicitly excluded by an earlier user instruction. These items remain unverified; neither user acceptance nor machine tests are represented as their PASS. The full local evidence remains in this worktree's `framework-audit/2026-10-04-prototype-notes-implementation/` directory. Its 6.5 GB of generated audit material is deliberately not part of the Git release.

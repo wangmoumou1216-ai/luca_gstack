@@ -24,6 +24,9 @@ research_default`，与 Plan Agent 研究默认门同一把尺子）→ dispatch
 简单或有成熟先例 → 直接进，不问。
 
 **R2 · OD-first（设计产出执行面）**
+对明确已有 HTML 增改交互说明或标注的意图，语义路由到 `prototype-notes`，先核当前文件、确认与范围；
+泛词“说明/侧栏/交互”、画新页面或改业务侧栏不属于此例外，仍由原生成/设计 owner 承接。
+该例外不改变 Project Gate 与 Plan 优先级，不授予工具切换或新业务设计权限。
 已有实际 HTML 的动效/微交互完善可语义路由到 `motion-polish`；动画概念解释、代码评审仍由各自
 owner 承接。该入口不授权新界面生成或工具切换，输入/权限见其 SKILL；新 UI 产出仍按下列 OD-first。
 意图 = 设计 / 原型 / 界面产出 → 默认 `open-design`（`design_output.primary` 的 standalone 执行面）：

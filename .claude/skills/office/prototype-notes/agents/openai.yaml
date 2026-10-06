@@ -1,0 +1,6 @@
+interface:
+  display_name: "Prototype Notes"
+  short_description: "Add and edit interaction notes in existing local HTML"
+  default_prompt: "Use $prototype-notes to process interaction notes for this exact existing HTML after current business confirmation, then return the exact artifact for independent acceptance."
+policy:
+  allow_implicit_invocation: true
