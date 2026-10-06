@@ -79,11 +79,11 @@ jobs:
       # symlink check) are intentionally excluded — they validate those
       # local-only symlink targets and cannot pass on a clean checkout.
       # Page-library preview is a real browser gate, so install the pinned
-      # Playwright dependency and Chromium before running framework logic.
+      # Playwright dependency, Chromium and Firefox before running framework logic.
       - name: Install Node dependencies
         run: npm ci
-      - name: Install Chromium for page-library preview
-        run: npx playwright install --with-deps chromium
+      - name: Install Chromium and Firefox for browser gates
+        run: npx playwright install --with-deps chromium firefox
       - name: Hook runtime side-effect tests
         run: npm run check:hooks
       - name: Route-guard golden tests

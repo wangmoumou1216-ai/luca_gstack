@@ -34,6 +34,7 @@ for (const command of [
 }
 
 const logicSection = ci.split(/^  validate-framework-logic:/m)[1]?.split(/^  [\w-]+:/m)[0] || '';
+assert.match(logicSection, /^\s*run: npx playwright install --with-deps chromium firefox\s*$/m, 'CI must install both browsers used by prototype-notes tests');
 for (const command of ['npm run test:prototype-notes','npm run test:prototype-notes-browser:ci','npm run test:prototype-notes-registration']) {
   assert.ok(logicSection.split(/\n/).some(line => line.trim() === command), `CI notes command must block in validate-framework-logic: ${command}`);
 }
