@@ -153,6 +153,18 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
           不等待 raw semantic PASS 或未来 OD DONE handoff；保留 raw FAIL 与全部原 D/STATE/AC
           只在同一未完成 Phase 修复已批准范围，final 完整独立 PASS + exact final_artifact_ref
           resolve 后回 OD Phase 5/6 完成父级一次；required FAIL/UNKNOWN 不前进、不进 TS
+        IF current open-design interactive HTML delivery enables prototype-notes：
+          默认交互交付启用，明确关闭/只回收归档/无交付意图保留原分支；选择不授予任何新effect/root权限
+          scoped recover 后完成 UI/交互/可选 motion 迭代，等待/继承绑定精确当前业务版本的真人确认
+          使用 OD Phase4–6 唯一固定 caller prepareODNotesCandidate；host来自已核当前phase/native确认/权限，候选metadata不授信
+          普通raw走获准相邻非包含根；accepted motion走helper专用derive，不接受motion candidate/假parent
+          generation与冷content review同版同hash guideline（含§2.1有源大模块连续fill），实际scope/来源/覆盖前后核验
+          AI局部范围不限制人工整份支持原型；原source全分母∪parent motion∪适用NOTES仍完整验收
+          未确认/stale/仅STAGED/缺源/raw仍FAIL/加工FAIL/UNKNOWN保留证据并阻断对应完成；raw FAIL不删也不要求提前raw PASS
+          raw_gate只消费mechanical-current-version与exact输入机械资格；raw_semantic_status=FAIL原样保留，最终原分母仍须独立PASS
+          caller只返回原Phase outputs的exact候选；原owner派真实独立PREACCEPT、核原票、记录report并seal
+          resolveODNotesFinal实际resolve最新notes_final_ref=final_artifact_ref；processor/manifest/parent/source均核一致
+          无效引用不退raw/旧motion；父NODE/STATUS与单次完成不变，不新增handoff/state，不重开历史OD/motion DONE
         → 进入 2c 测试环节（断言：handoff 文件存在 + gate_result PASS）
       ELSE（phase_type == task_execution，默认）：
         按编排模式执行：

@@ -225,25 +225,39 @@ Switcher QA：{共享浮动底栏key/名称、左右箭头及键盘环绕、inpu
 原型声明/权限：{只在批准目录，真实route/auth/数据写入/生产未被验证；另行实现须真实build环境
 production guard并移除底栏，Git归档/发送/发布需另获原生授权}
 
-## Exact derived delivery identity（仅明确选择 motion 后处理时）
+## Exact derived delivery identity（仅实际启用 motion/notes 后处理时）
 
 身份真值由 `.claude/skill-os/runtime/prototype-delivery.md` 和其 schema/helper 拥有；在写本节或
 消费 `final_artifact_ref` 前完整读取。这里仅记录实际入口，不改变普通原型的既有 QA/用途门。
 
 generation.source: {实际 open-design/html-prototype/用户原件来源}
 raw entry/spec/recovery receipt: {原始精确 path+sha256；保持原件，不重写旧 FAIL}
-postprocess.source: motion-polish
+postprocess.source: {motion-polish / prototype-notes；以实际解析 processor 为准}
+processor_id: {实际 candidate/report/certificate 的 processor；旧无字段票按 motion 默认，旧票字节不改}
+parent_accepted_ref: {仅 accepted motion→notes 的 exact parent path+sha256；raw/用户完整HTML不伪造parent}
 delivery kind: {adequate-original / adequate-copy / enhanced-copy}
 candidate_ref: {验收前冻结的精确 path+sha256}
 final entry/spec: {实际被验的精确 path+sha256；不得默认 raw/index.html}
-required behavior refs: {全部原始产品 AC/STATE、动效目标、适用输入和 KEEP 的预冻集合}
+required behavior refs: {原 source D/STATE/AC/KEEP 全分母 ∪ parent motion required ∪ 适用 NOTES:<case-id>；AI scope 不缩源分母}
 patch/methods: {实际变更与适用参考的版本/hash；充分分支 patch 为空}
 runtime evidence: {同 finalhash 的实际 DOM/时间轨迹、required 逐项结果}
 independent acceptance: {caller 核验的真实独立 invocation/output/report refs；自检不冒充独立票}
 final_artifact_ref: {仅最终接受后由普通 handoff 运输的 accepted-delivery.json path+sha256}
+notes_final_ref: {notes 分支最新 accepted ref，与 final_artifact_ref 同 path+sha256；raw/旧motion仅来源}
+notes_manifest_ref: {notes 必填；metadata/content外且不同于spec，绑定scope/data/runtime/guideline/hash/version与完整映射/required实例}
+notes current spec: {final/data/runtime/guideline/scope/source→behavior→annotation、实际表现/未演示/差异/证据；raw/parent spec原样保留}
+guideline generation/review: {同版同hash .claude/skills/office/references/prototype-notes/content-guidelines.md，按§2.1有源大模块/连续fill语义核验；非regex PASS}
 
 复制内容与原同名 spec/QA 资产位于 attempt/content，观察 spec/QA metadata 位于 attempt 根，
 不覆盖原文件。内部 OD 未完成分支使用真实 raw recovery receipt 与源期待，不要求未来的
 Phase6 DONE handoff；完整 final 独立 PASS 后才由 OD completion owner 完成一次。
+notes 共享字段/内容/生成合同由 `.claude/skills/office/references/prototype-notes/contract.md`、
+`.claude/skills/office/references/prototype-notes/content-guidelines.md`、
+`.claude/skills/office/references/prototype-notes/generation.md` 拥有。
+OD Phase4–6 固定 caller 真实调用公开 notes/delivery APIs；当前 host 确认与权限不能从这些身份字段产生。
+接受前冷 QG 消费 candidate，接受后所有下游实际 resolve 最新 notes_final_ref；失效不退 raw/旧motion。
+raw_gate 仅当前精确输入机械资格；raw semantic FAIL 保留，不是加工前 PASS 前置。最终完整原
+source 行为仍 FAIL/UNKNOWN 时不能接受或完成。
+本节仅扩展 exact identity；不改变 html-prototype 平台、生成器启用、用途门或普通输出政策，也不默认接线该生成器。
 
 <!-- FILE_END: html-prototype/SCHEMA.md -->

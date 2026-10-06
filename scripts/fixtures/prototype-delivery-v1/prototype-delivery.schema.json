@@ -1,0 +1,535 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Per-attempt prototype delivery identity",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/candidate"
+    },
+    {
+      "$ref": "#/$defs/report"
+    },
+    {
+      "$ref": "#/$defs/accepted"
+    }
+  ],
+  "$defs": {
+    "ref": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "locator",
+        "version",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "closure_item": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "additionalProperties": false
+    },
+    "base": {
+      "type": "object",
+      "properties": {
+        "entry": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "closure": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/closure_item"
+          },
+          "minItems": 1
+        },
+        "asset_root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entry_relative": {
+          "type": "string",
+          "minLength": 1
+        },
+        "origin": {
+          "enum": ["open-design", "external-html", "local-html", "framework-fixture"]
+        },
+        "recovery_ref": {
+          "$ref": "#/$defs/ref"
+        },
+        "spec": {
+          "$ref": "#/$defs/ref"
+        }
+      },
+      "required": [
+        "entry",
+        "sha256",
+        "closure",
+        "asset_root",
+        "entry_relative"
+      ],
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "preserved_expectations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "reference",
+        "sha256",
+        "preserved_expectations"
+      ],
+      "additionalProperties": false
+    },
+    "methods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pin_or_version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "path",
+          "pin_or_version",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "operation": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "before_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "const": null
+            }
+          ]
+        },
+        "after_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "path",
+        "before_sha256",
+        "after_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "patch_data": {
+      "type": "object",
+      "properties": {
+        "base_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        },
+        "content_changed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "base_sha256",
+        "operations",
+        "content_changed"
+      ],
+      "additionalProperties": false
+    },
+    "patch": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "base_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        },
+        "content_changed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "base_sha256",
+        "operations",
+        "content_changed"
+      ],
+      "additionalProperties": false
+    },
+    "delivery": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "adequate-original",
+            "adequate-copy",
+            "enhanced-copy"
+          ]
+        },
+        "entry": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "closure": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/closure_item"
+          },
+          "minItems": 1
+        },
+        "spec": {
+          "$ref": "#/$defs/ref"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "entry",
+        "sha256",
+        "closure",
+        "spec"
+      ],
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "preaccept-candidate"
+        },
+        "attempt_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "base": {
+          "$ref": "#/$defs/base"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "methods": {
+          "$ref": "#/$defs/methods"
+        },
+        "methods_ref": {
+          "$ref": "#/$defs/ref"
+        },
+        "patch": {
+          "$ref": "#/$defs/patch"
+        },
+        "authority_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "delivery_root": {
+          "type": "string",
+          "minLength": 1
+        },
+        "delivery": {
+          "$ref": "#/$defs/delivery"
+        },
+        "required_behavior_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "attempt_id",
+        "source",
+        "base",
+        "scope",
+        "methods",
+        "methods_ref",
+        "patch",
+        "authority_ref",
+        "delivery_root",
+        "delivery",
+        "required_behavior_refs"
+      ],
+      "additionalProperties": false
+    },
+    "behavior_result": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "UNKNOWN"
+          ]
+        },
+        "expected": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ref"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "id",
+        "status",
+        "expected",
+        "observed",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "report": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "candidate_ref": {
+          "$ref": "#/$defs/ref"
+        },
+        "final_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "required_behavior_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/behavior_result"
+          },
+          "minItems": 1
+        },
+        "reviewer_provenance": {
+          "type": "object",
+          "properties": {
+            "reviewer_role": {
+              "type": "string",
+              "minLength": 1
+            },
+            "invocation_ref": {
+              "$ref": "#/$defs/ref"
+            },
+            "output_ref": {
+              "$ref": "#/$defs/ref"
+            },
+            "origin": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "reviewer_role",
+            "invocation_ref",
+            "output_ref",
+            "origin"
+          ],
+          "additionalProperties": false
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "UNKNOWN"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "candidate_ref",
+        "final_sha256",
+        "required_behavior_results",
+        "reviewer_provenance",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "accepted": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "accepted-prototype-delivery"
+        },
+        "attempt_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate_ref": {
+          "$ref": "#/$defs/ref"
+        },
+        "acceptance_ref": {
+          "$ref": "#/$defs/ref"
+        },
+        "final": {
+          "type": "object",
+          "properties": {
+            "entry": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "spec": {
+              "$ref": "#/$defs/ref"
+            }
+          },
+          "required": [
+            "entry",
+            "sha256",
+            "spec"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "attempt_id",
+        "candidate_ref",
+        "acceptance_ref",
+        "final"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

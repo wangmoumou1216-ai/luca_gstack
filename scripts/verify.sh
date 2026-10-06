@@ -270,6 +270,9 @@ check S53 "实际 HTML 动态过程与连续性 guard RED/GREEN" "npm run test:m
 check S54 "当前实例 driver/data/cleanup receipt 实际契约" "npm run test:project-verification --silent"
 check S55 "原分母切片/读回/measurement receipt 实际契约" "npm run test:evidence-receipts --silent"
 check S56 "文档断言真实失败/工具错误退出码契约" "npm run test:verification-exit-contract --silent"
+check S57 "原型说明数据/生成范围/合并/完整包回归" "npm run test:prototype-notes --silent"
+check S58 "原型说明实际 Chromium CI 子集" "npm run test:prototype-notes-browser:ci --silent"
+check S59 "原型说明入口/注册/真实消费者合同" "npm run test:prototype-notes-registration --silent"
 # S45 对**发布提交的不可变 blob** 求证，而不是工作树：CANDIDATE-MANIFEST 是发布记录，
 # 断言工作树等于它会把这 81 个 runtime 文件（含 route-guard.mjs / codex-hook-adapter.mjs /
 # verify.sh / CLAUDE.md）永久冻结——任何一次合法修改都让本检查变红，且无被支持的变更路径。

@@ -1,0 +1,3 @@
+# Generated local browser and review evidence is retained here without broad Git staging.
+*
+!.gitignore

@@ -107,6 +107,9 @@ jobs:
       - name: Motion registration, exact delivery and actual browser gates
         run: |
           npm run test:motion-polish-registration
+          npm run test:prototype-notes
+          npm run test:prototype-notes-browser:ci
+          npm run test:prototype-notes-registration
           npm run test:prototype-delivery
           npm run test:motion-polish-browser
       - name: Current-instance, source receipts and assertion exit contracts

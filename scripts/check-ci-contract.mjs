@@ -25,8 +25,17 @@ for (const command of [
   'npm run test:agent-context',
   'npm run test:agent-context-ab-evaluator',
   'npm run test:agent-context-resolution',
+  'npm run test:prototype-notes',
+  'npm run test:prototype-notes-browser:ci',
+  'npm run test:prototype-notes-registration',
 ]) {
-  assert.ok(ci.includes(command), `CI missing blocking command: ${command}`);
+  const found = command.startsWith('npm run test:prototype-notes') ? ci.split(/\n/).some(line => line.trim() === command) : ci.includes(command);
+  assert.ok(found, `CI missing blocking command: ${command}`);
+}
+
+const logicSection = ci.split(/^  validate-framework-logic:/m)[1]?.split(/^  [\w-]+:/m)[0] || '';
+for (const command of ['npm run test:prototype-notes','npm run test:prototype-notes-browser:ci','npm run test:prototype-notes-registration']) {
+  assert.ok(logicSection.split(/\n/).some(line => line.trim() === command), `CI notes command must block in validate-framework-logic: ${command}`);
 }
 
 const htmlSection = ci.split(/^  validate-html:/m)[1]?.split(/^  [\w-]+:/m)[0] || '';

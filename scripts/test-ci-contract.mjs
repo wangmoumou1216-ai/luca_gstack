@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -44,4 +44,13 @@ assert.match(
   /validate-html must use Node 24 for html-validate@11\.10\.0/,
 );
 console.log('PASS incompatible validate-html runtime is rejected');
-console.log('PASS CI contract proof-it-bites 3/3');
+for (const [index, command] of ['npm run test:prototype-notes','npm run test:prototype-notes-browser:ci','npm run test:prototype-notes-registration'].entries()) {
+  const filename = join(tempDir, `ci-notes-${index}.yml`);
+  writeFileSync(filename, readFileSync(ciPath, 'utf8').replace(new RegExp(`^.*${command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'), '          # omitted notes gate'));
+  const child = run(filename);
+  assert.equal(child.status, 1, `${child.stdout}${child.stderr}`);
+  assert.ok(`${child.stdout}${child.stderr}`.includes(`CI missing blocking command: ${command}`));
+  console.log(`PASS missing notes blocking command rejected: ${command}`);
+}
+rmSync(tempDir, {recursive:true, force:true});
+console.log('PASS CI contract proof-it-bites 6/6');

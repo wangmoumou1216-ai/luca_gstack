@@ -29,7 +29,7 @@ tools:
 | 参数 | 模式 |
 |------|------|
 | 有 `assertions` 字段（shell 命令列表） | **Free Task Mode** |
-| `review_stage=PREACCEPT` + exact `candidate_ref` | **Skill Mode 的 motion 前端 facet**；优先于普通 handoff/DONE 检查 |
+| `review_stage=PREACCEPT` + exact `candidate_ref` | **Skill Mode 的 processor-aware 前端 facet**；实际 resolve 后按 processor 选 motion/notes；优先于普通 handoff/DONE 检查 |
 | 有 `skill_name` + `output_path` + `handoff_path` | **Skill Mode** |
 
 ---
@@ -135,13 +135,21 @@ Handoff 标题允许以下项目内常用变体：
 - 决策：`## 核心决策`、`## 决策`、`## 关键决策`
 - 约束：`## 下游约束`、`## 核心约束`、`## 执行约束`、`## 约束`
 
-#### 前端产出检查（html-prototype, open-design, figma-demo, motion-polish）
+#### 前端产出检查（html-prototype, open-design, figma-demo, motion-polish, prototype-notes）
 
-**motion PREACCEPT（接受前候选）：** 调用方独立按 common `MR-004` 派发，提供 exact
+**processor-aware PREACCEPT（接受前候选）：** 调用方独立按 common `MR-004` 派发，提供 exact
 `candidate_ref{path,sha256}`、verified delivery root、源期望、预冻结完整 required behavior set
 和实际获准 runtime/read context。在读取/判断前完整读取
 `.claude/skill-os/runtime/prototype-delivery.md` 与
-`.claude/skills/office/references/motion/review.md`。仅本地文件来源且无 remote/message context
+对应 processor 的冷审 owner：motion-polish 读取 `.claude/skills/office/references/motion/review.md`；
+prototype-notes（OD 内部或公开 standalone 均同一 processor-aware facet）完整读取
+`.claude/skills/office/references/prototype-notes/contract.md`、
+`.claude/skills/office/references/prototype-notes/generation.md`、
+`.claude/skills/office/references/prototype-notes/content-guidelines.md`。
+processor 从实际解析结果取得，不从文件名或 caller 自报选择；缺字段旧票仍按 helper 的 motion 默认。
+notes 核生成与内容审阅的 guideline version/path/SHA 完全相同；按规范 §2.1 实际审查大模块与连续填充适用性、
+有源宽高布局/伸缩/滚动、小控件父模块归属、无空段及无据参数/业务/AI术语。regex、模板或 integrity 不代 A-11。
+仅本地文件来源且无 remote/message context
 时实际执行以下 CLI：
 
 ```text
@@ -166,10 +174,20 @@ remote/message context 丢掉后强制 CLI。只有 CLI 能力且缺所需 API �
 handoff 或 workflow DONE。实际运行最终 HTML，逐原始源 D/STATE/AC/KEEP 与动态 required ID
 检查真实 DOM/time/reverse/repeat/cancel/reduced-motion/keyboard evidence；静态图或 helper
 integrity 不能判动态 PASS。Brief 合规仅当存在真实 handoff 才启动，adhoc 仍保留真实用户期望。
+notes 另核 exact manifest、当前 final HTML/new spec/patch、scope/data/runtime/guideline 与完整行为映射；
+`required = 原 source 全分母 ∪ parent motion ∪ 适用 NOTES实例`。helper 不识别全部源业务分母，
+冷判官实际对照原始源及 parent 集逐项核，不用 AI scope/not_applicable 删原项。
+motion→notes 仍验全部适用原 motion/source 与 notes 组合行为；raw/spec/receipt/parent 仅 provenance。
+未确认、stale、仅 STAGED、缺源、越界/漏项或加工失败保持原父 Phase 未完成，说明不掩盖 raw FAIL。
+OD raw_gate 的 mechanical-current-version PASS 不是 raw semantic PASS 前置；raw_semantic_status=FAIL
+保留进入冷审，完整原 source 分母在当前最终对象仍 FAIL/UNKNOWN 时阻断接受与完成。
+OD 内部消费 Phase 4 固定 caller 的候选，不要求未来 DONE handoff、不新增完成节点。
 报告绑定 candidate path+SHA、final SHA 与未缩减 required set，返回真实观察/证据/判决及
 reviewer invocation/output provenance；判官不写 report/certificate，caller 验证独立原票后才
 记录并 seal。缺票、必要 UNKNOWN/FAIL 不得接受；后续已接受产物检查实际 `resolveFinal` 精确
 `final_artifact_ref`，无效引用不回退 raw。一般前端检查继续如下。
+notes 接受后只消费最新 `notes_final_ref=final_artifact_ref`，实际 resolve 同 path+SHA、processor、
+manifest/parent/source 和完整 required 身份；旧 motion 证书不能代表新 HTML。
 
 | 维度 | 检查内容 | 判定标准 |
 |------|---------|---------|
