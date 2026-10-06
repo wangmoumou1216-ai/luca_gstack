@@ -91,8 +91,8 @@ standalone 模式允许 topic 为空，不要求 workflow-state 或工作流上�
 | `motion-polish` | exact actual HTML/closure、真实源期望、requested scope、当前读界限及所需 copy/edit/metadata/browser 效果；OD internal 还需真实机械 recovery receipt | 完整读取 `.claude/skill-os/runtime/prototype-delivery.md`；验证单独 caller context，不以 manifest 授权，不要求 raw semantic PASS/OD DONE handoff 或旧 accepted；必要浏览器能力缺失 NEEDS_CONTEXT。Preflight 不授本地写权且不代 final runtime gate |
 | `magicpath` | 用户明确选择；workflow 的 design-brief handoff 存在且 gate_result PASS | 校验已确认平台与精确上游 handoff |
 | `figma-demo` | （隐藏，仅内部 dispatch）无特殊前置 | — |
-| `tech-spec` | 实际PRD + design-brief handoff 存在且 gate_result PASS、coverage_scope=prd_end_to_end | 校验精确上游/完整工程追踪；design_source PASS不能代替 |
-| `task-plan` | tech-spec 与 design-brief 精确 handoff 存在且 gate_result PASS；Brief coverage_scope=prd_end_to_end | 验证同话题/版本、实际PRD来源及 tech-spec coverage gate PASS；design_source不代替工程源 |
+| `tech-spec` | input_mode=prd：实际 PRD + Brief gate PASS、coverage_scope=prd_end_to_end；conversation_synthesis：真实 register + 原始来源/独立 MUST 集 | 按 TS Phase 0 核模式、register 实际字节/hash 和完整来源；缺模式不由缺 Brief 猜 CONV，普通 PRD 门保持 |
+| `task-plan` | TS handoff/coverage PASS；input_mode=prd：Brief PASS、coverage_scope=prd_end_to_end；conversation_synthesis：真实 register 与原始 MUST 集 | 按 TP Phase 0 实际读取 register/hash、核同版原始源→TS；普通 PRD 来源/Brief 门保持，未知模式停门 |
 | `deepresearch` | 无特殊前置 | — |
 | `brainstorm` | 无特殊前置 | — |
 | `idea` | 无特殊前置 | — |

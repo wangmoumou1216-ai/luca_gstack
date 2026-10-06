@@ -117,7 +117,7 @@ skills:
       exported: ["same_source_body_and_reference_materials", "no_claim_of_external_import"]
       staged: ["od_daemon_reachable", "exact_project_readback", "brief_and_all_reference_bytes_match", "no_claim_of_generation"]
       recovered: ["bound_project_only", "actual_nonempty_prototype_recovered", "all_related_artifacts_recovered", "prototype_spec_written", "honest_traceability", "project_handoff_when_pinned"]
-    notes: "Brief在冻结前完成模板选择/语义适配，OD复用有效选择并在冻结后核验正式绑定/采用，不重做产品定义。未指定模板且无高置信匹配可reference=none；指定原件/未决冲突不能降级绕过。原始需求/原型先由Brief归一化，原型实际bytes可作不可变证据附件。页确认不代替工具写入权。用户在OD配置DS；仅委托时绑定验证。默认桌面端生成，headless显式opt-in，原请求最多重试1次后回同一staged项目桌面端。Claude Design只导出同包，不探测OD。EXPORTED/STAGED不是生成完成或节点DONE。"
+    notes: "Brief在冻结前完成模板选择/语义适配，OD复用有效选择并在冻结后核验正式绑定/采用，不重做产品定义。未指定模板且无高置信匹配可reference=none；指定原件/未决冲突不能降级绕过。原始需求/原型先由Brief归一化，原型实际bytes可作不可变证据附件。页确认不代替工具写入权。用户在OD配置DS；仅委托时绑定验证。默认桌面端生成，headless显式opt-in，普通carrier/reference_only原请求最多重试1次后回同一staged项目桌面端；original_copy v1 HEADLESS_ONLY，任何profile/外部stage/run前必须真实headless opt-in与独立run授权，否则STOP等真人选择；原件失败不能桌面恢复，原重试计数耗尽/缺授权/终态不明停交付并保留证据。Claude Design只导出同包，不探测OD。EXPORTED/STAGED不是生成完成或节点DONE。"
 
   motion-polish:
     modes:
@@ -273,7 +273,8 @@ skills:
       workflow:
         required: ["prd_artifact", "design_brief_handoff"]
         optional: ["prd_handoff"]
-    quality_gates: ["brief_prd_end_to_end_gate_when_prd_mode", "exact_current_sources", "conflict_register", "architecture_view", "interface_contracts", "traceability_matrix", "design_mapping_coverage", "coverage_gate"]
+    notes: "上述 modes.required 列表仅适用于 input_mode=prd 的正常 PRD/Brief 分支；input_mode 与 standalone/workflow 正交。conversation_synthesis 以完整可核 source_register（path/sha256/section/register_sha256）、original_sources 和独立 source_must_ids 替换 PRD/Brief 输入，保留同等覆盖：Phase 5 IF/CMP/可执行测试。无 UI 的 D/STATE 有源 N/A，工程状态/错误仍须测试。缺模式/源表 NEEDS_CONTEXT，漂移/漏 MUST/未决 UI 停门；不能由缺 Brief 猜 CONV，历史可核普通 PRD 沿用。"
+    quality_gates: ["original_source_must_coverage_when_conversation_synthesis", "brief_prd_end_to_end_gate_when_prd_mode", "exact_current_sources", "conflict_register", "architecture_view", "interface_contracts", "traceability_matrix", "design_mapping_coverage_when_prd_mode", "coverage_gate"]
     output_path: "docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md"
     handoff_path: "docs/handoff/YYYY-MM-DD-<topic>-tech-spec-handoff.md"
 
@@ -285,7 +286,8 @@ skills:
       workflow:
         required: ["tech_spec_handoff", "design_brief_handoff"]
         optional: []
-    quality_gates: ["upstream_handoff_verdicts", "brief_prd_end_to_end_gate", "exact_current_sources", "l0_index", "l1_source_index", "l2_node_index", "assertion_matrix", "task_cards", "design_decision_coverage", "state_coverage", "coverage_gate"]
+    notes: "上述 modes.required 列表仅适用于 input_mode=prd 的正常 PRD/Brief 分支；input_mode 与 standalone/workflow 正交。conversation_synthesis 以完整可核 source_register（path/sha256/section/register_sha256）、original_sources 和独立 source_must_ids 替换 PRD/Brief 输入，保留同等覆盖：Phase 7 原始 MUST→REQ/ASSERT→DEV+TEST 双向覆盖。无 UI 的 D/STATE 有源 N/A，工程状态/错误仍须测试。缺模式/源表 NEEDS_CONTEXT，漂移/漏 MUST/未决 UI 停门；不能由缺 Brief 猜 CONV，历史可核普通 PRD 沿用。"
+    quality_gates: ["original_source_must_coverage_when_conversation_synthesis", "upstream_handoff_verdicts", "brief_prd_end_to_end_gate_when_prd_mode", "exact_current_sources", "l0_index", "l1_source_index", "l2_node_index", "assertion_matrix", "task_cards", "design_decision_coverage_when_prd_mode", "state_coverage_when_prd_mode", "coverage_gate"]
     output_path: "docs/engineering/YYYY-MM-DD-<topic>-task-plan.md"
     handoff_path: "docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md"
 

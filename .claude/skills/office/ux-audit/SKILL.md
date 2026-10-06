@@ -248,51 +248,81 @@ Module A 完成：得分 {N}/100（完整/不完整评分）或 UNKNOWN，AI Slo
 执行下方保留的写入块前，必须同时确认：已验证项目 pin、当前 workflow 确有本节点、输出与状态路径
 属于同一已授权项目且真实可写、主报告已落盘，以及综合分数真实、完整、可计算。
 不完整评分或 UNKNOWN 只记录在报告及 handoff，不运行该块，不把 UNKNOWN 塞成0或写成完整 DONE 基线。
-下方旧块读取首个整数：实际解析值还须与报告分数完全一致；有小数、歧义或路径不符时停止该写入，
+下方块验证报告中的完整整数分数并与所有综合得分记录核对；有小数、歧义或路径不符时停止该写入，
 保留报告真实值并说明状态尚未同步，不截断或改分绕过。standalone 没有 workflow 节点时也不写状态。
 条件成立后，Claude 确定实际 `_TOPIC` 和综合 UX 得分，再执行：
 
+状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。
+
 ```bash
-export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
-[ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] && \
-  _TOPIC=$(ls -t docs/idea/*.md 2>/dev/null | head -1 | \
-           xargs basename 2>/dev/null | \
-           sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | \
-           sed 's/-idea\.md$//' || echo "unknown")
-# 从已写入的主报告中读取综合得分
-export _BASELINE=$(grep "综合 UX 得分\|综合.*得分" \
-  "docs/evaluation/$(date +%Y-%m-%d)-${_TOPIC}-ux-audit.md" 2>/dev/null | \
-  grep -o '[0-9]\+' | head -1 || echo "0")
-# _NODE/_STATUS 为 P7 契约标记；下方 python 块硬编码同义值（'ux-audit'/'DONE'），改这两行不影响实际写入
+case "${_PROJECT_ROOT:-}" in
+  /*) ;;
+  *) printf '%s\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;
+esac
+if [ ! -d "$_PROJECT_ROOT" ] || [ "$(cd "$_PROJECT_ROOT" && pwd -P)" != "$_PROJECT_ROOT" ]; then
+  printf '%s\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2
+  exit 1
+fi
+export _TOPIC="${_TOPIC:-$(cat "$_PROJECT_ROOT/.luca/current-topic.txt" 2>/dev/null)}"
+if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ]; then
+  _TOPIC=$(ls -t "$_PROJECT_ROOT"/docs/idea/*-idea.md 2>/dev/null | head -1 | \
+    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\.md$//')
+fi
+if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] || [ "$_TOPIC" = "unknown" ] || [ "$_TOPIC" = "none" ]; then
+  printf '%s\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2
+  exit 1
+fi
+# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。
+case "${_SCENE:-}" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac
 export _NODE="ux-audit"
 export _STATUS="DONE"
 export _OUTPUT="docs/evaluation/$(date +%Y-%m-%d)-${_TOPIC}-ux-audit.md"
-export _EXTRA_BASELINE="$_BASELINE"
-# 写入状态（baseline_score 需手动追加）
-python3 << PYEOF
-import yaml, datetime, os
-topic = os.environ.get('_TOPIC', 'unknown')
-output = os.environ.get('_OUTPUT', '')
-baseline = int(os.environ.get('_EXTRA_BASELINE', '0') or '0')
+if _EXTRA_JSON=$(python3 - <<'PYEOF'
+import json, os, pathlib, re, sys, yaml
+root = pathlib.Path(os.environ['_PROJECT_ROOT'])
 try:
-    state = yaml.safe_load(open('.claude/workflow-state.yaml')) or {}
-except Exception as e:
-    # 解析失败绝不能落到 state={}：下面是整文件 yaml.dump 覆写，
-    # 空字典会把 topic/scene 与其它全部节点一次性擦除（实测可复现）。
-    # 失败时报错退出、保留原文件，由人工修复后重跑。
-    import sys
-    print(f'ERROR: workflow-state.yaml 解析失败，已放弃写入以免擦除既有状态: {e}', file=sys.stderr)
-    sys.exit(1)
-state.setdefault('nodes', {})['ux-audit'] = {
-    'status': 'DONE',
-    'output': output,
-    'completed_at': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-    'baseline_score': baseline
-}
-state['last_updated'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-yaml.dump(state, open('.claude/workflow-state.yaml', 'w'), allow_unicode=True, default_flow_style=False)
-print(f'workflow-state updated: ux-audit, baseline_score={baseline}')
+    with (root / '.luca/workflow-state.yaml').open(encoding='utf-8') as stream:
+        state = yaml.safe_load(stream)
+except FileNotFoundError:
+    print('NO_WORKFLOW_NODE')
+    sys.exit(0)
+if not isinstance(state, dict) or not isinstance(state.get('nodes', {}), dict):
+    raise ValueError('workflow-state/nodes 必须为 mapping；状态尚未同步')
+if 'ux-audit' not in state.get('nodes', {}):
+    print('NO_WORKFLOW_NODE')
+    sys.exit(0)
+report = root / os.environ['_OUTPUT']
+lines = [line for line in report.read_text(encoding='utf-8').splitlines()
+         if re.search(r'综合(?: UX)? 得分[：:]', line)]
+if not lines:
+    raise ValueError('主报告缺少完整、可计算的综合 UX 得分')
+scores = []
+for line in lines:
+    match = re.fullmatch(r'\s*综合(?: UX)? 得分[：:]\s*([0-9]+)/100\s*[（(]完整评分[）)]\s*', line)
+    if not match or not 0 <= int(match.group(1)) <= 100:
+        raise ValueError('综合分数须真实完整且与报告整数值一致；不截断小数、不采用 UNKNOWN/不完整评分')
+    scores.append(int(match.group(1)))
+if len(set(scores)) != 1:
+    raise ValueError('报告综合分数存在歧义；状态尚未同步')
+print(json.dumps({'baseline_score': scores[0]}))
 PYEOF
+); then
+  if [ "$_EXTRA_JSON" = "NO_WORKFLOW_NODE" ]; then
+    unset _EXTRA_JSON
+    printf '%s\n' 'ux-audit: standalone 无 workflow 节点，未更新状态。'
+  else
+    export _EXTRA_JSON
+    python3 .claude/skills/office/references/write_state.py || {
+      _STATE_RC=$?
+      printf '%s\n' 'ERROR: 产物已生成，但 workflow-state 未同步；保留产物，停止依赖后继，不报告 DONE 或 handoff 成功。' >&2
+      exit "$_STATE_RC"
+    }
+  fi
+else
+  _STATE_RC=$?
+  printf '%s\n' 'ERROR: UX 报告已保留，baseline/state 尚未同步；停止依赖后继，不报告 workflow DONE 或 handoff 成功。' >&2
+  exit "$_STATE_RC"
+fi
 ```
 
 **Handoff 写入：**

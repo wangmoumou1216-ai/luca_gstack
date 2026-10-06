@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e",
+  "source_sha256": "b342a8b5647c46a8e1f1c18dcb258589df720c47a6bd5c7ad26dc0a1370d37a2",
   "skill": "open-design",
   "group": "skills",
   "global": {
@@ -66,6 +66,6 @@
         "project_handoff_when_pinned"
       ]
     },
-    "notes": "Brief在冻结前完成模板选择/语义适配，OD复用有效选择并在冻结后核验正式绑定/采用，不重做产品定义。未指定模板且无高置信匹配可reference=none；指定原件/未决冲突不能降级绕过。原始需求/原型先由Brief归一化，原型实际bytes可作不可变证据附件。页确认不代替工具写入权。用户在OD配置DS；仅委托时绑定验证。默认桌面端生成，headless显式opt-in，原请求最多重试1次后回同一staged项目桌面端。Claude Design只导出同包，不探测OD。EXPORTED/STAGED不是生成完成或节点DONE。"
+    "notes": "Brief在冻结前完成模板选择/语义适配，OD复用有效选择并在冻结后核验正式绑定/采用，不重做产品定义。未指定模板且无高置信匹配可reference=none；指定原件/未决冲突不能降级绕过。原始需求/原型先由Brief归一化，原型实际bytes可作不可变证据附件。页确认不代替工具写入权。用户在OD配置DS；仅委托时绑定验证。默认桌面端生成，headless显式opt-in，普通carrier/reference_only原请求最多重试1次后回同一staged项目桌面端；original_copy v1 HEADLESS_ONLY，任何profile/外部stage/run前必须真实headless opt-in与独立run授权，否则STOP等真人选择；原件失败不能桌面恢复，原重试计数耗尽/缺授权/终态不明停交付并保留证据。Claude Design只导出同包，不探测OD。EXPORTED/STAGED不是生成完成或节点DONE。"
   }
 }

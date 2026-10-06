@@ -225,7 +225,7 @@ for (const [name, pattern] of [
 }
 const engineeringModes = read('.claude/agents/references/plan-engineering-modes.md');
 const designGuidance = read('.claude/agents/references/plan-design-guidance.md');
-const expectedDesignGuidanceSha256 = '71f6da283256af06d54722dc9690164c9cb2425dc89cebf3792d0ee0db6fce0f';
+const expectedDesignGuidanceSha256 = '2922306d1260eae30aaa362641e1d35a48bd80ca2187384cd4746aadb6d73b28';
 const designGuidanceSha256 = createHash('sha256').update(designGuidance).digest('hex');
 const assertionExamples = read('.claude/agents/references/plan-assertion-examples.md');
 const mandatoryDesignOutputGate = 'When a design chain proceeds from `design-brief` to implementation, the intervening design-output\n'

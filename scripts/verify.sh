@@ -214,7 +214,7 @@ check C13 "project-scope-guard.mjs 语法合法" "node --check .claude/hooks/pro
 check C14 "会话级项目隔离回归通过（重定向/deny/跨session/fail-open）" "npm run test:project-scope --silent"
 check C15 "session-end.mjs 语法合法"   "node --check .claude/hooks/session-end.mjs"
 check C16 "self-model 与磁盘一致（audit F4-05）" "npm run check:self-model --silent"
-check C17 "workflow-state 写入块坏 yaml 时拒写（不擦除既有状态）" "python3 scripts/test-workflow-state-guard.py"
+check C17 "workflow-state 事务、并发与真实调用块失败传播" "python3 scripts/test-workflow-state-guard.py"
 check C18 "redteam 判据挂载表完整且引用路径全部存在" "python3 scripts/test-redteam-mount-table.py"
 check C19 "场景覆盖表结构自洽（SSOT对账+豁免声明双确认+三不规则形态）" "python3 scripts/check-skill-scene-coverage.py --selftest"
 check C20 "项目绑定+原生事件权限回归通过（attestation/CAS/lease/replay/new/legacy migration）" "npm run test:project-transaction --silent"
@@ -274,6 +274,8 @@ check S57 "原型说明数据/生成范围/合并/完整包回归" "npm run test
 check S58 "原型说明实际 Chromium CI 子集" "npm run test:prototype-notes-browser:ci --silent"
 check S59 "原型说明入口/注册/真实消费者合同" "npm run test:prototype-notes-registration --silent"
 check S60 "实际交付 HTML 与共享运行时一致、重绑取消/保存双浏览器回归" "npm run test:prototype-notes-release --silent"
+check S61 "设计草稿独立审查、档位、交互位置与工程来源合同" "node scripts/test-design-workflow-contract.mjs"
+check S62 "原件回收授权、取消、漂移与桌面拒绝 fixture" "node scripts/test-original-copy-handoff.mjs"
 # S45 对**发布提交的不可变 blob** 求证，而不是工作树：CANDIDATE-MANIFEST 是发布记录，
 # 断言工作树等于它会把这 81 个 runtime 文件（含 route-guard.mjs / codex-hook-adapter.mjs /
 # verify.sh / CLAUDE.md）永久冻结——任何一次合法修改都让本检查变红，且无被支持的变更路径。

@@ -48,8 +48,9 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 
 > **模型（核心）：** luca_gstack 负责「已就绪设计输入 → Brief内模板选择/非绑定语义适配 → design-brief 冻结 Packet
 > → 最终页面/模块 binding → TAC 草案 → 真人确认 adoption + TAC/hash → stage immutable bundle
-> （=STAGED，不是生成）→ **默认交你在 OD 桌面端按生成** → 你说「拉回来」按 handoff ID 的指定 output root 回收」。headless 一次性出图
+> （=STAGED，不是生成）→ **普通 carrier/reference_only 默认交你在 OD 桌面端按生成** → 你说「拉回来」按 handoff ID 的指定 output root 回收」。headless 一次性出图
 > （经 daemon /api/chat）为 **opt-in**：仅你显式要求"让 agent 自动出/用 headless"且另有 run 授权才走。
+> `original_copy` v1 的能力门以 Phase 0 为准：仅 headless，不能继承上述桌面默认/恢复。
 > **人工判断后置**：落盘后展示即止，迭代你在 OD 桌面端自行做（回收/下游由你点名）。与 magicpath/html-prototype 关系：
 > 三者的独立能力保留；本 OD flow 不因 daemon 故障自动换工具。用户明确改选本地 HTML 或 MagicPath 时才转交。
 > **连接走 daemon HTTP（动态端口）；`od mcp` 已注册时也可用其工具，二选一即可。Codex 不因本 prose
@@ -64,25 +65,34 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 - **chain（默认）**：从已绑定项目及当前任务定位 design-brief；仅在该范围取最新，多个来源无法消歧时先确认，不能靠共享别名选择项目。
 - **adhoc（单点交接，语义识别非词表）**：用户自然语言表达「把某产物交给 OD 生成」（"把刚才那个 md 给 OD"／
   "让 OD 基于这个出图"／"丢进 OD" 等都算）。三要素：①有明确源产物 ②目标是 OD ③意图是交给它生成 → adhoc，源=该产物。
-- **recover（回收）**：用户说「拉回来/落盘/我在 OD 弄好了」→ 直接跳 Phase 4 回收落盘，不重新编译（**不论 headless 还是桌面端生成的产物，首版与迭代都走此回收**）。
+- **recover（回收）**：用户说「拉回来/落盘/我在 OD 弄好了」→ 直接跳 Phase 4 回收落盘，不重新编译（**普通 carrier/reference_only 的 headless/桌面产物均走此回收；original_copy v1 只接成功 headless run**）。
 - 源指代不明 → 一句话确认；尚未落盘的对话内容 → 先写盘再用，不静默重构。
 
-**0b. 前置检查：**
+**0b. 前置检查（能力先于出图路径）：**
+
+`original_copy` v1 是 `HEADLESS_ONLY`。在任何 profile/出图路径选择及外部 stage/run 之前，
+先完整读取 page-context §7 与原件适配器拒绝合同。必须有真实用户的显式 headless opt-in，
+并有对准确目标、handoff 范围与本次 prompt/run 的独立授权；stage/run 仍各自核精确 bundle/hash。
+缺 opt-in 或 run 授权即 STOP，说明原件桌面生成/回收当前不支持，等待真实用户选择；
+不默认开启 headless，不先 stage，不以模板采用、stage grant 或能力 JSON 代签。
+已确认事实可继承，不重复索要相同批准；本 harness 的能力/inert-storage 门继续保留。
+
 ```
 □ [chain] 最新 design-brief 存在 + 含「Design Generation Packet」节，且 Packet 已通过门禁并冻结？ 否→BLOCKED（先 /design-brief，或改单点交接）。
 □ [adhoc] 用户点名产物存在、非空、可读？ 否→BLOCKED 明确报错（不静默建空项目）。
 □ [目标=OD] daemon 可达（Preamble OD_DAEMON=UP）？ DOWN→告知「请打开 OD 桌面端」，停在连接，不自动改选工具。
-□ 出图路径：**默认走 Phase 3D（OD 桌面端生成，可靠）**。仅当用户显式 opt-in headless（"让 agent 自动出图/用 headless"）
-   才走 Phase 3H（headless 不稳的具体表现权威见 Phase 3H；失败 retry 1 后回落 Phase 3D，daemon 既 UP 不退 magicpath）。
+□ 普通 carrier/reference_only 出图路径：**默认走 Phase 3D（OD 桌面端生成）**；original_copy 不适用。
+   普通路径仅用户显式 opt-in headless 才走 Phase 3H，失败 retry 1 后回落 Phase 3D。原件通过上述能力门
+   后只用 Phase 3D 的 stage/readback 子步骤，再按已授权 headless run 进入 Phase 3H；不产生桌面生成指令。
 ```
 
-> **headless 失败处理（可执行规则）：** retry 上限 1 后回落 Phase 3D 桌面端（不稳的具体表现权威见 Phase 3H）；不为它再造 auth/credit 探测。
+> **headless 失败处理：** 普通 carrier/reference_only 的 retry 上限 1 后回落 Phase 3D；original_copy 失败遵守 Phase 3H 停门，桌面恢复不支持。不为它再造 auth/credit 探测。
 > **鉴权前置（正面约束）：** OD spawn 的本机 claude env 的 `USER` 须为真实用户名（如 `luca`）才走订阅；`USER` 缺失/为空/错值会回退 API-credit 账户报「Credit balance is too low」，`LOGNAME` 不顶用。
 
-**0c. Brief适配与最终 binding 的边界：** design-brief 里的 `CandidateHint` 是已整理需求阶段的内部、短期
-发现结果；Brief内已确认模板/位置及非绑定适配草稿可继承并重核版本，不重新定义产品或逼用户重述。草稿不能作为 page adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完成 Phase 1
-并冻结 Packet；正式绑定时完整读取 `.claude/skill-os/runtime/page-context.md`，运行其最终
-`carrier-binding` 验证、隔离预览和真人 adoption，才可进入 `carrier`。Phase-A `NO_HINT` 不替代
+**0c. Brief适配与最终 binding 的边界：** `CandidateHint` 仅是需求整理阶段内部短期发现。
+Brief已确认模板/位置及非绑定草稿可继承并重核版本，不重定义产品或逼用户重述；草稿不作
+page adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完成 Phase 1、冻结 Packet，再完整读取
+`.claude/skill-os/runtime/page-context.md`，执行最终 `carrier-binding` 验证、隔离预览、真人 adoption 才进入 `carrier`。Phase-A `NO_HINT` 不替代
 最终完整目录判断；未指定模板且最终无合格候选，或用户明确拒绝/撤回模板约束、明确不用模板，均不阻塞已对齐 Packet 交接，但只能走
 互斥 `reference_only`，绝不得称模板衍生。已指定模板仍有动作/状态冲突时先 NEEDS_CONTEXT/BLOCKED，须有来源的解决或真人明确撤回模板约束；不能借降级越过人类门。
 页面/模板采用不授予 OD stage；stage、run、recover 各自独立授权。recover 跳过本步骤。
@@ -91,9 +101,10 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 
 ## Phase 1：编译 OD 指令（luca_gstack 核心活；一次性产出，桌面端/headless 通用）
 
-**用户指定原模板时**，交接的 base-template 必须与原件逐字节一致（含 CSS、脚本、资源、隐藏状态）；
-按 page-context 的 original-copy 门核验。没有原样适配能力就停住，不能生成简化影子页后声称用了模板。
-源复制不授权重设视觉或交互；用户要求保持的样式、结构和行为不得被 structural profile 或外部 DS 默认覆盖。
+**用户指定原模板时**，先过 Phase 0 HEADLESS_ONLY 选择/授权门，再编译。
+按 page-context original-copy 门核验 base-template 与原件逐字节一致（含 CSS、脚本、资源、隐藏状态）；
+无原样适配能力即停，禁止以简化影子页冒充模板。复制不授权重设视觉/交互；用户要求保持的样式、结构、行为
+不得被 structural profile 或外部 DS 默认覆盖。
 页面含 `original_copy` 时，使用 `scripts/original-copy-handoff.mjs` 的原件路径（参数及动作规则见
 page-context §7），不调用只支持静态重排的 carrier helper。该路径保留整份原件，并逐字节验证局部差异。
 精修用 original-ui-refinement-v1：refine+preserve、完整outerHTML、仅有效class/style改变，业务DOM/脚本/全局CSS/资产保持；嵌入仍add/modify独立合同，不混用。原型证据通过prototypeEvidence实际bytes/hash/既有source_ids进入不可变inventory，正文已含完整保持事实，附件不执行。
@@ -171,15 +182,18 @@ carrier output profile；`candidate_set` 未另获人类决定不得切换。Cod
 不替用户定。固定目标工具、准确项目 slug、新建/更新范围和写入授权后才进入 Phase 3；
 页面采用确认不替代这些权限。已有准确授权不反复索取。
 
-**2d. carrier profile（独立于设计系统）：** `structural_carrier` 只把不可变 base template 的 DOM、
-登记模块和内容结构作为实现载体；模板 CSS/token/assets 不构成视觉验收或 OD 设计系统输入。
-`visual_carrier` 只有用户明确选择，并同时给出 viewport、截图基线和允许差异阈值时才合法。当前
-Phase 1 合同默认/已确认的是 `structural_carrier + single`；实际每轮仍必须在 adoption/TAC hash 时
-确认相同 profile，不能根据 OD 输出偷偷切换。
+**2d. carrier profile（独立于设计系统）：** original_copy v1 先核 Phase 0 能力门，采用
+original-preserving-v1 或 original-ui-refinement-v1，不套普通静态默认 profile。
+普通 carrier 必须执行 Phase 1「设计系统」的 structural/visual 边界：默认/已确认
+`structural_carrier + single`；visual 必须有用户明确选择及 viewport、截图基线、允许差异阈值。
+每轮 adoption/TAC hash 仍确认相同 profile，不得按 OD 输出偷换。
 
 ---
 
 ## Phase 3D：确认 namespace 后 stage immutable bundle（**默认桌面端路径的前半段**）
+
+original_copy 必须已通过 Phase 0 的显式 headless opt-in 与独立 run 授权门；未满足就 STOP，
+不执行 stage、不给桌面生成指令。通过后本 Phase 对原件只负责 headless 前的 stage/readback。
 
 本 Phase 只把已确认材料 stage 到准确 OD 项目；它不触发生成。先固定贯穿 stage/run/recover 的
 `project_id + handoff_id + output_root`：`handoff_id` 只允许 ASCII 字母、数字、`-`、`_`，本轮必须新且
@@ -213,14 +227,17 @@ output root，但没有 base/assets/TAC/carrier hash，也不能报告“模板�
 DONE。Claude Design 仅可导出包，不能调用 OD stage。Codex 在独立 capability probe 没有成功证据前不得
 执行或声称 carrier stage 可达；它必须给出受控拒绝/降级，而不是复用 Claude 的结果。
 
-完整读回后一句话告知：已在指定 OD 项目和 `handoff_id` 写入并读回 immutable bundle；请在 OD 桌面端
-从该 handoff namespace 生成。生成后说「拉回来」并给出或引用同一 handoff ID；回收只检查该 output root。
+完整读回后，普通 carrier/reference_only 告知已在准确项目/handoff 写入 immutable bundle，请在
+OD 桌面端从该 namespace 生成，随后给同一 handoff ID 回收。original_copy 仅报告 STAGED，
+继续准确已授权的 headless run；回收须成功 run 证据和独立 recover 授权，不建议桌面生成。
 
 ---
 
 ## Phase 3H：headless 一次性触发生成（**opt-in**；仅你显式要求）
 
-> 你未显式要 headless → 跳过本节，走 Phase 3D 的桌面端生成。本路径本 session 实测不稳（生成慢 >2.5-3min + daemon SIGTERM 重启）。
+> 普通 carrier/reference_only 未显式要 headless → 跳过本节，走 Phase 3D 桌面生成。
+> original_copy 未显式 opt-in 或缺 run grant → STOP，回 Phase 0 的真人选择门；不得改走桌面。
+> 本路径既有不稳定证据为生成慢 >2.5-3min 和 daemon SIGTERM 重启。
 
 ```bash
 # 先完成 Phase 3D 的 carrier stage/readback；headless 授权另行绑定 run=true、prompt_hash、
@@ -231,7 +248,12 @@ curl -sN --max-time 1800 -X POST "$_OD_URL/api/chat" -H 'content-type: applicati
 ```
 - 生成耗时几分钟；只观察 `handoffs/<handoff-id>/<output_root>`，不得扫项目的其他 HTML 或其他 handoff。
 - daemon 可能中途重启（端口变）→ run/observe/recover 前**重新探测 `$_OD_URL`**。
-- 失败处理（**重试上限 1**）：首次 /api/chat 若立即 canceled（SIGTERM）或指定 output root 没有产物，确认该 root 后原样重试一次；再次失败 → 不再硬重试、不重建，回到桌面端生成说明。
+- 失败处理（**重试上限 1**）：先核原 run 终态、收取在途结果和同一授权范围；首次 canceled
+  或该 output root 没有产物时，仅按既有授权原样重试一次，计数绑定原请求/handoff，不重启重置。
+  普通 carrier/reference_only 再次失败 → 不再硬重试、不重建，回同一 staged 项目桌面端生成。
+  original_copy 失败不得回 Phase 3D 桌面生成/恢复；桌面路径不支持。允许的同一 headless retry
+  已耗尽、无法核终态或缺授权时 STOP，保留失败/取消/输出证据，停止本次交付及依赖后继，
+  等待真人选择受支持路径；不以旧 STAGED/桌面报告绕过失败，也不自动改选工具。
 - `observeCarrierOutput` 只把带可读 run ID/prompt hash/handoff ID 的证据标为 `OD_RUN_OBSERVED`；
   桌面端用户报告只能是 `USER_GENERATION_REPORTED`。二者随后都还要真实 output readback 才能成为 `GENERATED_OBSERVED`。
 - `od mcp` 工具可用时，等价调用也必须保留上述 namespace、独立 run 授权和证据边界。Codex 无本 harness probe 证据时拒绝本 Phase。
@@ -392,7 +414,8 @@ PASS 才交付最终 accepted 入口并进入 Phase 6；保留 raw FAIL，不把
 1. 普通分支：产物已从 `<handoff-id>/output/index.html` 回收至 `docs/prototype/YYYY-MM-DD-<topic>/index.html`；
    composite 分支：展示已 resolve 的实际 `final_entry` 和 `spec_path` 作为最终交付，另注明上述 raw
    recovery 路径及保留来源，不把 raw index.html 当本次最终入口；
-2. 要迭代请直接在 OD 桌面端继续改，改完说「拉回来」走 recover 入口回收最新版；
+2. 普通 carrier/reference_only 要迭代可在 OD 桌面端继续改，改完说「拉回来」回收；original_copy
+   不支持桌面报告/回收，新的迭代仍须同一原件合同的明确 headless 选择及独立 stage/run/recover 授权；
 3. 要回这里改字段布局时，点名即可；外部 Figma 交付由用户现有工具操作完成。
 
 > （若本次走 Phase 3D 桌面端生成：你首次说「拉回来」就是**首版回收**，同 Phase 4 逻辑，不是迭代；
@@ -400,11 +423,12 @@ PASS 才交付最终 accepted 入口并进入 Phase 6；保留 raw FAIL，不把
 
 > 依据 2026-06-10 luca 指示：「要迭代我会在 od 里面去迭代。如果真的需要回到这里改字段
 > 布局，我会在这里跟你说。」agent 不代理迭代轮、不替用户判断符合与否。
-> （recover 入口照旧汇入 Phase 4 回收逻辑。）
 
 ---
 
 ## Phase 6：handoff + 更新 workflow-state（落盘后）
+
+普通与 composite 两分支均从已验证项目绑定冻结 canonical `_PROJECT_ROOT`。中央 writer 非零退出时保留已回收产物，明确报告状态尚未同步并停止依赖后继；不得报告 DONE 或 handoff 成功。
 
 两分支互斥，以真实已批准 postprocess 范围和完整独立 PASS 选择，环境变量不能选择或授权分支。
 已批准 composite 分支先实际执行 exact ref resolution。仅本地文件来源且无 remote/message
@@ -438,11 +462,32 @@ Phase 4 的固定 `resolveODNotesFinal` 返回这一绑定；caller 核真实独
 引用失败即停，不回退 raw/旧 motion；NODE/STATUS/writer 及 disabled/只回收原路径不变。
 
 **仅普通回收分支执行以下原代码；composite 分支禁止执行：**
+状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。
+
 ```bash
-export _TOPIC="${_TOPIC:-$(cat .claude/current-topic.txt 2>/dev/null)}"
-export _NODE="open-design"; export _STATUS="DONE"
+case "${_PROJECT_ROOT:-}" in
+  /*) ;;
+  *) printf '%s\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;
+esac
+if [ ! -d "$_PROJECT_ROOT" ] || [ "$(cd "$_PROJECT_ROOT" && pwd -P)" != "$_PROJECT_ROOT" ]; then
+  printf '%s\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2
+  exit 1
+fi
+export _TOPIC="${_TOPIC:-$(cat "$_PROJECT_ROOT/.luca/current-topic.txt" 2>/dev/null)}"
+if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] || [ "$_TOPIC" = "unknown" ] || [ "$_TOPIC" = "none" ]; then
+  printf '%s\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2
+  exit 1
+fi
+# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。
+case "${_SCENE:-}" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac
+export _NODE="open-design"
+export _STATUS="DONE"
 export _OUTPUT="docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html"
-python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
+python3 .claude/skills/office/references/write_state.py || {
+  _STATE_RC=$?
+  printf '%s\n' 'ERROR: 产物已生成，但 workflow-state 未同步；保留产物，停止依赖后继，不报告 DONE 或 handoff 成功。' >&2
+  exit "$_STATE_RC"
+}
 ```
 **Handoff**（`docs/handoff/YYYY-MM-DD-<topic>-open-design-handoff.md` ≤2000 tokens）：决策（≤8：选的 platform/DS、
 用户判断结论、已确认参考/无参考）；约束（≤5：实际 index.html 路径、source=open-design、修改/保持边界与外部设置）；
@@ -468,8 +513,9 @@ source/parent/NOTES required 集与同版同 hash guideline/data/runtime。raw/p
    `visual_carrier` 需明确人类选择 + viewport/基线/差异阈值。不得静默使用模板 CSS/token 作为 OD 设计系统。
 4. **stage、run、recover 权限彼此独立**：adoption/TAC 确认不是 stage 授权；stage 不是 run 授权；run 或
    用户报告不是 recover/完成授权。每项绑定准确 project、handoff ID、namespace、hash 与范围。
-5. **默认桌面端生成；headless 为 opt-in**：stage 后交用户在 OD 桌面端生成→「拉回来」；headless 还需
-   `run=true + prompt_hash + handoff_id` 的真实授权，重试上限与回落规则以 Phase 3H 为准。
+5. **普通 carrier/reference_only 默认桌面端；original_copy v1 HEADLESS_ONLY**：原件在任何
+   profile/stage/run 之前要求显式 headless opt-in + 独立 run grant，否则 STOP 等真人选择；
+   headless 还需 `run=true + prompt_hash + handoff_id` 的真实授权。重试/原件失败停门见 Phase 3H。
 6. **recovery 永远按 handoff ID/output root**：不全项目枚举 HTML、不猜最近产物、不从 input 复制/改名 base。
    `single` 只允许指定 `output/index.html` 及闭包；额外/未知文件一律 BLOCKED，不自动删除证据。
 7. **本地 token/技术组件映射不注入交接包**；设计系统由用户在外部工具配置，缺本地资产不阻塞。

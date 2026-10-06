@@ -50,8 +50,8 @@ skills:
   # ── tier-2：可降级（degrade 必填）──
   deepresearch: {tier: 2, degrade: "正文自带顺序回退（environment doesn't support task() → sequential）；≥5 是 COUNT 非并行，顺序跑仍满足 skill-invariants:152"}
   ux-research: {tier: 2, degrade: "正文自带顺序回退（环境不支持时顺序执行，逻辑不变）"}
-  brainstorm: {tier: 2, degrade: "3+1 agent 无 ≥5 锁；Oracle 对抗可顺序化/内联"}
-  ux-brainstorm: {tier: 2, degrade: "同 brainstorm：3+1 可顺序化"}
+  brainstorm: {tier: 2, degrade: "Phase 1 可顺序化；Phase 5 DESIGN_DRAFT 必须真实 native quality-gate/MR-004 冷上下文前台独立审查及同次 accepted 票；缺能力或票即 BLOCKED，不以内联作者推理替 Oracle"}
+  ux-brainstorm: {tier: 2, degrade: "Phase 1 可顺序化；Phase 5 DESIGN_DRAFT 必须真实 native quality-gate/MR-004 冷上下文前台独立审查及同次 accepted 票；缺能力或票即 BLOCKED，不以内联作者推理替 Oracle"}
   quick-research: {tier: 2, degrade: "派单个后台 agent → 可内联查；**skill 正文未写明该回退**，故 Codex 上强度弱于 Claude 上的同一 skill"}
   code-recon: {tier: 2, degrade: "正文两模式共用峰值1的真实冷 explorer；缺实际 dispatch/completed/accepted 证据则 UNKNOWN 并停在门前，主循环只可准备授权只读输入，不模拟 explorer 或宣称同等行为"}
   code-hygiene: {tier: 2, degrade: "A–C 及 environment-retro 可按正文主循环处理；Mode D 必须真实冷 quality-gate/MR-004 peak 串行，缺 dispatch 或同次 accepted 则阻断该审查门，不以内联替票；普通无 Spec 诚实 NOT_RUN"}

@@ -9,6 +9,12 @@ const ciPath = process.env.LUCA_CI_FILE
   ? resolve(process.env.LUCA_CI_FILE)
   : join(root, '.github', 'workflows', 'ci.yml');
 const ci = readFileSync(ciPath, 'utf8');
+const designCommands = [
+  'python3 scripts/test-workflow-state-guard.py',
+  'node scripts/test-design-workflow-contract.mjs',
+  'node scripts/test-engineering-delivery-skills.mjs --all',
+  'node scripts/test-original-copy-handoff.mjs',
+];
 
 for (const command of [
   'npm run test:project-scope',
@@ -29,12 +35,19 @@ for (const command of [
   'npm run test:prototype-notes-browser:ci',
   'npm run test:prototype-notes-registration',
   'npm run test:prototype-notes-release',
+  ...designCommands,
 ]) {
   const found = command.startsWith('npm run test:prototype-notes') ? ci.split(/\n/).some(line => line.trim() === command) : ci.includes(command);
   assert.ok(found, `CI missing blocking command: ${command}`);
 }
 
 const logicSection = ci.split(/^  validate-framework-logic:/m)[1]?.split(/^  [\w-]+:/m)[0] || '';
+const designStep = logicSection.split(/^      - name: Design workflow core contracts\s*$/m)[1]?.split(/^      - (?:name:|uses:)/m)[0] || '';
+assert.deepEqual(
+  designStep.trim().split(/\n/).map(line => line.trim()),
+  ['run: |', 'set -euo pipefail', ...designCommands],
+  'Design workflow commands must run together in validate-framework-logic without swallowed failures or continue-on-error',
+);
 assert.match(logicSection, /^\s*run: npx playwright install --with-deps chromium firefox\s*$/m, 'CI must install both browsers used by prototype-notes tests');
 for (const command of ['npm run test:prototype-notes','npm run test:prototype-notes-browser:ci','npm run test:prototype-notes-registration','npm run test:prototype-notes-release']) {
   assert.ok(logicSection.split(/\n/).some(line => line.trim() === command), `CI notes command must block in validate-framework-logic: ${command}`);

@@ -109,27 +109,39 @@ tail -50 .claude/observability/observations.jsonl 2>/dev/null
 Claude 在执行前必须确定实际 `_TOPIC` 与 `_OUTPUT`，然后执行下面两组之一。
 **项目场景**（有绑定项目）：
 
+状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。
+
 ```bash
-export _TOPIC=$(cat .claude/current-topic.txt 2>/dev/null)
-# 如果 _TOPIC 为空或是占位符，从最新 idea 文件名推断
-[ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] && \
-  _TOPIC=$(ls -t docs/idea/*.md 2>/dev/null | head -1 | \
-           xargs basename 2>/dev/null | \
-           sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | \
-           sed 's/-idea.md$//' || echo "unknown")
+case "${_PROJECT_ROOT:-}" in
+  /*) ;;
+  *) printf '%s\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;
+esac
+if [ ! -d "$_PROJECT_ROOT" ] || [ "$(cd "$_PROJECT_ROOT" && pwd -P)" != "$_PROJECT_ROOT" ]; then
+  printf '%s\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2
+  exit 1
+fi
+export _TOPIC="${_TOPIC:-$(cat "$_PROJECT_ROOT/.luca/current-topic.txt" 2>/dev/null)}"
+if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ]; then
+  _TOPIC=$(ls -t "$_PROJECT_ROOT"/docs/idea/*-idea.md 2>/dev/null | head -1 | \
+    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\.md$//')
+fi
+if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] || [ "$_TOPIC" = "unknown" ] || [ "$_TOPIC" = "none" ]; then
+  printf '%s\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2
+  exit 1
+fi
+# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。
+case "${_SCENE:-}" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac
 export _NODE="redteam"
 export _STATUS="DONE"
 export _OUTPUT="docs/redteam/$(date +%Y-%m-%d)-${_TOPIC}-redteam.md"
-python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo "workflow-state 写入跳过"
+python3 .claude/skills/office/references/write_state.py || {
+  _STATE_RC=$?
+  printf '%s\n' 'ERROR: 产物已生成，但 workflow-state 未同步；保留产物，停止依赖后继，不报告 DONE 或 handoff 成功。' >&2
+  exit "$_STATE_RC"
+}
 ```
 
 **框架治理场景：不写 workflow-state。** 理由不是"绕开 guard"而是**没有可追踪的对象**——
-workflow-state 追的是某个项目的设计流节点，框架审计不属于任何项目的设计流。更硬的理由：
-`references/write_state.py` 在 Python 内部打开 `.claude/workflow-state.yaml`（**一条指向当前
-激活项目的软链**），project-scope-guard 只按 Bash 命令文本做 anchor 匹配、拦不住它——未绑定
-的框架 session 调它，会把框架评审的 DONE 状态写进"此刻碰巧激活的那个项目"，正是会话级项目
-隔离要消灭的跨项目污染（并行 session 尤甚）。**P7 合规**：写入块本体与变量含义一字未动，
-这里加的是场景门；`quality-gate` 的"workflow-state 已更新为 DONE"检查属 workflow 模式，
-框架治理场景本就不在 workflow 里。产出落 `framework-audit/` 自身即审计留痕。
+workflow-state 追的是某个项目的设计流节点，框架审计不属于任何项目的设计流。中央 writer 只接受已验证项目的绝对 `_PROJECT_ROOT`；NO_PIN 没有项目状态写入权限，不能从共享别名或当前激活项目补出绑定。`quality-gate` 的状态更新检查仍只适用于真实 workflow。产出落 `framework-audit/` 自身即审计留痕。
 
 <!-- FILE_END: .claude/skills/office/redteam/SKILL.md -->

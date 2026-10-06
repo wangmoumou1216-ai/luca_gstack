@@ -71,37 +71,37 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 
 
 ## Phase 0：确认输入存在
 
-先定位已验证项目/当前话题的精确输入，最新 glob 仅作发现线索，不静默选其他话题。
-检查以下文件是否存在：
-- `docs/handoff/*tech-spec-handoff.md` — **必须存在**，否则终止并提示先运行 `/tech-spec`
-- `docs/handoff/*design-brief-handoff.md` — **必须存在**，否则终止并提示先运行 `/design-brief`
+先定位已验证项目/当前话题的精确 tech-spec handoff 和 canonical TS，latest glob 仅作线索。
+tech-spec handoff 必须存在；缺失时 NEEDS_CONTEXT，提示先完成 tech-spec。
+完整读取它并运行 `node scripts/check-quality-gates.mjs --handoff "<精确 TS handoff 绝对路径>"`，
+核 gate_result=PASS 与实际 Phase 5 COVERAGE GATE PASS，然后按来源类型分支。
 
-如 tech-spec handoff 不存在：
-```
-⛔ 缺少 tech-spec handoff。
-请先运行 /tech-spec 生成工程规格，再运行 /task-plan。
-```
+`input_mode: prd | conversation_synthesis` 与 standalone / workflow 正交；不新增 Workflow。
+不能从缺少 Brief 推断 conversation_synthesis。未知/缺 input_mode 或无法核验 register 返回
+`NEEDS_CONTEXT`；历史未标 mode 但能由原有精确 PRD/Brief 来源确认的交接沿用普通分支，
+不批量改写。来源漂移、伪造 register、遗漏 MUST 或夹带未决产品/UI 返回 `BLOCKED`，
+交来源/TS/设计 owner 修订并重新过门，不在 task-plan 决定产品/UI。
 
-如 design-brief handoff 不存在：
-```
-⛔ 缺少 design-brief handoff。
-task-plan 需要设计决策和状态来源，不能只按 tech-spec 拆开发任务。
-请先运行 /design-brief，再运行 /tech-spec 和 /task-plan。
-```
-
----
-
-准入质量门（standalone 和 workflow 都执行）：完整读取两份精确 handoff，分别运行
-`node scripts/check-quality-gates.mjs --handoff "<handoff 绝对路径>"`；
-tech-spec 必须 `gate_result=PASS` 且实际 COVERAGE GATE PASS，Brief 必须 `gate_result=PASS`
-及 `coverage_scope=prd_end_to_end`。核同一话题/版本及实际 PRD 来源索引，按需核矩阵覆盖
-当前 PRD 全部 MUST R/AE，不读取无关全文。design_source PASS、handoff 存在或 tech-spec
-自己的矩阵计数不能替代上述证据。字段/来源缺失或未知返回 NEEDS_CONTEXT；失败、范围不符
-或漂移返回 BLOCKED，回对应上游 owner 修订过门，不把生成契约直接当工程任务源。
+- **正常 PRD/Brief 分支（input_mode=prd）**：精确 design-brief handoff 必须存在。
+  完整读取并运行同一 handoff checker；必须 gate_result=PASS、coverage_scope=prd_end_to_end。
+  核同话题/版本和实际 PRD 来源，定向核当前 PRD 全部 MUST R/AE 及设计追踪；design_source
+  PASS、文件存在或 TS 计数不代替证据。缺 Brief/来源返回 NEEDS_CONTEXT，FAIL/漂移 BLOCKED，
+  回原 owner；普通 PRD→Brief→TS→TP 门保持。
+- **conversation_synthesis 分支**：从 TS handoff 取得
+  `source_register{path,sha256,section,register_sha256}`、`original_sources` 引用与
+  `source_must_ids`。实际读取精确 source_register 所指文件，重算文件 sha256 与片段
+  register_sha256，核完整边界和原始来源身份，再读取 TS 矩阵；hash 不授读权。
+  register 可嵌入 canonical TS §1 Source Register，也可位于已有授权输入；必须有真实字节，
+  不能把 handoff 摘要或内存自报当下游 source。原始用户 turns/已授权证据必须可核，
+  不可核时 NEEDS_CONTEXT；hash/身份漂移 BLOCKED。
+  从原始来源独立枚举 MUST，和 register/source_must_ids/TS RTM 反向比对；
+  自己或 TS 矩阵算出的 100% 不能替代原始来源核验。少一条 MUST 即 BLOCKED。
+  此分支不要求/伪造 PRD、Brief 或 R/AE；无 UI 的 D/STATE 仅记有来源依据的 N/A。
+  已承诺工程运行状态、错误、失败恢复仍是 MUST，逐条保留可执行测试。
 
 ## Phase 1：输入加载（懒加载）
 
-**读取顺序（只读 handoff summary，不读全文）：**
+**正常 PRD/Brief 分支读取顺序（摘要与指定源节）：**
 
 1. `docs/handoff/*tech-spec-handoff.md`（完整读取，< 2000 tokens）
 2. `docs/handoff/*design-brief-handoff.md`（完整读取）
@@ -130,9 +130,12 @@ tech-spec 必须 `gate_result=PASS` 且实际 COVERAGE GATE PASS，Brief 必须 
    对照 TS 冻结的 final/spec/source/acceptance hashes，按需读取实际 final/spec；flags 重复但不
    授读权。缺失/漂移只阻相关 ASSERT/DEV/TEST，并回受影响 TS/交付 owner，不猜 raw/latest。
 
-**不读取**：PRD 全文、UX 文档全文、design-brief 全文。
+conversation_synthesis 按 Phase 0 完整读取并 hash 验证同一 register、original_sources 和
+独立 MUST 集，定向读 TS §5/接口/覆盖门；不加载不适用的 Brief。摘要读取不能跳过真实源表。
 
-**确认输出**（打印）：
+**不读取**：无关 PRD 全文、UX 文档全文、design-brief 全文。
+
+**确认输出**（普通分支打印；CONV 打印 input_mode、register/hash 与原始 MUST 总数）：
 ```
 ✓ tech-spec handoff: [路径]
 ✓ design-brief handoff: [路径]
@@ -164,13 +167,14 @@ tech-spec 必须 `gate_result=PASS` 且实际 COVERAGE GATE PASS，Brief 必须 
 
 | Source ID | 文档路径 | 用途 | 正常使用时机 | 不读时机 |
 |----------|--------|------|------------|--------|
+| SRC-CONV | source_register exact path+sha256+section+register_sha256；original_sources 与 source_must_ids | conversation_synthesis 的原始工程事实/完整 MUST 分母 | CONV intake/反向覆盖门及相关任务读取清单 | prd 模式不读 |
 | SRC-PRD | docs/prd/... | 产品需求 R/AE | 需求冲突或追踪失败时 | 正常开发时 |
 | SRC-TS | docs/engineering/...-tech-spec.md | 架构/接口/矩阵 | 所有开发任务必读对应节 | 不需整体读 |
 | SRC-DB | docs/decisions/...-design-brief.md | 页面/交互位置、决策、状态及可追踪矩阵 | UI 相关 task 读 §7「页面与交互位置映射」（`page_interaction_mapping`）和可追踪矩阵指定节 | 非 UI task 不读 |
 | SRC-HO | docs/handoff/... | 决策摘要/约束/风险 | 每个 task 开始前确认约束 | 任务执行中途 |
 | SRC-PROTOTYPE | exact accepted_ref + resolved final/spec path+SHA 与 source/acceptance/base provenance | 所选实际原型四维与行为实现证据，非 R/AE 来源 | 相关 CMP/ASSERT/DEV/TEST intake 和执行前重验同一 ref，再读所需实际代码/规格 | 无原型依赖的任务不读 |
 
-§7 的交互职责、D-ID、适用 STATE、R/AE 与 AC、约束和下游目标进入对应任务的读取清单。
+普通 PRD 分支的 §7 交互职责、D-ID、适用 STATE、R/AE 与 AC、约束和下游目标进入对应任务的读取清单。
 已确认页库引用仅辅助定位；`reference=none` 不免除 REQ/DEC/STATE 节点和 ASSERT 覆盖。
 历史 `component_mapping` / 旧组件映射只读提取这些语义列；不要求旧技术列或资产，不重写历史。
 本 Phase 的 SRC-PROTOTYPE 原样进入输出 §2 L1 Index；不能仅把 ref 藏在文本附录或变成新需求。
@@ -181,11 +185,16 @@ tech-spec 必须 `gate_result=PASS` 且实际 COVERAGE GATE PASS，Brief 必须 
 
 **目标**：把所有上游需求、交互状态、设计决策转化为可引用节点。
 
-### 4.1 需求节点（R-series + AE-series）
+### 4.1 需求节点（普通 PRD 的 R/AE，纯工程的 CONV）
 
 | Node ID | 来源 ID | 描述摘要 | MVP 状态 | 关联 tech section |
 |--------|--------|---------|---------|----------------|
 | REQ-R01 | SRC-PRD §R1 | ... | MUST | TS §3.3, IF-001 |
+
+conversation_synthesis：每个原始 CONV-MUST → REQ-CONV-NNN → ASSERT-NNN → DEV-NNN + TEST-NNN。
+来源字段指向 SRC-CONV 的真实 register 行和 original_sources turn/证据；不得以 RTM 的现有行
+决定分母。保留 PARTIAL/DEFERRED/排除项以防复活；工程状态/错误对应 CONV/REQ 和 ASSERT，
+不因没有 UI STATE 而删除它们。
 
 ### 4.2 交互状态节点（来自 interaction architecture / design-brief）
 
@@ -199,10 +208,13 @@ tech-spec 必须 `gate_result=PASS` 且实际 COVERAGE GATE PASS，Brief 必须 
 |--------|--------|---------|------------|
 | DEC-D001 | SRC-DB §D-001 | 3 按钮评分 | 不允许实现 4 按钮；必须映射到 FSRS |
 
+无 UI 的 conversation_synthesis 将设计决策/交互状态节记 N/A，附原始来源和无 UI 范围依据；
+不伪造 DEC、STATE 或设计来源。遇实际 UI/未定设计回 Phase 0 owner，不能沿 N/A 继续。
+
 ### 4.4 覆盖约束
 
 规则：
-- tech-spec Traceability Matrix 中每个 MUST 级 R/AE 必须生成 REQ 节点。
+- 普通 PRD 的每个 MUST R/AE、CONV 原始源表的每个 MUST CONV 都必须生成 REQ 节点；并核 TS RTM。
 - design-brief 中每个进入 MVP 的 D-series 必须生成 DEC 节点。
 - design-brief 中每个“是否需要单独设计 = 是”的状态必须生成 STATE 节点。
 - DEFERRED / REMOVED 不生成开发任务，但必须保留在 Source Index 中，防止被复活。
@@ -216,7 +228,7 @@ tech-spec 必须 `gate_result=PASS` 且实际 COVERAGE GATE PASS，Brief 必须 
 每条断言格式：
 ```
 断言 ID: ASSERT-NNN
-绑定节点: REQ-RXX 或 STATE-SXX 或 DEC-DXXX
+绑定节点: REQ-RXX / REQ-CONV-NNN 或适用的 STATE-SXX / DEC-DXXX
 断言描述: 给定 [前置条件]，执行 [操作]，结果必须是 [具体可验证结果]
 测试方法: unit | integration | e2e | manual
 Pass 准则: [具体数值/状态/输出，不允许写「正常运行」]
@@ -239,7 +251,7 @@ Pass 准则: [具体数值/状态/输出，不允许写「正常运行」]
 ```
 Task ID: DEV-NNN
 标题: <具体动词 + 具体对象>（不允许写「实现XXX模块」）
-来源节点: REQ-RXX, STATE-SXX, DEC-DXXX（至少一个）
+来源节点: REQ-RXX / REQ-CONV-NNN，及适用的 STATE-SXX, DEC-DXXX（至少一个）
 Tech Section: TS §X.X（必须绑定）
 接口 ID: IF-NNN（如适用）
 读取清单:
@@ -300,11 +312,15 @@ doctor/readiness 是准入而非功能 TEST；driver 坏回 capability owner，�
 
 **这是本 skill 的核心门禁。不通过不允许进入 Phase 8。**
 
-**Step 7.1** — 枚举所有 MUST 级需求节点
+**Step 7.1** — 从当前真实来源独立枚举 MUST 分母。普通 PRD 保留原 R/AE 与 Brief 的全部
+MVP D/STATE；conversation_synthesis 重验同一 register/hash，从 original_sources 原始来源
+独立枚举 MUST，反向核 source_must_ids → TS RTM → REQ/ASSERT → DEV+TEST。
+节点、ASSERT、DEV、TEST 再反查真实源，禁止无源任务/伪造引用；遗漏任一原始 MUST、hash 漂移
+或未决 UI 即 BLOCKED，不能以自己节点/矩阵的 100% 自动过门。
 
 **Step 7.2** — 逐条检查：
 ```
-对于每个 MUST 需求节点 REQ-RXX：
+对于每个 MUST 需求节点 REQ-RXX / REQ-CONV-NNN：
   ✓ 有对应 DEV task（绑定该节点）？
   ✓ DEV task 标题具体（不模糊）？
   ✓ DEV task 有绑定 ASSERT-NNN？
@@ -386,12 +402,18 @@ doctor/readiness 是准入而非功能 TEST；driver 坏回 capability owner，�
 ## 7. Gate Result（PASS + 统计）
 ```
 
+输出 §2 L1 和 §3/§7 保留 input_mode、同一 register/source hash、original_sources 引用、
+source_must_ids 与逐项反向覆盖证据；N/A 带来源理由，工程状态/错误测试不缩减。
+
 ### 8.2 写入 Handoff 文件
 
 路径：`docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md`
 格式：遵循 `.claude/skills/office/references/handoff-protocol.md`
 
 Handoff 必须包含：
+- `input_mode: prd | conversation_synthesis` 和当前精确来源；CONV 原样传递
+  `source_register{path,sha256,section,register_sha256}`、original_sources 引用、
+  source_must_ids 与原始 MUST→REQ/ASSERT→DEV+TEST 的 Phase 7 覆盖证据。
 - 决策：任务编排策略、里程碑划分（≤8 条）
 - 约束：执行 agent 必须先读本文件；不允许跳过 gate
 - 风险：执行中可能发现的遗漏（≤3 条）
