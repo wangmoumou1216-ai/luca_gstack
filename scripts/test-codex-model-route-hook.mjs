@@ -87,10 +87,13 @@ function start(sessionId, model = 'gpt-5.6-sol', source = 'startup') {
   return run({hook_event_name: 'SessionStart', session_id: sessionId, model, source, cwd: ROOT});
 }
 function pre(sessionId, toolInput, toolUseId, toolName = 'spawn_agent') {
+  const fixtureState = JSON.parse(readFileSync(stateFileForTest({harness: 'codex',
+    root_session_id: sessionId, state_root: stateRoot}), 'utf8'));
+  const nativePath = rootTranscript(sessionId, {model: fixtureState.root_anchor.model});
   return run({
     hook_event_name: 'PreToolUse', session_id: sessionId, turn_id: 'turn-root',
     tool_use_id: toolUseId, tool_name: toolName, tool_input: toolInput,
-    permission_mode: 'default', cwd: ROOT, model: 'gpt-5.6-sol',
+    permission_mode: 'default', cwd: ROOT, transcript_path: nativePath, model: 'gpt-5.6-sol',
   });
 }
 function subStart(sessionId, agentId, agentType) {
@@ -149,6 +152,62 @@ function recoveryRunner(sessionId, path, extra = {}) {
 }
 
 try {
+  const changedAnchor = 'root-active-model-change';
+  start(changedAnchor, 'gpt-6-astra');
+  const changedDispatch = recoveryPre(changedAnchor, rootTranscript(changedAnchor), {
+    tool_input: {task_name: 'current-review', message: 'judge', agent_type: 'quality-gate',
+      fork_turns: 'all', reasoning_effort: 'xhigh'},
+  });
+  equal(changedDispatch.hookSpecificOutput.permissionDecision, 'allow',
+    'active dispatch reconciles the current native model before selecting the reviewer');
+  equal(changedDispatch.hookSpecificOutput.updatedInput.model, 'gpt-6-astra',
+    'a stale peak anchor cannot suppress the required explicit model override');
+  equal(changedDispatch.hookSpecificOutput.updatedInput.fork_turns, 'none',
+    'review remains independent after current model reconciliation');
+  equal(changedDispatch.hookSpecificOutput.updatedInput.reasoning_effort, 'xhigh',
+    'native model reconciliation preserves user-owned effort');
+  equal(state(changedAnchor).root_anchor.model, 'gpt-5.6-sol',
+    'the cache adopts authenticated current turn evidence, not tool or payload claims');
+  equal(state(changedAnchor).root_generation, 1, 'current model change advances the generation');
+  subStart(changedAnchor, 'agent-current-review', 'quality-gate');
+  equal(subStop(changedAnchor, 'agent-current-review', 'quality-gate', transcript({
+    sessionId: changedAnchor, agentId: 'agent-current-review', agentType: 'quality-gate',
+    model: 'gpt-6-astra',
+  })), {}, 'the selected reviewer still requires matching same-invocation native evidence');
+  equal(Object.values(state(changedAnchor).invocations)[0].status, 'accepted',
+    'a reconciled dispatch accepts only the matching actual model');
+
+  for (const variant of ['missing-path', 'foreign-sid', 'completed-turn', 'wrong-turn', 'missing-model']) {
+    const session = `root-active-source-${variant}`;
+    start(session, 'gpt-6-astra');
+    const before = state(session);
+    const options = variant === 'foreign-sid' ? {metaId: 'other-native-session'}
+      : variant === 'completed-turn' ? {complete: true}
+      : variant === 'wrong-turn' ? {turnId: 'other-turn'} : {};
+    const path = rootTranscript(session, options);
+    if (variant === 'missing-model') {
+      const rows = readFileSync(path, 'utf8').trim().split('\n').map(JSON.parse);
+      delete rows.at(-1).payload.model;
+      writeFileSync(path, rows.map(JSON.stringify).join('\n') + '\n');
+    }
+    equal(recoveryPre(session, variant === 'missing-path' ? join(transcriptRoot, 'missing.jsonl') : path)
+      .hookSpecificOutput.permissionDecision, 'deny', `${variant} cannot refresh an active model anchor`);
+    equal(state(session), before, `${variant} leaves active authority and invocations unchanged`);
+  }
+  const latchedAnchor = 'root-active-model-change-latched';
+  start(latchedAnchor);
+  pre(latchedAnchor, {task_name: 'failed-review', message: 'judge', agent_type: 'quality-gate'},
+    'tool-latched-review');
+  subStart(latchedAnchor, 'agent-latched-review', 'quality-gate');
+  subStop(latchedAnchor, 'agent-latched-review', 'quality-gate', transcript({
+    sessionId: latchedAnchor, agentId: 'agent-latched-review', agentType: 'quality-gate', model: 'gpt-5.6-sol',
+  }));
+  const latchedBefore = state(latchedAnchor);
+  equal(latchedBefore.critical_failure, true, 'model adoption refusal remains latched');
+  equal(recoveryPre(latchedAnchor, rootTranscript(latchedAnchor, {model: 'gpt-6-astra'}))
+    .hookSpecificOutput.permissionDecision, 'deny', 'current model change cannot erase a failed critical invocation');
+  equal(state(latchedAnchor), latchedBefore, 'model refresh preserves the failed activation byte-for-byte');
+
   for (const variant of ['valid', 'no-start', 'ambiguous-start', 'wrong-parent', 'wrong-call', 'wrong-turn',
     'missing-agent', 'reused-agent', 'wrong-role', 'ambiguous-call', 'start-before-call', 'old-ticket', 'critical']) {
     const sid = `root-started-${variant}`, tool = `tool-started-${variant}`, agent = `agent-started-${variant}`;
@@ -434,10 +493,21 @@ try {
     const session = `root-profile-${variant}`, agent = `agent-profile-${variant}`;
     profileRun({hook_event_name: 'SessionStart', session_id: session, model: 'gpt-5.6-sol', source: 'startup'});
     grantProfile(session, variant === 'foreign-sid' ? 'other-native-session' : session);
+    const nativeRoot = join(profileSessions, `rollout-2026-10-01T01-00-00-${session}.jsonl`);
+    cpSync(rootTranscript(session, {metaCwd: profileRoot, contextCwd: profileRoot}), nativeRoot);
+    const before = state(session);
     const dispatched = profileRun({hook_event_name: 'PreToolUse', session_id: session, turn_id: 'turn-root',
       tool_use_id: `tool-${variant}`, tool_name: 'spawn_agent',
+      transcript_path: nativeRoot,
       tool_input: {task_name: 'review', message: 'judge', agent_type: 'quality-gate'}});
-    equal(dispatched.hookSpecificOutput.permissionDecision, 'allow', 'existing profile activation retains dispatch behavior');
+    if (variant === 'foreign-sid') {
+      equal(dispatched.hookSpecificOutput.permissionDecision, 'deny',
+        'another session source grant cannot refresh an active model anchor');
+      equal(state(session), before, 'foreign source grant leaves active authority unchanged');
+      continue;
+    }
+    equal(dispatched.hookSpecificOutput.permissionDecision, 'allow',
+      'authenticated current profile evidence permits dispatch from an existing activation');
     profileRun({hook_event_name: 'SubagentStart', session_id: session, agent_id: agent, agent_type: 'quality-gate'});
     const original = transcript({sessionId: session, agentId: agent, agentType: 'quality-gate', model: 'gpt-6-astra'});
     const granted = join(profileSessions, `${agent}.jsonl`);
@@ -544,6 +614,7 @@ try {
     hook_event_name: 'PreToolUse', session_id: anchorSession, turn_id: 'turn-root',
     tool_use_id: 'tool-bad-cwd', tool_name: 'spawn_agent',
     tool_input: {task_name: 'bad_cwd', message: 'work'},
+    transcript_path: rootTranscript(anchorSession),
     permission_mode: 'default', cwd: join(scratch, 'missing-cwd'), model: 'gpt-5.6-sol',
   });
   equal(failedProjectObservation.hookSpecificOutput.permissionDecision, 'deny',
@@ -843,7 +914,7 @@ try {
   // The host lock, rather than that stale snapshot, must decide admission.
   assert.equal(originalHost.includes('export function readActivation('), true);
   writeFileSync(hostFixture, originalHost.replace('export function readActivation(',
-    'function fixtureReadActivation(') + `\nimport {spawnSync as fixtureSpawnSync} from 'node:child_process';\nexport function readActivation(args) {\n  const snapshot = fixtureReadActivation(args);\n  if (args.root_session_id.startsWith('root-native-race-') && snapshot\n      && Object.keys(snapshot.invocations).length === 0\n      && process.env.LUCA_MODEL_ROUTE_INTERLEAVE_CHILD !== '1') {\n    const env = {...process.env, LUCA_MODEL_ROUTE_INTERLEAVE_CHILD: '1'};\n    const payload = {hook_event_name: 'PreToolUse', session_id: args.root_session_id,\n      turn_id: 'turn-root', tool_use_id: 'tool-interleave-first', tool_name: 'spawn_agent',\n      tool_input: {task_name: 'first-review', message: 'judge', agent_type: 'quality-gate'},\n      permission_mode: 'default', cwd: ${JSON.stringify(ROOT)}};\n    const first = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify(payload)});\n    if (first.status !== 0 || JSON.parse(first.stdout).hookSpecificOutput.permissionDecision !== 'allow')\n      throw new Error('interleaved first dispatch failed: ' + first.stderr);\n    const bound = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify({\n        hook_event_name: 'SubagentStart', session_id: args.root_session_id,\n        agent_id: 'agent-interleave-first', agent_type: 'quality-gate', cwd: ${JSON.stringify(ROOT)}})});\n    if (bound.status !== 0) throw new Error('interleaved agent binding failed: ' + bound.stderr);\n  }\n  return snapshot;\n}\n`);
+    'function fixtureReadActivation(') + `\nimport {spawnSync as fixtureSpawnSync} from 'node:child_process';\nexport function readActivation(args) {\n  const snapshot = fixtureReadActivation(args);\n  if (args.root_session_id.startsWith('root-native-race-') && snapshot\n      && Object.keys(snapshot.invocations).length === 0\n      && process.env.LUCA_MODEL_ROUTE_INTERLEAVE_CHILD !== '1') {\n    const env = {...process.env, LUCA_MODEL_ROUTE_INTERLEAVE_CHILD: '1'};\n    const payload = {hook_event_name: 'PreToolUse', session_id: args.root_session_id,\n      turn_id: 'turn-root', tool_use_id: 'tool-interleave-first', tool_name: 'spawn_agent',\n      tool_input: {task_name: 'first-review', message: 'judge', agent_type: 'quality-gate'},\n      permission_mode: 'default', cwd: ${JSON.stringify(ROOT)},\n      transcript_path: ${JSON.stringify(transcriptRoot)} + '/rollout-2026-10-01T01-00-00-' + args.root_session_id + '.jsonl'};\n    const first = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify(payload)});\n    if (first.status !== 0 || JSON.parse(first.stdout).hookSpecificOutput.permissionDecision !== 'allow')\n      throw new Error('interleaved first dispatch failed: ' + first.stderr);\n    const bound = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify({\n        hook_event_name: 'SubagentStart', session_id: args.root_session_id,\n        agent_id: 'agent-interleave-first', agent_type: 'quality-gate', cwd: ${JSON.stringify(ROOT)}})});\n    if (bound.status !== 0) throw new Error('interleaved agent binding failed: ' + bound.stderr);\n  }\n  return snapshot;\n}\n`);
   for (const agentType of ['quality-gate', 'default']) {
     const session = `root-native-race-${agentType}`;
     start(session);
