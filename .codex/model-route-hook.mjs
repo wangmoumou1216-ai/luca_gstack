@@ -126,6 +126,17 @@ function ensureNativeActivation(payload, policy) {
   if (state.critical_failure) throw new Error('CRITICAL_FAILURE_LATCHED');
   if (unresolvedCriticalInvocation(state)) throw new Error('CRITICAL_INVOCATION_EVIDENCE_PENDING');
   if (pendingPreparation(state)) throw new Error('UNRESOLVED_CRITICAL_PREPARATION');
+  // The app can change the effective model between SessionStart and dispatch.
+  // Reconcile native turn evidence before comparing peak with the cached anchor;
+  // otherwise a former peak anchor can incorrectly suppress the model override.
+  const anchor = currentNativeAnchor(payload);
+  if (state.root_anchor.model !== anchor.model) {
+    const updated = updateRootAnchor({harness: 'codex', root_session_id: payload.session_id,
+      root_anchor: anchor, state_root: STATE_ROOT});
+    if (!['UPDATED', 'UNCHANGED'].includes(updated.disposition)) throw new Error(updated.reason);
+    state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
+    if (!state || state.critical_failure) throw new Error('CRITICAL_FAILURE_LATCHED');
+  }
   return state;
 }
 function routeForAgent(payload, agentType) {
