@@ -1,0 +1,24 @@
+{
+  "plan_id": "counterexample-split-still-cyclic",
+  "nodes": [
+    {
+      "id": "U-003-a",
+      "dependencies": [
+        "U-005"
+      ]
+    },
+    {
+      "id": "U-003-b",
+      "dependencies": [
+        "U-003-a"
+      ]
+    },
+    {
+      "id": "U-005",
+      "dependencies": [
+        "U-003-b"
+      ]
+    }
+  ],
+  "external_dependencies": []
+}

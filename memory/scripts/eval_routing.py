@@ -51,8 +51,8 @@ from pathlib import Path
 # 记忆根）：routing fixture 必须配本仓的 route-guard/routing-map 评，跟着记忆根走会跨仓错评。
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ROUTE_GUARD = REPO_ROOT / ".claude" / "hooks" / "route-guard.mjs"
-FIXTURES = REPO_ROOT / "memory" / "evals" / "routing" / "fixtures.jsonl"
-RESULTS_DIR = REPO_ROOT / "memory" / "evals" / "routing"
+FIXTURES = Path(os.environ.get("ROUTING_FIXTURES", REPO_ROOT / "memory" / "evals" / "routing" / "fixtures.jsonl"))
+RESULTS_DIR = Path(os.environ.get("ROUTING_RESULTS_DIR", REPO_ROOT / "memory" / "evals" / "routing"))
 
 # keyword 层回归门语义（2026-07-13 二轮 A-F3）：比例阈值在 N≥21 时静默失效（20/21=0.952≥0.95
 # 又能容忍单条回归，且无人提醒调阈值）。改为绝对计数 misses ≤ ALLOWED_MISSES（默认 0 =
@@ -137,13 +137,25 @@ def load_fixtures():
     if not FIXTURES.exists():
         return []
     rows = []
+    ids = set()
     # 二轮 A-F6：坏行报文件行号（json.loads 只报行内位置，永远 "line 1"，定位极差）。
     for lineno, line in enumerate(FIXTURES.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
         if not line or line.startswith("//"):
             continue
         try:
-            rows.append(json.loads(line))
+            row = json.loads(line)
+            if not isinstance(row, dict):
+                raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行必须是 JSON object")
+            missing = [key for key in ("id", "input", "expected", "layer") if not row.get(key)]
+            if missing:
+                raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行缺少字段: {','.join(missing)}")
+            if row["id"] in ids:
+                raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行重复 id: {row['id']}")
+            if row["layer"] not in {"keyword", "semantic"}:
+                raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行 layer 无效: {row['layer']}")
+            ids.add(row["id"])
+            rows.append(row)
         except json.JSONDecodeError as e:
             raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行 JSON 非法: {e}")
     return rows
@@ -171,7 +183,7 @@ def evaluate(fixtures):
 
 def keyword_rate(keyword_results):
     if not keyword_results:
-        return 1.0
+        raise ValueError("keyword denominator is zero")
     hits = sum(1 for r in keyword_results if r["correct"])
     return hits / len(keyword_results)
 
@@ -184,6 +196,9 @@ def cmd_keyword_only():
         print(f"[eval_routing] FAIL: fixtures 为空或缺失（{FIXTURES}）——回归门不允许真空通过")
         return 1
     kw, _ = evaluate(fixtures)
+    if not kw:
+        print("[eval_routing] FAIL: keyword denominator is zero（fixtures 只有 semantic 层，回归门不允许真空通过）")
+        return 1
     rate = keyword_rate(kw)
     misses = [r for r in kw if not r["correct"]]
     print(f"[eval_routing] keyword-layer 命中率: {rate:.3f} "
@@ -202,6 +217,9 @@ def cmd_keyword_only():
 def cmd_report():
     fixtures = load_fixtures()
     kw, sem = evaluate(fixtures)
+    if not kw:
+        print("[eval_routing] FAIL: keyword denominator is zero（无法生成有效命中率）")
+        return 1
     rate = keyword_rate(kw)
     print(f"=== 甲类语义路由命中率报告 ({date.today()}) ===")
     print(f"fixtures: {len(fixtures)}  (keyword={len(kw)}, semantic-dependent={len(sem)})")
@@ -220,9 +238,20 @@ def cmd_report():
 def cmd_judge():
     """导出 semantic-dependent judge 工作单（实际判官由 orchestrator/主循环起，非本脚本）。"""
     fixtures = load_fixtures()
+    if not fixtures:
+        print(f"[eval_routing] FAIL: fixtures 为空或缺失（{FIXTURES}）——盲评门不允许真空通过")
+        return 1
     _, sem = evaluate(fixtures)
+    if not sem:
+        print("[eval_routing] FAIL: semantic denominator is zero（没有可盲评的 semantic fixture）")
+        return 1
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     out_path = RESULTS_DIR / f"judge-queue-{date.today()}.jsonl"
+    key_path = RESULTS_DIR / f"judge-answer-key-{date.today()}.jsonl"
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    with open(key_path, "w", encoding="utf-8") as key:
+        for s in sem:
+            key.write(json.dumps({"eval_kind": "routing-answer-key", "id": s["id"], "expected_capability": s["expected"]}, ensure_ascii=False) + "\n")
     with open(out_path, "w", encoding="utf-8") as f:
         for s in sem:
             # 二轮 A-F4：补 scene/note（token 语义线索）+ actual_capability/reason 回填位
@@ -233,19 +262,18 @@ def cmd_judge():
                 "id": s["id"],
                 "input": s["input"],
                 "scene": s.get("scene", "unknown"),
-                "note": s.get("note", ""),
-                "expected_capability": s["expected"],
                 "routing_layer": "semantic",
                 "route_guard_actual": s["route_guard_actual"],
                 "judge_question": (
-                    f"给定框架能力面（由 dispatch 方提供），用户请求「{s['input']}」按含义应路由到"
-                    f"哪个能力？（对照 expected={s['expected']}，判 pass/fail + 一句理由）"
+                    f"给定框架能力面（由 dispatch 方提供），用户请求「{s['input']}」按含义应路由到哪个能力？"
+                    "请输出 actual_capability、verdict（pass/fail/unknown）和一句理由；不要猜测或索取标准答案。"
                 ),
                 "actual_capability": None,  # 由 judge 回填：它认为该路由到的能力
                 "verdict": None,            # 由 judge 回填 pass/fail
                 "reason": None,             # 由 judge 回填一句理由
             }, ensure_ascii=False) + "\n")
-    print(f"[eval_routing] 已导出 {len(sem)} 条 judge 工作单 → {out_path}")
+    print(f"[eval_routing] 已导出 {len(sem)} 条盲评工作单 → {out_path}")
+    print(f"[eval_routing] 独立 scorer answer key（不得交给判官）→ {key_path}")
     print("下一步：由 orchestrator/主循环对每条起独立 llm-judge（冷启动隔离），回填 verdict，"
           "再算 semantic-layer 命中率。")
     return 0

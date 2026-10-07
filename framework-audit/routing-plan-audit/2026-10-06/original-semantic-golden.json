@@ -1,0 +1,192 @@
+[
+  {
+    "id": "sem-sidebar",
+    "input": "看看我侧栏当前打开的那个页面",
+    "expected": "special:sidebar",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "muse 专属：侧栏感知，语义识别非词表"
+  },
+  {
+    "id": "sem-luca-open",
+    "input": "把这份报告在 app 里打开给我看",
+    "expected": "special:luca-open",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "muse 专属：luca-open 文件预览"
+  },
+  {
+    "id": "sem-feature-login",
+    "input": "给这个项目加一个完整的用户登录注册体系",
+    "expected": "PLAN_MODE",
+    "layer": "semantic",
+    "scene": "A",
+    "note": "实质多文件特性，口语无枚举→route-guard NONE/semantic fallback，靠语义过 Plan Agent 5 条件"
+  },
+  {
+    "id": "sem-code-api",
+    "input": "给后端设计并实现一整套订单管理的接口",
+    "expected": "PLAN_MODE",
+    "layer": "semantic",
+    "scene": "D",
+    "note": "实质工程需求，口语→NONE/semantic fallback，靠语义进工程链/Plan Agent"
+  },
+  {
+    "id": "sem-flow-full",
+    "input": "帮我把这个需求从头到原型完整跑一遍",
+    "expected": "/muse-loop-orchestrate|flow:design-chain",
+    "layer": "semantic",
+    "scene": "A",
+    "note": "标签官#18 修正：CLAUDE.md 语义兜底逐字规定'从需求到原型跑一遍完整流程'→/muse-loop-orchestrate（首选真值）；flow:design-chain 为可辩护次选。判官能力面必须含 muse-loop-orchestrate，否则答案空间放水"
+  },
+  {
+    "id": "sem-redteam",
+    "input": "把这个改动对抗性地审一遍找问题",
+    "expected": "redteam",
+    "layer": "semantic",
+    "scene": "C",
+    "note": "隐藏 skill，用户点名意图，靠语义"
+  },
+  {
+    "id": "sem-prd-novel",
+    "input": "给我们要做的 AI 语音助手写个完整 PRD",
+    "expected": "ask:research-first",
+    "layer": "semantic",
+    "scene": "A",
+    "note": "chain-check R1：目标 brainstorm+复杂且新颖+无研究输入→正确响应是先问'先调研还是直接开始'，不是直接进 brainstorm 静默 cold-start"
+  },
+  {
+    "id": "sem-prd-simple",
+    "input": "给登录页改版写个 PRD",
+    "expected": "/brainstorm",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "chain-check R1 负样本：有成熟先例→直接进 brainstorm 不打扰（防过度 ask）"
+  },
+  {
+    "id": "sem-design-out",
+    "input": "帮我出个这个功能的设计",
+    "expected": "flow:od-design",
+    "layer": "semantic",
+    "scene": "A",
+    "note": "chain-check R2：泛设计产出意图→OD-first 链（design-brief→open-design 或 adhoc），非 html-prototype"
+  },
+  {
+    "id": "sem-prototype",
+    "input": "做个原型看看效果",
+    "expected": "flow:od-design",
+    "layer": "semantic",
+    "scene": "A",
+    "note": "chain-check R2：原型意图默认 OD（design_output.primary），html-prototype 仅 fallback_trigger 命中时"
+  },
+  {
+    "id": "sem-ux-novel",
+    "input": "给 AI Agent 的多轮澄清交互设计个方案",
+    "expected": "ask:research-first|/ux-brainstorm",
+    "layer": "semantic",
+    "scene": "D",
+    "note": "chain-check R1：目标 ux-brainstorm+新颖交互无成熟先例→先问要不要 ux-research；直接进亦可辩护（多选）"
+  },
+  {
+    "id": "sem-review-own-work",
+    "input": "你 review 一遍你做的内容",
+    "expected": "review:dispatch",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "chain-check R4：泛 review 无对象词→STOP（词表有意不收泛动词，preview⊃review）；正确响应=按 R4 先判评审对象再选资产/自建编排，route-guard 出评审轴提示钉"
+  },
+  {
+    "id": "sem-review-plan-doc",
+    "input": "帮我评审一下刚才那份计划",
+    "expected": "review:dispatch",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "chain-check R4：评审对象是计划文档非页面→redteam 或自建编排；2026-07-31 前此句高置信误落 /ux-audit（强制截图），撤泛词后靠语义分流"
+  },
+  {
+    "id": "sem-review-nitpick",
+    "input": "帮我挑挑毛病",
+    "expected": "review:dispatch",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "chain-check R4：ux_audit 泛词『挑毛病』2026-07-31 撤销（零对象却硬映射到截图 skill）；撤后必须由提示钉+语义接住，否则从『错的确定』退成裸奔"
+  },
+  {
+    "id": "sem-review-acceptance-prototype",
+    "input": "验收一下这个原型有没有实现 design-brief 的决策",
+    "expected": "review:dispatch",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "2026-08-03 实现后评审补：『验收』类评审意图此前零命中评审钉；open-design 路径无 verify-prototype 等价物，兜底靠 redteam 判据挂载表 row『target 是 design-brief 产出』后半句"
+  },
+  {
+    "id": "sem-review-taste-on-prototype",
+    "input": "跑一次品味检查",
+    "expected": "review:dispatch",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "2026-08-03：已生成原型的品味复检。taste-review 删除后 8 锚点挂 redteam 判据挂载表 row1（渲染页面/原型 HTML）——实现后评审发现原挂载漏了 anchors，已补"
+  },
+  {
+    "id": "sem-review-cross-artifact-align",
+    "input": "对一下 PRD、原型和 figma 是否一致",
+    "expected": "review:dispatch",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "2026-08-03：跨产物三方对齐。实测此句落 MULTI（候选 /brainstorm、/figma-layer 均生产类，会导向去写 PRD/搭 Figma），故 MULTI 分支同步挂评审钉；R4 表已增『跨产物交付验收→自建独立评审编排，验证者须独立于生产者』"
+  },
+  {
+    "id": "sem-align-design-spec-negative",
+    "input": "帮我对齐设计稿的间距",
+    "expected": "direct",
+    "layer": "semantic",
+    "scene": "A",
+    "note": "负样本：『对齐』是生产意图非评审意图。2026-08-03 新增评审词时收窄为复合词（对齐检查/一致性检查/是否一致），此句必须不出评审钉"
+  },
+  {
+    "id": "sem-primary-data-in-hand",
+    "input": "上周做的 6 场用户访谈记录都在这个文件夹里，帮我看看说明了什么",
+    "expected": "/insight-synthesis",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "2026-08-03 可达性方案 C：一手定性数据已在手→/insight-synthesis（兜底段新增句）。与 /idea 划界=忠实结构化 vs 解读跃迁；与 muse-req-triage 靠意图消歧（筛 vs 综合）"
+  },
+  {
+    "id": "sem-idea-faithful-structuring",
+    "input": "这是今天会议的语音转写稿，帮我整理成需求文档，别加你自己的想法",
+    "expected": "/idea",
+    "layer": "semantic",
+    "scene": "A",
+    "note": "2026-08-03 盲测覆盖补漏：已有语料忠实结构化→/idea（不延展不推断）；『别加想法』是忠实 vs 解读的显式信号，与 insight-synthesis 划界"
+  },
+  {
+    "id": "sem-quick-research-single-source",
+    "input": "帮我查一下 Electron 的 before-quit 事件到底保不保证触发，看官方文档",
+    "expected": "/quick-research",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "2026-08-03 补漏：单点读一手源→quick-research（三档研究的中档）；研究轴钉已覆盖此类信号"
+  },
+  {
+    "id": "sem-compare-two-options",
+    "input": "这两个方案帮我比一比哪个更合适",
+    "expected": "compare",
+    "layer": "semantic",
+    "scene": "B",
+    "note": "2026-08-03 低频 skill 下沉：多方案对比→compare（隐藏 skill 按名调用；CLAUDE.md 隐藏节已改口——场景命中时主动提出是义务）"
+  },
+  {
+    "id": "project-gate-muse-luca-app-20260820",
+    "input": "项目是muse的luca app 啊",
+    "expected": "direct",
+    "layer": "semantic",
+    "scene": "B",
+    "matrix": "reality-correction",
+    "matrix_class": "project",
+    "note": "v3.4：名称解析是证据；agent 经 public selection 入口提交，route fixture 不再期待隐式切换",
+    "env": {
+      "ROUTE_GUARD_PROJECTS": "muse,luca-dev",
+      "ROUTE_GUARD_CURRENT_PROJECT": ""
+    }
+  }
+]

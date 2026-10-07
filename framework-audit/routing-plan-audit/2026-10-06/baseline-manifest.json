@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "project_identity": "NO_PIN",
+  "source_revision": "d211bd3c1479720836219b035ec9963d278efa49",
+  "approved_plan": {
+    "path": "/Users/luca/.codex/worktrees/dbdd/luca_gstack/framework-audit/plans/2026-10-06-routing-plan-agent-final-plan.md",
+    "sha256": "87a40cfe4b2a78e8414c8e716d9371d35d325251465e745a722859d559aede10"
+  },
+  "user_approval": "按照这个计划，去执行。执行完做验证，没问题后，提交推送并拉回本地",
+  "source_sha256": {
+    ".claude/skill-os/agent-context-manifest.json": "9c7c3d4ccfe1c0aeb1cb970617701ab8a060906ad4def72085e55b88622ef034",
+    ".claude/skill-os/routing-chain-check.md": "9be42589271e467118dceac0ca0b56ebcfed2f550deee0b6e08db2ef16589287",
+    ".claude/skill-os/runtime/workflow-mode.md": "e6573465a8d369d0da3b7a5954ff58e191ccd8315cdad69c9da505ff5d55f0f5",
+    ".claude/hooks/route-guard.mjs": "1da1fb9097d72415a300475b8514205bd597404313c9a64678397afb68f9ee7a",
+    ".claude/agents/plan-agent.md": "00ad93605d8cdaac020f72308556ae972b8f1c352139ad4518b6c762b4319813",
+    "scripts/check-quality-gates.mjs": "a28baee2e649b189d0a2c19bad07b88dd02cd691ebdf7c46027a4282d8c4ba45",
+    "memory/scripts/eval_routing.py": "f987baf3444ca22c09ef2c183a4a60fa834d1c4f8c78bb4b47e93f022e905e0d",
+    "memory/evals/routing/fixtures.jsonl": "2bc0b18c899f453a5cbc855c65c544b5c67adf7ebc676fc117809c28b84ced07",
+    "scripts/run-agent-context-ab.mjs": "3db4335f98dd14c74e96d22bdf6068fea82c8920163e74d1fe76b1cefec4d834"
+  },
+  "issues": [
+    {
+      "id": "R1",
+      "problem": "junction loading gap",
+      "unit": "U2",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "R2",
+      "problem": "lexical MULTI mandatory selection",
+      "unit": "U2",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "R3",
+      "problem": "graph read/recommendation conflict",
+      "unit": "U2",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "R4",
+      "problem": "quoted/negated plan hint authority",
+      "unit": "U2",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "P1",
+      "problem": "single Supervisor approval conflict",
+      "unit": "U3",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "P2",
+      "problem": "alias/latest persistence identity",
+      "unit": "U3",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "P3",
+      "problem": "handoff FAIL/comment false positive",
+      "unit": "U3",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "P4",
+      "problem": "split does not resolve cycle",
+      "unit": "U3",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "E1",
+      "problem": "label judge is not SUT behavior",
+      "unit": "U4",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "E2",
+      "problem": "retired active golden",
+      "unit": "U4",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    },
+    {
+      "id": "E3",
+      "problem": "empty keyword denominator green",
+      "unit": "U4",
+      "verification": "current-subject positive/negative + isolated mutation where applicable",
+      "required": true
+    }
+  ],
+  "native_denominator": {
+    "RP": 96,
+    "PO_candidate": 6,
+    "calibration_included": 4
+  },
+  "historical_results": "preserved, not rescored"
+}

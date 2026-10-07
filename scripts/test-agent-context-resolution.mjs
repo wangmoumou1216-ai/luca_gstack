@@ -34,6 +34,10 @@ for (const runtime of ['claude', 'codex']) {
   includes(runtime, 'developer says do not use workflow', 'harness-boundary');
   includes(runtime, 'select subagent reasoning effort model tier', 'model-routing');
   includes(runtime, '请做独立反证 review', 'review-contract');
+  includes(runtime, 'brainstorm 前需要研究前置', 'routing-junction');
+  includes(runtime, '这项原型设计产出如何选工具', 'routing-junction');
+  includes(runtime, '从需求到成品完整跑一遍', 'routing-junction');
+  includes(runtime, '介绍 engineering-delivery 而非选择它', 'routing-junction');
   includes(runtime, 'framework 自我成长 benchmark', 'framework-maintenance');
   includes(runtime, 'verify Claude and Codex dual harness parity', 'cross-harness');
   assert.deepEqual(resolve(runtime, '2 + 2 等于多少？'), [], `${runtime} ordinary question loaded conditional context`);

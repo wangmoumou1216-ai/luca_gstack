@@ -132,6 +132,17 @@ function prepare(assertion, type, scenario) {
   const script = join(dir, 'check script.sh');
   executable(script, `exit ${failed ? 6 : 0}`);
   mkdirSync(join(dir, 'scripts'));
+  if (type === 'handoff-field') {
+    const checker = join(dir, 'scripts/check-quality-gates.mjs');
+    writeFileSync(checker, [
+      "import { existsSync, readFileSync } from 'node:fs';",
+      "const path = process.argv[process.argv.indexOf('--handoff') + 1];",
+      `if (${JSON.stringify(toolError)}) process.exit(17);`,
+      "if (!path || !existsSync(path)) process.exit(2);",
+      "if (!readFileSync(path, 'utf8').includes('gate_result: PASS')) process.exit(" + (failed ? 1 : 2) + ");",
+      `process.exit(${failed ? 1 : 0});`,
+    ].join('\n') + '\n');
+  }
   executable(join(dir, 'scripts/verify.sh'), `exit ${failed ? 6 : 0}`);
   if (type === 'git-dir' && !failed) mkdirSync(join(dir, '.git'));
   if (scenario === 'missing') {

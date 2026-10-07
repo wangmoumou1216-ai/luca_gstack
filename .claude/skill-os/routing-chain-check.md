@@ -9,10 +9,20 @@
 
 ## 触发
 
-**R1/R2/R3/R5** 在语义路由把意图映射到目标能力之后、dispatch 之前过一遍——它们是"已选定目标后的
-junction"。**R4 在映射阶段就生效**（评审请求的失效形态恰恰是"没映射上"或"映射错"：NONE fallback 漏网、
+**R1/R2/R3/R5** 在语义路由识别目标意图之后、首次相关推荐、工具选择、preset 选择判断或 dispatch
+之前，完整读取本 owner 并应用对应 junction。**R4 在映射阶段就生效**（评审请求的失效形态恰恰是"没映射上"或"映射错"：NONE fallback 漏网、
 或词表 SINGLE 命中了对象不符的 skill），故它在 R1-R3 之前先跑。全部是语义判断（route-guard
 关键词层不参与决策，只出提示钉）；keyword 层 fixture 不测本协议，semantic 层 fixture 测。
+
+先过 Project Gate、核验 Plan 五条件与有效豁免，再接受 skill 路由。SINGLE/MULTI/NONE/PLAN_MODE
+及 wayfinder 分数命中均为候选证据；引用、否定或讨论计划不构成真实规划请求。多个独立且明确的
+意图可进入 Multi-Skill；仅当目标、范围或选择仍有真实歧义时，请用户回答一个会改变路由的问题。
+
+**图读取以推荐：** R1 只读 `optional-workflow-graph.yaml` 的 `research_default`，R2 只读
+`design_output`，R3 只读对应场景的 `recommended_paths`；在本次已有读权限内取得必要信息即可。
+这些读取不激活 Workflow、不补 workflow-state、不授予效果。先给出推荐，再等用户真实选择才
+进入 Workflow；无关 standalone 不增加图读取。已选择流程的执行读取按
+`.claude/skill-os/runtime/workflow-mode.md`，R5 继续只认显式选择。
 
 ## 五规则
 

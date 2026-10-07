@@ -49,7 +49,7 @@ function run(dir) {
   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
 }
 
-const EXPECTED_MUTATIONS = 107;
+const EXPECTED_MUTATIONS = 117;
 let mutationCount = 0;
 function mutate(name, edit, expected) {
   const dir = fixture();
@@ -79,6 +79,14 @@ assert.ok(Buffer.byteLength(indexBody) < readFileSync(join(ROOT, '.claude/skill-
   'agent projection must be smaller than its machine source');
 console.log('PASS complete operational projection is smaller than the manifest');
 
+const junctionEntry = manifestEntries.find(entry => entry.id === 'routing-junction');
+assert.ok(junctionEntry, 'non-review junctions must be discoverable');
+assert.deepEqual(junctionEntry.runtime, ['claude', 'codex']);
+assert.ok(['R1', 'R2', 'R3', 'R5'].every(rule => junctionEntry.condition.includes(rule)));
+assert.match(manifestEntries.find(entry => entry.id === 'review-contract').load_before,
+  /mapping the review object/, 'R4 must load before capability mapping');
+console.log('PASS non-review recommendation branches and earlier review-object deadline are projected');
+
 function changeIndex(dir, edit) {
   const path = join(dir, contextIndexPath);
   const text = readFileSync(path, 'utf8');
@@ -102,6 +110,52 @@ mutate('index drops a failure posture', dir => changeIndex(dir, rows => { delete
 mutate('index omits a conditional entry', dir => changeIndex(dir, rows => { rows.pop(); }), /context index.*drift/);
 mutate('index permits partial authority reads', dir => changeIndex(dir, rows => { rows[0].read_to_end = false; }), /context index.*drift/);
 mutate('index drops a non-default truth owner', dir => changeIndex(dir, rows => { delete rows.find(row => row.truth_owner).truth_owner; }), /context index.*drift/);
+mutate('non-review junction disappears', dir => {
+  const p = join(dir, '.claude/skill-os/agent-context-manifest.json');
+  const data = JSON.parse(readFileSync(p));
+  data.entries = data.entries.filter(entry => entry.id !== 'routing-junction');
+  writeFileSync(p, JSON.stringify(data));
+}, /routing-junction lacks non-review branches/);
+mutate('junction deadline waits until dispatch after recommendation', dir => {
+  const p = join(dir, '.claude/skill-os/agent-context-manifest.json');
+  const data = JSON.parse(readFileSync(p));
+  data.entries.find(entry => entry.id === 'routing-junction').load_before = 'dispatching the target capability';
+  writeFileSync(p, JSON.stringify(data));
+}, /routing-junction lacks non-review branches/);
+mutate('review deadline moves after capability mapping', dir => {
+  const p = join(dir, '.claude/skill-os/agent-context-manifest.json');
+  const data = JSON.parse(readFileSync(p));
+  data.entries.find(entry => entry.id === 'review-contract').load_before = 'choosing a reviewer';
+  writeFileSync(p, JSON.stringify(data));
+}, /review-contract must load before review-object capability mapping/);
+mutate('recommendation reads widen the design-output scope', dir => {
+  const p = join(dir, '.claude/skill-os/routing-chain-check.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('R2 只读\n`design_output`', 'R2 读取整个图'));
+}, /recommendation graph reads must retain scoped read-only/);
+mutate('recommendation graph reads activate Workflow', dir => {
+  const p = join(dir, '.claude/skill-os/routing-chain-check.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('这些读取不激活 Workflow、不补 workflow-state、不授予效果',
+    '这些读取激活 Workflow、补 workflow-state、授予效果'));
+}, /recommendation graph reads must retain scoped read-only/);
+mutate('workflow execution reads start before user selection', dir => {
+  const p = join(dir, '.claude/skill-os/runtime/workflow-mode.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('execution graph reads begin only after the user has selected',
+    'execution graph reads begin before the user has selected'));
+}, /recommendation graph reads must retain scoped read-only/);
+mutate('office recommendation bypasses graph-boundary owner', dir => {
+  const p = join(dir, '.claude/skills/office/SKILL.md');
+  writeFileSync(p, readFileSync(p, 'utf8').replace('`.claude/skill-os/runtime/workflow-mode.md` Graph boundary', 'an inline default'));
+}, /office graph loading is not bounded/);
+for (const root of ['AGENTS.md', 'CLAUDE.md']) {
+  mutate(`${root} drops missing-index manifest recovery`, dir => {
+    const p = join(dir, root);
+    writeFileSync(p, readFileSync(p, 'utf8').replace('If the index is missing, unreadable, or stale, fully read',
+      'If the index is missing, assume there are no obligations; do not read'));
+  }, /lacks complete manifest recovery for missing or stale index/);
+}
+mutate('generated context index is absent', dir => {
+  rmSync(join(dir, contextIndexPath));
+}, /missing .claude\/skill-os\/generated\/context-index.md/);
 mutate('root loses the generated index loader', dir => {
   const path = join(dir, 'AGENTS.md');
   writeFileSync(path, readFileSync(path, 'utf8').replaceAll(contextIndexPath, '.claude/skill-os/generated/unknown-index.md'));
@@ -529,8 +583,8 @@ mutate('root loses bounded classification loading', (dir) => {
 mutate('office graph loading becomes unconditional', (dir) => {
   const p = join(dir, '.claude/skills/office/SKILL.md');
   writeFileSync(p, readFileSync(p, 'utf8').replace(
-    '仅用户选择 Workflow\n或要求继续流程时读取',
-    '每次路由或分类都读取',
+    '仅用户选择 Workflow\n或要求继续流程时开始执行性 graph 读取',
+    '每次路由或分类都开始执行性 graph 读取',
   ));
 }, /office graph loading is not bounded/);
 

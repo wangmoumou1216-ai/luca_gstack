@@ -1,0 +1,7 @@
+{
+  "source": "memory/scripts/eval_routing.py",
+  "input": "semantic-only fixture",
+  "exit_code": 0,
+  "stdout": "[eval_routing] keyword-layer 命中率: 1.000 (0/0)  容忍回归数=0\n[eval_routing] PASS\n",
+  "stderr": ""
+}
