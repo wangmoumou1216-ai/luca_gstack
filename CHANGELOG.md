@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed（2026-10-07 · Codex 当前模型路由）
 
+- 嵌套原生派发从可信 transcript 和既有父子绑定解析真实调用者，并将启动、完成证据归到同一次调用；拒绝错误祖先、陈旧代次和歧义来源，保留祖先待决调用与失败锁。为什么：worker 再派发子 Agent 时，宿主回调可能保留祖先 session ID，导致身份误判或完成证据归错会话。
 - 原生派发前用可信当前 turn 校准缓存的根模型，再按原模型角色选择子 Agent；拒绝错误或缺失来源，保留关键失败锁、冷审隔离和用户 effort。为什么：会话换模型后，旧 peak 缓存可能漏传判官模型，导致真实采用检查拒绝。
 
 ### Fixed（2026-10-06 · 设计 Workflow 核心合同）

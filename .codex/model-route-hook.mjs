@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Codex-native adapter for the shared model-only route policy.
 import {createHash} from 'node:crypto';
-import {realpathSync, readFileSync} from 'node:fs';
+import {realpathSync, readFileSync, readdirSync} from 'node:fs';
 import {homedir} from 'node:os';
 import {basename, dirname, isAbsolute, relative, resolve as resolvePath} from 'node:path';
 import {spawnSync} from 'node:child_process';
@@ -225,6 +225,7 @@ function handlePreToolUse(payload) {
     const command = payload.tool_input?.command;
     if (!text(command) || !runnerCommand(command)) return {};
     try {
+      payload = nativeCallerPayload(payload);
       ensureNativeActivation(payload, readPolicy());
       return allow({...payload.tool_input,
         command: `LUCA_MODEL_ROUTE_ROOT_SESSION_ID=${shellQuote(payload.session_id)} ${command}`});
@@ -239,6 +240,7 @@ function handlePreToolUse(payload) {
   const agentType = text(payload.tool_input.agent_type) ? payload.tool_input.agent_type : 'default';
   let routed, modelPreparationStarted = false;
   try {
+    payload = nativeCallerPayload(payload);
     routed = routeForAgent(payload, agentType);
     const unbound = Object.values(routed.state.invocations).some(call => call.status === 'pending'
       && call.route_harness === 'codex-native' && !text(call.external_identity?.agent_id));
@@ -344,11 +346,23 @@ function reconcileNativeStarted(payload, state) {
   });
   if (bound.disposition !== 'BOUND') throw new Error(`native started correlation failed: ${bound.reason}`);
   // This changes identity only. Pending completion and critical gates remain intact.
-  return ensureNativeActivation(payload, readPolicy());
+  return readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
 }
 
 function handleSubagentStart(payload) {
   if (!text(payload.session_id) || !text(payload.agent_id) || !text(payload.agent_type)) return {};
+  try {
+    const path = payload.agent_transcript_path
+      || nativeTranscriptForSession(payload.agent_id, payload.session_id);
+    const {meta} = nativeMeta(path, payload.session_id);
+    if (meta.id !== payload.agent_id
+        || (meta.source?.subagent?.thread_spawn?.agent_role || 'default') !== payload.agent_type) {
+      throw new Error('NATIVE_CALLER_ANCESTRY_MISMATCH');
+    }
+    payload = nativeStopPayload({...payload, agent_transcript_path: path});
+  } catch (error) {
+    return {systemMessage: `model-route start identity unavailable: ${error?.message || error}`};
+  }
   const state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
   if (!state) return {systemMessage: 'model-route could not find the parent activation'};
   const existing = Object.values(state.invocations).filter(call => call.external_identity?.agent_id === payload.agent_id);
@@ -381,17 +395,96 @@ function handleSubagentStart(payload) {
   return {};
 }
 
-function safeTranscript(path, sessionId) {
-  if (!text(path) || !isAbsolute(path)) throw new Error('TRANSCRIPT_MISSING');
+function nativeTranscriptRoot(sessionId) {
   const scope = readHostLaunchSourceScope(ROOT, sessionId);
   const expectedRoot = scope ? resolvePath(scope.sourceRoot.realpath, 'sessions') : TRANSCRIPT_ROOT;
   const root = realpathSync(expectedRoot);
   if (root !== resolvePath(expectedRoot)) throw new Error('TRANSCRIPT_ROOT_NOT_CANONICAL');
+  return root;
+}
+function safeTranscript(path, sessionId) {
+  if (!text(path) || !isAbsolute(path)) throw new Error('TRANSCRIPT_MISSING');
+  const root = nativeTranscriptRoot(sessionId);
   const actual = realpathSync(path);
   if (actual !== resolvePath(path)) throw new Error('TRANSCRIPT_NOT_CANONICAL');
   const rel = relative(root, actual);
   if (rel.startsWith('..') || isAbsolute(rel)) throw new Error('TRANSCRIPT_OUTSIDE_CODEX_SESSIONS');
   return actual;
+}
+function nativeMeta(path, sessionId) {
+  const actual = safeTranscript(path, sessionId);
+  const events = readFileSync(actual, 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+  const metas = events.filter(event => event.type === 'session_meta');
+  if (metas.length !== 1 || events[0] !== metas[0] || !text(metas[0].payload?.id)) {
+    throw new Error('ROOT_TRANSCRIPT_IDENTITY_MISMATCH');
+  }
+  return {actual, events, meta: metas[0].payload};
+}
+
+function nativeTranscriptForSession(sessionId, scopeSessionId) {
+  if (!text(sessionId) || !/^[A-Za-z0-9-]+$/.test(sessionId)) throw new Error('NATIVE_CALLER_SOURCE_MISSING');
+  const matches = [];
+  function scan(folder, depth) {
+    for (const entry of readdirSync(folder, {withFileTypes: true})) {
+      const path = resolvePath(folder, entry.name);
+      if (entry.isDirectory() && depth < 3 && /^\d{2,4}$/.test(entry.name)) scan(path, depth + 1);
+      else if (entry.isFile() && entry.name.startsWith('rollout-')
+        && entry.name.endsWith(`-${sessionId}.jsonl`)) matches.push(path);
+      if (matches.length > 1) throw new Error('NATIVE_CALLER_SOURCE_AMBIGUOUS');
+    }
+  }
+  scan(nativeTranscriptRoot(scopeSessionId), 0);
+  if (matches.length !== 1) throw new Error('NATIVE_CALLER_SOURCE_MISSING');
+  return matches[0];
+}
+
+// Native nested hooks can retain the immediate parent's session_id while
+// transcript_path identifies the acting thread. Resolve that edge only from
+// native metadata and the parent's existing, current activation binding.
+function nativeCallerPayload(payload) {
+  const {meta} = nativeMeta(payload.transcript_path, payload.session_id);
+  if (meta.id === payload.session_id) return payload;
+  const spawn = meta.source?.subagent?.thread_spawn;
+  const parent = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
+  const calls = Object.values(parent?.invocations || {}).filter(call =>
+    call.external_identity?.agent_id === meta.id);
+  const call = calls[0];
+  if (meta.session_id !== payload.session_id || meta.parent_thread_id !== payload.session_id
+      || spawn?.parent_thread_id !== payload.session_id || meta.thread_source !== 'subagent'
+      || !Number.isSafeInteger(spawn.depth) || spawn.depth < 1 || spawn.depth > 32
+      || parent?.status !== 'active' || parent.critical_failure || calls.length !== 1
+      || call.activation_id !== parent.activation_id || call.root_generation !== parent.root_generation
+      || !['pending', 'accepted'].includes(call.status)
+      || call.route_harness !== 'codex-native'
+      || call.external_identity.agent_type !== (spawn.agent_role || 'default')) {
+    throw new Error('NATIVE_CALLER_ANCESTRY_MISMATCH');
+  }
+  const resolved = {...payload, session_id: meta.id};
+  currentNativeRecords(resolved);
+  return resolved;
+}
+
+function nativeStopPayload(payload) {
+  // Keep direct-call evidence failures on the normal acceptance/latch path.
+  const direct = findInvocationByExternalIdentity({harness: 'codex', root_session_id: payload.session_id,
+    field: 'agent_id', value: payload.agent_id, state_root: STATE_ROOT});
+  let meta;
+  try { ({meta} = nativeMeta(payload.agent_transcript_path, payload.session_id)); }
+  catch (error) { if (direct) return payload; throw error; }
+  if (direct && (meta.id !== payload.agent_id || meta.parent_thread_id === payload.session_id)) return payload;
+  if (meta.id !== payload.agent_id) throw new Error('NATIVE_CALLER_ANCESTRY_MISMATCH');
+  if (meta.parent_thread_id === payload.session_id) return payload;
+  const caller = readActivation({harness: 'codex', root_session_id: meta.parent_thread_id, state_root: STATE_ROOT});
+  // SessionStart and recovery store different anchor provenance. Locate the
+  // unique native caller record, then verify its identity and bound parent edge.
+  const path = nativeTranscriptForSession(meta.parent_thread_id, payload.session_id);
+  const {events} = nativeMeta(path, payload.session_id);
+  const context = events.filter(event => event.type === 'turn_context').at(-1)?.payload;
+  const resolved = nativeCallerPayload({...payload, transcript_path: path, turn_id: context?.turn_id});
+  if (resolved.session_id !== meta.parent_thread_id) throw new Error('NATIVE_CALLER_ANCESTRY_MISMATCH');
+  if (caller?.status !== 'active' || caller.critical_failure) throw new Error('ACTIVATION_MISSING');
+  reconcileNativeStarted(resolved, caller);
+  return {...payload, session_id: resolved.session_id};
 }
 function currentNativeRecords(payload) {
   const actual = safeTranscript(payload.transcript_path, payload.session_id);
@@ -477,6 +570,10 @@ function transcriptEvidence(path, rootSessionId, agentId, agentType,
 }
 
 function handleSubagentStop(payload) {
+  try { payload = nativeStopPayload(payload); }
+  catch (error) {
+    return {continue: false, stopReason: `model-route caller refused: ${error?.message || error}`};
+  }
   const call = findInvocationByExternalIdentity({
     harness: 'codex', root_session_id: payload.session_id,
     field: 'agent_id', value: payload.agent_id, state_root: STATE_ROOT,
