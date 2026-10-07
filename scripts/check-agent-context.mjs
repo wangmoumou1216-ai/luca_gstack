@@ -34,6 +34,9 @@ for (const path of roots) {
   if (!rootText[path].includes('.claude/skill-os/generated/skill-catalog.md')) errors.push(`${path} lacks skill catalog loader`);
   if (!rootText[path].includes('.claude/skill-os/generated/context-index.md')) errors.push(`${path} lacks conditional context index loader`);
   if (!rootText[path].includes('.claude/skill-os/agent-context-manifest.json')) errors.push(`${path} lacks conditional context manifest loader`);
+  if (!/If the index is missing, unreadable, or stale, fully read\s+`\.claude\/skill-os\/agent-context-manifest\.json`/.test(rootText[path])) {
+    errors.push(`${path} lacks complete manifest recovery for missing or stale index`);
+  }
   if (!rootText[path].includes('≥ 3 files created or modified')) errors.push(`${path} Plan file trigger must specify creation or modification`);
   if (!rootText[path].includes('.claude/skill-os/runtime/workflow-mode.md')
       || !rootText[path].includes('.claude/skill-os/generated/input-modes/<key>.json')) {
@@ -113,6 +116,20 @@ for (const entry of entries.filter((item) => String(item.target || '').startsWit
 }
 
 const workflowEntry = entries.find((entry) => entry.id === 'workflow-mode');
+const junctionEntry = entries.find(entry => entry.id === 'routing-junction');
+const reviewEntry = entries.find(entry => entry.id === 'review-contract');
+if (junctionEntry?.target !== '.claude/skill-os/routing-chain-check.md'
+    || JSON.stringify(junctionEntry?.runtime) !== JSON.stringify(['claude', 'codex'])
+    || !['R1', 'R2', 'R3', 'R5'].every(rule => junctionEntry?.condition?.includes(rule))
+    || !['recommending research first', 'choosing a design-output tool', 'recommending a workflow', 'interpreting preset selection']
+      .every(action => junctionEntry?.load_before?.includes(action))
+    || !/neither lexical candidates nor graph reads select a workflow or grant effects/.test(junctionEntry?.fallback || '')) {
+  errors.push('routing-junction lacks non-review branches, pre-recommendation deadlines, or non-authorization fallback');
+}
+if (reviewEntry?.target !== '.claude/skill-os/routing-chain-check.md'
+    || !/mapping the review object to a capability/.test(reviewEntry?.load_before || '')) {
+  errors.push('review-contract must load before review-object capability mapping');
+}
 const prototypeEntry = entries.find(entry => entry.id === 'prototype-delivery');
 if (prototypeEntry?.target !== '.claude/skill-os/runtime/prototype-delivery.md'
     || JSON.stringify(prototypeEntry?.runtime) !== JSON.stringify(['claude', 'codex'])
@@ -131,6 +148,19 @@ if (!workflowMode.includes('<!-- FILE_END: skill-os/runtime/workflow-mode.md -->
     || !/missing, unreadable, or proven stale|缺失、不可读或已证实过期/.test(workflowMode)
     || !/no specific input-mode override|无特定.*override/.test(workflowMode)) {
   errors.push('workflow-mode lacks selected-view, fallback, missing-key, or EOF contract');
+}
+const junction = read('.claude/skill-os/routing-chain-check.md');
+if (!/R1 只读[\s\S]{0,100}`research_default`/.test(junction)
+    || !/R2 只读[\s\S]{0,30}`design_output`/.test(junction)
+    || !/R3 只读对应场景的 `recommended_paths`/.test(junction)
+    || !/这些读取不激活 Workflow、不补 workflow-state、不授予效果/.test(junction)
+    || !/等用户真实选择才[\s\S]{0,15}进入 Workflow/.test(junction)
+    || !/无关 standalone 不增加图读取/.test(junction)
+    || !/R1\/R2\/R3 recommendation branches[\s\S]{0,100}only scoped[\s\S]{0,20}read-only/.test(workflowMode)
+    || !/does not select or activate a[\s\S]{0,15}Workflow, write workflow-state, or grant effects/.test(workflowMode)
+    || !/execution graph reads begin only after the user has selected/.test(workflowMode)
+    || !/Unrelated standalone invocation adds no graph read/.test(workflowMode)) {
+  errors.push('recommendation graph reads must retain scoped read-only consultation and user-selected activation');
 }
 
 // Resolve the exact closed set from the same validated YAML authority as the builder.
@@ -431,7 +461,9 @@ if (!retiredNames.has('figma-layer')) errors.push('required figma-layer retireme
 
 const office = read('.claude/skills/office/SKILL.md');
 if (!/only user selected Workflow|仅用户选择 Workflow/.test(office)
-    || !/只做路由、分类或 skill 合同判断时[\s\S]{0,80}不加载[\s\S]{0,60}graph/.test(office)
+    || !/只做路由、分类或 skill 合同判断时不加载静态视图或源表/.test(office)
+    || !/R1\/R2\/R3 的限定只读推荐图读取[\s\S]{0,100}workflow-mode\.md` Graph boundary/.test(office)
+    || !/其余 standalone 不增加 graph 读取，推荐不激活 Workflow/.test(office)
     || !/实际执行 skill 且输入模式条件命中时[\s\S]{0,80}先完整读取[\s\S]{0,80}workflow-mode\.md[\s\S]{0,100}再只读取所选 skill[\s\S]{0,100}generated\/input-modes\/<key>\.json/.test(office)) {
   errors.push('office graph loading is not bounded to Workflow execution');
 }

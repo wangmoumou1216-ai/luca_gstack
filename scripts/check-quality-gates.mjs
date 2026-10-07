@@ -9,6 +9,23 @@ const CRITERIA_RE = /^criteria:[ \t]*$/m;
 const CRITERIA_BLOCK_RE = /^criteria:[ \t]*\r?\n((?:[ \t]+-[^\r\n]*(?:\r?\n|$))+)/m;
 const CRITERION_LINE_RE = /^[ \t]*-[ \t]*["']?\[(C\d+)\].*?(PASS|FAIL|UNKNOWN).*$/gm;
 
+function exactHandoffText(content) {
+  const lines = content.split(/\r?\n/);
+  const kept = [];
+  let fenced = false;
+  for (const line of lines) {
+    if (/^\s*```/.test(line)) { fenced = !fenced; continue; }
+    if (!fenced && !/^\s*#/.test(line)) kept.push(line);
+  }
+  return kept.join('\n');
+}
+
+function exactGateValues(content) {
+  const clean = exactHandoffText(content);
+  return [...clean.matchAll(/^gate_result:[ \t]*(PASS|FAIL|CONDITIONAL_PASS)(?:[ \t]+\([^\r\n)]+\))?[ \t]*$/gm)]
+    .map((match) => match[1]);
+}
+
 function read(path) {
   return readFileSync(join(root, path), 'utf8');
 }
@@ -19,6 +36,7 @@ const args = process.argv.slice(2);
 let requested = null;
 let sessionId = null;
 let frameworkOnly = false;
+let requiredGate = null;
 for (let i = 0; i < args.length; i++) {
   const flag = args[i];
   if (flag === '--framework') frameworkOnly = true;
@@ -32,9 +50,15 @@ for (let i = 0; i < args.length; i++) {
       assert.equal(sessionId, null, 'duplicate --project-session');
       sessionId = value;
     }
+  } else if (flag === '--require-gate') {
+    const value = args[++i];
+    assert.equal(requiredGate, null, 'duplicate --require-gate');
+    assert.equal(value, 'PASS', '--require-gate only accepts PASS');
+    requiredGate = value;
   } else throw new Error(`unknown argument: ${flag}`);
 }
 assert.ok(!frameworkOnly || (!requested && !sessionId), '--framework cannot be combined with project or handoff scope');
+assert.ok(requiredGate === null || requested !== null, '--require-gate requires --handoff');
 
 let projectRoot = null;
 if (sessionId !== null) {
@@ -77,9 +101,17 @@ if (requested !== null) {
   assert.match(handoffPath, /-handoff\.md$/, 'handoff validator only accepts *-handoff.md');
   assert.equal(existsSync(handoffPath), true, `handoff file not found: ${requested}`);
   const content = readFileSync(handoffPath, 'utf8');
-  assert.match(content, GATE_RE, `${requested} missing gate_result`);
-  assert.match(content, CRITERIA_RE, `${requested} missing criteria block`);
-  const criteriaBlock = content.match(CRITERIA_BLOCK_RE);
+  const exactContent = exactHandoffText(content);
+  const gateValues = exactGateValues(content);
+  if (requiredGate !== null) {
+    assert.equal(gateValues.length, 1, `${requested} requires exactly one gate_result field`);
+    assert.equal(gateValues[0], requiredGate, `${requested} gate_result must be ${requiredGate}`);
+  } else {
+    assert.match(content, GATE_RE, `${requested} missing gate_result`);
+  }
+  const validationContent = requiredGate !== null ? exactContent : content;
+  assert.match(validationContent, CRITERIA_RE, `${requested} missing criteria block`);
+  const criteriaBlock = validationContent.match(CRITERIA_BLOCK_RE);
   assert.ok(criteriaBlock, `${requested} criteria block must contain bullet lines`);
   const bullets = criteriaBlock[1].split(/\r?\n/).filter((line) => line.trim());
   const criteria = [...criteriaBlock[1].matchAll(CRITERION_LINE_RE)];

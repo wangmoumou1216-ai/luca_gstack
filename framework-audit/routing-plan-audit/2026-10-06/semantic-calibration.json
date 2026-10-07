@@ -1,0 +1,280 @@
+[
+  {
+    "id": "sem-sidebar",
+    "input": "看看我侧栏当前打开的那个页面",
+    "prior_expected": "special:sidebar",
+    "expected": "special:sidebar",
+    "context": "LUCA_APP支持该读取，当前selection未核验；先解析真实selection，不猜页面。",
+    "owners": [
+      ".claude/skill-os/runtime/luca-app.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-luca-open",
+    "input": "把这份报告在 app 里打开给我看",
+    "prior_expected": "special:luca-open",
+    "expected": "special:luca-open",
+    "context": "用户提供本次报告精确文件路径；只打开该文件。",
+    "owners": [
+      ".claude/skill-os/runtime/luca-app.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-feature-login",
+    "input": "给这个项目加一个完整的用户登录注册体系",
+    "prior_expected": "PLAN_MODE",
+    "expected": "PLAN_MODE",
+    "context": "本测试已验证当前项目；完整登录体系需至少3文件，没有已批准计划。",
+    "owners": [
+      ".claude/skill-os/runtime/project-session.md",
+      ".claude/agents/plan-agent.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-code-api",
+    "input": "给后端设计并实现一整套订单管理的接口",
+    "prior_expected": "PLAN_MODE",
+    "expected": "PLAN_MODE",
+    "context": "本测试已验证当前项目；订单API工作需至少3文件，没有已批准计划。",
+    "owners": [
+      ".claude/skill-os/runtime/project-session.md",
+      ".claude/agents/plan-agent.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-flow-full",
+    "input": "帮我把这个需求从头到原型完整跑一遍",
+    "prior_expected": "/muse-loop-orchestrate|flow:design-chain",
+    "expected": "flow:design-chain",
+    "context": "新功能场景已确认，尚未选择Workflow；先推荐并await真实选择。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-redteam",
+    "input": "把这个改动对抗性地审一遍找问题",
+    "prior_expected": "redteam",
+    "expected": "review:dispatch",
+    "context": "未提供改动是代码还是计划文档的对象事实；先澄清对象，不因对抗一词选redteam。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-prd-novel",
+    "input": "给我们要做的 AI 语音助手写个完整 PRD",
+    "prior_expected": "ask:research-first",
+    "expected": "ask:research-first",
+    "context": "项目已确认；跨阶段复杂工作，新机制无成熟先例，无研究输入；Plan前置与R1研究决定均适用。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-prd-simple",
+    "input": "给登录页改版写个 PRD",
+    "prior_expected": "/brainstorm",
+    "expected": "/brainstorm",
+    "context": "项目已确认；成熟单页登录文案需求，已有输入，无独立Plan触发。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-design-out",
+    "input": "帮我出个这个功能的设计",
+    "prior_expected": "flow:od-design",
+    "expected": "flow:od-design",
+    "context": "已验证项目；已有已确认需求，无用户工具选择；standalone推荐OD，不静默启动全链。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-prototype",
+    "input": "做个原型看看效果",
+    "prior_expected": "flow:od-design",
+    "expected": "flow:od-design",
+    "context": "已验证项目；已有已确认需求，无用户工具选择；standalone默认OD。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-ux-novel",
+    "input": "给 AI Agent 的多轮澄清交互设计个方案",
+    "prior_expected": "ask:research-first|/ux-brainstorm",
+    "expected": "ask:research-first",
+    "context": "项目已确认；跨阶段复杂且新颖，无研究输入和成熟先例；先Plan及研究决定。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-review-own-work",
+    "input": "你 review 一遍你做的内容",
+    "prior_expected": "review:dispatch",
+    "expected": "review:dispatch",
+    "context": "最近产物类型未给出；先确认实际对象并独立评审。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-review-plan-doc",
+    "input": "帮我评审一下刚才那份计划",
+    "prior_expected": "review:dispatch",
+    "expected": "review:dispatch",
+    "context": "本次exact计划文档已定位；评审计划而非渲染页面。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-review-nitpick",
+    "input": "帮我挑挑毛病",
+    "prior_expected": "review:dispatch",
+    "expected": "review:dispatch",
+    "context": "对象未给出；先定位对象，再按R4选择评审形态。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-review-acceptance-prototype",
+    "input": "验收一下这个原型有没有实现 design-brief 的决策",
+    "prior_expected": "review:dispatch",
+    "expected": "review:dispatch",
+    "context": "本次exact原型与design-brief已提供，跨产物一致性独立评审。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-review-taste-on-prototype",
+    "input": "跑一次品味检查",
+    "prior_expected": "review:dispatch",
+    "expected": "review:dispatch",
+    "context": "当前exact渲染原型与截图已给出，按页面评审资产；不以退役taste入口路由。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-review-cross-artifact-align",
+    "input": "对一下 PRD、原型和 figma 是否一致",
+    "prior_expected": "review:dispatch",
+    "expected": "review:dispatch",
+    "context": "本次PRD/原型/Figma产物已明确；自建独立跨产物评审，不调用生产skill来重新生成。",
+    "owners": [
+      ".claude/skill-os/routing-chain-check.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-align-design-spec-negative",
+    "input": "帮我对齐设计稿的间距",
+    "prior_expected": "direct",
+    "expected": "direct",
+    "context": "当前已打开设计稿，只机械调整一个间距；无评审、工具切换或新文件请求。",
+    "owners": [
+      ".claude/skill-os/generated/skill-catalog.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-primary-data-in-hand",
+    "input": "上周做的 6 场用户访谈记录都在这个文件夹里，帮我看看说明了什么",
+    "prior_expected": "/insight-synthesis",
+    "expected": "/insight-synthesis",
+    "context": "用户授权的一手访谈资料已提供；意图是解释与综合，不只是忠实转写。",
+    "owners": [
+      ".claude/skill-os/generated/skill-catalog.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-idea-faithful-structuring",
+    "input": "这是今天会议的语音转写稿，帮我整理成需求文档，别加你自己的想法",
+    "prior_expected": "/idea",
+    "expected": "/idea",
+    "context": "用户已有语料且要求忠实结构化；不扩展、不推断。",
+    "owners": [
+      ".claude/skill-os/generated/skill-catalog.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-quick-research-single-source",
+    "input": "帮我查一下 Electron 的 before-quit 事件到底保不保证触发，看官方文档",
+    "prior_expected": "/quick-research",
+    "expected": "/quick-research",
+    "context": "仅单一明确问题与官方来源，无深度研究或多阶段请求。",
+    "owners": [
+      ".claude/skill-os/generated/skill-catalog.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "sem-compare-two-options",
+    "input": "这两个方案帮我比一比哪个更合适",
+    "prior_expected": "compare",
+    "expected": "compare",
+    "context": "两份既有方案已提供；只比较，不代用户决定取舍。",
+    "owners": [
+      ".claude/skill-os/generated/skill-catalog.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  },
+  {
+    "id": "project-gate-muse-luca-app-20260820",
+    "input": "项目是muse的luca app 啊",
+    "prior_expected": "direct",
+    "expected": "project:gate",
+    "context": "NO_PIN；muse是已存在唯一命名项目；经public selection门，无隐式切换或场景B推断。",
+    "owners": [
+      ".claude/skill-os/runtime/project-session.md"
+    ],
+    "disposition": "CALIBRATED",
+    "interpretation": "expected is a label audit target; full gate order and actual behavior require RP/PO native evidence"
+  }
+]

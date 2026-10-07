@@ -1299,7 +1299,7 @@ function runRouteGuard(cwd, prompt) {
 
 {
   const result = runRouteGuard(makeRouteFixture(), '对比两个版本');
-  assert.match(result.stdout, /建议调用.*\/alpha/, 'should route to alpha');
+  assert.match(result.stdout, /(?:建议调用|SINGLE 候选[^\n]*\/alpha)/, 'should route to alpha');
   assert.match(result.stdout, /📏 alpha 活跃规则/, 'should auto-surface alpha rules at routing time');
   assert.match(result.stdout, /R-TEST-001/, 'should include the matched rule id');
   console.log('PASS route-guard auto-injects active rules for the matched skill');
@@ -1307,7 +1307,7 @@ function runRouteGuard(cwd, prompt) {
 
 {
   const result = runRouteGuard(makeRouteFixture(), '比较一下两个版本');
-  assert.match(result.stdout, /建议调用.*\/beta/, 'should route to beta');
+  assert.match(result.stdout, /(?:建议调用|SINGLE 候选[^\n]*\/beta)/, 'should route to beta');
   assert.doesNotMatch(result.stdout, /活跃规则/, 'no rule block for a skill without rules');
   console.log('PASS route-guard stays silent when the matched skill has no rules');
 }

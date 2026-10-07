@@ -53,8 +53,9 @@ python3 .claude/observability/scripts/get_rules.py office "*" 2>/dev/null || tru
 `.claude/skill-os/runtime/workflow-mode.md`，再只读取所选 skill 的完整静态视图
 `.claude/skill-os/generated/input-modes/<key>.json`；健康视图缺失、不可读或已证实过期时，
 才按 owner 的受控回退完整读取 `.claude/skill-os/input-modes.yaml`。仅用户选择 Workflow
-或要求继续流程时读取 `optional-workflow-graph.yaml`。只做路由、分类或 skill 合同判断时
-不加载静态视图、源表或 graph：
+或要求继续流程时开始执行性 graph 读取。只做路由、分类或 skill 合同判断时不加载静态视图或源表；
+R1/R2/R3 的限定只读推荐图读取先完整消费 `.claude/skill-os/runtime/workflow-mode.md` Graph boundary，
+其余 standalone 不增加 graph 读取，推荐不激活 Workflow：
 ```
 .claude/skill-os/runtime/workflow-mode.md
 .claude/skill-os/generated/input-modes/<key>.json

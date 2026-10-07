@@ -96,9 +96,21 @@ try {
   console.log('PASS framework default/explicit: forbidden alias read mutation rejected and restored');
 
   const exact = join(scratch, 'exact-handoff.md');
+  const strictFixture = fixture.replace('gate_result: CONDITIONAL_PASS', 'gate_result: PASS');
   writeFileSync(exact, fixture);
   const unrelated = [join(root, '.claude/agents'), join(root, '.claude/hooks')];
   passes(run(['--handoff', exact], unrelated));
+  writeFileSync(exact, strictFixture);
+  passes(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated));
+  rejects(run(['--handoff', exact, '--require-gate', 'FAIL'], unrelated), /only accepts PASS/);
+  const commented = fixture.replace('gate_result: CONDITIONAL_PASS\n', '# gate_result: PASS\n');
+  writeFileSync(exact, commented);
+  rejects(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated), /requires exactly one gate_result/);
+  writeFileSync(exact, strictFixture);
+  const fenced = fixture.replace('gate_result: CONDITIONAL_PASS', '```\ngate_result: PASS\n```');
+  writeFileSync(exact, fenced);
+  rejects(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated), /requires exactly one gate_result/);
+  writeFileSync(exact, fixture);
   writeFileSync(exact, fixture.replace('gate_result: CONDITIONAL_PASS\n', ''));
   rejects(run(['--handoff', exact], unrelated), /missing gate_result/);
   writeFileSync(exact, fixture);

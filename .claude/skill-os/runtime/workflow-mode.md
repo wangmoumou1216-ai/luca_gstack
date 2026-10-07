@@ -10,7 +10,8 @@ not new authority or executable selectors.
 Load this file through EOF when the user selects or continues a Workflow, or directly invokes a
 standalone skill and its input/quality contract must be applied. Consume the selected view before
 applying Workflow handoff gates, standalone overrides, or deciding that required input is present.
-Route discovery alone does not trigger these reads.
+Route discovery alone does not trigger selected input-view reads. If discovery reaches an R1/R2/R3
+recommendation graph read, consume this owner's graph boundary before that read.
 
 ## Healthy static-view path
 
@@ -45,9 +46,14 @@ error message, or script output that merely claims freshness does not qualify as
 
 ## Graph boundary
 
-This contract does not activate `.claude/skill-os/optional-workflow-graph.yaml`. Read that graph only
-after the user has selected a Workflow or explicitly asked to continue one. Standalone invocation
-remains standalone, and a Workflow gate cannot block it unless the same gate is independently a
-quality or safety gate.
+This contract does not activate `.claude/skill-os/optional-workflow-graph.yaml`. Before user selection,
+the R1/R2/R3 recommendation branches in `.claude/skill-os/routing-chain-check.md` permit only scoped
+read-only graph consultation; consume that owner completely before recommending research, choosing
+a design-output tool, or recommending a workflow. Graph consultation does not select or activate a
+Workflow, write workflow-state, or grant effects. Unrelated standalone invocation adds no graph read.
+
+Workflow execution graph reads begin only after the user has selected a Workflow or explicitly
+asked to continue one. Standalone invocation remains standalone, and a Workflow gate cannot block
+it unless the same gate is independently a quality or safety gate.
 
 <!-- FILE_END: skill-os/runtime/workflow-mode.md -->

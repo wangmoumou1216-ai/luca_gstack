@@ -21,7 +21,7 @@ Claude 兼容路径仍按 `fable_whitelist` P2 显式传 `model: fable`（无 pi
        ↓
   Plan Agent 输出执行计划
        ↓
-  主 Agent 展示计划 [Supervisor/Hierarchical → 等用户确认]
+  主 Agent 展示计划 [Supervisor/Hierarchical → 等 scope-matched 用户确认]
        ↓
   进入 Orchestrator Free Task Mode → 按计划执行
 ```
@@ -416,7 +416,19 @@ Wave 2（U001 完成后）: [U003] [U005]    ← Dependencies 全在 Wave 1
 Wave 3（U003+U005 完成后）: [U006]      ← 最终汇聚节点
 ```
 
-循环检测：若发现 U3→U5→U3，分裂其中一个 U-block，原 ID 留空。
+循环检测：若发现 U3→U5→U3，分裂其中一个 U-block，原 ID 留空；分裂或重排后必须重新执行
+拓扑检查，直到没有残环。只要存在残环、未知依赖、自环、空图或未通过的外部依赖，就不能发布
+可执行 Wave，也不能把任一节点标为 ready。
+可执行图的机械检查使用：
+首次派发或 effect 前，调用方必须分别运行 `scripts/check-plan-approval.mjs`、
+`scripts/check-plan-identity.mjs` 和 `scripts/check-plan-graph.mjs`，并传入同一份精确计划、批准票、身份票、
+依赖图、scope、source identity、effect 和 `--require-no-external-blockers`。这些检查器只验证既有票据和图，
+不创建授权；任何子检查失败都必须保持 PLANNED 或 NEEDS_CONTEXT。当前仓库没有可信的 native approval
+receipt primitive，因此不能把普通 JSON 检查结果当作用户授权，也不得在没有该能力时接入首次派发。
+`node scripts/check-plan-graph.mjs --graph <精确JSON路径>`。输入必须包含 `plan_id`、与计划 SHA 绑定的 `plan_sha256`、非空
+`nodes[{id,dependencies}]` 和独立的 `external_dependencies[{node_id,source_ref,status}]`；外部
+依赖只有 `status: PASS` 才解除阻塞。检查器只返回拓扑顺序、层级、残环和阻塞外部依赖，不返回
+授权或执行 ready 状态。
 
 设计产出仍以 open-design 为首选，MagicPath/HTML 仅由用户真实选择或已批准的具名备用计划
 授权；设计工具故障本身不授予切换权。精确可用性、恢复和断言写法由上述
@@ -467,7 +479,7 @@ else
 fi
 
 # [BLOCKING] <ID> — skill handoff 包含必要字段
-if ( set -o pipefail; grep -q "gate_result" "<authorized_absolute_handoff_path>" ); then
+if ( set -o pipefail; node scripts/check-quality-gates.mjs --handoff "<authorized_absolute_handoff_path>" --require-gate PASS ); then
   echo "PASS <ID>"
 else
   check_rc=$?
@@ -578,6 +590,19 @@ RECOMMENDATION: <下一步建议动作，给用户可选项>
 - Sequential 外层 + 每 Phase 内部 Parallel Fan-out
 - Hierarchical 顶层 + 每个 Worker 后接 Supervisor 验证
 
+**批准门（K3 唯一落地规则）：**
+任何 `Supervisor` 或 `Hierarchical` 计划，包括嵌套在其他模式中的实例，都必须在首次派发、首次
+fan-out 或首次不可逆 effect 之前取得真实用户确认。确认必须绑定 `plan_id`、精确计划路径、
+`plan_sha256`、scope、effect 范围和确认时间；任一字段变化都使旧确认失效。计划输出、handoff、
+质量检查和增量重规划不会产生执行授权。没有 scope-matched 确认时只能保持 `PLANNED`，不得
+派发 Work Agent、写项目文件、提交、推送或执行外部操作。
+批准票据在首次 effect 前用以下检查器核验；调用方必须传入本次计划的精确绝对路径、稳定
+`plan_id`、scope 和每个即将执行的 effect：
+`node scripts/check-plan-approval.mjs --plan <absolute-plan> --approval <absolute-approval.json> --plan-id <id> --scope <scope> --effect <effect>`。
+检查器只验证票据与计划身份、范围和时间的绑定，不创建授权；任何字段不匹配均保持 `PLANNED`。
+恢复已有计划前另用身份检查器核对 `plan_id`、精确路径、`plan_sha256`、scope 和 source identity：
+`node scripts/check-plan-identity.mjs --plan <absolute-plan> --identity <absolute-identity.json> --plan-id <id> --scope <scope> --source-identity <source>`。
+路径或内容变化返回失败并保持 `NEEDS_CONTEXT`，不能按最新文件替代。
 ---
 
 ## 主 Agent 决策树
@@ -610,8 +635,9 @@ RECOMMENDATION: <下一步建议动作，给用户可选项>
 当 Supervisor 或 Hierarchical 模式，且包含 U-block 展开时，按以下优先级写入：
 
 **路径解析顺序：**
-1. 若 `docs/plans/` 存在 → `docs/plans/YYYY-MM-DD-NNN-<type>-<slug>-plan.md`
-2. 降级（目录不存在）→ `./<slug>-plan-YYYY-MM-DD.md`（项目根目录）
+1. 已验证项目 pin 下使用该项目绝对根目录的 `docs/plans/`。
+2. NO_PIN 框架/meta 计划使用当前框架根的 `framework-audit/plans/`。
+3. 目录不存在时先报告 `NEEDS_CONTEXT`；不得降级到项目根、共享 `docs/` 或其他显示别名。
 
 | 字段 | 说明 | 示例 |
 |------|------|------|
@@ -619,7 +645,10 @@ RECOMMENDATION: <下一步建议动作，给用户可选项>
 | `type` | `feat` / `fix` / `refactor` / `implement` / `infra` | `implement`（来自 task-plan） |
 | `slug` | kebab-case 任务摘要 | `crm-lead-pool` |
 
-此路径支持跨 session 幂等查找：新 session 运行 `ls docs/plans/` 即可定位最新计划，Work Agent 按 U-ID 续点恢复。
+计划文件必须在 checkpoint/handoff 中记录 `plan_id`、精确绝对路径、scope、source identity 和
+`plan_sha256`。恢复时按这组身份逐项核对同一文件内容；路径、scope、source 或 SHA 不匹配就返回
+`NEEDS_CONTEXT`。禁止按目录中“最新”文件、最大编号、文件名相似度或 symlink alias 猜测恢复对象。
+增量重规划在原计划文件末尾追加并更新 SHA；稳定 U-ID 和已完成节点保持不变。
 
 ---
 

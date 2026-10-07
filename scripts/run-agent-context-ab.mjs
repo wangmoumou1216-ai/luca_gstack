@@ -12,6 +12,7 @@ import { homedir, tmpdir } from 'node:os';
 import { createInterface } from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as branchFixtureContracts from './agent-context-branch-fixtures.mjs';
+import { ROUTING_PLAN_FIXTURES, validateRoutingPlanSuite } from './routing-plan-v1-suite.mjs';
 import {
   branchFixturePositiveClaims,
   runBranchFixtureContractTests,
@@ -40,7 +41,7 @@ const CLI_VALUE_OPTIONS = new Set([
   '--root', '--arm', '--harness', '--fixture', '--trials', '--concurrency', '--output',
   '--rescore', '--source-sha256', '--source-release-manifest', '--release-manifest',
   '--g5-phase', '--g5-cell', '--g5-ledger', '--batch-id', '--fallback-ids',
-  '--claude-model', '--claude-effort', '--codex-model', '--codex-effort',
+  '--claude-model', '--claude-effort', '--codex-model', '--codex-effort', '--suite',
 ]);
 const CLI_BOOLEAN_OPTIONS = new Set([
   '--require-pass', '--resume-valid', '--self-test', '--describe', '--offline-fake-transport-self-test',
@@ -82,6 +83,7 @@ const root = resolve(value('--root') || '');
 const arm = value('--arm');
 const harness = value('--harness');
 const fixtureArg = value('--fixture') || 'all';
+const suite = value('--suite') || 'legacy';
 const trials = Number(value('--trials') || 1);
 const concurrency = Number(value('--concurrency') || 1);
 const output = resolve(value('--output') || '');
@@ -402,6 +404,16 @@ const fixtures = {
 
 const legacyFixtureIds = Object.keys(fixtures);
 Object.assign(fixtures, createBranchFixtures({ fallbackIds }));
+if (!['legacy', 'routing-plan-v1'].includes(suite)) {
+  console.error('unknown suite; expected legacy or routing-plan-v1'); process.exit(2);
+}
+if (suite === 'routing-plan-v1') {
+  validateRoutingPlanSuite();
+  Object.assign(fixtures, ROUTING_PLAN_FIXTURES);
+  if (g5Mode || fixtureArg !== 'all') {
+    console.error('routing-plan-v1 cannot be mixed with legacy fixture or G5 flags'); process.exit(2);
+  }
+}
 const g5Fixtures = createG5Fixtures();
 const g5Matrix = createG5Matrix();
 const g5MatrixSummary = validateG5Matrix(g5Matrix);
@@ -458,12 +470,13 @@ if (g5Mode && !g5Describe) {
   }
   }
 }
-if (fixtureArg !== 'all' && !fixtures[fixtureArg]) {
+if (suite === 'legacy' && fixtureArg !== 'all' && !fixtures[fixtureArg]) {
   console.error(`unknown fixture ${fixtureArg}; expected one of ${Object.keys(fixtures).join(', ')}`);
   process.exit(2);
 }
 // `all` retains the historical fixture set; new fixtures never become live by removing a draft suffix.
-const selected = fixtureArg === 'all' ? legacyFixtureIds : [fixtureArg];
+const selected = suite === 'routing-plan-v1' ? Object.keys(ROUTING_PLAN_FIXTURES)
+  : (fixtureArg === 'all' ? legacyFixtureIds : [fixtureArg]);
 const needsRelease = (ids) => ids.some((id) => !legacyFixtureIds.includes(id));
 if (!selfTest && !describe && needsRelease(selected) && !releaseManifestPath) {
   console.error('Branch fixtures are RELEASE_REQUIRED: supply a reviewed frozen --release-manifest before live execution.');
@@ -6673,8 +6686,10 @@ if (selfTest) {
   assert.equal(candidateTracePolicy(unrelated, 'AGENTS.md', [CONTEXT_MANIFEST],
     { recovered: true, status: 'RECOVERED', failed_target: CONTEXT_INDEX }).pass, false,
   'unrelated failure was excused');
-  assert.deepEqual(fixtureArg === 'all' ? selected : legacyFixtureIds, legacyFixtureIds,
+  if (suite === 'legacy') assert.deepEqual(fixtureArg === 'all' ? selected : legacyFixtureIds, legacyFixtureIds,
     'all silently expanded into unreleased branch fixtures');
+  else assert.deepEqual(selected, Object.keys(ROUTING_PLAN_FIXTURES),
+    'routing-plan-v1 selection drifted from frozen fixture set');
   assert.equal(needsRelease(legacyFixtureIds), false);
   assert.equal(needsRelease([...legacyFixtureIds, 'F13-page-handoff']), true,
     'an all-style list containing a branch fixture bypasses release admission');

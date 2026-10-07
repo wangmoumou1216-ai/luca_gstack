@@ -385,7 +385,8 @@ function complexityDecision(prompt, routingScope = { kind: 'ordinary' }) {
     { name: '显式复杂', weight: 4, regex: /负责的功能|复杂的需求|复杂功能|plan\s*agent|task编排|多个skill|skill.*组合|这是一个复杂/ },
     // Audit C3: explicit user plan request — plan-agent.md:38 lists this as
     // the 5th trigger condition. Standalone weight 6 puts it past the PLAN_MODE
-    // threshold; uses normalized-text regex (normalize() lowercases).
+    // threshold. This is lexical evidence only; production hints require the
+    // main agent to distinguish an actual request from quotation or negation.
     { name: '用户明确要求 plan', weight: 6, regex: /先做个计划|先做计划|plan\s*一下|想清楚再做|做个计划再说|做个规划再说/ },
     {
       // 2026-07-12：'新项目复杂需求' → '多功能需求'。原信号被"新项目/新需求"前缀锁死，
@@ -1144,8 +1145,8 @@ function buildDecisionCore(prompt) {
   const complexity = complexityDecision(prompt, routingScope);
 
   // 2026-07-13 fable review B-F1：显式 / 或 $ 直呼 = 用户最新明确请求（规则优先级 #1），不被
-  // 复杂度门替换——旧行为里 PLAN_MODE 会吞掉 '/brainstorm 新增A、B、C' 的直呼，还压过 fork
-  // 较软 PLAN_CHECK 门。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
+  // 词法候选替换——直呼保留为候选，复杂度以 planHint 附加。主 Agent 在接受候选之前
+  // 仍先核验 Project Gate、Plan 五条件与有效豁免；分数或直呼本身不裁决复杂度。
   const directCall = /^[$/][a-z][\w-]*/i.test(prompt) || !!visibleSlashlessAlias(prompt)
     || /^(?:muse-loop-orchestrate|muse-proto-gen)(?:\s|$)/i.test(prompt);
   if (!directCall && complexity.decision === 'PLAN_MODE') {
@@ -1209,6 +1210,21 @@ function reviewAxisHint(decision) {
 }
 
 function decisionToHints(decision) {
+  const hints = decisionToCandidateHints(decision);
+  if (decision.reason === 'retired_skill' || decision.decision === 'HARNESS_MESSAGE') return hints;
+  // R4 runs before capability mapping, including NONE and PLAN_MODE lexical
+  // collisions. A scored route can never substitute for identifying the object.
+  const review = reviewAxisHint(decision).trim();
+  if (!hints.length && !review) return hints;
+  const lexical = ['SINGLE_SKILL', 'MULTI_SKILL', 'NONE', 'PLAN_MODE', 'PLAN_CHECK'].includes(decision.decision);
+  const assessment = lexical ? [
+    '[route-guard] 候选证据：SINGLE/MULTI/NONE/PLAN_MODE 与分数均不覆盖语义判断。先处理 Project Gate，再核验 Plan，最后接受 skill 路由；无词法命中仍按语义 fallback 判断。',
+    '[route-guard] Plan 核验：按实际工作核验 .claude/agents/plan-agent.md 的五类触发条件、计数边界与有效豁免。引用、否定或讨论计划不等于真实请求；可能触发时先全文读取唯一 owner，确认触发才产计划。',
+  ] : [];
+  return [...(review ? [review] : []), ...assessment, ...hints];
+}
+
+function decisionToCandidateHints(decision) {
   switch (decision.decision) {
     case 'NONE': {
       if (decision.reason !== 'no_keyword_match') return [];
@@ -1223,9 +1239,9 @@ function decisionToHints(decision) {
     case 'NEEDS_CONTEXT':
       return [`[route-guard] 🧭 NEEDS CONTEXT — ${decision.message}`];
     case 'PROJECT_STOP': {
-      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}` + reviewAxisHint(decision);
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}`;
       if (!decision.planHint) return [base];
-      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：确认项目后必须先读 .claude/agents/plan-agent.md 走 Plan Agent，禁止直接进单个 skill。`];
+      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6 是候选信号：确认项目后按 .claude/agents/plan-agent.md 核验五条件与有效豁免，真实触发才产计划。`];
     }
     case 'PROJECT_SWITCH': {
       // 框架自维护碰撞（2026-07-31）：产品线名同时是项目名时（如 muse），"清理/评审 muse 的 hook"
@@ -1240,15 +1256,15 @@ function decisionToHints(decision) {
       const operation = decision.operation === 'new' ? 'new' : 'switch';
       const command = decision.projectMutation
         || `./scripts/project.sh ${operation} ${decision.project} --session-id <sid> --tx <missing> --expected-epoch <missing>`;
-      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n本轮是 SWITCH_ONLY；只执行这一条事务命令，成功后立即结束本轮：${command}` + frameworkSelfMaint + reviewAxisHint(decision);
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n本轮是 SWITCH_ONLY；只执行这一条事务命令，成功后立即结束本轮：${command}` + frameworkSelfMaint;
       if (!decision.planHint) return [base];
-      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：切换后先走 Plan Agent。`];
+      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6 是候选信号：切换后核验 Plan 五条件与有效豁免，真实触发才产计划。`];
     }
     case 'FRAMEWORK_FLOW': {
       if (decision.flow === 'engineering-delivery') {
         return [
-          '[route-guard] 🧩 ENGINEERING DELIVERY PRESET — 用户已显式选择可选 preset；这只是 routing metadata，不授予写入、Git、网络或 external effect authority。\n' +
-          '读取 optional-workflow-graph.yaml 的 engineering-delivery 建议边，以 compile-only selection envelope 进入 Plan Agent；不跳过 canonical tech-spec/task-plan gate，不预造代码 U-ID。\n' +
+          '[route-guard] 🧩 ENGINEERING DELIVERY PRESET 候选 — 词法命中选择式表述；先完整读取 .claude/skill-os/routing-chain-check.md R5，核验用户真实选择，提及、引用、询问或评审不构成选择。\n' +
+          '确认真实选择后才读取 optional-workflow-graph.yaml 的 engineering-delivery 建议边，以 compile-only selection envelope 进入 Plan Agent；这只是 routing metadata，不授予写入、Git、网络或 external effect authority，不跳过 canonical tech-spec/task-plan gate，不预造代码 U-ID。\n' +
           '最终 task-plan SHA-256 冻结后，由 Plan Agent 编译 exact U-ID，用户对同一 SHA/baseline/U-ID/path/effect/assertion payload 再次确认后才能交 Orchestrator。',
         ];
       }
@@ -1264,39 +1280,39 @@ function decisionToHints(decision) {
     case 'PLAN_MODE':
       if ((decision.recommendedSkills || []).includes('/wayfinder')) {
         return [
-          `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}）；同时满足 huge AND multi-session AND fog。\n` +
-          '仍为 PLAN MODE，不降级为 SINGLE_SKILL。必须先读取 .claude/agents/plan-agent.md，由 Plan Agent 重验三条件后才可进入具名 /wayfinder mode。\n' +
-          '等用户确认计划后，再进入 Orchestrator 模式执行。',
+          `[route-guard] 🧠 PLAN MODE 候选 — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}）；词法证据提示 huge AND multi-session AND fog。\n` +
+          '候选 /wayfinder：主 Agent 先核验实际 Plan 触发与豁免，再举证 huge、multi-session、fog 三条件；全成立才由 Plan Agent 进入具名 wayfinder mode。\n' +
+          '按所选编排模式核验适用的真实批准后，才可交 Orchestrator 执行；候选与计划不产生执行权。',
         ];
       }
       return [
-        `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}；关键词近似判定，权威口径以 .claude/agents/plan-agent.md 触发条件表为准）\n` +
-        '禁止直接路由到单个 skill。必须先读取 .claude/agents/plan-agent.md，输出 Phase 分解计划。\n' +
-        '等用户确认计划后，再进入 Orchestrator 模式执行。',
+        `[route-guard] 🧠 PLAN MODE 候选 — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}；权威口径以 .claude/agents/plan-agent.md 触发条件表为准）。\n` +
+        '主 Agent 核验真实意图、五条件与有效豁免；确认触发才输出 Phase 分解计划，未触发则继续语义路由。\n' +
+        '按所选编排模式核验适用的真实批准后，才可交 Orchestrator 执行；候选与计划不产生执行权。',
       ];
     case 'PLAN_CHECK': {
       const prefix = decision.routeType === 'builtin' ? '内置 skill: ' : '项目 skill: ';
       return [
-        `[route-guard] ⚠️ PLAN CHECK — 高置信命中${prefix}${decision.skill}，该 skill 被登记为需外部计划确认的重型编排器。\n` +
+        `[route-guard] ⚠️ PLAN CHECK 候选 — 命中${prefix}${decision.skill}，该 skill 被登记为需外部计划确认的重型编排器。\n` +
         '执行前先读 .claude/agents/plan-agent.md 的「触发条件」表（唯一权威口径，本提示不复述），\n' +
-        '满足任一条件 → 输出 Phase 计划，等用户确认后再执行。',
+        '真实满足任一条件且无有效豁免 → 输出 Phase 计划，按所选编排模式核验真实批准后再执行。',
       ];
     }
     case 'SINGLE_SKILL': {
       const prefix = decision.routeType === 'builtin' ? '内置 skill: ' : '项目 skill: ';
-      const base = `[route-guard] ✅ 高置信命中 → 建议调用${prefix}${decision.skill}` + reviewAxisHint(decision);
+      const base = `[route-guard] ↪ SINGLE 候选 → ${prefix}${decision.skill}；语义意图明确且前置判断成立时接受。`;
       // 直呼+复杂内容（B-F1）：直呼已归还，复杂度以提醒附加，权威口径仍是 plan-agent.md。
       if (!decision.planHint) return [base];
-      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：直呼已尊重；执行前按 plan-agent.md 触发条件表自查，满足任一先出计划。`];
+      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6 是候选信号；直呼同样先核验 Plan 五条件与有效豁免，真实触发才产计划。`];
     }
     case 'MULTI_SKILL':
       // 2026-08-03：MULTI 同样挂评审钉。实现后评审实测「对一下 PRD、原型和 figma 是否一致」
       // 落 MULTI → 候选是 /brainstorm、/figma-layer（生产类 skill），会把一个评审请求
       // 导向"去写 PRD / 去搭 Figma"。候选相近时评审提示比在单命中时更需要。
       return [
-        '[route-guard] 🔀 MULTI — 路由命中多个候选（权重相近，无法自动决策）。\n' +
-        '你必须在执行任何操作前，先主动询问用户选择哪个 skill，禁止自行判断。\n' +
-        `候选列表（供用户选择）：${decision.candidates.join(', ')}` + reviewAxisHint(decision),
+        '[route-guard] 🔀 MULTI 候选 — 多个词法命中（权重相近），先按用户真实意图复核。\n' +
+        '单一明确意图接受对应能力；多个独立明确意图进入 Multi-Skill；仅存在真实歧义时，请用户回答一个会改变路由的问题。\n' +
+        `候选列表（供语义判断）：${decision.candidates.join(', ')}`,
       ];
     case 'STOP': {
       if (decision.reason === 'retired_skill') return [`[route-guard] ⛔ RETIRED — ${decision.message}`];
@@ -1319,14 +1335,13 @@ function decisionToHints(decision) {
       // 下一步不同——构建轴指向 Plan Agent，研究轴指向研究三档选档。
       // 2026-07-31：评审轴走共享 helper reviewAxisHint（STOP 与 PROJECT GATE 两路复用，见其上注释）。
       const researchAxis = (decision.signals || []).includes('研究/认知诉求');
-      const reviewReminder = reviewAxisHint(decision);
       const complexReminder = (decision.complexityScore > 0 && decision.hasActiveProject)
         ? (researchAxis
           ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 ${routingOwner} 在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
           : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 ${routingOwner} 评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
         : '';
       return [
-        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + entryNotice + candidateHint + reviewReminder + complexReminder,
+        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + entryNotice + candidateHint + complexReminder,
       ];
     }
     default:
