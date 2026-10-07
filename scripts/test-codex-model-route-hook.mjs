@@ -97,9 +97,10 @@ function pre(sessionId, toolInput, toolUseId, toolName = 'spawn_agent') {
   });
 }
 function subStart(sessionId, agentId, agentType) {
+  const path = transcript({sessionId, agentId, agentType, model: 'gpt-5.6-sol', complete: false});
   return run({
     hook_event_name: 'SubagentStart', session_id: sessionId, turn_id: 'turn-root',
-    agent_id: agentId, agent_type: agentType, permission_mode: 'default', cwd: ROOT,
+    agent_id: agentId, agent_type: agentType, agent_transcript_path: path, permission_mode: 'default', cwd: ROOT,
   });
 }
 function transcript({sessionId, agentId, agentType, model, complete = true}) {
@@ -151,7 +152,87 @@ function recoveryRunner(sessionId, path, extra = {}) {
     tool_input: {command: 'node .codex/workflow-runner.mjs external-skill-scout'}, ...extra});
 }
 
+function nestedNativeChecks() {
+  for (const variant of ['valid', 'critical', 'started-caller', 'sibling-pending', 'ambiguous-caller', 'wrong-started-witness',
+    'unbound', 'wrong-parent', 'wrong-role',
+    'wrong-session', 'completed-caller', 'wrong-turn', 'paused-parent', 'stale-generation']) {
+    const callbackRejected = ['ambiguous-caller', 'wrong-started-witness'].includes(variant);
+    const valid = ['valid', 'critical', 'started-caller', 'sibling-pending'].includes(variant) || callbackRejected;
+    const parent = `root-nested-${variant}`, caller = `agent-nested-${variant}`;
+    start(parent);
+    if (variant !== 'unbound') {
+      pre(parent, {task_name: 'wa', message: 'work', agent_type: 'worker'}, `tool-wa-${variant}`);
+      subStart(parent, caller, 'worker');
+    }
+    if (variant === 'started-caller') start(caller);
+    const path = rootTranscript(caller, {parentId: parent, turnId: 'turn-wa'});
+    const rows = readFileSync(path, 'utf8').trim().split('\n').map(JSON.parse);
+    Object.assign(rows[0].payload, {session_id: parent, thread_source: 'subagent'});
+    Object.assign(rows[0].payload.source.subagent.thread_spawn,
+      {agent_role: variant === 'wrong-role' ? 'quality-gate' : 'worker', depth: 1, agent_path: '/root/wa'});
+    if (variant === 'wrong-parent') rows[0].payload.parent_thread_id = 'foreign-parent';
+    if (variant === 'wrong-session') rows[0].payload.session_id = 'foreign-parent';
+    if (variant === 'completed-caller') rows.push({type: 'event_msg', payload: {type: 'task_complete', turn_id: 'turn-wa'}});
+    writeFileSync(path, rows.map(JSON.stringify).join('\n') + '\n');
+    if (variant === 'paused-parent') run({hook_event_name: 'SessionEnd', session_id: parent});
+    if (variant === 'stale-generation') start(parent, 'gpt-6-astra', 'compact');
+    if (variant === 'sibling-pending') pre(parent,
+      {task_name: 'sibling', message: 'work', agent_type: 'worker'}, 'tool-sibling');
+    const before = state(parent);
+    const tool = `tool-child-${variant}`;
+    const role = variant === 'critical' ? 'quality-gate' : 'worker';
+    const args = {task_name: 'child', message: 'work', agent_type: role, fork_turns: 'none'};
+    const result = run({hook_event_name: 'PreToolUse', session_id: parent,
+      turn_id: variant === 'wrong-turn' ? 'foreign-turn' : 'turn-wa',
+      tool_use_id: tool, tool_name: 'collaborationspawn_agent', tool_input: args,
+      permission_mode: 'default', cwd: ROOT, transcript_path: path});
+    equal(result.hookSpecificOutput.permissionDecision, valid ? 'allow' : 'deny',
+      `${variant}: native parent SID is mapped only to its authenticated caller`);
+    equal(state(parent), before, `${variant}: caller routing never changes ancestor authority`);
+    if (!valid) {
+      equal(state(caller), null, `${variant}: rejected ancestry creates no caller activation`);
+      continue;
+    }
+    equal(Object.values(state(caller).invocations).length, 1, 'nested call belongs to the caller activation');
+    rows.push({type: 'response_item', payload: {type: 'function_call', name: 'spawn_agent',
+      namespace: 'collaboration', call_id: tool, arguments: JSON.stringify(args),
+      internal_chat_message_metadata_passthrough: {turn_id: 'turn-wa'}}});
+    rows.push({type: 'event_msg', payload: {type: 'item_completed',
+      thread_id: variant === 'wrong-started-witness' ? 'foreign-thread' : caller, turn_id: 'turn-wa',
+      item: {type: 'SubAgentActivity', kind: 'started', id: tool, agent_thread_id: 'agent-grandchild'}}});
+    writeFileSync(path, rows.map(JSON.stringify).join('\n') + '\n');
+    if (variant === 'ambiguous-caller') cpSync(path, join(transcriptRoot, `rollout-duplicate-${caller}.jsonl`));
+    if (variant === 'sibling-pending') {
+      const childPath = transcript({sessionId: caller, agentId: 'agent-grandchild',
+        agentType: role, model: 'gpt-5.6-sol', complete: false});
+      equal(run({hook_event_name: 'SubagentStart', session_id: parent, turn_id: 'turn-wa',
+        agent_id: 'agent-grandchild', agent_type: role, agent_transcript_path: childPath, cwd: ROOT}), {},
+      'nested start authenticates the actual parent before binding');
+      equal(state(parent), before, 'nested start cannot bind a different pending ancestor call');
+    }
+    // Some native callbacks retain the ancestor SID and omit the caller path.
+    // The exact started witness must correlate the descendant before acceptance.
+    const completion = subStop(parent, 'agent-grandchild', role, transcript({
+      sessionId: caller, agentId: 'agent-grandchild', agentType: role,
+      model: variant === 'critical' ? 'gpt-6-astra' : 'gpt-5.6-sol',
+    }));
+    if (callbackRejected) {
+      equal(completion.continue, false, `${variant}: forged or ambiguous completion is refused`);
+      equal(Object.values(state(caller).invocations)[0].status, 'pending',
+        `${variant}: rejected callback cannot close caller invocation`);
+      equal(state(parent), before, `${variant}: rejected callback cannot consume ancestor authority`);
+      continue;
+    }
+    equal(completion, {}, 'grandchild completion is accepted in the actual caller activation');
+    equal(Object.values(state(caller).invocations)[0].status, 'accepted',
+      'descendant completion closes its own invocation');
+    equal(state(parent), before, 'descendant completion never consumes the ancestor invocation');
+  }
+}
+
 try {
+  nestedNativeChecks();
+  if (!process.argv.includes('--nested')) {
   const changedAnchor = 'root-active-model-change';
   start(changedAnchor, 'gpt-6-astra');
   const changedDispatch = recoveryPre(changedAnchor, rootTranscript(changedAnchor), {
@@ -508,10 +589,11 @@ try {
     }
     equal(dispatched.hookSpecificOutput.permissionDecision, 'allow',
       'authenticated current profile evidence permits dispatch from an existing activation');
-    profileRun({hook_event_name: 'SubagentStart', session_id: session, agent_id: agent, agent_type: 'quality-gate'});
     const original = transcript({sessionId: session, agentId: agent, agentType: 'quality-gate', model: 'gpt-6-astra'});
     const granted = join(profileSessions, `${agent}.jsonl`);
     cpSync(original, granted);
+    profileRun({hook_event_name: 'SubagentStart', session_id: session, agent_id: agent,
+      agent_type: 'quality-gate', agent_transcript_path: granted});
     const stopped = profileRun({hook_event_name: 'SubagentStop', session_id: session,
       agent_id: agent, agent_type: 'quality-gate', agent_transcript_path: variant === 'wrong-home' ? original : granted,
       stop_hook_active: false, last_assistant_message: 'done'});
@@ -918,6 +1000,9 @@ try {
   for (const agentType of ['quality-gate', 'default']) {
     const session = `root-native-race-${agentType}`;
     start(session);
+    cpSync(transcript({sessionId: session, agentId: 'agent-interleave-first',
+      agentType: 'quality-gate', model: 'gpt-6-astra', complete: false}),
+    join(transcriptRoot, 'rollout-interleaved-agent-interleave-first.jsonl'));
     const second = pre(session, {task_name: 'second', message: 'work', agent_type: agentType},
       'tool-interleave-second');
     equal(second.hookSpecificOutput.permissionDecision, 'deny',
@@ -981,6 +1066,7 @@ try {
 
   run({hook_event_name: 'SessionEnd', session_id: lightSession, reason: 'other', cwd: ROOT});
   equal(state(lightSession).status, 'paused', 'SessionEnd pauses activation');
+  }
 } finally {
   for (const fixture of profileFixtures) releaseFixtureRoot(fixture, () => rmSync(fixture, {recursive: true, force: true}));
   rmSync(scratch, {recursive: true, force: true});
