@@ -16,13 +16,31 @@ const codeError = (code, message = code) => Object.assign(new Error(message), { 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const id = value => typeof value === 'string' && value.length > 0 && value.length <= 128 && !/[\x00-\x1f]/.test(value);
 const normalizedId = value => id(value) && value.trim() === value && value.normalize('NFC') === value;
-// Codex atomically writes these presentation-only TUI preferences on first run.
+// Version the finite preference projection; frozen v1 launches keep their old policy.
 // Parse TOML, never strip source lines: strings/comments can contain table syntax.
 const CODEX_CONFIG_CANONICALIZER = String.raw`
 import sys, json, math, tomllib
 value = tomllib.loads(sys.stdin.buffer.read().decode('utf-8'))
+if sys.argv[1] == 'codex-config-v2':
+    def preferences(table):
+        for key in ('model', 'model_reasoning_effort'):
+            if key in table:
+                if type(table[key]) is not str or not table[key].strip(): raise ValueError('invalid model preference')
+                del table[key]
+    preferences(value)
+    profiles = value.get('profiles')
+    if isinstance(profiles, dict):
+        for profile in profiles.values():
+            if isinstance(profile, dict): preferences(profile)
 tui = value.get('tui')
 if isinstance(tui, dict):
+    if sys.argv[1] == 'codex-config-v2':
+        if 'theme' in tui:
+            if type(tui['theme']) is not str or not tui['theme'].strip(): raise ValueError('invalid theme preference')
+            del tui['theme']
+        if 'animations' in tui:
+            if type(tui['animations']) is not bool: raise ValueError('invalid animation preference')
+            del tui['animations']
     if 'screen_reader_detection_done' in tui:
         if type(tui['screen_reader_detection_done']) is not bool: raise ValueError('invalid screen reader preference')
         del tui['screen_reader_detection_done']
@@ -62,7 +80,8 @@ function codexConfigPython() {
   }
   throw codeError('CONFIG_PARSER_UNAVAILABLE');
 }
-export function codexConfigIdentity(path) {
+export function codexConfigIdentity(path, kind = 'codex-config-v2') {
+  if (!['codex-config-v1', 'codex-config-v2'].includes(kind)) throw codeError('CONFIG_POLICY_UNSUPPORTED');
   const before = lstatSync(path), canonical = realpathSync(path);
   if (canonical !== path || !before.isFile() || before.uid !== process.getuid()
       || before.size > MAX_CONFIG_BYTES) throw codeError('CONFIG_SCOPE_INVALID');
@@ -72,10 +91,10 @@ export function codexConfigIdentity(path) {
   const python = codexConfigPython();
   let canonicalBytes;
   try {
-    canonicalBytes = execFileSync(python, ['-c', CODEX_CONFIG_CANONICALIZER],
+    canonicalBytes = execFileSync(python, ['-c', CODEX_CONFIG_CANONICALIZER, kind],
       { input: bytes, timeout: 3000, maxBuffer: 16 * MAX_CONFIG_BYTES, stdio: ['pipe', 'pipe', 'pipe'] });
   } catch { throw codeError('CONFIG_PARSE_FAILED'); }
-  return { kind: 'codex-config-v1', realpath: canonical, dev: String(before.dev),
+  return { kind, realpath: canonical, dev: String(before.dev),
     uid: before.uid, mode: before.mode, sha256: hash(canonicalBytes) };
 }
 export function fileIdentity(path, fingerprint = false) {
@@ -101,8 +120,8 @@ function verifyProfile(profile) {
   if (!statSync(profile.sourceRoot.realpath).isDirectory() || !statSync(profile.binary.realpath).isFile()) throw codeError('PROFILE_INVALID');
   for (const [index, config] of profile.configFiles.entries()) {
     if (config.kind !== undefined) {
-      if (index !== 0 || config.kind !== 'codex-config-v1' || config.realpath !== join(profile.sourceRoot.realpath, 'config.toml')) throw codeError('PROFILE_INVALID');
-      if (!same(codexConfigIdentity(config.realpath), config)) throw codeError('IDENTITY_CHANGED');
+      if (index !== 0 || !['codex-config-v1', 'codex-config-v2'].includes(config.kind) || config.realpath !== join(profile.sourceRoot.realpath, 'config.toml')) throw codeError('PROFILE_INVALID');
+      if (!same(codexConfigIdentity(config.realpath, config.kind), config)) throw codeError('IDENTITY_CHANGED');
     } else verifyIdentity(config, true);
   }
 }

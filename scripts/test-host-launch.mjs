@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { fork, execFile, execFileSync, spawnSync } from 'node:child_process';
 import { connect } from 'node:net';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createHostLaunchBroker, fileIdentity, codexConfigIdentity } from '../.claude/hooks/lib/host-launch.mjs';
 import { queueProjectEventCandidate, readProjectState, canonicalProjectIdentity, prepareProjectSwitch,
   closeAttestedProjectEvent, refenceProjectStateForDeactivate } from '../.claude/hooks/lib/project-substrate.mjs';
@@ -204,11 +204,11 @@ test('fresh private host binding coexists with native scopes and scoped damage b
   }
 });
 const codexLaunchConfig = 'model = "fixture-model"\nmodel_provider = "local"\n[model_providers.local]\nbase_url = "http://127.0.0.1:64069/v1"\n';
-function semanticConfigFixture() {
+function semanticConfigFixture(content = codexLaunchConfig, kind) {
   const f = fixture();
   f.nativeConfig = join(f.sourceRoot, 'config.toml');
-  writeFileSync(f.nativeConfig, codexLaunchConfig, { mode: 0o600 });
-  f.request.profileIdentity.configFiles.unshift(codexConfigIdentity(f.nativeConfig));
+  writeFileSync(f.nativeConfig, content, { mode: 0o600 });
+  f.request.profileIdentity.configFiles.unshift(codexConfigIdentity(f.nativeConfig, kind));
   return f;
 }
 function replaceConfig(file, text) {
@@ -227,9 +227,89 @@ test('first-run Codex TUI atomic config writes preserve startup and tool authori
     assert.equal(result.status, project ? 'COMMITTED' : 'ACTIVE_NO_PIN');
   }
 });
-test('Codex config semantic identity retains all launch settings and non-UI types', async () => {
+test('model and effort changes preserve startup and active tool authority', async () => {
+  const base = codexLaunchConfig + '\n[profiles.work]\nmodel = "old"\nmodel_reasoning_effort = "high"\n';
+  for (const project of [false, true]) {
+    const f = semanticConfigFixture(base), claim = await dispatched(f, project);
+    replaceConfig(f.nativeConfig, base.replace('fixture-model', 'new-model').replace('old', 'new'));
+    await f.broker.claim('attach', claim);
+    for (const content of [
+      base.replace('high', 'low'),
+      base.replace('model = "fixture-model"', 'model_reasoning_effort = "medium"'),
+      base + '\n[tui]\ntheme = "dark"\nanimations = false\n',
+      base.replace('model = "old"\nmodel_reasoning_effort = "high"', ''),
+    ]) {
+      replaceConfig(f.nativeConfig, content);
+      assert.equal((await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() })).status,
+        project ? 'COMMITTED' : 'ACTIVE_NO_PIN');
+    }
+  }
+});
+test('versioned configuration identities preserve v1 semantics and reject unknown policy', async () => {
+  const f = semanticConfigFixture(codexLaunchConfig, 'codex-config-v1');
+  const original = f.request.profileIdentity.configFiles[0], claim = await dispatched(f);
+  assert.equal(original.kind, 'codex-config-v1');
+  await f.broker.claim('attach', claim);
+  replaceConfig(f.nativeConfig, codexLaunchConfig.replace('fixture-model', 'new-model'));
+  await assert.rejects(f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() }), { code: 'IDENTITY_CHANGED' });
+  assert.throws(() => codexConfigIdentity(f.nativeConfig, 'codex-config-v99'), { code: 'CONFIG_POLICY_UNSUPPORTED' });
+  f.request.profileIdentity.configFiles[0].kind = 'codex-config-v99';
+  await assert.rejects(f.broker.parent('prepare', { ...f.request, operationId: randomUUID() }), { code: 'PROFILE_INVALID' });
+});
+// Explicit peer checkout: normal framework validation never guesses an App path.
+test('real App snapshot and client interoperate with broker IPC after model changes', {
+  skip: !process.env.LUCA_HOST_APP_ROOT,
+}, async t => {
+  const appRoot = realpathSync(process.env.LUCA_HOST_APP_ROOT);
+  const { snapshotCodexLaunchProfile, codexConfigIdentity: appIdentity } = await import(pathToFileURL(join(appRoot, 'host-launch-profile.js')));
+  const { createHostLaunchClient } = await import(pathToFileURL(join(appRoot, 'host-launch-client.js')));
+  for (const kind of ['codex-config-v1', 'codex-config-v2']) {
+    const f = semanticConfigFixture(codexLaunchConfig, kind);
+    mkdirSync(join(f.gstackRoot, '.codex'));
+    writeFileSync(join(f.gstackRoot, '.codex', 'config.toml'), 'trusted = true\n');
+    const snapshot = () => {
+      const profile = snapshotCodexLaunchProfile({ profileId: 'codex:sidecar', configRevision: 1,
+        sourceId: 'fixture-sidecar', codexHome: f.sourceRoot, binary: process.execPath, gstackRoot: f.gstackRoot });
+      // v1 models an already deployed old App; never relabel a v2 hash as v1.
+      profile.configFiles[0] = appIdentity(f.nativeConfig, kind);
+      return profile;
+    };
+    let child, challenges = 0;
+    const client = createHostLaunchClient({ brokerPath: fileURLToPath(new URL('./host-launch-broker.mjs', import.meta.url)),
+      gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+      snapshotCurrentProfile: () => { challenges++; return snapshot(); },
+      forkProcess: (script, args, options) => { child = fork(script, [...args, '--fixture'], options); return child; },
+    });
+    t.after(async () => {
+      if (child?.connected) { const exited = new Promise(resolve => child.once('exit', resolve)); child.disconnect(); await exited; }
+    });
+    const prepared = await client.prepare({ ...f.request, profileIdentity: snapshot() });
+    await client.dispatch({ launchId: prepared.launchId, operationId: f.request.operationId, launchNonce: prepared.launchNonce });
+    const claim = { ...prepared, hostRunId: f.request.hostRunId, openRequestId: f.request.openRequestId, nativePayload: f.payload };
+    const call = (method, params) => new Promise((resolve, reject) => {
+      const socket = connect(prepared.claimEndpoint); let data = '';
+      socket.setTimeout(5000, () => socket.destroy(new Error('broker socket timeout')));
+      socket.on('connect', () => socket.write(JSON.stringify({ method, params }) + '\n'));
+      socket.on('data', chunk => { data += chunk; }); socket.on('end', () => resolve(JSON.parse(data))); socket.on('error', reject);
+    });
+    assert.equal((await call('attach', claim)).result.status, 'ATTACHED');
+    assert.equal((await call('beforeTool', { ...claim, nativePayload: f.appendHuman() })).result.status, 'ACTIVE_NO_PIN');
+    assert.ok(challenges > 0, 'actual broker must challenge the actual App client');
+    replaceConfig(f.nativeConfig, codexLaunchConfig.replace('fixture-model', 'switched-model'));
+    const changed = await call('beforeTool', { ...claim, nativePayload: f.appendHuman() });
+    if (kind === 'codex-config-v1') assert.equal(changed.error.code, 'IDENTITY_CHANGED');
+    else {
+      assert.equal(changed.result.status, 'ACTIVE_NO_PIN');
+      assert.ok(challenges >= 2);
+      replaceConfig(f.nativeConfig, codexLaunchConfig.replace('64069', '64070'));
+      assert.equal((await call('beforeTool', { ...claim, nativePayload: f.appendHuman() })).error.code, 'IDENTITY_CHANGED');
+    }
+  }
+});
+test('Codex config semantic identity retains security settings and non-UI types', async () => {
   for (const changed of [
-    codexLaunchConfig.replace('fixture-model', 'other-model'),
+    'approval_policy = "never"\n' + codexLaunchConfig,
+    'sandbox_mode = "danger-full-access"\n' + codexLaunchConfig,
     codexLaunchConfig.replace('64069', '64070'),
     codexLaunchConfig + '\n[hooks]\nenabled = false\n',
     codexLaunchConfig + '\n[projects."/tmp"]\ntrust_level = "trusted"\n',

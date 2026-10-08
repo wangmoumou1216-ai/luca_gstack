@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-08 · 切模型后的工具权限误拦截）
+
+- Host Launch 新增 `codex-config-v2`，将合法模型、思考强度和有限显示偏好从安全身份中分离，与 Luca App 同步采用；权限、服务地址、项目与未知字段仍严格校验。为什么：正常切模型不应导致 `IDENTITY_CHANGED` 并阻断工具。旧 v1 会话保持原规则，新 App broker 与新会话采用修复。
+  v2 只排除根级和现有 `profiles.<name>` 中的非空字符串 `model` / `model_reasoning_effort`、非空字符串 `tui.theme`、布尔 `tui.animations`，以及原有两项经过类型检查的 TUI 首次运行偏好。保留 profile 名、选择、空表和未知字段；非法类型与未知版本拒绝。App 连接设置的 revision 仍受保护，磁盘更新不会迁移已有回执或进程。
+
 ### Fixed（2026-10-08 · 未提交修复与历史证据归并）
 
 - 已验证的 App 项目选择在启动上下文中明确当前项目与默认指代，保留原生事件权限校验。为什么：避免用户已经选定项目后再次被要求选择。
