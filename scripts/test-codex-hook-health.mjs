@@ -23,6 +23,9 @@ function stableRegistration(config) {
       const suffix = hook.command.slice(hook.command.indexOf(marker) + marker.length)
         .replaceAll('$luca_hook_root', '$(git rev-parse --show-toplevel)');
       hook.command = prefix + suffix;
+      if (hook.command.includes('/.codex/host-launch-hook.mjs')) {
+        hook.command = hook.command.replace('; c=$?;', ' 2>> /tmp/luca-gstack-hooks.log; c=$?;');
+      }
     }
   }
   return config;
@@ -303,11 +306,39 @@ test('native-trust-v1 requires no optional guard and does not scan or approve wo
 test('native-trust-v1 rejects an extra command, missing strict mode or changed registration shape', t => {
   for (const mutate of [
     config => { config.hooks.PreToolUse[0].hooks[0].command += '; true'; },
+    config => { config.hooks.PreToolUse[0].hooks[0].command = config.hooks.PreToolUse[0].hooks[0].command.replace('; c=$?;', ' 2>> /tmp/luca-gstack-hooks.log; c=$?;'); },
     config => { config.hooks.PreToolUse[0].hooks[0].command = config.hooks.PreToolUse[0].hooks[0].command.replace('export LUCA_NATIVE_HOOK_STRICT=1; ', ''); },
     config => { config.hooks.PreToolUse[0].matcher = '^NEVER$'; },
   ]) {
     const f = fixture(t, () => {}, { native: true, install: false });
     const config = JSON.parse(readFileSync(f.hooksPath)); mutate(config); writeFileSync(f.hooksPath, JSON.stringify(config));
     assert.equal(f.inspect().registration.status, 'FAIL');
+  }
+});
+
+test('native Host Launch shell preserves refusal stderr and exit 2 for all three targets', t => {
+  const f = fixture(t, () => {}, { native: true, install: false });
+  cpSync(new URL('../.codex/host-launch-hook.mjs', import.meta.url), join(f.root, '.codex/host-launch-hook.mjs'));
+  writeFileSync(join(f.root, '.codex/codex-hook-adapter.mjs'),
+    'process.stderr.write("Fixture downstream refusal\\n"); process.exitCode = 2;\n');
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
+    !key.startsWith('GIT_') && !key.startsWith('MUSE_HOST_') && key !== 'MUSE_OPEN_REQUEST_ID'));
+  const init = spawnSync('git', ['init', '--quiet', f.root], { env, encoding: 'utf8' });
+  assert.equal(init.status, 0, init.stderr);
+  const config = JSON.parse(readFileSync(f.hooksPath));
+  for (const event of ['SessionStart', 'UserPromptSubmit', 'PreToolUse']) {
+    const command = config.hooks[event][0].hooks[0].command;
+    assert.doesNotMatch(command, /2>>/, `${event} must expose its refusal to Codex`);
+    const run = extra => spawnSync('/bin/sh', ['-c', command], { cwd: f.root, env: { ...env, ...extra },
+      input: JSON.stringify({ hook_event_name: event }), encoding: 'utf8', timeout: 5000 });
+    const downstream = run({});
+    assert.equal(downstream.status, 2, event);
+    assert.equal(downstream.stderr, 'Fixture downstream refusal\n', event);
+    if (event !== 'UserPromptSubmit') {
+      const claim = run({ MUSE_HOST_LAUNCH_ID: 'isolated-shell-test' });
+      assert.equal(claim.status, 2, event);
+      assert.match(claim.stderr, /Host launch refused: CLAIM_ENDPOINT_INVALID/, event);
+      assert.equal(JSON.parse(claim.stdout).hookSpecificOutput.permissionDecision, 'deny');
+    }
   }
 });

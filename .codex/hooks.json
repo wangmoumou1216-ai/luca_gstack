@@ -7,7 +7,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 恢复 session 上下文",
-            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/host-launch-hook.mjs\" \"$luca_hook_root/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/host-launch-hook.mjs\" \"$luca_hook_root/.claude/hooks/session-restore.mjs\"; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
             "additionalContextLimit": 0
           }
         ]
@@ -29,7 +29,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 路由检查",
-            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/host-launch-hook.mjs\" \"$luca_hook_root/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/host-launch-hook.mjs\" \"$luca_hook_root/.claude/hooks/route-guard.mjs\"; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
             "additionalContextLimit": 0
           }
         ]
@@ -42,7 +42,7 @@
           {
             "type": "command",
             "statusMessage": "luca_gstack: 项目边界检查",
-            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/host-launch-hook.mjs\" \"$luca_hook_root/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/host-launch-hook.mjs\" \"$luca_hook_root/.claude/hooks/project-scope-guard.mjs\"; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
           }
         ]
       },

@@ -21,7 +21,7 @@ const GATE_START = `cd "$(git rev-parse --show-toplevel)" || exit 2; ${SOURCE_SC
 // Intentional protocol changes require reviewing and updating this pin together.
 const LEGACY_REGISTRATION_CONTRACT = '0d3e966d491751a1e45ce6a29fc62fd850981ba972393b81fdf51be989cbd50a';
 const STABLE_REGISTRATION_CONTRACT = '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189';
-const NATIVE_REGISTRATION_CONTRACT = '4045d37a195d19ab5a3f437f83cf500b24cd41868cf563b5f01790dc6945f476';
+const NATIVE_REGISTRATION_CONTRACT = '071dcae5ae935ce15318dea12d1deaee3cddec60c74bda6d82ec1c422eb885e4';
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === 'object') return Object.fromEntries(

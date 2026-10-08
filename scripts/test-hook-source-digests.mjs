@@ -24,6 +24,9 @@ function stableRegistration(config) {
       const suffix = hook.command.slice(hook.command.indexOf(marker) + marker.length)
         .replaceAll('$luca_hook_root', '$(git rev-parse --show-toplevel)');
       hook.command = prefix + suffix;
+      if (hook.command.includes('/.codex/host-launch-hook.mjs')) {
+        hook.command = hook.command.replace('; c=$?;', ' 2>> /tmp/luca-gstack-hooks.log; c=$?;');
+      }
     }
   }
   return config;
@@ -38,7 +41,7 @@ assert.equal(entries.length, 11);
 const normalize = value => value && typeof value === 'object' ? Array.isArray(value) ? value.map(normalize)
   : Object.fromEntries(Object.keys(value).sort().map(key => [key, normalize(value[key])])) : value;
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
-assert.equal(sha(JSON.stringify(normalize(nativeConfig.hooks))), '4045d37a195d19ab5a3f437f83cf500b24cd41868cf563b5f01790dc6945f476');
+assert.equal(sha(JSON.stringify(normalize(nativeConfig.hooks))), '071dcae5ae935ce15318dea12d1deaee3cddec60c74bda6d82ec1c422eb885e4');
 assert.equal(sha(JSON.stringify(normalize(config.hooks))), '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189');
 const base = realpathSync(mkdtempSync(join(tmpdir(), 'hook-source-digests-')));
 const fixture = join(base, "repo with space's quote"), home = join(base, 'home');

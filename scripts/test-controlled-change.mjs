@@ -213,11 +213,8 @@ function installAdapterFixture(f) {
     'native registered Hook must not require per-workspace source approval');
   assert.match(registered, /c=\$\?; \[ "\$c" = "0" \] && exit 0 \|\| exit 2$/,
     'registered hook must map every abnormal exit to blocking code 2');
-  const sink = join(f.scratch, 'registered-wrapper.log');
-  const executable = registered.replace('2>> /tmp/luca-gstack-hooks.log', `2>> "${sink}"`);
-  assert.notEqual(executable, registered, 'test harness must relocate exactly one log sink into authorized scratch');
-  assert.equal(executable.replace(`2>> "${sink}"`, '2>> /tmp/luca-gstack-hooks.log'), registered, 'test wrapper may change only the log sink, not registered command semantics');
-  return { registered, executable, log: sink };
+  assert.doesNotMatch(registered, /2\s*>>?/, 'native blocking reasons must remain on stderr');
+  return { registered, executable: registered };
 }
 
 function runRegisteredPreToolWrapper(f, executable, env = {}, options = {}) {
@@ -414,11 +411,11 @@ test('adapter-runtime-fail-closed', () => {
   const compromised = fixture();
   try {
     prepare(compromised, 'generation-adapter-syntax');
-    const { executable, log } = installAdapterFixture(compromised);
+    const { executable } = installAdapterFixture(compromised);
     writeFileSync(join(compromised.repo, '.codex', 'codex-hook-adapter.mjs'), 'this is deliberately invalid JavaScript !\n');
     const syntaxResult = runRegisteredPreToolWrapper(compromised, executable);
     assert.equal(syntaxResult.status, 2, 'registered wrapper blocks corrupted adapter source');
-    assert.match(readFileSync(log, 'utf8'), /SyntaxError/, 'real runtime failure remains visible in the isolated Hook log');
+    assert.match(syntaxResult.stderr, /SyntaxError/, 'real runtime failure remains visible on hook stderr');
   } finally { compromised.cleanup(); }
 });
 

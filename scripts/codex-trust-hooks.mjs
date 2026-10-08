@@ -68,13 +68,14 @@ const routeEntryAt = routeCommand.indexOf(routeEntry);
 if (routeEntryAt < 0) throw new Error('Codex model-route hook guard prefix is missing');
 const guardedPrefix = routeCommand.slice(0, routeEntryAt);
 const entryRoot = routeEntry === nativeEntry ? '$luca_hook_root' : '$(git rev-parse --show-toplevel)';
+const hostStderr = guardedPrefix.includes('export LUCA_NATIVE_HOOK_STRICT=1;') ? '' : ' 2>> /tmp/luca-gstack-hooks.log';
 const HOST_COMMANDS = new Map([
   ['sessionStart', 'SessionStart', 'session-restore.mjs'],
   ['userPromptSubmit', 'UserPromptSubmit', 'route-guard.mjs'],
   ['preToolUse', 'PreToolUse', 'project-scope-guard.mjs'],
 ].map(([event, registration, target]) => [event, {
   registration,
-  command: `${guardedPrefix}MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node "${entryRoot}/.codex/host-launch-hook.mjs" "${entryRoot}/.claude/hooks/${target}" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ "$c" = "0" ] && exit 0 || exit 2`,
+  command: `${guardedPrefix}MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node "${entryRoot}/.codex/host-launch-hook.mjs" "${entryRoot}/.claude/hooks/${target}"${hostStderr}; c=$?; [ "$c" = "0" ] && exit 0 || exit 2`,
 }]));
 if (HOST_LAUNCH) for (const { registration, command } of HOST_COMMANDS.values()) {
   const matches = (registered.hooks[registration] || []).flatMap(group => group.hooks || [])
