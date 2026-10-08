@@ -73,12 +73,9 @@ jobs:
           test -x /bin/zsh
           command -v python3
           command -v rg
-      # CI-safe subset only: these checks read committed repo files or run in
-      # tmpdir fixtures / route-guard dry-run, and degrade gracefully when the
-      # local-only docs/ and .claude/workflow-state.yaml symlinks are DANGLING
-      # on a clean runner. check:project-links and the full verify.sh (S16
-      # symlink check) are intentionally excluded — they validate those
-      # local-only symlink targets and cannot pass on a clean checkout.
+      # CI runs the explicit framework checks below, not the full verify.sh.
+      # Both stay in NO_PIN scope and avoid shared project aliases; project
+      # state/link health requires a separately verified project binding.
       # Page-library preview is a real browser gate, so install the pinned
       # Playwright dependency, Chromium and Firefox before running framework logic.
       - name: Install Node dependencies

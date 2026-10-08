@@ -1,0 +1,2214 @@
+{
+  "schema_version": 1,
+  "status": "REVIEWED_RESTORATION_MAPPING",
+  "baseline": "9ad66003f6f30da9be004dabbf3bf17de2929524",
+  "scope": "framework-audit/2026-10-06-design-workflow-publication-pr26/",
+  "pairs": [
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-old-vote-actual-rejection 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-old-vote-actual-rejection.json",
+      "mode": "100644",
+      "sha256": "f6b6a85d67a02664aaaf4a09ef34de0933e8a7bbe9247e162e5fcdd87ff6a1db",
+      "git_blob": "8bdb2deb5663c7f9746bb15feb3bdb3258029022",
+      "bytes": 2010
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v1-consumed 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v1-consumed.json",
+      "mode": "100644",
+      "sha256": "38fa842bbe584d77ff621313fb80306203eb022896cb3867541c03777d9bbf3f",
+      "git_blob": "21e7d402d9f36a267ebdb4eedec87db79aaaff32",
+      "bytes": 595
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v1-envelope 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v1-envelope.json",
+      "mode": "100644",
+      "sha256": "f8fd08895ba1976c8580326088cb31356b3ee0951c07b86f270d05a954f9ddc5",
+      "git_blob": "96fccef1bfbf8cc5627aa583e3d9675aea59dbc7",
+      "bytes": 1085
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v1-review 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v1-review.md",
+      "mode": "100644",
+      "sha256": "f4b5a030f0e375e583e86ed77d30c73236d39fa4e01ad2a4150ab98b8e8cf728",
+      "git_blob": "2d2d3c47a95adb59d07262f13e1f929deaba1844",
+      "bytes": 12896
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v2-consumed 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v2-consumed.json",
+      "mode": "100644",
+      "sha256": "bc03bd62347c75f43649244cfe91d81c3e36fe2d40f20fab8f8ddec7063a0c7b",
+      "git_blob": "7591e618ad216c8c0f4a9b61ebbef6df1338f6ba",
+      "bytes": 595
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v2-envelope 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v2-envelope.json",
+      "mode": "100644",
+      "sha256": "dd34672388502e6cbe5a21882566c49fff45f4bbf65d576ff31c308eb6891512",
+      "git_blob": "d1a48c454b95fb58d370f952bf7aff7c16119814",
+      "bytes": 1096
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v2-review 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/B1-standard-v2-review.md",
+      "mode": "100644",
+      "sha256": "69f9971ee4ccb7b4bb9e41c03b1a8a3e054bed25c484e693a45fc2713328f661",
+      "git_blob": "73146e81e5abf4967bed201e24852e46ea809437",
+      "bytes": 11458
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/DELTAS 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/DELTAS.md",
+      "mode": "100644",
+      "sha256": "abe8c7dea6b3a392c9c4d4d5a090ead43dd4008936ff08ac239e7f7b5bbb676e",
+      "git_blob": "d505cbc76662e0c26ae0f96ad595f4dc509700cf",
+      "bytes": 2942
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/FINDINGS 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/FINDINGS.md",
+      "mode": "100644",
+      "sha256": "e9396c8282926219b5085e53f27ca5e2e5fd8cbb9f3ceb0ca45bb3206560acaa",
+      "git_blob": "e77d59c3ff9aaac5e39124dbb3b246211592f287",
+      "bytes": 6620
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/PLAN 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/PLAN.md",
+      "mode": "100644",
+      "sha256": "6e2ed3c76fb939468088800f3d82bb0925157be282fd2f7b573855f913f63f3a",
+      "git_blob": "96bd41e0cc65700088691a069dac38eea0da4ed9",
+      "bytes": 21919
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-a/baseline-replay 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-a/baseline-replay.json",
+      "mode": "100644",
+      "sha256": "c75a44e31461bdee3c0b726af48ba9e951847b3a671852fc2b8130e2c6e5e190",
+      "git_blob": "91bbb5f29021bf942996922ad57abda605e8e203",
+      "bytes": 264882
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-a/green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-a/green.json",
+      "mode": "100644",
+      "sha256": "827b7eaf00acdbc638298fa70197e32d04243d54ae4590d7b4337a5288326e7e",
+      "git_blob": "d5789314547d003d35cf050f078479a54f960d2d",
+      "bytes": 334
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-a/mutation-reject-restored 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-a/mutation-reject-restored.json",
+      "mode": "100644",
+      "sha256": "15942ed96c9d31701ac00a32e8f1fefa9773cb239cd9d65723c3bdc725c97439",
+      "git_blob": "97c16d0bf35c204396b6c5ec2aba82ed7a58367c",
+      "bytes": 9112
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-a/proof-summary 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-a/proof-summary.json",
+      "mode": "100644",
+      "sha256": "6f45cef9be3ebecc6731b86f8102b0a6d5facea821a4141e43098f45e99d203c",
+      "git_blob": "4ae42edc6a63f20e43aeca42a4116a989da64431",
+      "bytes": 1165
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/CHECKPOINT 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/CHECKPOINT.md",
+      "mode": "100644",
+      "sha256": "db937cfe40f8884856aff97e695a7994443ff750a298024cb55e7486219e3c7d",
+      "git_blob": "8d34c56a7606503ac4f91944e120253e45bb30b7",
+      "bytes": 4246
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/baseline-caller-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/baseline-caller-red.json",
+      "mode": "100644",
+      "sha256": "c79515f57d6c09647605653715bc75ce93c88977016d18a6ce63cf903dca6f5b",
+      "git_blob": "a50e1105d7b00c5c225c239e7bcaa71c75d0e132",
+      "bytes": 317870
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/final-restored-green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/final-restored-green.json",
+      "mode": "100644",
+      "sha256": "e0150fc069e8ccdb4f96fe2baac2102d92bdac8ff903db4a62038a07ccd0915a",
+      "git_blob": "4d83599aa690d9166ea76adfca3bd348841b4c6b",
+      "bytes": 658587
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/green-real-callers 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/green-real-callers.json",
+      "mode": "100644",
+      "sha256": "147dfa8a26c4fd619e091f977b1b3e8d9b01f788db23292ead5e41e6440f1a0d",
+      "git_blob": "a1d5696f30921ba9746ae6e071d46e2ef67667c2",
+      "bytes": 658587
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/green-source-bound 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/green-source-bound.json",
+      "mode": "100644",
+      "sha256": "e72b12fae76385de8b0be2d06dabc5658f2b4f4ad1bce1a99e1f0ea976e7e101",
+      "git_blob": "c2c00a41b48cce1c049bcb63fa7cd45d12efa970",
+      "bytes": 658587
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/mutation-propagation-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/mutation-propagation-red.json",
+      "mode": "100644",
+      "sha256": "acd2652a10a3a60bd741ad32f503748b190428ce3c55ad8e7cfb948c038ab886",
+      "git_blob": "a3b864ef8ad2b8b19a3ab32b01d8ac4272243688",
+      "bytes": 64942
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/mutation-propagation-restored 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/mutation-propagation-restored.json",
+      "mode": "100644",
+      "sha256": "dd1da3b46731330a7d5b482b14ccae0e720ed22c0d04295f15accc022a5caac5",
+      "git_blob": "a4aa140d60bf2ff6e1a0ec8d7de290a6b7a0a7a2",
+      "bytes": 67511
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/parent-current-green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/parent-current-green.json",
+      "mode": "100644",
+      "sha256": "94df8ca4004d371d66e0c2f6cb91e9a09521c04c3b36afdbaa17327e757a1bef",
+      "git_blob": "c02441268c0731b2f307dd19128436e361b6fb19",
+      "bytes": 658395
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/parent-validation 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/parent-validation.json",
+      "mode": "100644",
+      "sha256": "959dceb4766e11a9d0cd450159dbc77c6310c6264f441443b09867a55209e862",
+      "git_blob": "2618c21f114bcb6b5ba2ec05b3c9812f2eb00f8d",
+      "bytes": 2705
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/project-gate-mutations 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/project-gate-mutations.json",
+      "mode": "100644",
+      "sha256": "0881578240ac1371f97dcf05c0fd4e51ed5924dc0cc891be3533bd2c07ed5cc9",
+      "git_blob": "328a563cae833de9a0f1f00cf30ccaeffcf35e76",
+      "bytes": 1248
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/project-selection 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/project-selection.json",
+      "mode": "100644",
+      "sha256": "b68c91b7bfca87f42dd6c013ccd14c3c91507c6afd814e4fd4cd2864b06b9e53",
+      "git_blob": "008497d85dd408cb15eca3f925aa0ab0c277b164",
+      "bytes": 762
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/proof-summary 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/proof-summary.json",
+      "mode": "100644",
+      "sha256": "b8160ed2feb981e5aeecbbb58b96dd0aaa0a955efd1995e644b5481d1b21eb93",
+      "git_blob": "2535f8c0e6c4ba3ec6b4bc3e9378851d598d6db1",
+      "bytes": 3800
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/run-proof 2.py",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-001-b/run-proof.py",
+      "mode": "100644",
+      "sha256": "d87e9cb0e54bb2d029817658ac79b3b8d7fe0602972120a0d5e44555278c828c",
+      "git_blob": "2ee29a9a934d05c54c55f1d17f9e2af5a1a0ec2c",
+      "bytes": 4284
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/CHECKPOINT 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/CHECKPOINT.md",
+      "mode": "100644",
+      "sha256": "d82d1695899669148ddbeec0a1bd5b72bad3cce098e50052bec7ce0331e13cfc",
+      "git_blob": "3d665c5c64b2b89bc3a61b3598483c1b4d7c5066",
+      "bytes": 3509
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/baseline-concise-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/baseline-concise-red.json",
+      "mode": "100644",
+      "sha256": "b2471b32d0de03781ea041b77723062eb960d5dad70b7876653e716620c45b93",
+      "git_blob": "1192b97b607e6d0964fbe0ede5a88791fba7af44",
+      "bytes": 18023
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/baseline-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/baseline-red.json",
+      "mode": "100644",
+      "sha256": "5b73302ddaa1bf36574d3a761f1c09bbbfa0696d0fc743f6c32a62a318e4f57b",
+      "git_blob": "ea7260b33fdf082f271d3d2db6532456d8f0b46c",
+      "bytes": 799461
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/mutation-draft-exemption-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/mutation-draft-exemption-red.json",
+      "mode": "100644",
+      "sha256": "6e4b7b7116e9692934765e42f465c025cdd4be47dfa70620d860a8d3c106b8e9",
+      "git_blob": "31917a34e853accb19a884da800627f99d38725a",
+      "bytes": 11775
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/mutation-tier-branch-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/mutation-tier-branch-red.json",
+      "mode": "100644",
+      "sha256": "0f912cb3f0f1ae1f01c045e60863a6cd32ad5a6ecc582a1119c36fcf50799a7a",
+      "git_blob": "3b6d097e73063c776d792e54bc1d4ed5378e2a44",
+      "bytes": 11739
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/mutations-summary 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/mutations-summary.json",
+      "mode": "100644",
+      "sha256": "09ab394a37820cefbc10c0344d8789db9eb6ac6124dca6279bb5d3a00dfbb571",
+      "git_blob": "881169b3236dba4d418aeb4efa9baf54a8632eae",
+      "bytes": 11765
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/original/.claude/skill-os/codex-viability 2.yaml",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/original/.claude/skill-os/codex-viability.yaml",
+      "mode": "100644",
+      "sha256": "05718cc213e45ada0d1a28e306c7486aa5075f4ea6aadce6d50d49d8132ac7ba",
+      "git_blob": "dcf5ba8ea2c3b889d63282c57203d7f33059eabe",
+      "bytes": 6096
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/original/.claude/skills/office/brainstorm/SKILL 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/original/.claude/skills/office/brainstorm/SKILL.md",
+      "mode": "100644",
+      "sha256": "cb48d7ffed032cd2ab18320cdbc560f48ae6206e4136ba09406680deacd54a5d",
+      "git_blob": "1965a63c8be6f788ba4c2d4ab8e57e0ab33222ab",
+      "bytes": 41854
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/original/.claude/skills/office/ux-brainstorm/SKILL 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/original/.claude/skills/office/ux-brainstorm/SKILL.md",
+      "mode": "100644",
+      "sha256": "c4a0ce65bc5db6b9152e247461d9da4143bd8f18cb27928fe132d73de4526949",
+      "git_blob": "f6f457a7775b0009db264c8b09826fe5bb873bb0",
+      "bytes": 38006
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/parent-final-byte-green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/parent-final-byte-green.json",
+      "mode": "100644",
+      "sha256": "fd836bc435c97e79aacb684d3cd520200485e4745745fecf6143b6ab9476e97f",
+      "git_blob": "8e7609f3b63e4ddccd13734f47a9561dd7e15c5b",
+      "bytes": 10401
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/restored-green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-002/restored-green.json",
+      "mode": "100644",
+      "sha256": "d1fe875847a685563e4da1f800215e4bc8e71305475205c5f49c78fbe7171c76",
+      "git_blob": "73994b577c14ad0b4b59f51a9b21ab2c91fb33d1",
+      "bytes": 10401
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/CHECKPOINT 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/CHECKPOINT.md",
+      "mode": "100644",
+      "sha256": "fe9d4ef4c91b2dd6b0c4fcbd189bb94d334195806fa20aafe83b5d8734926838",
+      "git_blob": "e8e011a388a2fae2d16ed2203952d68477ef3ebf",
+      "bytes": 589
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/baseline-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/baseline-red.json",
+      "mode": "100644",
+      "sha256": "e35b64ec7a187118e7b588a3ed9cc4fa0c15f59822f4e3ebde8a29464290ff8f",
+      "git_blob": "c405ca07bd3bb3bc847f960eb13b3c157f9a7054",
+      "bytes": 8842
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/green.json",
+      "mode": "100644",
+      "sha256": "14398fbe741f4b13ba022701dda15598430c0c1f50eb785145b4095b3c245101",
+      "git_blob": "32f47cfd9fc574f5e062d4b94e57a9606a22dd47",
+      "bytes": 7811
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/mutation-interactive-spawn-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/mutation-interactive-spawn-red.json",
+      "mode": "100644",
+      "sha256": "0871a2fb298dc49e74036bd4f6b200baaf5050b4c835b5a7959377bca124e55c",
+      "git_blob": "08f9b8ca34f2228aa3dcc9a22c4eee8954e22a1c",
+      "bytes": 7883
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/postimages 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/postimages.json",
+      "mode": "100644",
+      "sha256": "5df08b5c985d3ffd406b94aaca13c1599f3137b12233a16b223af86443ed83fc",
+      "git_blob": "d08dbe7d2830172312f57b44b39cf9473de00e01",
+      "bytes": 227
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/preimages 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/preimages.json",
+      "mode": "100644",
+      "sha256": "54606c4512b23347061b78cbf35447d78a6fd0d20d313b17b90609fdf2c25d07",
+      "git_blob": "2c699ee719ee744ea87aa74c3287cf014872d205",
+      "bytes": 227
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/preimages/.claude/skills/office/auto/SKILL 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/preimages/.claude/skills/office/auto/SKILL.md",
+      "mode": "100644",
+      "sha256": "c887eb42f6e4f192de08cd7f520a8b5cc8e8dcff2a5a5af1efacf885f31a39a7",
+      "git_blob": "6548ec712e0edcdc2c30797be77920ad7f9324cb",
+      "bytes": 14352
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/preimages/scripts/test-design-workflow-contract 2.mjs",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/preimages/scripts/test-design-workflow-contract.mjs",
+      "mode": "100644",
+      "sha256": "b6137c9db8e2775390fb387c5f687abf99d3d38c7c350f758ccbac8766d2392c",
+      "git_blob": "af173a150c1964c50e46f4ad3fd47fca1c4f1be0",
+      "bytes": 11447
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/restored-green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-003/restored-green.json",
+      "mode": "100644",
+      "sha256": "1f028d89ead6acc24dfd08fbd6d08cf28439ad20e91f7d9a7722cdd91fb30ac7",
+      "git_blob": "2bbe25876daf6e04eb732105b056d9f1ea8c5063",
+      "bytes": 7811
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/CHECKPOINT 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/CHECKPOINT.md",
+      "mode": "100644",
+      "sha256": "79d1a6944538e1059a7f89650b8ec6693d078c46347c720c5599ee3b9a97202e",
+      "git_blob": "8b1e5b270025c9782c6bab34b1675b3fa40c444a",
+      "bytes": 1189
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/baseline-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/baseline-red.json",
+      "mode": "100644",
+      "sha256": "a4e1febc393625556c9f46969ef79617df924661b4a08533c6426c2b9dc150f3",
+      "git_blob": "bfd7e1df0083ad71c76af9d160324e2e8bb71456",
+      "bytes": 12439
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/generated-delta 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/generated-delta.json",
+      "mode": "100644",
+      "sha256": "ecd625b111c57a243cda7221c86b17513f3a04bfcf28af9d4d8c7304f772cfc3",
+      "git_blob": "de5d15236bdadd3dad9184da9bbc1ffc24689a24",
+      "bytes": 3473
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/green-build 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/green-build.json",
+      "mode": "100644",
+      "sha256": "9014a0251505f4ea32e37b612ca737eaa4e517b56304c0617f54eed307c28741",
+      "git_blob": "8b3dbaaf7eab9e48813f4acc02982e5536d94466",
+      "bytes": 249
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/green-contract 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/green-contract.json",
+      "mode": "100644",
+      "sha256": "469cab5e552706d03fe25c1cbb56dec857420f50c2bd66dafeb4bd64bef645dc",
+      "git_blob": "ecfe9b501b86bf91751cbac13b27f3726b791e57",
+      "bytes": 10311
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/green-engineering 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/green-engineering.json",
+      "mode": "100644",
+      "sha256": "61cccff3ab956b07424a0cdcaea029a9249ec135011c4eeea8ca9f186762849f",
+      "git_blob": "724f7b7e16c909710267d6edea69f6e5272cd85c",
+      "bytes": 461
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/mutation-register-read-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/mutation-register-read-red.json",
+      "mode": "100644",
+      "sha256": "122acf8f398067344b992beca9d5093f5f329634f14e35476d11d73674682ed5",
+      "git_blob": "2c6233a12b44aadf435b3c6a307d8e922282f96a",
+      "bytes": 10588
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/postimages 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/postimages.json",
+      "mode": "100644",
+      "sha256": "18cc0f68de212fe63af146cad1f54ea85ac8f8454539ca999a0e713b83ffa3d2",
+      "git_blob": "59c5f5c35aaeca4dc806e3a5cc39ce5bde27f69f",
+      "bytes": 7015
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages.json",
+      "mode": "100644",
+      "sha256": "c1a360a46ec948499200ab611f89c1831602572d2977d3084c0d3c85d18e0d44",
+      "git_blob": "a1959cfb357ff95167ef84c4f722cdc52cd34fc8",
+      "bytes": 7015
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/agents/preflight-agent 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/agents/preflight-agent.md",
+      "mode": "100644",
+      "sha256": "4ae97467954b6958c0a230fe97438b3ff4eaeb841ba274d7b50bf777112bdb85",
+      "git_blob": "700944ff6ce2c2c6f0fb270c75a8afe1936f0056",
+      "bytes": 8141
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/context-index 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/context-index.md",
+      "mode": "100644",
+      "sha256": "9f40be97d14e6b8b18efb00464e5742b0a71c6580b00b2208f1adb6716e4dee2",
+      "git_blob": "b26b50728dd28db358d880fe235e09f929f2af01",
+      "bytes": 12083
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/auto 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/auto.json",
+      "mode": "100644",
+      "sha256": "3a44b9d3323e5fe2f1ea60d1ec010ac16a532478fde09b00ddab913e005e1cde",
+      "git_blob": "f9f668ab3dad050c03098941528aff5c820f843a",
+      "bytes": 677
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/brainstorm 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/brainstorm.json",
+      "mode": "100644",
+      "sha256": "303349ee23eaa9e2a6cf4f8c433a969dbfb07e6f5a6f0b2f1bf6cb5aed715cf6",
+      "git_blob": "bce1539c01b398ee3efad15def6a0f01f3ab8376",
+      "bytes": 852
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/code-hygiene 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/code-hygiene.json",
+      "mode": "100644",
+      "sha256": "17f526c708b1526a174d80844b129ac86a943fdbc5b58b929a5d047fdfcdda88",
+      "git_blob": "d091601e8aa52ca1e0dd279f7b6025d35bb00a28",
+      "bytes": 1902
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/code-recon 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/code-recon.json",
+      "mode": "100644",
+      "sha256": "c047586d382a8bfe225ccc9d06e3aedb2d60e86e62f9a90541530079ddb21771",
+      "git_blob": "c26d126b768d6058dc7e51d0d44e4698fd2ea152",
+      "bytes": 2238
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/code-review 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/code-review.json",
+      "mode": "100644",
+      "sha256": "765a2e0fcf3cff5c226c11c5c5de76a102bb1a08c1a08431d647b0db7aba9eeb",
+      "git_blob": "acba82782c54245a59f2ca636071dedfbcfca992",
+      "bytes": 1130
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/codebase-design 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/codebase-design.json",
+      "mode": "100644",
+      "sha256": "ae022bfb2a3589509b4edb99487b6a87282fe7381dd3810cf670dca28cebc0a5",
+      "git_blob": "ea62828217c9caa3988886089ab4c21c102eef07",
+      "bytes": 1052
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/compare 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/compare.json",
+      "mode": "100644",
+      "sha256": "4e2dbe4db6b62cd284b793bb4f20db775af162f7fd97af7022a9c6f2ae78581b",
+      "git_blob": "acd9e62f35ebf50c5f7409ebca2420b934227635",
+      "bytes": 827
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/deepresearch 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/deepresearch.json",
+      "mode": "100644",
+      "sha256": "27ca275cba88be3109737eab6186c6ae329523575fe86c4b92596561f7d51e48",
+      "git_blob": "4a6fc5050a32d862dc0bf7ad9931b9c8ac8ec679",
+      "bytes": 680
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/design-brief 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/design-brief.json",
+      "mode": "100644",
+      "sha256": "3d6c61f2fe1aed7d1058dc3cf5940c7f0535c02b07d04248e5be84e40aa07b08",
+      "git_blob": "b2b06591db867abac89b12af00e99eed5bf0fd87",
+      "bytes": 2488
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/diagnosing-bugs 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/diagnosing-bugs.json",
+      "mode": "100644",
+      "sha256": "f245894919dc105d5c119b2ff4a30cb3aafcc75b3672327682e799f7523df391",
+      "git_blob": "bf35884c90e457ef317f1630fd93af53680d8b3c",
+      "bytes": 1276
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/domain-modeling 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/domain-modeling.json",
+      "mode": "100644",
+      "sha256": "a0015a2a119eca7f79edef18511d77b29c6080db094ac3601969e936aca9750a",
+      "git_blob": "20e7713ba125e090650ee3ebde109c9734176144",
+      "bytes": 1317
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/evals 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/evals.json",
+      "mode": "100644",
+      "sha256": "934b0222cd31626ca8069ad4e11dff9d3435abd053b7a459d1fda1ebe3f7635e",
+      "git_blob": "a787e3ca0b1d8c7c70b7fc425e0bdcebdde305cf",
+      "bytes": 587
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/figma-demo 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/figma-demo.json",
+      "mode": "100644",
+      "sha256": "b4a167381042ac08ad7530c2957ff95e0822b81f4a4edb21e99ac0bf2a807296",
+      "git_blob": "744c62afd91fc3765feb7b366bddc83bb4111d50",
+      "bytes": 753
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/grilling 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/grilling.json",
+      "mode": "100644",
+      "sha256": "fef891076a484f2a0026cb3eb09779a2921bc5869f93cceaf7e60a89c3aadd72",
+      "git_blob": "ea1ecb1644828ee702cfa3f54816cd49615af61a",
+      "bytes": 1179
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/handoff 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/handoff.json",
+      "mode": "100644",
+      "sha256": "cdff1954744d65ab129dfe58086663ff31e5bd4ade845b3751d70e72723bb437",
+      "git_blob": "ff1ca28e3d62628ff0ba8fdddccd82f6f00736d2",
+      "bytes": 777
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/html-prototype 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/html-prototype.json",
+      "mode": "100644",
+      "sha256": "c0be04af724e2bbd6bd61e1762d6b10521b9b04c5b817ab6f92a212b4a6daa1c",
+      "git_blob": "be99e3a66c7532438f766cf8e18a75dfe6ae7ab2",
+      "bytes": 2083
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/idea 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/idea.json",
+      "mode": "100644",
+      "sha256": "92f537555aaccac5b62529b401426a9a52dbd85b1ede22b2134cceba07b44329",
+      "git_blob": "ccf74b33db048397c8f4174d31746ba6397505d4",
+      "bytes": 655
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/implement 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/implement.json",
+      "mode": "100644",
+      "sha256": "a1a3cce256b9e4e36f533092ff880c476c89781311a3e4eafd0060502759fe28",
+      "git_blob": "c30e39ea262bc50e8fa66535d6f188e09792b297",
+      "bytes": 1309
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/insight-synthesis 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/insight-synthesis.json",
+      "mode": "100644",
+      "sha256": "c4e7eecaea60ad76d0c0808be18d5e3e34976b61acf75c6bc8cde1a53ce1825e",
+      "git_blob": "15cd87556e2dbe82c11eed5e93cc3f44d2e76f78",
+      "bytes": 1051
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/issue-triage 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/issue-triage.json",
+      "mode": "100644",
+      "sha256": "fc1b7b06df14665d7053cc18542abb5e60bd93c4c43ba798a51c06d2bf9733e3",
+      "git_blob": "5b0caf37dd4fe2ac17bcb355521ba1b1399802b0",
+      "bytes": 1762
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/loop-me 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/loop-me.json",
+      "mode": "100644",
+      "sha256": "ee0b4ddf7cf65791aa3f201bf1aa5f0e2c8c44c9dc51adfc66dac5d9343aa421",
+      "git_blob": "ae6711f0a755b175d95be667d860b743857181dd",
+      "bytes": 1355
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/magicpath 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/magicpath.json",
+      "mode": "100644",
+      "sha256": "ea218fafdc0c55d26e0f4abc93ac82daf476a829a194b41af494bac4ade4af03",
+      "git_blob": "38bd5cd5e46f2ec82e6b105ec6df4d178f13dd0b",
+      "bytes": 881
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/motion-polish 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/motion-polish.json",
+      "mode": "100644",
+      "sha256": "8901ceb72de0ae84d4cc41514adde3532c3c2d917b1d8a76afbf0281cf6d5f71",
+      "git_blob": "053617bc70d8389885a997c5050b2b3e02345b19",
+      "bytes": 2023
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/muse-req-triage 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/muse-req-triage.json",
+      "mode": "100644",
+      "sha256": "47fc4178b960efaf83cfb808f760cc0f3c3b4ea02a0a6af2ab0f93ef2cbe7b4a",
+      "git_blob": "c1a6f46fda4be1a3b1037e65cd74851a2c7e3ede",
+      "bytes": 781
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/open-design 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/open-design.json",
+      "mode": "100644",
+      "sha256": "b794adb6c7bbd8f6bec6ee0f708c5875a84c207d21d0ea495e051bfece14b7c4",
+      "git_blob": "7654e9039cb11cc112ff303e544f9caf46e94bdb",
+      "bytes": 2619
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/prototype-notes 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/prototype-notes.json",
+      "mode": "100644",
+      "sha256": "4a53cee4df85d2545ecc7d291064100f07dea21de37d238f31e3ca8d8b977757",
+      "git_blob": "f34813b78ca79e2a7d69b60dbeaedaf26fd68bb9",
+      "bytes": 2258
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/quick-research 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/quick-research.json",
+      "mode": "100644",
+      "sha256": "1a07a34736c28902768c8f31008a1601b7760cc4622c14fb2b21f6f34b164058",
+      "git_blob": "edd8c67c2c3f22cd4760fa44538ef6bf6c6cb21c",
+      "bytes": 533
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/redteam 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/redteam.json",
+      "mode": "100644",
+      "sha256": "0093a97d748b0144586c08d957e5c1749d4cf136f51237460af4185434469607",
+      "git_blob": "7547fec76696384d9e1378904ed58e67462f6e30",
+      "bytes": 598
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/research-kit 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/research-kit.json",
+      "mode": "100644",
+      "sha256": "f3f63806ec238c83a029ddd07d26cf7873d8817ac6f8f24fc6eec884e569f343",
+      "git_blob": "9530aed143888583c47dad91ca0738a6b8e8f0d3",
+      "bytes": 2346
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/resolving-merge-conflicts 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/resolving-merge-conflicts.json",
+      "mode": "100644",
+      "sha256": "59ab1b0ea59b35e8fbd1ccfcb3e55bc7360712b0fa87cdf50822896a99ee837d",
+      "git_blob": "74888139a5331d67ad2d423ecee424cdb1cb63d7",
+      "bytes": 1346
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/retro 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/retro.json",
+      "mode": "100644",
+      "sha256": "ddbead879af5c4a4136da6b60683dd2950d00eee3d975ab7efe69b537c516a47",
+      "git_blob": "517cf59ba8cbe4a5642cc73ff582427592c2791e",
+      "bytes": 616
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/setup-wizard 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/setup-wizard.json",
+      "mode": "100644",
+      "sha256": "f0adbc82297db7f2ed64e79d8016ab6f46772d600c9ae1844bde893989a29753",
+      "git_blob": "c681e49613257ee69c1b24d5c40078557707d4e8",
+      "bytes": 1477
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/superpowers-brainstorming 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/superpowers-brainstorming.json",
+      "mode": "100644",
+      "sha256": "66c503c2cf2c95cac0c6cb73215008a287a674d4a86a9702e9013dafc798e76a",
+      "git_blob": "b97f9f56d42fe8ca0ebf02a0d90a55af3b136e77",
+      "bytes": 896
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/task-plan 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/task-plan.json",
+      "mode": "100644",
+      "sha256": "3cc0af99f72b4f9a9ec6c514e888ef36180ef436bf2926f84b0cb19924237e68",
+      "git_blob": "c5651f89432615f157aa505310c39b4a7806eb12",
+      "bytes": 1053
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/tech-spec 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/tech-spec.json",
+      "mode": "100644",
+      "sha256": "1153543254b5d1a5f98c82a286e172f45787070f74321278fbe8fb626ec4b015",
+      "git_blob": "bcaa16f93b1f661630779647931dacadc2ec6842",
+      "bytes": 1100
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/to-spec 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/to-spec.json",
+      "mode": "100644",
+      "sha256": "a0ce8975cd83efe39c339e92a33d7733bb9c9bbf35009ee2ac8e4edf4bcba9e3",
+      "git_blob": "b64aea20cba9e8e7132b78494e135091a9828998",
+      "bytes": 1220
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/to-tickets 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/to-tickets.json",
+      "mode": "100644",
+      "sha256": "a28b5ffbdbd399c346320165c4f65fa6e279b4fd2b6f29322bc56ca41e91ebcf",
+      "git_blob": "5d677256dad4e1c28edeabd5f1035e3bea4d7415",
+      "bytes": 1205
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/ux-audit 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/ux-audit.json",
+      "mode": "100644",
+      "sha256": "b017ad6e46f14d0e8cd163e00eec11fb5f7009ad9ec2ecea91c41f5b26c18af5",
+      "git_blob": "cdfb524b68dabe11f3df0c70fba740442d4826a7",
+      "bytes": 606
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/ux-brainstorm 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/ux-brainstorm.json",
+      "mode": "100644",
+      "sha256": "18342bf70897f352e0c8c420aaeb7038b18a224e1a82c3c69d9a1f694998ac30",
+      "git_blob": "0208a1fa8e68d774d43a71ab8602b6cec7daad2b",
+      "bytes": 789
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/ux-research 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/ux-research.json",
+      "mode": "100644",
+      "sha256": "8d1150868458db790f7141864ea397fbed66ba0dbc0792db9e6c1e7830a091b8",
+      "git_blob": "0a2977576bf5bf8054a7550adb356ef56111999b",
+      "bytes": 741
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/ux-writing 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/ux-writing.json",
+      "mode": "100644",
+      "sha256": "64fe46593c9fe3fa4d42f4a0e8a0ac979cb0c501cb29d82e955bf4a99e121ba3",
+      "git_blob": "e1e5492cc034666fa2cf1636bc6037fa72905500",
+      "bytes": 1014
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/wait-what 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/wait-what.json",
+      "mode": "100644",
+      "sha256": "fb3e71f124758ea3a49288f89c8324722dd53c8983801079d3bc4b20b78b76ca",
+      "git_blob": "e6d88eb9e7c469a098ebc3521b9047b9506d91a9",
+      "bytes": 818
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/wayfinder 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/wayfinder.json",
+      "mode": "100644",
+      "sha256": "88c10a4f01672b37d5659b15d620ea0104d2395b37db0a3124070b4069257ea1",
+      "git_blob": "3646ca3e85411789983693215b6c41b26acf6386",
+      "bytes": 1272
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/writing-for-agents 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/writing-for-agents.json",
+      "mode": "100644",
+      "sha256": "b4d83c206ee2ef8d849bf9838843d5b7cfee17f2bc4c5903219da8e96c6b88fe",
+      "git_blob": "2d718fd041ef862f347cb6bf16d2e398bab8aaed",
+      "bytes": 1036
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/writing-workshop 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/input-modes/writing-workshop.json",
+      "mode": "100644",
+      "sha256": "1ccdb649bacb7229437457ff2457452096d2237af2cc766a8362461dc8b93d00",
+      "git_blob": "df08714793b20a0a4f831a79d92a9bd75ae087ff",
+      "bytes": 1823
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/skill-catalog 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/skill-catalog.md",
+      "mode": "100644",
+      "sha256": "a263163a91ae3ae82b74f379abca72bbc11f5a494d7c3d08d1e136ee76a495c1",
+      "git_blob": "74b9b151397a9eaa0ffec35b661149fd0da230fb",
+      "bytes": 13284
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/static-fallback 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/generated/static-fallback.md",
+      "mode": "100644",
+      "sha256": "1fdd89c843dc4b268604239b1924d7c093e02c410739f6a22d6b890d8664eec3",
+      "git_blob": "0928fc0c9efe6bc3b9b56869036e02701e464387",
+      "bytes": 1429
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/input-modes 2.yaml",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skill-os/input-modes.yaml",
+      "mode": "100644",
+      "sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e",
+      "git_blob": "e3ef29bd68e045b0ddd970c68b42f4c15cdcfb50",
+      "bytes": 33836
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skills/office/task-plan/SKILL 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skills/office/task-plan/SKILL.md",
+      "mode": "100644",
+      "sha256": "38e80538d73367b87ffac747aa2d6121e4088d0ecd90341d00c1652eba689d60",
+      "git_blob": "9cd89e2d281f91b7b31e43798c063cf5b101660d",
+      "bytes": 18992
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skills/office/tech-spec/SKILL 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/.claude/skills/office/tech-spec/SKILL.md",
+      "mode": "100644",
+      "sha256": "c12f3f61942375551c72bea203f5c8d2d5e12573188da362fce33b7fe4050c90",
+      "git_blob": "35fd8d29e4e4dea86ee0112ae59536771923d4f1",
+      "bytes": 18841
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/AGENTS 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/AGENTS.md",
+      "mode": "100644",
+      "sha256": "db5ea430452a32cf5d98fac04917ae2ef2da5ae46ca2ea775423fb434336d8d8",
+      "git_blob": "0fe3ec7a864b542be58990f958f7e3ab76180190",
+      "bytes": 11253
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/CLAUDE 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/CLAUDE.md",
+      "mode": "100644",
+      "sha256": "789523a6586d34ddf5ccddc8bc479125621efd2f06737f145548b5517018284f",
+      "git_blob": "d9f34e9e7f04cab2aa32b39e3cc81197bf8481de",
+      "bytes": 10813
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/scripts/test-design-workflow-contract 2.mjs",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/scripts/test-design-workflow-contract.mjs",
+      "mode": "100644",
+      "sha256": "180550118544a81813812a068b49199b8483352c7dcac6ad12af749e4dfa3354",
+      "git_blob": "b1834db0b73fa0092fb27e3a3b433368ebdf8685",
+      "bytes": 13400
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/scripts/test-engineering-delivery-skills 2.mjs",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/preimages/scripts/test-engineering-delivery-skills.mjs",
+      "mode": "100644",
+      "sha256": "39672b75f85e059ae2c64b7b7fe1d8916477b391660a6c7daadffa0463753f7f",
+      "git_blob": "95a81dd8f7ca417d9b8b2ca27fd02941589a8f0b",
+      "bytes": 20456
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/restored-green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-004/restored-green.json",
+      "mode": "100644",
+      "sha256": "5206ec8b93e09c39493e4f2fac1cae45c09b054592b095311b5ff8bdd7c6540c",
+      "git_blob": "4a86b32f174847e324f19b8c64f284d7bbc64388",
+      "bytes": 10458
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/CHECKPOINT 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/CHECKPOINT.md",
+      "mode": "100644",
+      "sha256": "b6a107a7116a393a451c4d1effd001ab7e642a655f32930daa71539b34779a05",
+      "git_blob": "a419c8a69dbcd6ca64cf358bbfac922ebb72b44e",
+      "bytes": 1071
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/baseline-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/baseline-red.json",
+      "mode": "100644",
+      "sha256": "725c0d856c4ab1b25171c888badceab8329fb645e848dd7169ab8c0a9f5e3beb",
+      "git_blob": "b89ef7b96e5fd8b8952b0927553d3d0a224d5638",
+      "bytes": 13969
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/delta 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/delta.md",
+      "mode": "100644",
+      "sha256": "5120f6ec3caa4eee2577c8e28c551bb4ed917ed920a09957846a7e237d379132",
+      "git_blob": "7794afc8e71c8bbfe7e785bf7196d4bf7a5de70a",
+      "bytes": 523
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/generated-delta 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/generated-delta.json",
+      "mode": "100644",
+      "sha256": "1a6bfc3048f20454a02469796dd9efc321b78892e655794e73cca88f67b50d00",
+      "git_blob": "9f8959df47f9d877a5287c9acd87ded3e1bf4aa9",
+      "bytes": 3474
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/green-build 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/green-build.json",
+      "mode": "100644",
+      "sha256": "9014a0251505f4ea32e37b612ca737eaa4e517b56304c0617f54eed307c28741",
+      "git_blob": "8b3dbaaf7eab9e48813f4acc02982e5536d94466",
+      "bytes": 249
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/green-contract 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/green-contract.json",
+      "mode": "100644",
+      "sha256": "2c6d26a6993dd0a2d4c5b84964bf0bf4cdedf9958146ce59d7cb428e8e0ef180",
+      "git_blob": "a02f4c5ec601362b9bd3439d9f9ad6fc78308454",
+      "bytes": 12298
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/green-original-adapter 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/green-original-adapter.json",
+      "mode": "100644",
+      "sha256": "e6fd0dbe7546116a83a32b61aa9f1fceda8e359b46df4ce931c415e2b4a0b5d3",
+      "git_blob": "7369a85521c3aca5e4bf5febd91349ce6510306c",
+      "bytes": 459
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/postimages 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/postimages.json",
+      "mode": "100644",
+      "sha256": "53505c9451cc2b6d5fea0112110939d5d7b2c1039e46b01a74f516867481fcce",
+      "git_blob": "140905c2c7f317247d57329dac2e3f2f9a6399a1",
+      "bytes": 7243
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages.json",
+      "mode": "100644",
+      "sha256": "23fe955114facf888267753910f2a27a9d50a3f291e8ae71e547584fc3056816",
+      "git_blob": "00237c5ab32bfb5fc69f8c69bd6f911ec66fe88e",
+      "bytes": 7243
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/agents/references/plan-design-guidance 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/agents/references/plan-design-guidance.md",
+      "mode": "100644",
+      "sha256": "71f6da283256af06d54722dc9690164c9cb2425dc89cebf3792d0ee0db6fce0f",
+      "git_blob": "20dc1c96722bb4b37ba6488e8c5e46978d10819d",
+      "bytes": 7186
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/context-index 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/context-index.md",
+      "mode": "100644",
+      "sha256": "9f40be97d14e6b8b18efb00464e5742b0a71c6580b00b2208f1adb6716e4dee2",
+      "git_blob": "b26b50728dd28db358d880fe235e09f929f2af01",
+      "bytes": 12083
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/auto 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/auto.json",
+      "mode": "100644",
+      "sha256": "c2c5038f7eb0abdb6a7176e7942cdf19ad47fd345b5ff87d40853d321d180ceb",
+      "git_blob": "f1ddb38fcb940119b38e374b69f680e9a185f9ad",
+      "bytes": 677
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/brainstorm 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/brainstorm.json",
+      "mode": "100644",
+      "sha256": "cab098f59bea02f859f5b7d3ca834d136508298f49207b3adc6e28a67ebaf8bf",
+      "git_blob": "7a896873452abea518563c37f24f6eca52746846",
+      "bytes": 852
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/code-hygiene 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/code-hygiene.json",
+      "mode": "100644",
+      "sha256": "ecce71c2d1fed95a270a1089d7ee5786281b365d5ee56193c7ab6a97baee2ccd",
+      "git_blob": "4ddc63dba2055ac6e603b9c369eac8ca8e21749b",
+      "bytes": 1902
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/code-recon 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/code-recon.json",
+      "mode": "100644",
+      "sha256": "74eb7ce406c763f0e08e886b9057c1bb0d99093a4dfc29f790c1586f5894c589",
+      "git_blob": "cf1e5477ad31384809c219595ee5777c7d4f29d5",
+      "bytes": 2238
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/code-review 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/code-review.json",
+      "mode": "100644",
+      "sha256": "e2809bda842fd775e8e84918c21b4995365019842435a5213f857ba3de021f28",
+      "git_blob": "b4c217a77c9e5705a95bee19dd7fb45cbc39bd99",
+      "bytes": 1130
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/codebase-design 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/codebase-design.json",
+      "mode": "100644",
+      "sha256": "e75fe3c74a6cb380ff0f39aa95f65bdd9bc4f26799454399a1063a21617e106f",
+      "git_blob": "529769723e81d391c3c1a58064ebcabd2fc78213",
+      "bytes": 1052
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/compare 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/compare.json",
+      "mode": "100644",
+      "sha256": "30b08805ce1e12a4e85c622374425a8de44c54e49049b7cf41464fa148f30a36",
+      "git_blob": "57b02bdaba1ee26402e4c56c6122dded16a6e066",
+      "bytes": 827
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/deepresearch 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/deepresearch.json",
+      "mode": "100644",
+      "sha256": "c21497b2d1d4fd581f7fcd9c1240f8bace3d371af987d65bf543d2d80391d0b3",
+      "git_blob": "fdc7b0d752ea6e7a41c7607bae3dc66ed068acd7",
+      "bytes": 680
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/design-brief 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/design-brief.json",
+      "mode": "100644",
+      "sha256": "3f23a4c9b1f8391d092fd84935ab0fcb31f9ebf664a738b865c657659179b78f",
+      "git_blob": "ab6997e3cbc063f9731b9eebc645c3452cefd8ee",
+      "bytes": 2488
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/diagnosing-bugs 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/diagnosing-bugs.json",
+      "mode": "100644",
+      "sha256": "222ef938f7037bc2ad42c3649b1b3de266129a281c299a43dfc572566e3ba41b",
+      "git_blob": "b2233fc5b8ca27a36fcd088fa4f4d12ffa3a407e",
+      "bytes": 1276
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/domain-modeling 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/domain-modeling.json",
+      "mode": "100644",
+      "sha256": "982742688b85a5f228b48d9e52e414e90c97a49baab8c34ad46ce0d995a27c45",
+      "git_blob": "865213c721b988927c29deae968420d13fa20813",
+      "bytes": 1317
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/evals 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/evals.json",
+      "mode": "100644",
+      "sha256": "225fcfc1ddc4647a826b51778de5fd34d95d77aa2cddc0a9870b44a358be6d3f",
+      "git_blob": "e2d02cdefe8d25cc8c9317d269c9a942ee25ee03",
+      "bytes": 587
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/figma-demo 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/figma-demo.json",
+      "mode": "100644",
+      "sha256": "cf916d6d73f5e082ddc5b79d185f8b658fc6a6ca081072650ad95bb0548aaa33",
+      "git_blob": "857a6f1e475d405d0575f9e403c235499f2c5158",
+      "bytes": 753
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/grilling 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/grilling.json",
+      "mode": "100644",
+      "sha256": "8c2ae3840e01e1d75ca626f33aac703f18a15fc2b270bd09ed5d3a992b8c777d",
+      "git_blob": "4c97f42d3d67fd0cbaa291828ee2432c9ea0aaee",
+      "bytes": 1179
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/handoff 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/handoff.json",
+      "mode": "100644",
+      "sha256": "d945dcf4a782b6b55fbd84a3656e003cf42dda2789892e7b81907f157605372b",
+      "git_blob": "01b7dc4280de76ca7a9e09dc6c834aa8cb06f4d6",
+      "bytes": 777
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/html-prototype 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/html-prototype.json",
+      "mode": "100644",
+      "sha256": "c68066501543dab94127ca5e2379fbf114f0cfbb463ecc828003029e2354bd9c",
+      "git_blob": "085fef75ba2c35837f19a23dbd6ec4caf9cd7a86",
+      "bytes": 2083
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/idea 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/idea.json",
+      "mode": "100644",
+      "sha256": "aa24a1f1898e34a6ff14bdd3cfde0d4b6c03979235c458fb2223b0cfdb20151e",
+      "git_blob": "04dfef5fc4cdda4efb3855b1efb6f7d0c1b7e0b9",
+      "bytes": 655
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/implement 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/implement.json",
+      "mode": "100644",
+      "sha256": "5920482a5d630ece16ce37d6fbcfd1d8c5673937d6f71b845a3db9ad279535bb",
+      "git_blob": "353372cdde8e7fb3dece1bcc7d38680483005836",
+      "bytes": 1309
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/insight-synthesis 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/insight-synthesis.json",
+      "mode": "100644",
+      "sha256": "9c3e5d9e9f68d6a239b3d7b9b4e39daca662662e6fe2f776c9cef1d4cedf2955",
+      "git_blob": "78b71508a846e814bfd8e1ea80b15736355e92b7",
+      "bytes": 1051
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/issue-triage 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/issue-triage.json",
+      "mode": "100644",
+      "sha256": "822a77e3ba641dd1dc3c423de239707e401d9ee421b63309d8471f83c33e8562",
+      "git_blob": "8e1889f95cda8bf7c3022970956eddd5afeefcd6",
+      "bytes": 1762
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/loop-me 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/loop-me.json",
+      "mode": "100644",
+      "sha256": "98d50702a6b57de6a8116361a843c99249f4f79e08d6e761eca84bc90dcf0265",
+      "git_blob": "ed6dc18d7c26c8f4d7c67be48719c96c10ef6161",
+      "bytes": 1355
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/magicpath 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/magicpath.json",
+      "mode": "100644",
+      "sha256": "b588cfe3a0af73cfe268fff1070e2fda5cef93aa6f6abbc5f7bd9c2783d30a94",
+      "git_blob": "5b8c3f6fe90b2eaec6d099692cb6145428cafb54",
+      "bytes": 881
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/motion-polish 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/motion-polish.json",
+      "mode": "100644",
+      "sha256": "00cb1bb6938995f511a6d7ba9c6e5e89c4dcb3ce23b611580ab1efbffc160a73",
+      "git_blob": "9fb47e716eef70739ceaf2c9b2638fb9513b2805",
+      "bytes": 2023
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/muse-req-triage 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/muse-req-triage.json",
+      "mode": "100644",
+      "sha256": "4798f5610b19019d07897f780231eb62f33b5f5cdf0fbff785032cc81b31903b",
+      "git_blob": "a8e4cd6b065e67298051c38d26b1efec51afc693",
+      "bytes": 781
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/open-design 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/open-design.json",
+      "mode": "100644",
+      "sha256": "2aa521b773543b8b24a34262b20768721942c631ee1a517c54563687e4adaf00",
+      "git_blob": "2569fb179d95a3ff5cad09af12939072dd1c41be",
+      "bytes": 2619
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/prototype-notes 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/prototype-notes.json",
+      "mode": "100644",
+      "sha256": "f5c29fc8e7e563e5346f413c271975b33a8bbdf032ef6a9820221109d2054cfc",
+      "git_blob": "ad82dc296ebec630e4b0f49b37a37b45fe55cc9f",
+      "bytes": 2258
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/quick-research 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/quick-research.json",
+      "mode": "100644",
+      "sha256": "eccd0f3fc6600351b888a210d37078ee7422b271ba98e3f4e6a384eef8554b7a",
+      "git_blob": "7f6ede848c57ac888bbba46c8ae729d8b51bc14d",
+      "bytes": 533
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/redteam 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/redteam.json",
+      "mode": "100644",
+      "sha256": "dd764ba663674b1a890fd7aaaf12e776db7b6b0278465a27a05bb1bec9f717be",
+      "git_blob": "4eed9445cc81dc34951991e524586746fe3f28f7",
+      "bytes": 598
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/research-kit 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/research-kit.json",
+      "mode": "100644",
+      "sha256": "37016e6921a9d1c0970cd985cb8798f8f343624fb400d5b19a744432e460f6a5",
+      "git_blob": "6e4ce9de2d25582917741510f56578cc4a721714",
+      "bytes": 2346
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/resolving-merge-conflicts 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/resolving-merge-conflicts.json",
+      "mode": "100644",
+      "sha256": "3a5d1f5a998913253d8f1277c6124ece6132d5d10d4d2db6b80f0f57e41b5ace",
+      "git_blob": "ce8ef84cf1efb8ea79f6fb07fdcec4aa7514e20e",
+      "bytes": 1346
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/retro 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/retro.json",
+      "mode": "100644",
+      "sha256": "339b9628bbe09e666b43b507e6d5b12ecb3d085e4643d044a92e0c59e220ebba",
+      "git_blob": "e6e01f707365c76ef6a1734989163fd0bf2b5a7f",
+      "bytes": 616
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/setup-wizard 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/setup-wizard.json",
+      "mode": "100644",
+      "sha256": "73c7c5c1c35c1a0e1d3868172a1c7dc56f0500e687672d46dd6359996b9735ec",
+      "git_blob": "855610d9847bdf495d82ad544c9b171f2d6f553a",
+      "bytes": 1477
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/superpowers-brainstorming 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/superpowers-brainstorming.json",
+      "mode": "100644",
+      "sha256": "c68a3751a74bfe8b17480243de8ed7a7b00dfe4d664cf838c4b6c00686a67e56",
+      "git_blob": "ac4ce28398cb7e42fb33c3f4f8abcd6434b4dad1",
+      "bytes": 896
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/task-plan 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/task-plan.json",
+      "mode": "100644",
+      "sha256": "1790cab3a724d38ae02e1354278794053e3f3137a4af3b34d053007a7c4be570",
+      "git_blob": "49aaac594794f1cfd76824fcc2eaae0bd92738d4",
+      "bytes": 1751
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/tech-spec 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/tech-spec.json",
+      "mode": "100644",
+      "sha256": "85f49673c92cc413179505b89b1116a6ec480d9a45dc942da54a878cd9a697f6",
+      "git_blob": "20b7bf3945669df7660055463971856b16ea20ba",
+      "bytes": 1744
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/to-spec 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/to-spec.json",
+      "mode": "100644",
+      "sha256": "472cd5ea8ae8af73b7e7044b258900ea375e46a8ddbd08c008c1e8d41832b8a2",
+      "git_blob": "363a44b54368690c1213a450a0b0cf0a4f2737e9",
+      "bytes": 1220
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/to-tickets 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/to-tickets.json",
+      "mode": "100644",
+      "sha256": "9f6b3e5aecc0646c5180f950c1f3da9db0d6f0fef28d21e9301a38ed8033069b",
+      "git_blob": "205da36b88d813a04b412a15fab4f78067f034c9",
+      "bytes": 1205
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/ux-audit 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/ux-audit.json",
+      "mode": "100644",
+      "sha256": "6f16626c655cea23341f2309b9aadb18fcb2a85b332d150d0f4dec1fb0878f36",
+      "git_blob": "925d1d68d05790372edd1f22e7e21684eb0e6074",
+      "bytes": 606
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/ux-brainstorm 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/ux-brainstorm.json",
+      "mode": "100644",
+      "sha256": "43c23837ca03d0e7163432f1b9cc288e57f21ee99f312c857a45303daf921791",
+      "git_blob": "1dcd55660d96d7764cb3ae83eb660e1c324e8d16",
+      "bytes": 789
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/ux-research 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/ux-research.json",
+      "mode": "100644",
+      "sha256": "306017f3e3408cb24296cdde79faf0d71870c3f5eeeadb7155524452180420e5",
+      "git_blob": "6d7a277b1daf68ee343b6d41aa773e03a7d5820b",
+      "bytes": 741
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/ux-writing 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/ux-writing.json",
+      "mode": "100644",
+      "sha256": "29320302baa2206498fbed01299dd3db03d852909b27e7de205d10340fd8ddc2",
+      "git_blob": "8fbb549ad4b91cfa8fc5fddd5b5141a4aa5993ff",
+      "bytes": 1014
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/wait-what 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/wait-what.json",
+      "mode": "100644",
+      "sha256": "58a93bd4fdaf0e49902b895fad15ee36838202387f4833e7547740976f2102cc",
+      "git_blob": "87cc7b28f2b9092420e0b356dca4c7ce8bed4e53",
+      "bytes": 818
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/wayfinder 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/wayfinder.json",
+      "mode": "100644",
+      "sha256": "f96ebe1e6bebb05028f8d0e66731d79590677db64abac665efe943d126f39de4",
+      "git_blob": "4d90fd9aebcba257ee51d371acebab8e815d013b",
+      "bytes": 1272
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/writing-for-agents 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/writing-for-agents.json",
+      "mode": "100644",
+      "sha256": "edbdcbe349259aff7d32b065b86dde378b944eaf5843963bf78e26557efdd191",
+      "git_blob": "75dacb79bc3bdbe9b0d8297d51fc0c50bb9501d5",
+      "bytes": 1036
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/writing-workshop 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/input-modes/writing-workshop.json",
+      "mode": "100644",
+      "sha256": "f9fbbcb50de9632cf8333457ae13ffc3a1848b77739996bc4f6233c3b7f0d389",
+      "git_blob": "2b80ceb5f8823bc124399fe46161488d3107109d",
+      "bytes": 1823
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/skill-catalog 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/skill-catalog.md",
+      "mode": "100644",
+      "sha256": "a263163a91ae3ae82b74f379abca72bbc11f5a494d7c3d08d1e136ee76a495c1",
+      "git_blob": "74b9b151397a9eaa0ffec35b661149fd0da230fb",
+      "bytes": 13284
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/static-fallback 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/generated/static-fallback.md",
+      "mode": "100644",
+      "sha256": "1fdd89c843dc4b268604239b1924d7c093e02c410739f6a22d6b890d8664eec3",
+      "git_blob": "0928fc0c9efe6bc3b9b56869036e02701e464387",
+      "bytes": 1429
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/input-modes 2.yaml",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/input-modes.yaml",
+      "mode": "100644",
+      "sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+      "git_blob": "3b7dccd10d4356215bd3cc23a75275851550b676",
+      "bytes": 35160
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/runtime/page-context 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skill-os/runtime/page-context.md",
+      "mode": "100644",
+      "sha256": "772a63116b2be445602d109671abd2361ce55a2a2666201703d4bc15ddb8f5bc",
+      "git_blob": "d78f691a52c0a905d776d872cde6237a748ece5e",
+      "bytes": 23017
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skills/office/auto/SKILL 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skills/office/auto/SKILL.md",
+      "mode": "100644",
+      "sha256": "822b06940892b6faa4b034ef3dfde77542c9f0156ffd551a395f47b2e026248d",
+      "git_blob": "cbe7ce676d9496b0e5a59e27e595338ff9fe6903",
+      "bytes": 16101
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skills/office/open-design/SKILL 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/.claude/skills/office/open-design/SKILL.md",
+      "mode": "100644",
+      "sha256": "95c4709b1f79e192e953e8bb9bbdd7216449d5820d9894a481c4e0939fe4f738",
+      "git_blob": "7fe411c9cbd7e8180e4abf14d8f94769cbfb1faf",
+      "bytes": 44093
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/AGENTS 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/AGENTS.md",
+      "mode": "100644",
+      "sha256": "db5ea430452a32cf5d98fac04917ae2ef2da5ae46ca2ea775423fb434336d8d8",
+      "git_blob": "0fe3ec7a864b542be58990f958f7e3ab76180190",
+      "bytes": 11253
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/CLAUDE 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/CLAUDE.md",
+      "mode": "100644",
+      "sha256": "789523a6586d34ddf5ccddc8bc479125621efd2f06737f145548b5517018284f",
+      "git_blob": "d9f34e9e7f04cab2aa32b39e3cc81197bf8481de",
+      "bytes": 10813
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/scripts/original-copy-handoff 2.mjs",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/scripts/original-copy-handoff.mjs",
+      "mode": "100644",
+      "sha256": "a957ba7114b1f742b6fee6d4a4956f54e7fc7fbfd718755f9281f002acb75b76",
+      "git_blob": "8563529f72dbafed711ebe058b1cd0dea1e8d780",
+      "bytes": 17548
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/scripts/test-design-workflow-contract 2.mjs",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/scripts/test-design-workflow-contract.mjs",
+      "mode": "100644",
+      "sha256": "1d7753c03ac9eeb634fba99f0fd877e20acb2bb3b2d54660d4110c73a26458b9",
+      "git_blob": "6f5df950865bf77a2aa457f1923a9df4f08a0aec",
+      "bytes": 16503
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/scripts/test-original-copy-handoff 2.mjs",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/preimages/scripts/test-original-copy-handoff.mjs",
+      "mode": "100644",
+      "sha256": "2c10c81e139c560cfc2c421705aa7be40fc7bf94216ae57cb19362d469a23e35",
+      "git_blob": "5ae1e6e134269cdfaa03a785171457a905bef731",
+      "bytes": 22569
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/protected-readback 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/protected-readback.json",
+      "mode": "100644",
+      "sha256": "83212f4a99c5abb5f8297234ba67da75d751d0e3e520c1f25dc269c68f3919b6",
+      "git_blob": "5c32c1079b3c620f7b0b813935ce39009108f8ac",
+      "bytes": 167
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/restored-green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-005/restored-green.json",
+      "mode": "100644",
+      "sha256": "55559a36e183c2f040d518c99aa39a48577755af977b33e179d3ff4b1466a3f3",
+      "git_blob": "5701d1dcb55948dfdd81c4d621a72717521ca5e6",
+      "bytes": 12445
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-agent-context-pin/preimages/.claude/agents/references/plan-design-guidance 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-agent-context-pin/preimages/.claude/agents/references/plan-design-guidance.md",
+      "mode": "100644",
+      "sha256": "2922306d1260eae30aaa362641e1d35a48bd80ca2187384cd4746aadb6d73b28",
+      "git_blob": "fd9d3e32f2ed11a24bbf1667162e6312b228becb",
+      "bytes": 7681
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-agent-context-pin/preimages/scripts/check-agent-context 2.mjs",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-agent-context-pin/preimages/scripts/check-agent-context.mjs",
+      "mode": "100644",
+      "sha256": "c4261c7e95a159a6aaac583f0f2c7d87fc18fd62fa6de1682a330c63bbe55d19",
+      "git_blob": "96a6ae28d66deecfe6bdf33ca655b5d6b83395d9",
+      "bytes": 41531
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/B2 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/B2.json",
+      "mode": "100644",
+      "sha256": "37db01921002a063159ba53ae4a6a9d785855b17ab9ae8282b280f8c17840b7f",
+      "git_blob": "fd05bfc3a73a2bcf4cc785ae54a89a45befe1c99",
+      "bytes": 883
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/contract 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/contract.json",
+      "mode": "100644",
+      "sha256": "f4a85bda9bb37133b25fcc0658580d0b687cd33a0dd9f2aae8deda14e03b7fb1",
+      "git_blob": "67c009cf0c75b137370e1f6c0ac2c42e67e0243e",
+      "bytes": 826
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/contract 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/contract.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/contract 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/contract.stdout",
+      "mode": "100644",
+      "sha256": "ea12b5492d02a065d3dfa826d56767e37eb4e900b75487ea0df9ee6ec11bea6b",
+      "git_blob": "9e71255c32a1959ab75d051ee3fef5b7509cbbca",
+      "bytes": 11785
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/pin-before 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/pin-before.stdout",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/pin-checker 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/pin-checker.json",
+      "mode": "100644",
+      "sha256": "b33addd1f02fdc97ff381f1480fc3e0841a55a544a2ce1b8fda3151512f29602",
+      "git_blob": "da305a64013c10e64b7a066d1f222f285f5af662",
+      "bytes": 816
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/pin-checker 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/pin-checker.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/pin-mutations 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/pin-mutations.stdout",
+      "mode": "100644",
+      "sha256": "ca8100f8e6348605bb9d2edf33f015dbb07e1784b6d9c26db5d31336cd1560ca",
+      "git_blob": "73e5a21597abce0bc9960f0591afcf5c1adb5b9d",
+      "bytes": 7360
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/postimages/scripts/check-agent-context 2.mjs",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/postimages/scripts/check-agent-context.mjs",
+      "mode": "100644",
+      "sha256": "9bb0711e9c7f7f6adb8fa2bfcdcfc8a27cf1a8b3aedca78feab1f70d1912294b",
+      "git_blob": "663a2568d5d9777880cc57eddee7e06ef4e71e0e",
+      "bytes": 41531
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/preimages 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/preimages.json",
+      "mode": "100644",
+      "sha256": "d828e22a1aefc3c1beb17871a7bab16e1f233bc06dae137cf67ab379716a4a2b",
+      "git_blob": "f247551877095343778c40d657c0082bf5adf7f9",
+      "bytes": 1745
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/preimages/.claude/skills/office/html-prototype/SKILL 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/preimages/.claude/skills/office/html-prototype/SKILL.md",
+      "mode": "100644",
+      "sha256": "2dab4f3962d09ee4b802a61a07dece538df39df780dc9c5bcfd263b93bc7e878",
+      "git_blob": "8bd04bea088789fa7dc35a10c6a83f1ccfcb4ec9",
+      "bytes": 47191
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/state 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/state.json",
+      "mode": "100644",
+      "sha256": "5f1e247f23ae10ffe9c13508db10185961d72a78b1f86d9936ae01d953fcc8ef",
+      "git_blob": "194c6ca3d65bab25a51776992005afec8c833cf0",
+      "bytes": 824
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/state 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U-006-interface-budget-repair/state.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U001a-worker-review 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U001a-worker-review.md",
+      "mode": "100644",
+      "sha256": "99d0ec1a7e41994b0b83ba8cb85e00c7decef2890e6d460c972eacee4b4981d3",
+      "git_blob": "3c5ac5ca614cb929ba42e3d6cf6bb84a185ffe3b",
+      "bytes": 1255
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U001b-worker-native-receipt 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U001b-worker-native-receipt.json",
+      "mode": "100644",
+      "sha256": "1493f66ed47cf225c809582a19c6b6a1fb0500d28ba352012841448bc2e411aa",
+      "git_blob": "9ffe2a1224fb7bc4139819bece5c4a92b89e416a",
+      "bytes": 1290
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U001b-worker-review 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U001b-worker-review.md",
+      "mode": "100644",
+      "sha256": "236bdbf7f32b43248dabcd2f68b4a99459b13b433eb707fffb88fe063b8e61f3",
+      "git_blob": "bb59767bb14c640c7059cae273fb1a4b93ef1f45",
+      "bytes": 1082
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U002-worker-native-receipt 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U002-worker-native-receipt.json",
+      "mode": "100644",
+      "sha256": "1493f66ed47cf225c809582a19c6b6a1fb0500d28ba352012841448bc2e411aa",
+      "git_blob": "9ffe2a1224fb7bc4139819bece5c4a92b89e416a",
+      "bytes": 1290
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U002-worker-review 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U002-worker-review.md",
+      "mode": "100644",
+      "sha256": "425550deb15cf114091072a8f078de18ad3fe97aa8164123a7e8c4e541a48c61",
+      "git_blob": "38e47c2c2471611eb8a53eaa00a8e7b0c3dd5eff",
+      "bytes": 880
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U003-U005-final-manifest 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U003-U005-final-manifest.json",
+      "mode": "100644",
+      "sha256": "a1bffb7912b5bda061d57d4b8808bb57fadb7fb7da0f1363843aa99b5e968ac8",
+      "git_blob": "e257cfd648a8cba17e8cf761d7e935cc6da4757c",
+      "bytes": 7671
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-baseline-red 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-baseline-red.json",
+      "mode": "100644",
+      "sha256": "63373eec9b2edd5a33c51985a63ccb01f5930dff883d42f66d4e2323c2c7d6cc",
+      "git_blob": "bc6e18cca6f7c01b0f0ddd58a2136b0efa641b42",
+      "bytes": 612
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-ci-green 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-ci-green.json",
+      "mode": "100644",
+      "sha256": "316fec20500674c21187701e465e426a31bac770581c28bd7ffdb2b23ab11d92",
+      "git_blob": "c67dfff62055f4a2fa6aa962822a98a1758cd392",
+      "bytes": 414
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-ci-green 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-ci-green.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-ci-green 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-ci-green.stdout",
+      "mode": "100644",
+      "sha256": "ec65d4c35f2e416891bc129e34072ca32effaf114c52c839202568d748619f54",
+      "git_blob": "bf121d35a1d5ee98cc9f8406c3629c8f96625262",
+      "bytes": 1018
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-diagnose-C9 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-diagnose-C9.json",
+      "mode": "100644",
+      "sha256": "89b72f8a7f5e5f3cc48ed00566890eb6ecd367e909da91422dbd6a8610690772",
+      "git_blob": "5ccabfc6df1a52e5c3b794dcdfca39d14c23309e",
+      "bytes": 19322
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-diagnose-C9 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-diagnose-C9.stdout",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-full-verify 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-full-verify.json",
+      "mode": "100644",
+      "sha256": "d771ad28d2c688d643a7398949ea5bfa79bfaca799df134ce3bdc879a340b482",
+      "git_blob": "619a3b4edf19259c856cae7bba2a5c0d00f76959",
+      "bytes": 19308
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-repair-worker-native-receipt 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/U006-repair-worker-native-receipt.json",
+      "mode": "100644",
+      "sha256": "23d1d99f44e9ec249291abccfbf8423ec1544a30b967f60428544e728736f16d",
+      "git_blob": "5b6b8beff9c70c8edada19f33dbd56f753bc105f",
+      "bytes": 1290
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-credential-absent 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-credential-absent.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-credential-absent 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-credential-absent.stdout",
+      "mode": "100644",
+      "sha256": "1a9a83ec5760b8a0a78115e95e87d493f346f8360643bd77b3fedec7059ca4f2",
+      "git_blob": "a7b064c66b1b81ba4ce9e6cd18e7905d952432e2",
+      "bytes": 226
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-release-spec-native-receipt 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-release-spec-native-receipt.json",
+      "mode": "100644",
+      "sha256": "80226ba2b0103503e5739d735f84f84851d978b71cf6fb3c61732219b651beb4",
+      "git_blob": "6315b59b2a519814e2b53b17b268aa55a80f1eb7",
+      "bytes": 1293
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-release-spec-review 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-release-spec-review.md",
+      "mode": "100644",
+      "sha256": "4ad081d0a973158e938727b3a151c3a2cd8397d282aac1e79e4a1e214da597e5",
+      "git_blob": "3ea2c0258faa1761822b777b2736e51a9a1624de",
+      "bytes": 2342
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-release-standards-native-receipt 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-release-standards-native-receipt.json",
+      "mode": "100644",
+      "sha256": "6b4baa60cc85cb6b1447cd0997489ed5a06956070146a39cf03fb9c92280397c",
+      "git_blob": "ee6db6e19734a41ac76a74c1628ebd94177a2950",
+      "bytes": 1293
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-commit 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-commit.json",
+      "mode": "100644",
+      "sha256": "484609399c77b6eb5bf437a4fa7bdb63c02eacb2833ff5f92efb12ab38d1d65e",
+      "git_blob": "5a5a616278839dc56ce4e2bbe241d5667db2169f",
+      "bytes": 19595
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-commit 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-commit.stderr",
+      "mode": "100644",
+      "sha256": "4bf0262c7e0322e9c15cbd1b303d22e05bc6a3576d871ea69ea3a8cf03b182ac",
+      "git_blob": "244c922424b61c5e3b13bdf6e10d74bfdafa3d1f",
+      "bytes": 8895
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-commit 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-commit.stdout",
+      "mode": "100644",
+      "sha256": "b7852233f820136f8c13711c1ffa2a4ffadb5a225c82415bbb1f10eae4757982",
+      "git_blob": "8caaa8096e25d3819e2b582907c926459c9a02e4",
+      "bytes": 138
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-contract 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-contract.json",
+      "mode": "100644",
+      "sha256": "55a49d78e3ebdcf17528aa312ef34d6b926607c0a877b0c6d685a25f97dbbda6",
+      "git_blob": "d390d3c83e7d399d92e6e8c9cf0a19d0c9779aae",
+      "bytes": 19535
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-contract 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-contract.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-contract 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-contract.stdout",
+      "mode": "100644",
+      "sha256": "ec65d4c35f2e416891bc129e34072ca32effaf114c52c839202568d748619f54",
+      "git_blob": "bf121d35a1d5ee98cc9f8406c3629c8f96625262",
+      "bytes": 1018
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-after 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-after.json",
+      "mode": "100644",
+      "sha256": "33e241591b92bbe13a67bf1b7a7bd72da6062a2307dd41ce6eda52d26e463485",
+      "git_blob": "dd75f8bfb3f28d192b9e5c6427120dc8d2efb4d0",
+      "bytes": 237
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-before 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-before.json",
+      "mode": "100644",
+      "sha256": "c0329bff831f706d187c58312cf2a55f9870f8b37098e6246b79cbf5761f30fb",
+      "git_blob": "e51ce082390c914ff4969c416d8962a830b894c4",
+      "bytes": 9740
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-ci-mutations 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-ci-mutations.json",
+      "mode": "100644",
+      "sha256": "7ec0e21aeb4e67829f45243ef2de71770283ec3dd23b3ebb59d1d9d50076b3fb",
+      "git_blob": "a5743052b1ed20d1466218e916ba8d62345d8d00",
+      "bytes": 19555
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-ci-mutations 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-ci-mutations.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-ci-mutations 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-ci-mutations.stdout",
+      "mode": "100644",
+      "sha256": "ec65d4c35f2e416891bc129e34072ca32effaf114c52c839202568d748619f54",
+      "git_blob": "bf121d35a1d5ee98cc9f8406c3629c8f96625262",
+      "bytes": 1018
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-design 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-design.json",
+      "mode": "100644",
+      "sha256": "bd5585f17a6a271ac07b84e1e7e419e5100e1680d247328e7dc1f630d06a266d",
+      "git_blob": "4178de5aad5c24703686104b77ee6d220e989d70",
+      "bytes": 19562
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-engineering 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-engineering.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-engineering 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-engineering.stdout",
+      "mode": "100644",
+      "sha256": "1a9a83ec5760b8a0a78115e95e87d493f346f8360643bd77b3fedec7059ca4f2",
+      "git_blob": "a7b064c66b1b81ba4ce9e6cd18e7905d952432e2",
+      "bytes": 226
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-generated 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-generated.json",
+      "mode": "100644",
+      "sha256": "85d8556ab19e917ae71f4191b8edaeefda1e398a2a96f8f8906f5e8eaf87616c",
+      "git_blob": "5c6a6384fc4bea6b1aeb18c21d847f9e8f068f25",
+      "bytes": 19570
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-generated 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-generated.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-generated 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-generated.stdout",
+      "mode": "100644",
+      "sha256": "e4a08fdfd511fd2cce4cd328f971090f7a3e788fc7ddd91ede2c63d02e9748d4",
+      "git_blob": "e1b92f79af803531b2cf0befb47335722dedc882",
+      "bytes": 40
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-original-copy 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-original-copy.json",
+      "mode": "100644",
+      "sha256": "e7abd9bedca77a60641ec86ed8f2d9c5a9f9983844c695a143fb0a7aad0f0fd1",
+      "git_blob": "9f5000b648ac387a6452997c15c76440609b1901",
+      "bytes": 19566
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-state 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-isolated-state.json",
+      "mode": "100644",
+      "sha256": "9a230413cf3475d23bc236892e6c07951d1aa53a689da5a3172e9a8b9feb7c5f",
+      "git_blob": "39b177a3c0cc63407304ed1082f26dae4e7835f9",
+      "bytes": 19559
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-push 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-push.json",
+      "mode": "100644",
+      "sha256": "69d2d4680a614429f53af50ba29e960b03dd3e20150202f0eec8961d85cee2b9",
+      "git_blob": "bd7903d5c14126a226673865bdebd2bb806edf69",
+      "bytes": 19506
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-push 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-push.stderr",
+      "mode": "100644",
+      "sha256": "addc7ef52638876ed65b96812b5dfc97b31e1cc14eda85a87caec59d15dd9eaa",
+      "git_blob": "a5015f11993727af810cc856cca018b1cd76fc27",
+      "bytes": 136
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-push 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-push.stdout",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/desktop-protected-before-pull 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/desktop-protected-before-pull.json",
+      "mode": "100644",
+      "sha256": "0a029a36493ec2fb52f3f3ff3b7abf2bfc22e2faf776ed2d94966588abae1283",
+      "git_blob": "bf68a3f3f21888f26bfba33514a27dba9b93009a",
+      "bytes": 380
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/draft-fixtures/native-pre-freeze-stale-parent 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/draft-fixtures/native-pre-freeze-stale-parent.json",
+      "mode": "100644",
+      "sha256": "932e69915bfdd2be44186f1732d25c2ece632c739936b9274e83a5f57aa5baf4",
+      "git_blob": "23b626054ea02a1dc082038463409b2329543e57",
+      "bytes": 2526
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/draft-fixtures/negative-pre-freeze 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/draft-fixtures/negative-pre-freeze.json",
+      "mode": "100644",
+      "sha256": "697d7d934ffb6fc26b5390548dc9efa1c03852abb3069a6ec8b2009364fd1afe",
+      "git_blob": "b56222c8362df64e894da74f5a881a5c96d58027",
+      "bytes": 3594
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/draft-fixtures/standard-draft-seed 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/draft-fixtures/standard-draft-seed.json",
+      "mode": "100644",
+      "sha256": "51fd8605b79c41a9aeb5b19fe2e7266d0436d87e87c106da64ae0dd69efc6c1c",
+      "git_blob": "14fc4e444508fc925d246513544459c43975f329",
+      "bytes": 8418
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/draft-fixtures/unknown-tier 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/draft-fixtures/unknown-tier.json",
+      "mode": "100644",
+      "sha256": "99f4b176baca8b6389c8ef91f323edd5cfa10651a251ec18731a50d9ba67059d",
+      "git_blob": "3ca89479f2244d7d95cff501a972bd9b5fceac87",
+      "bytes": 15047
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-agents 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-agents.json",
+      "mode": "100644",
+      "sha256": "7287d54e613d2af03862905e723aa52cec5e396ee0cc35f122392512be77faa4",
+      "git_blob": "7de5a81522c5e303bdb9823f76e395f14c47b06b",
+      "bytes": 19544
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-agents 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-agents.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-agents 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-agents.stdout",
+      "mode": "100644",
+      "sha256": "e31b9e29c944ad7fe16e05fa1093a07d9bac987722cc6fc656ae30cb9167110d",
+      "git_blob": "48d968ce8c5922a11ce2dcdee082ed3794f59b58",
+      "bytes": 175
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-ci-mutations 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-ci-mutations.json",
+      "mode": "100644",
+      "sha256": "30fa00e884b1ded40e11ddf56c815c98c1691683f1a034b92561d7cdc536eb16",
+      "git_blob": "4cb04b119b0617106a7f793eab2ebbd80c7f80fc",
+      "bytes": 19545
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-context 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-context.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-context 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-context.stdout",
+      "mode": "100644",
+      "sha256": "8cc0a21a8f32204623ed27e6ec276db44eba8625d5a9795fe7870846275858e6",
+      "git_blob": "936a0eb09968c5f1157faaee1e8d69a2e5faf59d",
+      "bytes": 75
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-engineering 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-engineering.json",
+      "mode": "100644",
+      "sha256": "b31d12e5cc0c1ffe2869404fd40a6b596bda23ac2aac0e3722eb13620b19ce88",
+      "git_blob": "0c4f4848e298c1618f542ee041fd0dbe6e66aea8",
+      "bytes": 19573
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-generated 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-generated.json",
+      "mode": "100644",
+      "sha256": "0c0b6df66d944c3b7307de62f02e4786fb17a5c7155ee817808c06a867e6d578",
+      "git_blob": "b5988dd441fccd433cbc4dfa92086ece390bc024",
+      "bytes": 19560
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-generated-corrected 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-generated-corrected.json",
+      "mode": "100644",
+      "sha256": "13c2a2b7b0d326bdacf07f0a7e5b7719cd2be099e9c91036765dbf0f59683d08",
+      "git_blob": "309b9a4549853b5bd5274a6487405798b2fdc920",
+      "bytes": 19570
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-generated-corrected 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-generated-corrected.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-generated-corrected 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-generated-corrected.stdout",
+      "mode": "100644",
+      "sha256": "e4a08fdfd511fd2cce4cd328f971090f7a3e788fc7ddd91ede2c63d02e9748d4",
+      "git_blob": "e1b92f79af803531b2cf0befb47335722dedc882",
+      "bytes": 40
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-historical-manifest 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-historical-manifest.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-state 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-state.stdout",
+      "mode": "100644",
+      "sha256": "f0af4786c9a2a2ee41e22c3ed24d70d86bd2574d323f9506dba686c0c5163985",
+      "git_blob": "58c9541750dbff573acc9a35652f12fdc6bd0944",
+      "bytes": 4075
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-state-proof 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/isolated-state-proof.json",
+      "mode": "100644",
+      "sha256": "9460edc84689575297ec3c2dadad8c089bf3d7e39cb8798db5423efa9adca43a",
+      "git_blob": "24946e074a6309d6cf20e09c214be44be1bbf81f",
+      "bytes": 660729
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/plan-review-v2-manifest 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/plan-review-v2-manifest.json",
+      "mode": "100644",
+      "sha256": "dcd90480c3ca371373eed8dc0a146507e6ab4367258a35ecab058b7b24e1f2f3",
+      "git_blob": "6c60cdf5714dcfd864461d4632adeeadfc1a9238",
+      "bytes": 19481
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/preflight-native-receipt 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/preflight-native-receipt.json",
+      "mode": "100644",
+      "sha256": "e4e5c5757a552fdb1e9e215ab1e8c72b75eab1bfcd9e443f5a0feb3da1ffbe4a",
+      "git_blob": "54fce3d4069286d7a5a00e8c5aa1b1082f8ad390",
+      "bytes": 1297
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/preflight-review 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/preflight-review.md",
+      "mode": "100644",
+      "sha256": "5893ce856725ca83dbdac5c8f36bb6b6fc5409a234965e5af8584f1130ca9355",
+      "git_blob": "1346fb6fc470396126549de9a48a68820cb5e2dc",
+      "bytes": 993
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/publication-upstream 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/publication-upstream.json",
+      "mode": "100644",
+      "sha256": "30fda8ef6f6b24e1195e21ff7229d82d2df7578dbc2e97f250456b2845e5df8e",
+      "git_blob": "40e3495a324584af02b61dfa7d4b480f2717bc52",
+      "bytes": 485
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release 2.diff",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release.diff",
+      "mode": "100644",
+      "sha256": "6a50462917e4eb0256305834be7b50f536b64db21fe9a4d5bc2f81fb1b3a3361",
+      "git_blob": "d65754f010023c49465ae0da1f536f8bd6def3c5",
+      "bytes": 256897
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-commit 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-commit.stderr",
+      "mode": "100644",
+      "sha256": "4bf0262c7e0322e9c15cbd1b303d22e05bc6a3576d871ea69ea3a8cf03b182ac",
+      "git_blob": "244c922424b61c5e3b13bdf6e10d74bfdafa3d1f",
+      "bytes": 8895
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-commit 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-commit.stdout",
+      "mode": "100644",
+      "sha256": "7ea40555c35790071b3e48db666bc623cf51b73040216a8132e8dbf23296d04b",
+      "git_blob": "c6125953e2a354165d0127d65b4949d9fb823945",
+      "bytes": 223
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-source-manifest 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-source-manifest.json",
+      "mode": "100644",
+      "sha256": "64dd81a465b1e2e5a228e6a531c57b0bf1bbd06014ab654fbd8aebef40351829",
+      "git_blob": "5c861fd552731a8010a53019a67dda7cfa6a2afe",
+      "bytes": 9843
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-source-manifest.v1 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-source-manifest.v1.json",
+      "mode": "100644",
+      "sha256": "079e80f8db2a4879995f954f5f7e1d20cec4349812068658a4c496cd4b66b435",
+      "git_blob": "86bbdb3826acd7035d3b4e840e7a63ecbc90e49b",
+      "bytes": 9843
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-spec-final-envelope 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-spec-final-envelope.json",
+      "mode": "100644",
+      "sha256": "b37c8afd4d64be46443295e4dba4c09e2d5554f25d9f75fd70bb20c9aed72981",
+      "git_blob": "dd495194cd033e15ef3bd75d5fc0a521c880d44e",
+      "bytes": 749
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-standards-final-envelope 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-standards-final-envelope.json",
+      "mode": "100644",
+      "sha256": "dfed59c6af4512b697fdc0e0cc1ca2e2b757a43530a979441499b01532d4de34",
+      "git_blob": "972cf44b7087ebdb561f32c17a58b532d37c7bb9",
+      "bytes": 685
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-standards-final-native-receipt 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-standards-final-native-receipt.json",
+      "mode": "100644",
+      "sha256": "ce3872d18fd6885140bd98f088b2002eec9f9ecdad7146f06be2586ca21dafcc",
+      "git_blob": "0b176513b594deeb61e2074db43f63b02ccfd8a8",
+      "bytes": 1293
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-standards-final-review 2.md",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/release-standards-final-review.md",
+      "mode": "100644",
+      "sha256": "dada6a83d53579158dc4bdc0b5605ed8e549b37cb3e492d8ab87d7d70afe0c3a",
+      "git_blob": "cfb6648739cd71831db01f7352107f62d5f520f1",
+      "bytes": 2353
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/resume-design-core 2.json",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/resume-design-core.json",
+      "mode": "100644",
+      "sha256": "52359e5b5c3b6db21ab5a2c964d5953bc898dfbb05206e524a40f9d87b7af7fa",
+      "git_blob": "effd2952633dbea30f28863ad7b6289c5a347ebe",
+      "bytes": 19548
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/resume-design-core 2.stderr",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/resume-design-core.stderr",
+      "mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/resume-design-core 2.stdout",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/resume-design-core.stdout",
+      "mode": "100644",
+      "sha256": "274b7411265c0cebbc824c49ae9e5c30c73dcb4735d64dd22345eac3b025e697",
+      "git_blob": "18626e88f1adaff16c5ad551ce829031e4f0cb43",
+      "bytes": 11787
+    },
+    {
+      "removed_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/run-release-evidence 2.py",
+      "retained_path": "framework-audit/2026-10-06-design-workflow-publication-pr26/run-release-evidence.py",
+      "mode": "100644",
+      "sha256": "9c4498feb018bc552266e105f6165b83b8a873e5edda4323c7dd2f14727be3a7",
+      "git_blob": "edee34ec7f90c85f431dc19b89d6c3a46330e463",
+      "bytes": 1378
+    }
+  ],
+  "exceptions": [
+    {
+      "path": "framework-audit/2026-10-06-design-workflow-publication-pr26/ci-repair-progress 2.json",
+      "reason": "different Git blob/mode or missing retained source",
+      "sha256": "68dddfb02cb390808769d95c15e310d8ad17cc2f1d4993a01d23c11f30eb4b6a"
+    }
+  ],
+  "text_reference_scan": {
+    "method": "git grep -l -F -f - BASE -- . using every exact numbered basename",
+    "exit_code": 1,
+    "matched_paths": [],
+    "boundary": "literal tracked-text search; does not prove unknown external or dynamic consumers absent"
+  },
+  "recoverability": "All original baseline Git blobs remain reachable; retain original files and mapping. No Git history rewrite."
+}

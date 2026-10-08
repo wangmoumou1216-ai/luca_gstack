@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-08 · 仓库文档与历史副本整理）
+
+- README 与贡献指南同步当前 skill 入口、有限委托、规则加载、standalone/项目状态边界和验证环境；package 描述改为产品中性。为什么：避免旧说明误导调用、项目写入或环境准备。
+- 精确去重 274 份字节和 Git mode 相同的编号审计副本，保留原件、不同的进度快照和提交历史，并记录逐文件恢复映射。为什么：减少约 6.32 MiB 重复工作树材料，同时保留审计来源；旧 inventory 仍是原基线的历史快照。
+
+### Added（2026-10-06 · 本地原型交互说明）
+
+- 新增 `prototype-notes`：为已确认业务版本的本地 HTML 增改交互说明、标注与人工编辑入口，AI 仅处理本次新增范围，人工可编辑整个受支持原型。为什么：让原型说明可维护，同时保留业务行为与已有说明；具体支持范围和验收以 skill 合同为准。
+
 ### Fixed（2026-10-08 · 路由与计划基线有限返修）
 
 - Plan 摘要与模式表统一要求所有 Supervisor/Hierarchical 实例获真实批准；严格 handoff 拒绝 UNKNOWN、非法或重复字段及注释、证据中的伪 PASS。为什么：避免说明与执行门不一致，以及文本伪装造成错误放行。

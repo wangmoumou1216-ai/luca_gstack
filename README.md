@@ -36,6 +36,7 @@ Governance-callable 治理（评审/评估/复盘/自进化）随时可调，但
 
 - **设计收敛**：Design Brief 统一承接全流程已选方案、已有需求/口述与已有原型精修，冻结前完成模板语义适配。
 - **工程交付**：补齐 `wayfinder`、`grilling`、`to-spec`、`to-tickets`、`implement` 与 `code-review` 等入口，复用既有规格和任务计划。
+- **原型说明**：`prototype-notes` 为已确认的本地 HTML 增改交互说明、标注与人工编辑入口，AI 仅处理本次新增范围，人工可编辑整个受支持原型。
 - **动效与验收**：`motion-polish` 处理现有 HTML 的动效与微交互，交付绑定精确候选、独立验收报告和最终产物引用。
 - **事实采集**：`fact-collector` 用轻量模型摘录有限来源中的显式事实，主模型核验后才采用；解释、综合与关键裁决保持各自分工。
 
@@ -146,11 +147,11 @@ Optional Workflow Graph（可选，主动启用）
 pending 与裁决 marker 只表示工作窗口的处理状态，不证明记忆已落库。
 旧强制提取模式需显式设置 `SESSION_SYNC_FORCE_ON_STOP=1`；Claude 可 block，Codex 对该控制动词降级为提示。
 
-### 3. Observability — 从反馈蒸馏短规则
+### 3. Observability — 按需加载已生效规则
 
-`observations.jsonl` 记录原始用户反馈（冷存储）；`get_rules.py <skill> [scene]` 把其中明确、可复用的
-反馈蒸馏成**短规则**，只在跑对应 skill 时按需加载。它和记忆自成长互补：Observability 的明确规则可立即
-生效，记忆候选则必须经评审才晋升——两条速度不同的成长通道。
+`observations.jsonl` 记录原始用户反馈（冷存储），规则的提议与采纳另走治理流程。
+`get_rules.py <skill> [scene]` 读取 `rules.yaml`，按 skill、场景与 active 状态筛选短规则；
+它只负责加载，不生成或晋升规则。记忆候选仍须经评审才能晋升。
 
 ### 4. Agent 编排体系
 
@@ -158,16 +159,18 @@ pending 与裁决 marker 只表示工作窗口的处理状态，不证明记忆�
 
 | Agent | 定位 | 关键约束 |
 |-------|------|----------|
-| **Orchestrator** | 主 session 的执行行为模式（双模式：自由任务 / skill 流程）| 不是 subagent dispatcher；skill 内部自管 subagent |
+| **Orchestrator** | 主 session 的执行行为模式（双模式：自由任务 / skill 流程）| 不是 subagent dispatcher；skill 内部委托受父级合同约束 |
 | **Plan Agent** | 规划器 | 输出阶段计划 + 编排模式 + 断言，供 Orchestrator 执行 |
 | **Preflight Agent** | 前置校验 | skill 启动前验证前置条件，返回 PASS/FAIL |
 | **Quality Gate** | 测试层 | 独立 context 跑断言、审查产出质量，不污染主 session |
-| **Work Agent** | 单阶段执行器 | 只做一件有界的事，返回结构化完成报告，不规划、不再派 subagent |
+| **Work Agent** | 单阶段执行器 | 只做一件有界的事；task_execution / implement 不再委托，其余 skill_execution 按合同有限委托 |
 | **Fact Collector** | 有界原文采集 | 只读授权快照；出处校验后仍需主模型逐题核验，不承担综合或裁决 |
 
 编排模式借鉴 Anthropic *Building Effective Agents*：能画出决策树的任务就用确定性编排，不交给 agent
 自由探索。按职责控制上下文：探索者接收查询问题，执行者接收任务与文件所有权，
 审查者接收冻结改动、需求与断言。具体预算由编排合同约束。
+内部委托共用父级分配的全树额度，取消期间仍占额度；受管节点经独立验收、记录与当前真人门后，
+由唯一父级提交完成状态。具体见 [Orchestrator 合同](.claude/agents/orchestrator.md)。
 
 事实采集结果先由 `scripts/verify-fact-candidates.mjs` 校验出处与逐字内容，再由主模型逐题记录
 接受、接手或未解决。模型采用回执与内容验收分开，校验器退出成功也不等于事实已获认可。
@@ -406,6 +409,7 @@ standalone 不强制启动整条流程，但仍遵守 skill 自身的输入、�
 | `ux-writing` | 内容语义、voice/tone、微文案与文案评审 |
 | `open-design` | 冻结 Packet 与模板绑定后交接到指定 OD 项目，执行获批的生成与回收 |
 | `html-prototype` | 用户明确选择的本地 HTML 原型与可观测 QA |
+| `prototype-notes` | 为已确认的本地 HTML 增改交互说明、标注与人工编辑入口 |
 | `motion-polish` | 检查或改善现有 HTML 的动效、微交互及交付质量 |
 | `ux-audit` | 按选定模块评审页面 UX |
 
@@ -454,7 +458,8 @@ standalone 不强制启动整条流程，但仍遵守 skill 自身的输入、�
 
 - Claude Code 或 Codex 已安装并可访问此工作区
 - macOS / Linux
-- Git、Node.js ≥ 20、npm 与 Python 3；完整检查还需 PyYAML 等环境依赖
+- Git、Node.js ≥ 20.19.0、npm 与 Python 3；完整检查建议使用与 CI 一致的 Node.js 22
+- 完整检查还需 PyYAML、zsh、ripgrep，以及当前锁定 Playwright 对应的 Chromium 和 Firefox
 
 ### 安装
 
@@ -480,11 +485,24 @@ git config core.hooksPath .githooks
 
 ### 健康检查
 
+先完成 `npm ci`，并在用于检查的 Python 环境安装 PyYAML（可使用虚拟环境）：
+
+```bash
+python3 -m pip install pyyaml
+npx playwright install chromium firefox
+```
+
+Linux 缺浏览器系统依赖时，按 [CI 配置](.github/workflows/ci.yml) 使用
+`npx playwright install --with-deps chromium firefox`；该命令可能需要系统安装权限。
+确认 `zsh`、`rg` 可用后再运行：
+
 ```bash
 bash scripts/verify.sh                         # NO_PIN 框架完整检查
 node scripts/codex-hook-health.mjs --source-only # 只查仓内 Codex 注册
 ```
 
+完整 `verify.sh` 在 `NO_PIN` 范围检查框架，不扫描共享项目别名；项目状态须在已验证绑定下另行检查。
+CI 使用配置中列出的独立检查，未运行本机完整门。
 `--source-only` 不证明官方授信、启用或端到端通过；完整 hook 体检与旧注册维护步骤见上方生命周期说明。
 `scripts/sync.sh` 含 Git 同步效果，按实际授权使用，不能作为只读健康检查。
 
