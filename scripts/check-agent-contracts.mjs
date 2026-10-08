@@ -175,6 +175,48 @@ t('eval 区分主张、版本、前置依赖与未知成本',
   && evalMethod.includes('整体收益/架构替换') && evalMethod.includes('不改判旧成绩')
   && evalMethod.includes('未知费用留空'));
 
+// AOR-02: 静态消费面 tripwires；不能证明冷调用实际行为。
+t('O 两个 PF 调用显式携带模式与真实上下文', (orch.match(/显式传入 skill_name \+ topic \+ execution_mode/g) || []).length === 2 && pre.includes('Orchestrator 调用必传'));
+for (const kind of ['wa_phase', 'main_phase', 'aggregate']) t(`QG/O ${kind} 来源合同`, qg.includes(kind) && orch.includes(kind));
+t('QG 坏输入先拒绝且原分母不缩', qg.includes('DONE 却有 required skipped/blockers') && qg.includes('不执行断言') && qg.includes('派发前冻结的全部 required Phase'));
+t('QG 当前产物与票绑定，最终仍跑断言', qg.includes('同 phase 换产物不能复用旧票') && qg.includes('已有 Phase 票不免最终全断言验证'));
+
+// AOR-01: each finite completion entry must explicitly replace its local write.
+const managedSkills = ['idea','challenge','evals','retro','redteam','ux-audit','html-prototype','figma-demo','open-design','design-brief','deepresearch','ux-research','ux-brainstorm','prototype-notes'];
+for (const skill of managedSkills) {
+  const body = read(`.claude/skills/office/${skill}/SKILL.md`);
+  t(`${skill} 局部完成接口受管回交`, body.includes('completion_owner') && body.includes('回交') && body.includes('受管节点提交'));
+}
+const completion = orch.slice(orch.indexOf('  3.4d '), orch.indexOf('  3.4e '));
+function hasCompletionGatesBeforeCommit(body) {
+  const commit = body.indexOf('才调用原完成 seam');
+  return commit >= 0 && ['调度独立', '原样记录', '当前节点的必需 Human Gate'].every(anchor => {
+    const gate = body.indexOf(anchor);
+    return gate >= 0 && gate < commit;
+  });
+}
+t('O 验收记录当前人类门先于完成提交', hasCompletionGatesBeforeCommit(completion));
+for (const anchor of ['调度独立', '原样记录', '当前节点的必需 Human Gate', '才调用原完成 seam']) {
+  t(`O 完成提交缺失 ${anchor} 必须拒绝`, !hasCompletionGatesBeforeCommit(completion.replaceAll(anchor, '')));
+}
+t('QG 普通对象待验而非未来DONE', qg.includes('`status: IN_PROGRESS` 待验对象') && !qg.includes('确认 `status: DONE`'));
+t('O 旧DONE先停依赖再转待验', orch.includes('先阻断其依赖消费，再将精确节点转 IN_PROGRESS') && orch.includes('转换前后中断都不能凭旧 DONE 放行'));
+t('共享提交保留合并字段与独立owner', handoff.includes('合并后有效状态') && handoff.includes('baseline_score、blueprint、certificate') && office.includes('任何局部 writer/YAML/host 完成步骤前'));
+const notesBody = read('.claude/skills/office/prototype-notes/SKILL.md');
+t('notes 受管return在completeOnce之前且保留exact引用', notesBody.indexOf("if(managed&&request.action==='return')") > 0 && notesBody.indexOf("if(managed&&request.action==='return')") < notesBody.indexOf('await host.completeOnce') && notesBody.includes('不重新 prepare/seal') && notesBody.includes('同一可信宿主绑定'));
+
+// AOR-03 bounded skill-only delegation; task/implement retain no-nesting.
+t('WA 两模式先消费共用约束', wa.includes('共用前置（两种模式先执行）') && wa.includes('共用前置完成后只跳过 SECTION 3') && !wa.includes('跳过 SECTION 1-3'));
+t('WA 普通task和implement始终禁嵌套', wa.includes('task_execution 及 implement 一律不调用其他 Agent') && wa.includes('缺许可或共用约束未实际读完则禁止'));
+for (const [name, body] of [['WA',wa],['O',orch]]) {
+ t(`${name} 子树不复制预算`, body.includes('不重叠额度') && body.includes('不能复制父总额度') || name==='O' && body.includes('不能各复制父总额度') && body.includes('不重叠额度'));
+ t(`${name} 取消未结束不释放`, body.includes('真实完成/确认结束前不释放占用') && body.includes('停止新增派发'));
+}
+
+// AOR-04 complete required denominator, including file eleven.
+t('WA 十文件仅单批建议', wa.includes('单批预加载建议 | 10 个；不是必读文件总上限') && !wa.includes('超过则优先读最直接相关的'));
+t('WA 第11项完整读且缺必读停依赖', wa.includes('第 11 项同样必须完整读取') && wa.includes('缺必读停止依赖动作') && wa.includes('11 项可分批不得仅因数量永久阻断'));
+
 if (failures.length) {
   console.error(`❌ agent 契约回归 FAIL（${failures.length}/${n}）：`);
   failures.forEach(f => console.error('  - ' + f));

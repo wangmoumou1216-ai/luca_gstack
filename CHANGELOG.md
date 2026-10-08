@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-08 · Agent 编排完成与委托合同）
+
+- PF 明确实际模式与输入；QG 区分 WA、主控和汇总证据。受管节点在独立验收、记录与当前真人门后由唯一父级提交，保留 standalone 和原宿主完成接口。为什么：避免先写 DONE 或缺输入造成错误放行与合法流程误阻。
+- Skill 内部委托使用父级分配的全树额度，取消期间保留占用；必读集合允许分批完整消费。验证采用用户选择的核心用例，复杂完成分支和 Claude 活体验证仍未覆盖。
+
 ### Fixed（2026-10-07 · Codex 当前模型路由）
 
 - 嵌套原生派发从可信 transcript 和既有父子绑定解析真实调用者，并将启动、完成证据归到同一次调用；拒绝错误祖先、陈旧代次和歧义来源，保留祖先待决调用与失败锁。为什么：worker 再派发子 Agent 时，宿主回调可能保留祖先 session ID，导致身份误判或完成证据归错会话。

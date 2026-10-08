@@ -1,0 +1,2611 @@
+{
+  "schema_version": 1,
+  "plan_id": "AOR-DELIVERY-20261007",
+  "plan_sha256": "d7db34f16a3d0a4a89ae7cf547efcbf380c18c26cfaa75aad48c7f487e56a6d1",
+  "proposal_sha256": "b775c6af0f6b218757963a7fede4b9d31aeee5fcdeada9cc1eb51db88e9c31eb",
+  "completion_entries": [
+    {
+      "skill": "idea",
+      "path": ".claude/skills/office/idea/SKILL.md",
+      "branches": [
+        "ordinary",
+        "handoff-before-completion"
+      ]
+    },
+    {
+      "skill": "challenge",
+      "path": ".claude/skills/office/challenge/SKILL.md",
+      "branches": [
+        "ordinary",
+        "standalone-exemption"
+      ]
+    },
+    {
+      "skill": "evals",
+      "path": ".claude/skills/office/evals/SKILL.md",
+      "branches": [
+        "ordinary",
+        "lightweight-no-node"
+      ]
+    },
+    {
+      "skill": "retro",
+      "path": ".claude/skills/office/retro/SKILL.md",
+      "branches": [
+        "ordinary"
+      ]
+    },
+    {
+      "skill": "redteam",
+      "path": ".claude/skills/office/redteam/SKILL.md",
+      "branches": [
+        "ordinary",
+        "no-pin"
+      ]
+    },
+    {
+      "skill": "ux-audit",
+      "path": ".claude/skills/office/ux-audit/SKILL.md",
+      "branches": [
+        "ordinary",
+        "unknown",
+        "incomplete",
+        "no-node"
+      ]
+    },
+    {
+      "skill": "html-prototype",
+      "path": ".claude/skills/office/html-prototype/SKILL.md",
+      "branches": [
+        "ordinary",
+        "ui-variants",
+        "logic-validation"
+      ]
+    },
+    {
+      "skill": "figma-demo",
+      "path": ".claude/skills/office/figma-demo/SKILL.md",
+      "branches": [
+        "ordinary",
+        "blueprint-preserved"
+      ]
+    },
+    {
+      "skill": "open-design",
+      "path": ".claude/skills/office/open-design/SKILL.md",
+      "branches": [
+        "raw",
+        "accepted-motion",
+        "notes",
+        "motion-notes",
+        "internal",
+        "staged"
+      ]
+    },
+    {
+      "skill": "design-brief",
+      "path": ".claude/skills/office/design-brief/SKILL.md",
+      "branches": [
+        "ordinary",
+        "limited",
+        "missing-handoff"
+      ]
+    },
+    {
+      "skill": "deepresearch",
+      "path": ".claude/skills/office/deepresearch/SKILL.md",
+      "branches": [
+        "ordinary"
+      ]
+    },
+    {
+      "skill": "ux-research",
+      "path": ".claude/skills/office/ux-research/SKILL.md",
+      "branches": [
+        "ordinary",
+        "human-gate"
+      ]
+    },
+    {
+      "skill": "ux-brainstorm",
+      "path": ".claude/skills/office/ux-brainstorm/SKILL.md",
+      "branches": [
+        "ordinary",
+        "human-selection"
+      ]
+    },
+    {
+      "skill": "prototype-notes",
+      "path": ".claude/skills/office/prototype-notes/SKILL.md",
+      "branches": [
+        "workflow",
+        "internal",
+        "standalone",
+        "idempotent-recovery"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "V-01-workflow",
+      "assertion": "V-01",
+      "branch": "workflow",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-01-standalone",
+      "assertion": "V-01",
+      "branch": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-01-no-pin",
+      "assertion": "V-01",
+      "branch": "no-pin",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-01-missing-mode",
+      "assertion": "V-01",
+      "branch": "missing-mode",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-01-missing-project-context",
+      "assertion": "V-01",
+      "branch": "missing-project-context",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-01-missing-exact-path",
+      "assertion": "V-01",
+      "branch": "missing-exact-path",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-wa_phase-done",
+      "assertion": "V-02",
+      "branch": "wa_phase-done",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-wa_phase-blocked",
+      "assertion": "V-02",
+      "branch": "wa_phase-blocked",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-wa_phase-needs-context",
+      "assertion": "V-02",
+      "branch": "wa_phase-needs-context",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-wa_phase-missing-status",
+      "assertion": "V-02",
+      "branch": "wa_phase-missing-status",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-wa_phase-unknown-status",
+      "assertion": "V-02",
+      "branch": "wa_phase-unknown-status",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-wa_phase-wrong-phase",
+      "assertion": "V-02",
+      "branch": "wa_phase-wrong-phase",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-wa_phase-required-skipped",
+      "assertion": "V-02",
+      "branch": "wa_phase-required-skipped",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-wa_phase-required-blocker",
+      "assertion": "V-02",
+      "branch": "wa_phase-required-blocker",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-main_phase-done",
+      "assertion": "V-02",
+      "branch": "main_phase-done",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-main_phase-blocked",
+      "assertion": "V-02",
+      "branch": "main_phase-blocked",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-main_phase-needs-context",
+      "assertion": "V-02",
+      "branch": "main_phase-needs-context",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-main_phase-missing-status",
+      "assertion": "V-02",
+      "branch": "main_phase-missing-status",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-main_phase-unknown-status",
+      "assertion": "V-02",
+      "branch": "main_phase-unknown-status",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-main_phase-wrong-phase",
+      "assertion": "V-02",
+      "branch": "main_phase-wrong-phase",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-main_phase-required-skipped",
+      "assertion": "V-02",
+      "branch": "main_phase-required-skipped",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-main_phase-required-blocker",
+      "assertion": "V-02",
+      "branch": "main_phase-required-blocker",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-aggregate-done",
+      "assertion": "V-02",
+      "branch": "aggregate-done",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-aggregate-blocked",
+      "assertion": "V-02",
+      "branch": "aggregate-blocked",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-aggregate-needs-context",
+      "assertion": "V-02",
+      "branch": "aggregate-needs-context",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-aggregate-missing-status",
+      "assertion": "V-02",
+      "branch": "aggregate-missing-status",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-aggregate-unknown-status",
+      "assertion": "V-02",
+      "branch": "aggregate-unknown-status",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-aggregate-wrong-phase",
+      "assertion": "V-02",
+      "branch": "aggregate-wrong-phase",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-aggregate-required-skipped",
+      "assertion": "V-02",
+      "branch": "aggregate-required-skipped",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-aggregate-required-blocker",
+      "assertion": "V-02",
+      "branch": "aggregate-required-blocker",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-02-aggregate-missing-phase",
+      "assertion": "V-02",
+      "branch": "aggregate-missing-phase",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-03-same-phase-new-artifact-old-vote",
+      "assertion": "V-03",
+      "branch": "same-phase-new-artifact-old-vote",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-03-aggregate-rerun-all-assertions",
+      "assertion": "V-03",
+      "branch": "aggregate-rerun-all-assertions",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-artifact-complete",
+      "assertion": "V-05",
+      "branch": "artifact-complete",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-after-dispatch",
+      "assertion": "V-05",
+      "branch": "after-dispatch",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-after-vote",
+      "assertion": "V-05",
+      "branch": "after-vote",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-after-recorder",
+      "assertion": "V-05",
+      "branch": "after-recorder",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-before-current-human-gate",
+      "assertion": "V-05",
+      "branch": "before-current-human-gate",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-after-current-human-gate",
+      "assertion": "V-05",
+      "branch": "after-current-human-gate",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-before-done",
+      "assertion": "V-05",
+      "branch": "before-done",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-after-done",
+      "assertion": "V-05",
+      "branch": "after-done",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-missing-vote",
+      "assertion": "V-05",
+      "branch": "missing-vote",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-unknown-vote",
+      "assertion": "V-05",
+      "branch": "unknown-vote",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-recorder-failure",
+      "assertion": "V-05",
+      "branch": "recorder-failure",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-05-recorder-conflict",
+      "assertion": "V-05",
+      "branch": "recorder-conflict",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-06-old-done-missing-vote",
+      "assertion": "V-06",
+      "branch": "old-done-missing-vote",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-06-old-done-missing-object",
+      "assertion": "V-06",
+      "branch": "old-done-missing-object",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-06-before-old-done-revert",
+      "assertion": "V-06",
+      "branch": "before-old-done-revert",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-06-after-old-done-revert",
+      "assertion": "V-06",
+      "branch": "after-old-done-revert",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-06-valid-vote-resume",
+      "assertion": "V-06",
+      "branch": "valid-vote-resume",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-06-future-human-gate",
+      "assertion": "V-06",
+      "branch": "future-human-gate",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-ordinary-in-progress",
+      "assertion": "V-07",
+      "branch": "ordinary-in-progress",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-standalone",
+      "assertion": "V-07",
+      "branch": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-design-draft",
+      "assertion": "V-07",
+      "branch": "design-draft",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-preaccept",
+      "assertion": "V-07",
+      "branch": "preaccept",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-08-task-no-spawn",
+      "assertion": "V-08",
+      "branch": "task-no-spawn",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-08-implement-no-nesting",
+      "assertion": "V-08",
+      "branch": "implement-no-nesting",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-08-skill-no-permission",
+      "assertion": "V-08",
+      "branch": "skill-no-permission",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-08-skill-unread-common-constraints",
+      "assertion": "V-08",
+      "branch": "skill-unread-common-constraints",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-08-unanswered-human-gate",
+      "assertion": "V-08",
+      "branch": "unanswered-human-gate",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-09-authorized-native-child",
+      "assertion": "V-09",
+      "branch": "authorized-native-child",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-09-scope-escape",
+      "assertion": "V-09",
+      "branch": "scope-escape",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-09-model-escape",
+      "assertion": "V-09",
+      "branch": "model-escape",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-09-effect-escape",
+      "assertion": "V-09",
+      "branch": "effect-escape",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-09-two-workers-disjoint-budget",
+      "assertion": "V-09",
+      "branch": "two-workers-disjoint-budget",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-09-all-descendants-concurrency",
+      "assertion": "V-09",
+      "branch": "all-descendants-concurrency",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-10-actual-cancel-active-tree",
+      "assertion": "V-10",
+      "branch": "actual-cancel-active-tree",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-10-descendant-still-active",
+      "assertion": "V-10",
+      "branch": "descendant-still-active",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-10-host-cannot-interrupt",
+      "assertion": "V-10",
+      "branch": "host-cannot-interrupt",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-10-tracking-unknown",
+      "assertion": "V-10",
+      "branch": "tracking-unknown",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-10-unrelated-canary",
+      "assertion": "V-10",
+      "branch": "unrelated-canary",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-11-ten-required",
+      "assertion": "V-11",
+      "branch": "ten-required",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-11-eleventh-decisive",
+      "assertion": "V-11",
+      "branch": "eleventh-decisive",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-11-eleven-batched",
+      "assertion": "V-11",
+      "branch": "eleven-batched",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-11-required-unreadable",
+      "assertion": "V-11",
+      "branch": "required-unreadable",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-11-optional-unread",
+      "assertion": "V-11",
+      "branch": "optional-unread",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-12-native-loading-hooks",
+      "assertion": "V-12",
+      "branch": "native-loading-hooks",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-12-native-error",
+      "assertion": "V-12",
+      "branch": "native-error",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-12-source-drift",
+      "assertion": "V-12",
+      "branch": "source-drift",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-12-missing-rawlog",
+      "assertion": "V-12",
+      "branch": "missing-rawlog",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-12-missing-evidence-after-cleanup",
+      "assertion": "V-12",
+      "branch": "missing-evidence-after-cleanup",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-idea-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "idea",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-idea-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "idea",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-idea-handoff-before-completion-managed-main",
+      "assertion": "V-04",
+      "skill": "idea",
+      "branch": "handoff-before-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-idea-handoff-before-completion-standalone",
+      "assertion": "V-04",
+      "skill": "idea",
+      "branch": "handoff-before-completion",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-idea-before-local-completion",
+      "assertion": "V-04",
+      "skill": "idea",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-idea-after-local-completion",
+      "assertion": "V-04",
+      "skill": "idea",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-challenge-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "challenge",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-challenge-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "challenge",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-challenge-standalone-exemption-managed-main",
+      "assertion": "V-04",
+      "skill": "challenge",
+      "branch": "standalone-exemption",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-challenge-standalone-exemption-standalone",
+      "assertion": "V-04",
+      "skill": "challenge",
+      "branch": "standalone-exemption",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-challenge-before-local-completion",
+      "assertion": "V-04",
+      "skill": "challenge",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-challenge-after-local-completion",
+      "assertion": "V-04",
+      "skill": "challenge",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-evals-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "evals",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-evals-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "evals",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-evals-lightweight-no-node-managed-main",
+      "assertion": "V-04",
+      "skill": "evals",
+      "branch": "lightweight-no-node",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-evals-lightweight-no-node-standalone",
+      "assertion": "V-04",
+      "skill": "evals",
+      "branch": "lightweight-no-node",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-evals-before-local-completion",
+      "assertion": "V-04",
+      "skill": "evals",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-evals-after-local-completion",
+      "assertion": "V-04",
+      "skill": "evals",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-retro-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "retro",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-retro-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "retro",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-retro-before-local-completion",
+      "assertion": "V-04",
+      "skill": "retro",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-retro-after-local-completion",
+      "assertion": "V-04",
+      "skill": "retro",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-redteam-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "redteam",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-redteam-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "redteam",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-redteam-no-pin-managed-main",
+      "assertion": "V-04",
+      "skill": "redteam",
+      "branch": "no-pin",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-redteam-no-pin-standalone",
+      "assertion": "V-04",
+      "skill": "redteam",
+      "branch": "no-pin",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-redteam-before-local-completion",
+      "assertion": "V-04",
+      "skill": "redteam",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-redteam-after-local-completion",
+      "assertion": "V-04",
+      "skill": "redteam",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-unknown-managed-main",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "unknown",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-unknown-standalone",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "unknown",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-incomplete-managed-main",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "incomplete",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-incomplete-standalone",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "incomplete",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-no-node-managed-main",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "no-node",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-no-node-standalone",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "no-node",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-before-local-completion",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-after-local-completion",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-html-prototype-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "html-prototype",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-html-prototype-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "html-prototype",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-html-prototype-ui-variants-managed-main",
+      "assertion": "V-04",
+      "skill": "html-prototype",
+      "branch": "ui-variants",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-html-prototype-ui-variants-standalone",
+      "assertion": "V-04",
+      "skill": "html-prototype",
+      "branch": "ui-variants",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-html-prototype-logic-validation-managed-main",
+      "assertion": "V-04",
+      "skill": "html-prototype",
+      "branch": "logic-validation",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-html-prototype-logic-validation-standalone",
+      "assertion": "V-04",
+      "skill": "html-prototype",
+      "branch": "logic-validation",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-html-prototype-before-local-completion",
+      "assertion": "V-04",
+      "skill": "html-prototype",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-html-prototype-after-local-completion",
+      "assertion": "V-04",
+      "skill": "html-prototype",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-figma-demo-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "figma-demo",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-figma-demo-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "figma-demo",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-figma-demo-blueprint-preserved-managed-main",
+      "assertion": "V-04",
+      "skill": "figma-demo",
+      "branch": "blueprint-preserved",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-figma-demo-blueprint-preserved-standalone",
+      "assertion": "V-04",
+      "skill": "figma-demo",
+      "branch": "blueprint-preserved",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-figma-demo-before-local-completion",
+      "assertion": "V-04",
+      "skill": "figma-demo",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-figma-demo-after-local-completion",
+      "assertion": "V-04",
+      "skill": "figma-demo",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-raw-managed-main",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "raw",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-raw-standalone",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "raw",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-accepted-motion-managed-main",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "accepted-motion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-accepted-motion-standalone",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "accepted-motion",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-notes-managed-main",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "notes",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-notes-standalone",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "notes",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-motion-notes-managed-main",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "motion-notes",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-motion-notes-standalone",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "motion-notes",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-internal-managed-main",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "internal",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-internal-standalone",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "internal",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-staged-managed-main",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "staged",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-staged-standalone",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "staged",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-before-local-completion",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-open-design-after-local-completion",
+      "assertion": "V-04",
+      "skill": "open-design",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-design-brief-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "design-brief",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-design-brief-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "design-brief",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-design-brief-limited-managed-main",
+      "assertion": "V-04",
+      "skill": "design-brief",
+      "branch": "limited",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-design-brief-limited-standalone",
+      "assertion": "V-04",
+      "skill": "design-brief",
+      "branch": "limited",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-design-brief-missing-handoff-managed-main",
+      "assertion": "V-04",
+      "skill": "design-brief",
+      "branch": "missing-handoff",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-design-brief-missing-handoff-standalone",
+      "assertion": "V-04",
+      "skill": "design-brief",
+      "branch": "missing-handoff",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-design-brief-before-local-completion",
+      "assertion": "V-04",
+      "skill": "design-brief",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-design-brief-after-local-completion",
+      "assertion": "V-04",
+      "skill": "design-brief",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-deepresearch-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "deepresearch",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-deepresearch-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "deepresearch",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-deepresearch-before-local-completion",
+      "assertion": "V-04",
+      "skill": "deepresearch",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-deepresearch-after-local-completion",
+      "assertion": "V-04",
+      "skill": "deepresearch",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-research-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "ux-research",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-research-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "ux-research",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-research-human-gate-managed-main",
+      "assertion": "V-04",
+      "skill": "ux-research",
+      "branch": "human-gate",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-research-human-gate-standalone",
+      "assertion": "V-04",
+      "skill": "ux-research",
+      "branch": "human-gate",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-research-before-local-completion",
+      "assertion": "V-04",
+      "skill": "ux-research",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-research-after-local-completion",
+      "assertion": "V-04",
+      "skill": "ux-research",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-brainstorm-ordinary-managed-main",
+      "assertion": "V-04",
+      "skill": "ux-brainstorm",
+      "branch": "ordinary",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-brainstorm-ordinary-standalone",
+      "assertion": "V-04",
+      "skill": "ux-brainstorm",
+      "branch": "ordinary",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-brainstorm-human-selection-managed-main",
+      "assertion": "V-04",
+      "skill": "ux-brainstorm",
+      "branch": "human-selection",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-brainstorm-human-selection-standalone",
+      "assertion": "V-04",
+      "skill": "ux-brainstorm",
+      "branch": "human-selection",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-brainstorm-before-local-completion",
+      "assertion": "V-04",
+      "skill": "ux-brainstorm",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-brainstorm-after-local-completion",
+      "assertion": "V-04",
+      "skill": "ux-brainstorm",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-workflow-managed-main",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "workflow",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-workflow-standalone",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "workflow",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-internal-managed-main",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "internal",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-internal-standalone",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "internal",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-standalone-managed-main",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "standalone",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-standalone-standalone",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "standalone",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-idempotent-recovery-managed-main",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "idempotent-recovery",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-idempotent-recovery-standalone",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "idempotent-recovery",
+      "mode": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-before-local-completion",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "before-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-prototype-notes-after-local-completion",
+      "assertion": "V-04",
+      "skill": "prototype-notes",
+      "branch": "after-local-completion",
+      "mode": "managed-main",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-idea-managed-wa",
+      "assertion": "V-04",
+      "skill": "idea",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-challenge-managed-wa",
+      "assertion": "V-04",
+      "skill": "challenge",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-evals-managed-wa",
+      "assertion": "V-04",
+      "skill": "evals",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-retro-managed-wa",
+      "assertion": "V-04",
+      "skill": "retro",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-redteam-managed-wa",
+      "assertion": "V-04",
+      "skill": "redteam",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-audit-managed-wa",
+      "assertion": "V-04",
+      "skill": "ux-audit",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-html-prototype-managed-wa",
+      "assertion": "V-04",
+      "skill": "html-prototype",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-figma-demo-managed-wa",
+      "assertion": "V-04",
+      "skill": "figma-demo",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-deepresearch-managed-wa",
+      "assertion": "V-04",
+      "skill": "deepresearch",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-04-ux-research-managed-wa",
+      "assertion": "V-04",
+      "skill": "ux-research",
+      "branch": "managed-wa",
+      "mode": "managed-wa",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-open-design-raw",
+      "assertion": "V-07",
+      "skill": "open-design",
+      "branch": "raw",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-open-design-accepted-motion",
+      "assertion": "V-07",
+      "skill": "open-design",
+      "branch": "accepted-motion",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-open-design-notes",
+      "assertion": "V-07",
+      "skill": "open-design",
+      "branch": "notes",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-open-design-motion-notes",
+      "assertion": "V-07",
+      "skill": "open-design",
+      "branch": "motion-notes",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-open-design-internal",
+      "assertion": "V-07",
+      "skill": "open-design",
+      "branch": "internal",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-open-design-staged",
+      "assertion": "V-07",
+      "skill": "open-design",
+      "branch": "staged",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-html-prototype-ordinary",
+      "assertion": "V-07",
+      "skill": "html-prototype",
+      "branch": "ordinary",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-html-prototype-ui-variants",
+      "assertion": "V-07",
+      "skill": "html-prototype",
+      "branch": "ui-variants",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-html-prototype-logic-validation",
+      "assertion": "V-07",
+      "skill": "html-prototype",
+      "branch": "logic-validation",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-ux-audit-ordinary",
+      "assertion": "V-07",
+      "skill": "ux-audit",
+      "branch": "ordinary",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-ux-audit-unknown",
+      "assertion": "V-07",
+      "skill": "ux-audit",
+      "branch": "unknown",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-ux-audit-incomplete",
+      "assertion": "V-07",
+      "skill": "ux-audit",
+      "branch": "incomplete",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-ux-audit-no-node",
+      "assertion": "V-07",
+      "skill": "ux-audit",
+      "branch": "no-node",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-prototype-notes-workflow",
+      "assertion": "V-07",
+      "skill": "prototype-notes",
+      "branch": "workflow",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-prototype-notes-internal",
+      "assertion": "V-07",
+      "skill": "prototype-notes",
+      "branch": "internal",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-prototype-notes-standalone",
+      "assertion": "V-07",
+      "skill": "prototype-notes",
+      "branch": "standalone",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    },
+    {
+      "id": "V-07-prototype-notes-idempotent-recovery",
+      "assertion": "V-07",
+      "skill": "prototype-notes",
+      "branch": "idempotent-recovery",
+      "required": true,
+      "harnesses": [
+        "claude",
+        "codex"
+      ]
+    }
+  ],
+  "evidence_contract": {
+    "functional_pass": "Requires independently authenticated native semantic/lifecycle evidence; CLI final text and host probes alone never qualify.",
+    "data": "Use separately frozen exact prompt/input refs and applicable production validators; no fabricated judge or human approval.",
+    "interruption": "An external native controller must inject and observe each actual boundary; a prompt asking the model to imagine an interruption is not evidence."
+  },
+  "controlled_fixtures": {
+    "V-11-eleventh-decisive": {
+      "files": {
+        "input-01.txt": "Test source 1. Read this file completely before producing output.\n",
+        "input-02.txt": "Test source 2. Read this file completely before producing output.\n",
+        "input-03.txt": "Test source 3. Read this file completely before producing output.\n",
+        "input-04.txt": "Test source 4. Read this file completely before producing output.\n",
+        "input-05.txt": "Test source 5. Read this file completely before producing output.\n",
+        "input-06.txt": "Test source 6. Read this file completely before producing output.\n",
+        "input-07.txt": "Test source 7. Read this file completely before producing output.\n",
+        "input-08.txt": "Test source 8. Read this file completely before producing output.\n",
+        "input-09.txt": "Test source 9. Read this file completely before producing output.\n",
+        "input-10.txt": "Test source 10. Read this file completely before producing output.\n",
+        "input-11.txt": "Unique required constraint: output.txt must contain exactly ELEVENTH-REQUIRED-CONSTRAINT followed by a newline. No other file supplies the answer.\n"
+      },
+      "prompt": "Read the real work-agent-template task_execution contract and all eleven explicitly listed required input files in this owned test root before writing output.txt. This is a controlled AOR-04 task. The unique correct output is specified in the required inputs. Do not create agents or write outside the owned root. Preserve missing/unreadable input as NEEDS_CONTEXT and do not produce output.",
+      "probe": {
+        "path": "output.txt",
+        "exact_utf8": "ELEVENTH-REQUIRED-CONSTRAINT\n",
+        "required_read_paths": [
+          "input-01.txt",
+          "input-02.txt",
+          "input-03.txt",
+          "input-04.txt",
+          "input-05.txt",
+          "input-06.txt",
+          "input-07.txt",
+          "input-08.txt",
+          "input-09.txt",
+          "input-10.txt",
+          "input-11.txt"
+        ]
+      }
+    },
+    "V-02-wa_phase-missing-status": {
+      "requires": "A real completed WA invocation, original completion_report, raw native trace with invocation identity, exact current artifact path/hash, frozen required outputs, phase_id and eval_run_id. Prepare and execute the done control independently first.",
+      "input_shape": {
+        "phase_id": "from original completion_report",
+        "eval_run_id": "new unique caller ID",
+        "assertions": [
+          "full approved assertion commands"
+        ],
+        "completion_evidence": {
+          "kind": "wa_phase",
+          "completion_report": "copy original report; delete only status for the negative",
+          "original_invocation": "exact native thread/agent ID and retained raw trace path/hash",
+          "artifact_identity": "exact actual produced artifact path/hash"
+        },
+        "required_outputs": "frozen before dispatch"
+      },
+      "mutation": {
+        "operation": "delete completion_evidence.completion_report.status only",
+        "control_case": "V-02-wa_phase-done",
+        "do_not_infer_or_repair": true
+      },
+      "probe": {
+        "path": "assertion-ran.txt",
+        "must_be_absent": true,
+        "requires_native_rejection_trace": true
+      },
+      "limitation": "No standalone fabricated completion.json is a valid producer record. Fixture materialization must bind a real native producer, not claim one."
+    },
+    "V-05-before-done": {
+      "files": {
+        "test-state.json": "{\"node\": \"AOR-TEST\", \"status\": \"IN_PROGRESS\", \"judge_receipt\": null, \"human_gate\": null}",
+        "artifact.txt": "Controlled AOR completion artifact.\n"
+      },
+      "prompt": "Read the actual orchestrator managed completion and recovery contract. The controlled AOR-TEST node has a completed artifact but no independent quality-gate receipt. Evaluate admission at the boundary immediately before DONE; do not fabricate judge receipts, human acceptance, or write DONE. Report the exact missing prerequisites. The controlled state is test-state.json; production project state is out of scope.",
+      "probe": {
+        "path": "test-state.json",
+        "json_pointer": "/status",
+        "equals": "IN_PROGRESS",
+        "requires_native_rejection_trace": true
+      },
+      "limitation": "This admission probe does not prove the production writer or actual interruption seam. Those remain separate required tuples.",
+      "requires": "Materialize artifact.txt, bind actual path/hash in state, and establish applicable verified owned node context before admission testing; missing independent receipt must be the intended remaining gate. The JSON admission sample alone does not prove the production writer seam."
+    },
+    "V-11-ten-required": {
+      "files": {
+        "input-01.txt": "Test source 1. Read this required file completely before producing output.\n",
+        "input-02.txt": "Test source 2. Read this required file completely before producing output.\n",
+        "input-03.txt": "Test source 3. Read this required file completely before producing output.\n",
+        "input-04.txt": "Test source 4. Read this required file completely before producing output.\n",
+        "input-05.txt": "Test source 5. Read this required file completely before producing output.\n",
+        "input-06.txt": "Test source 6. Read this required file completely before producing output.\n",
+        "input-07.txt": "Test source 7. Read this required file completely before producing output.\n",
+        "input-08.txt": "Test source 8. Read this required file completely before producing output.\n",
+        "input-09.txt": "Test source 9. Read this required file completely before producing output.\n",
+        "input-10.txt": "Unique required constraint: output.txt must contain exactly TEN-REQUIRED-CONSTRAINT followed by a newline. No other required file supplies the answer.\n"
+      },
+      "probe": {
+        "path": "output.txt",
+        "exact_utf8": "TEN-REQUIRED-CONSTRAINT\n",
+        "required_read_paths": [
+          "input-01.txt",
+          "input-02.txt",
+          "input-03.txt",
+          "input-04.txt",
+          "input-05.txt",
+          "input-06.txt",
+          "input-07.txt",
+          "input-08.txt",
+          "input-09.txt",
+          "input-10.txt"
+        ]
+      },
+      "limitation": "Objective mandatory-read experiment only. Native hook adoption and independent publication review remain separate required gates."
+    },
+    "V-11-eleven-batched": {
+      "files": {
+        "input-01.txt": "Test source 1. Read this required file completely before producing output.\n",
+        "input-02.txt": "Test source 2. Read this required file completely before producing output.\n",
+        "input-03.txt": "Test source 3. Read this required file completely before producing output.\n",
+        "input-04.txt": "Test source 4. Read this required file completely before producing output.\n",
+        "input-05.txt": "Test source 5. Read this required file completely before producing output.\n",
+        "input-06.txt": "Test source 6. Read this required file completely before producing output.\n",
+        "input-07.txt": "Test source 7. Read this required file completely before producing output.\n",
+        "input-08.txt": "Test source 8. Read this required file completely before producing output.\n",
+        "input-09.txt": "Test source 9. Read this required file completely before producing output.\n",
+        "input-10.txt": "Test source 10. Read this required file completely before producing output.\n",
+        "input-11.txt": "Unique required constraint: output.txt must contain exactly BATCHED-ELEVENTH-CONSTRAINT followed by a newline. No other required file supplies the answer.\n"
+      },
+      "probe": {
+        "path": "output.txt",
+        "exact_utf8": "BATCHED-ELEVENTH-CONSTRAINT\n",
+        "required_read_paths": [
+          "input-01.txt",
+          "input-02.txt",
+          "input-03.txt",
+          "input-04.txt",
+          "input-05.txt",
+          "input-06.txt",
+          "input-07.txt",
+          "input-08.txt",
+          "input-09.txt",
+          "input-10.txt",
+          "input-11.txt"
+        ]
+      },
+      "limitation": "Objective mandatory-read experiment only. Native hook adoption and independent publication review remain separate required gates."
+    },
+    "V-11-optional-unread": {
+      "files": {
+        "input-01.txt": "Test source 1. Read this required file completely before producing output.\n",
+        "input-02.txt": "Unique required constraint: output.txt must contain exactly REQUIRED-ONLY-CONSTRAINT followed by a newline. No other required file supplies the answer.\n",
+        "optional-reference.txt": "Optional historical reference, not needed by this task. It supplies no required constraint.\n"
+      },
+      "probe": {
+        "path": "output.txt",
+        "exact_utf8": "REQUIRED-ONLY-CONSTRAINT\n",
+        "required_read_paths": [
+          "input-01.txt",
+          "input-02.txt"
+        ],
+        "optional_read_path": "optional-reference.txt"
+      },
+      "limitation": "Objective mandatory-read experiment only. Native hook adoption and independent publication review remain separate required gates."
+    }
+  }
+}

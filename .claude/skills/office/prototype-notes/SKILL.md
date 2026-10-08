@@ -14,7 +14,7 @@ allowed-tools:
   - Glob
   - Grep
 context-cost:
-  self: 25471
+  self: 27051
   runtime-estimate: 6500
 metadata:
   recommended-model: core-execution
@@ -166,6 +166,8 @@ export async function prototypeNotesCall(request,host){
  const final=delivery.resolveFinal({...accepted_ref,delivery_root:host.delivery_root},host.current_context);pnRequire(final.processor_id==='prototype-notes'&&pnEqual(final.candidate_ref,checkpoint.candidate_ref),'FINAL_IDENTITY_MISMATCH');
  checkpoint.accepted_ref=structuredClone(final.accepted_ref);save('ACCEPTED_AWAITING_PARENT');
  if(host.mode==='internal')return {...final,notes_final_ref:final.accepted_ref,parent_completion:'CALLER_OWNS_SINGLE_COMPLETION'};
+ const managed=host.mode==='workflow'&&host.node_context?.completion_owner==='Orchestrator';
+ if(managed&&request.action==='return')return {...final,checkpoint:structuredClone(checkpoint),completion_request:{action:'complete',accepted_ref:structuredClone(final.accepted_ref),call_id:host.call_id},parent_completion:'ORCHESTRATOR_OWNS_SINGLE_COMPLETION'};
  pnRequire(request.action==='complete','COMPLETION_ACTION_REQUIRED');
  if(checkpoint.completion_receipt){pnRead(checkpoint.completion_receipt,host);return {...final,completion_receipt:checkpoint.completion_receipt,already_completed:true};}
  pnRequire(typeof host.completeOnce==='function','COMPLETION_OWNER_REQUIRED');const receipt=await host.completeOnce({call_id:host.call_id,mode:host.mode,exact_final_ref:structuredClone(final.accepted_ref),node_context:host.mode==='workflow'?host.node_context:null});pnRead(receipt,host);checkpoint.completion_receipt=structuredClone(receipt);save('ACCEPTED_AWAITING_PARENT');return {...final,completion_receipt:receipt};
@@ -177,7 +179,7 @@ export async function prototypeNotesCall(request,host){
 
 调用体返回 candidate_ref/精确 HTML/spec/notes-manifest，caller 按 `.claude/agents/quality-gate.md` 独立 MR-004 派发 PREACCEPT，
 核 actual runtime/browser/source/content/原分母与原票；不要求未来 DONE handoff。raw/spec/receipt/parent仅 provenance，不失败回退 raw。
-真实独立通过后 caller 用现有 delivery.sealAccepted，再以本次 exact accepted_ref 调用上述 return/complete。
+真实独立通过后 caller 用现有 delivery.sealAccepted；受管 workflow 以本次 exact accepted_ref 调用 action=return，准备并校验普通 handoff 后回交；其余模式沿原 return/complete。受管提交调用见 §6，不能在 skill 内提前 complete。
 所有最终消费均走 `.claude/skill-os/runtime/prototype-delivery.md` processor-aware facet 与当前 read/effects，旧票或其它 accepted_ref 不可替代。
 Synthetic local integrity 报告只用于机器测试，不是业务或独立验收票。
 
@@ -187,7 +189,13 @@ Synthetic local integrity 报告只用于机器测试，不是业务或独立验
 不含权限凭证、不增 NODE/STATUS/handoff。ITERATING/AWAITING_CONFIRMATION 无有效 candidate；CONFIRMED_READY 才生成，
 CANDIDATE_REVIEW 只接该candidate；ACCEPTED_AWAITING_PARENT 重验exact结果后返回/完成。恢复从宿主重新核权限、确认、输入与scope。
 internal 只返回父 caller，父核同 call_id 原完成记录后完成一次；standalone 写自己普通 handoff/receipt，不重开历史 OD/motion DONE；
-workflow只完成本次明确选择且已绑定的notes节点，不自动插 optional graph。`completeOnce` 是原caller已授权普通完成出口，
+workflow只完成本次明确选择且已绑定的notes节点，不自动插 optional graph。受管 workflow 在派发前由可信宿主将 node_context.completion_owner 绑定为 Orchestrator，skill/WA 不得改写。
+先调用 `prototypeNotesCall({action:'return',accepted_ref}, host)` 保留 accepted_ref checkpoint，再准备并校验 handoff，将其精确身份及 completion_request 回交 O，节点保持 IN_PROGRESS。
+O 按 `references/handoff-protocol.md`「受管节点提交」核同对象独立 QG、required 全分母、recorder 和当前 Human Gate 后，以同一可信宿主绑定调用
+`prototypeNotesCall({action:'complete',accepted_ref:completion_request.accepted_ref}, host)`；这次只重验并执行原 completeOnce，不重新 prepare/seal。
+宿主既有 completeOnce 在实际副作用前必须核当前 caller 是该节点提交 owner、当前验收及记录/Human Gate 已闭合，不能信任 request/checkpoint 自报授权；缺此真实能力 BLOCKED。
+这是现有调用体和宿主完成合同的接线，不声称独立生产 host 实现已验证；测试宿主只能证明合同消费，不代表原生验收或生产授权。
+`completeOnce` 是原caller已授权普通完成出口，
 必须先核同 call_id 持久完成记录并原子写入一次；若进程在receipt与checkpoint之间终止，恢复返回已有receipt，不能重复交接。
 只要原规则/当前版本/必要行为仍 FAIL，保留问题和原件，不能以工具字段合法关闭门禁。
 
