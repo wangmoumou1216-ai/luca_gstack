@@ -671,17 +671,61 @@ test('an authenticated global launch remains usable after the initial capability
     await assert.rejects(f.broker.claim('beforeTool',{...claim,nativePayload:payload}),{code:'CLAIM_REJECTED'});
   }finally{Date.now=realNow;}
 });
-test('unfulfilled launch capability expires, while active global launches still recheck profile',async()=>{
-  const f=fixture(),claim=await attached(f);
+test('idle attached launch revalidates the live host before its first tool',async()=>{
+  let checks=0;
+  const f=fixture({revalidateProfile:async()=>{checks++;return f.request.profileIdentity;}}),claim=await attached(f);
   const realNow=Date.now;Date.now=()=>realNow()+601000;
   try {
-    await assert.rejects(f.broker.claim('beforeTool',{...claim,nativePayload:f.appendHuman()}),{code:'CLAIM_REJECTED'});
-    assert.equal((await f.broker.parent('readReceipt',{launchId:claim.launchId})).status,'ATTACHED');
+    assert.equal((await f.broker.claim('beforeTool',{...claim,nativePayload:f.appendHuman()})).status,'ACTIVE_NO_PIN');
+    assert.equal(checks,1);
   } finally {Date.now=realNow;}
   const g=fixture(),active=await attached(g),payload=g.appendHuman();
   await g.broker.claim('beforeTool',{...active,nativePayload:payload});
   writeFileSync(g.config,'{"profile":"changed"}');
   await assert.rejects(g.broker.claim('beforeTool',{...active,nativePayload:payload}),{code:'IDENTITY_CHANGED'});
+});
+test('idle dispatched launch attaches after minutes or days with one fresh host challenge',async t=>{
+  for(const delay of [26*60*1000,7*24*60*60*1000]) for(const project of [false,true]) {
+    let checks=0;
+    const f=fixture({revalidateProfile:async()=>{checks++;return f.request.profileIdentity;}});
+    t.after(()=>rmSync(f.root,{recursive:true,force:true}));
+    const claim=await dispatched(f,project),realNow=Date.now;
+    Date.now=()=>realNow()+delay;
+    try {
+      assert.equal((await f.broker.claim('attach',claim)).status,project?'COMMITTED':'ATTACHED');
+      assert.equal(checks,1,'one private challenge per serial startup claim');
+      const saved=JSON.parse(readFileSync(join(f.gstackRoot,'.claude','host-launch',`${claim.launchId}.json`)));
+      assert.ok(saved.expiresAt>Date.now());
+      assert.equal((await f.broker.claim('beforeTool',{...claim,nativePayload:f.appendHuman()})).status,project?'COMMITTED':'ACTIVE_NO_PIN');
+    } finally {Date.now=realNow;}
+  }
+});
+test('idle renewal refuses unavailable host, forged capability, cancellation and invalid native source',async t=>{
+  for(const mode of ['host-missing','forged','cancel-race','native-source','config-changed','prepared']) {
+    let checks=0,cancellation;
+    const f=fixture({revalidateProfile:async()=>{
+      checks++;
+      if(mode==='host-missing')return null;
+      if(mode==='cancel-race')cancellation=f.broker.parent('cancel',{launchId:claim.launchId,operationId:f.request.operationId});
+      return f.request.profileIdentity;
+    }});
+    t.after(()=>rmSync(f.root,{recursive:true,force:true}));
+    const claim=mode==='prepared'
+      ? {...await f.broker.parent('prepare',f.request),hostRunId:f.request.hostRunId,openRequestId:f.request.openRequestId,nativePayload:f.payload}
+      : await dispatched(f);
+    const journal=join(f.gstackRoot,'.claude','host-launch',`${claim.launchId}.json`);
+    const expiry=JSON.parse(readFileSync(journal)).expiresAt;
+    if(mode==='forged')claim.claimHandle='wrong';
+    if(mode==='native-source')writeFileSync(f.source,'{"type":"session_meta","payload":{}}\n');
+    if(mode==='config-changed')writeFileSync(f.config,'{}');
+    const realNow=Date.now;Date.now=()=>realNow()+26*60*1000;
+    try {
+      await assert.rejects(f.broker.claim('attach',claim));
+      if(cancellation)await cancellation;
+      assert.equal(JSON.parse(readFileSync(journal)).expiresAt,expiry,'failed verification cannot renew');
+      assert.equal(checks,['host-missing','cancel-race','native-source'].includes(mode)?1:0);
+    } finally {Date.now=realNow;}
+  }
 });
 test('active global launch rechecks native evidence on every tool',async()=>{
   const f=fixture(),claim=await attached(f),payload=f.appendHuman();

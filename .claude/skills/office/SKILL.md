@@ -87,6 +87,10 @@ Project Gate、Plan 批准、普通 Human Gate 或任何效果授权。
 - **Goal-Driven Execution**：开始执行前在内部确认完成状态和验证方式；结束前用对应
   gate、脚本、读回文件或浏览器检查验证。未验证的假设必须标注为风险，不得写成结论。
 
+### 受管完成前置加载
+
+Orchestrator 管理的 workflow 节点，在运行目标 skill 的任何局部 writer/YAML/host 完成步骤前，完整读取 `references/handoff-protocol.md`「受管节点提交」。调用方明确 execution_mode、精确节点与 completion_owner=Orchestrator；自身执行与 WA 委托相同。局部完成入口执行受管回交分支，保持节点 IN_PROGRESS；standalone 沿自身合同与豁免，无节点不写状态。
+
 ### Completion Status Protocol
 
 每个 skill 完成时，用以下之一报告：

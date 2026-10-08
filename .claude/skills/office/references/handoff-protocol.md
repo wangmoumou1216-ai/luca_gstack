@@ -10,6 +10,16 @@
 Workflow 模式（workflow-state 有本 skill 节点）的 skill 标记 `status: DONE` 之前，
 必须先写 handoff summary 文件。
 
+## 受管节点提交
+
+Orchestrator 管理的 workflow 节点，唯一完成提交者为 Orchestrator（completion_owner=Orchestrator）。执行前明确真实 mode、精确 node、原输出字段与本次证据槽；skill/WA 完成原产物、自检、适用证书和 handoff 校验后，只回交完成记录与提交请求，替代内部 writer/YAML/host 完成动作。报告 DONE 表示生产工作完成，不是节点已验收；独立门前节点保持 IN_PROGRESS。
+
+回交在既有 handoff 证据槽/outputs 中保存精确当前 artifact path/hash、原节点输出字段、适用独立票/recorder 引用及尚待当前 Human Gate；不另建状态机。作者自报不作为独立票。Orchestrator 核当前身份、真实独立 QG 判决及冻结 required 全分母，完成适用 recorder 与当前节点必需 Human Gate 后，才执行原完成 seam 一次；未来节点 Human Gate 不阻断当前完成。CONDITIONAL_PASS 仅在原合同允许且 required 全通过时有效，原 exact PASS 门不降级。
+
+提交前核既有 writer 的合并后有效状态（含默认 status、extra 覆盖），保护 node/status/提交 owner，保留 baseline_score、blueprint、certificate 等原字段；回交 payload 不能自行覆盖这些控制字段。普通节点使用原 writer；prototype-notes 必须由同一可信 host binding 执行原 completeOnce，不用普通 writer 绕过 exact accepted_ref。standalone 保留原完成合同及豁免，不新增 O/QG/state 依赖；无节点不制造节点。
+
+记录失败/冲突或 required FAIL/UNKNOWN 保持待验/既有失败语义，只重试缺失门，不重跑已完成产物及外部效果。恢复旧 DONE 缺本节点有效票/当前对象身份时，先停止精确节点的依赖消费，再把该节点转 IN_PROGRESS 并补验；转换前后中断都不能凭旧 DONE 放行，不批改历史节点。
+
 ## 豁免规则
 
 standalone 模式 + 轻量 skill（frontmatter `context-cost: lightweight`

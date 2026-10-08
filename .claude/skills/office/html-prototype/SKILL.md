@@ -739,7 +739,9 @@ grep -A2 "思考中态\|低置信态\|拒答态\|部分完成态\|待 Steer 态\
 
 ## Phase 4：产出文件 + 更新状态
 
-状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。
+writer 延后至 spec、Phase 4.5全部适用QA（普通 UI/每个 UI 变体/logic-validation）、当前反馈门及 handoff 校验后。受管（completion_owner=Orchestrator）按共享「受管节点提交」只回交，O 验收后才执行；standalone 无节点不写。
+
+从 office 已验证绑定冻结 `_PROJECT_ROOT`；路径检查不授权。writer 失败保留产物、停后继，不报 DONE/handoff 成功。
 
 ```bash
 case "${_PROJECT_ROOT:-}" in
@@ -927,7 +929,7 @@ AskUserQuestion：
 
 **Step 2 — 更新 workflow-state.yaml：**
 
-> 单写入口：workflow-state 仅由 Phase 4 的 `write_state.py` 写入一次（落 `nodes.html-prototype`）。下方 YAML 是该节点的目标形态示意——`gate_result` / `handoff_path` 为 handoff 附加字段，如 write_state.py 未覆盖则补写到同一节点下；**不要另手写顶层 `html-prototype:` 键造成双写**。
+> 受管只回交；O 验收后（非受管沿原完成者）用 Phase 4 `write_state.py` 一次提交 `nodes.html-prototype`，保留 `gate_result`/`handoff_path`。YAML 仅示意；不得另写顶层 `html-prototype:` 或重复写入。
 
 ```yaml
 html-prototype:

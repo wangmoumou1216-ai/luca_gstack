@@ -748,7 +748,10 @@ docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
 - **风险**（≤3条）：未验证假设、v2 探索项
 - **产出路径**：decisions/ 文件完整路径（方案 + 交互架构）
 
-**Step 2 — 更新 workflow-state.yaml：**
+**Step 2 — 完成分支：**
+受管 workflow（completion_owner=Orchestrator）在本 skill 全部必需步骤、自检、真实审查/当前 Human Gate 与 handoff 校验完成后，按 `references/handoff-protocol.md`「受管节点提交」只回交当前产物身份、原输出字段及提交请求；此回交替代本步 YAML 更新，不在 skill 内写 DONE。
+下方 YAML 保留为验收后 O 使用原 writer 一次提交的字段说明，不是另一写入器；standalone 保留自身完成及 handoff 合同，无节点不写状态，也不新增 O/QG 依赖。
+
 ```yaml
 ux-brainstorm:
   status: DONE

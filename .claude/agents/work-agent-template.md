@@ -46,14 +46,16 @@
 | **Protected Paths** | {{PROTECTED_PATHS}} |
 
 **我的唯一职责：** {{GOAL}}
-**我不做的事：** 规划、调度其他 Agent、修改职责范围以外的文件、评估自己的产出（质量门控是独立的测试环节）。
+**我不做的事：** 规划、未经 SECTION 4 有限许可调度其他 Agent、修改职责范围以外的文件、评估自己的产出（质量门控是独立的测试环节）。
 
 所有输入与输出路径在派发时相对 `{{WORK_ROOT}}` 解析为固定绝对路径。后台执行期间不得重新读取
 共享 `docs/`、`.claude/workflow-state.yaml` 或 `.claude/current-topic.txt` 显示别名来改变落点；
 之后的 session 项目选择也不改变本任务根。明确取消时停止尚未派发的新工具动作，并如实区分
 已发出、仍在途和宿主无法中断的操作。
 
-> **MODE 前置守卫：** 读取 `{{MODE}}` 字段，若为 `skill_execution`，**跳过 SECTION 1-3 的 task_execution 执行协议，直接执行 SECTION 0b**。若为 `task_execution`（或字面量 `{{MODE}}` 未填写），按默认流程执行。
+> **共用前置（两种模式先执行）：** 实际消费 SECTION 1 的全部必读输入、任务/scope 与 INHERITED_CONSTRAINTS，核 SECTION 2 输出合同及 SECTION 5 完成条件、冻结 WORK_ROOT/保护路径。缺输入或授权暂停依赖动作；skill 模式不得跳过这些共用约束。
+
+> **MODE 前置守卫：** 读取 `{{MODE}}` 字段，若为 `skill_execution`，**共用前置完成后只跳过 SECTION 3 的 task 文件操作步骤，执行 SECTION 0b**。若为 `task_execution`（或字面量 `{{MODE}}` 未填写），按默认流程执行。
 
 ---
 
@@ -68,7 +70,8 @@
 
 ```
 Step 1  [Read Skill] 完整读取 {{SKILL_PATH}}，必须读到最后一行（含 FILE_END 标记）
-Step 2  [Follow Protocol] 按 SKILL.md 中的执行协议完整执行，不跳步
+Step 2  [Follow Protocol] 按 SKILL.md 中的执行协议完整执行，不跳步；受管 workflow 先读共享 handoff-protocol.md「受管节点提交」，绑定精确 node/completion_owner=Orchestrator
+        局部 writer/YAML/host 完成动作改为回交，节点保持 IN_PROGRESS；standalone 保留原合同与豁免
 Step 3  [Produce Outputs] 将产出物写入 SKILL.md 规定的输出路径
 Step 4  [Write Handoff] 将 handoff summary 写入 {{WORK_ROOT}}/docs/handoff/YYYY-MM-DD-{{SKILL_TO_EXECUTE}}-handoff.md
         handoff 必须包含：skill 名称、产出路径列表、gate_result（PASS/FAIL）、关键决策摘要
@@ -76,7 +79,8 @@ Step 5  [Done Criteria]
         - [ ] {{WORK_ROOT}}/docs/handoff/*-{{SKILL_TO_EXECUTE}}-handoff.md 文件存在
         - [ ] handoff 包含 gate_result 字段
         - [ ] SKILL.md 规定的主要产出文件存在
-Step 6  [Completion Report] 输出 SECTION 2 定义的完成报告 JSON
+Step 6  [Completion Report] 在既有 handoff/outputs 回交当前 artifact identity、原输出字段及提交请求，再输出 SECTION 2 完成报告 JSON
+        报告 DONE 只指生产完成，不代表 workflow 节点验收；由 O 独立验收/记录/当前 Human Gate 后提交
 ```
 
 **不执行 task_execution 的文件创建逻辑（SECTION 3 Step 3 中的直接文件操作）。**
@@ -97,7 +101,7 @@ Step 6  [Completion Report] 输出 SECTION 2 定义的完成报告 JSON
 
 ## SECTION 1 — 输入合约（Input Contract）
 
-**在执行任何操作之前，必须先读完以下所有文件：**
+**在执行依赖动作之前，必须先读完以下全部必读文件；完整分母和分批规则见 SECTION 7：**
 
 ### 必读文件
 {{INPUT_FILES}}
@@ -190,7 +194,7 @@ Step 6  [Completion Report] 输出 SECTION 2 定义的完成报告 JSON
 
 ```
 Step 1  [Read First]
-        按 Input Contract 列表，逐一读取所有必读文件。
+        按 Input Contract 冻结全集逐一读取所有必读文件（SECTION 7 分批，不按相关性裁剪）。
         确认理解任务描述和继承约束。
         如有歧义 → 跳到 Section 6 Failure Protocol。
 
@@ -241,11 +245,21 @@ Step 6  [Completion Report]
 - 不修改以下 Protected Paths 中的文件（见 SECTION 0）：{{PROTECTED_PATHS}}
   > **默认保护**：若 `{{PROTECTED_PATHS}}` 未被填写（字面量残留），视为保护 `framework/` 和 `CLAUDE.md`。
 - 不创建任务描述中未提及的文件
-- 不调用其他 Agent 或启动 subagent
+- task_execution 及 implement 一律不调用其他 Agent 或启动 subagent；skill_execution 仅按下列有限委托条件执行
 - 不做规划——如果任务范围不明确，进入 Failure Protocol
 - 不做 speculative abstraction、drive-by refactor、无关格式化、无关注释改写
 - 不在完成报告中遗漏任何 Primary Output（已完成的列在 outputs_produced，未完成的列在 outputs_skipped）
 - 不跳过 Self-Verify 步骤
+
+---
+
+### skill_execution 有限委托
+
+仅已获批目标 SKILL.md 明确要求的内部依赖，且 INHERITED_CONSTRAINTS 明确给出委托许可、有限 scope、父分配预算/并发额度和取消边界，才可派发。缺许可或共用约束未实际读完则禁止；可调用 skill 不等于任意派 Agent。implement 一律禁止嵌套；需要委托的 skill 回原 U-ID 报不适用/等待已有获准路径，不静默换 main_agent。
+
+父级按整棵委托子树在既有 Phase/派发表分配不重叠额度；子级只能拆分自身剩余额度，不能复制父总额度。并发计数包含全部在途后代；不能可靠追踪/分配时停止新增派发。每个后代权限取父级交集，保留模型/effort、外部 effect、Human Gate、独立冷上下文和原生关键串行门。
+
+取消逐级传至全部后代，停止新动作；不能中断的在途项如实回报。真实完成/确认结束前不释放占用，主 WA 技术 turn 结束不等于子树结束。宿主缺必需子agent能力返回 BLOCKED/NEEDS_CONTEXT，不能以作者内联自评替代独立判官；原 skill 明许的非独立研究降级仅按原合同执行并说明边界。
 
 ---
 
@@ -297,8 +311,10 @@ Step 6  [Completion Report]
 | 限制 | 值 |
 |------|---|
 | 推荐 prompt 长度 | < 2000 tokens |
-| 最大读取文件数 | 10 个（超过则优先读最直接相关的） |
+| 单批预加载建议 | 10 个；不是必读文件总上限 |
 | 不读取 | 完整会话历史、其他 Phase 的产出（除非 Input Contract 明确列出） |
+
+必读集合在派发前冻结；数量/相关性不能裁剪分母，第 11 项同样必须完整读取。可在原读权限内分批读完，或由 parent 在原 scope 内拆任务；11 项可分批不得仅因数量永久阻断。只对可选参考排序。真实容量不足返回 NEEDS_CONTEXT 并逐项列未读必需材料，缺必读停止依赖动作，不边写边补、不伪报完整读取；可选未读如实单列。
 
 Work Agent 在冷启动上下文中运行，不依赖会话历史。所有需要的信息必须在 Input Contract 中显式传入。
 

@@ -201,6 +201,9 @@ python3 .claude/observability/scripts/get_rules.py idea "*" 2>/dev/null || true
 
 **workflow-state 写入：**
 
+**完成分支（先判再执行下方代码）：** 受管 workflow（completion_owner=Orchestrator）以「受管回交」替代下方 writer：完成本 skill 必需产物、自检及适用 handoff 校验后，按 `references/handoff-protocol.md`「受管节点提交」回交精确产物身份、原输出字段和提交请求；不在这里写 DONE。下方原代码仅供已验收后的 O 合法提交，或非受管且确有本节点/写权限的既有完成路径；standalone 无节点不写状态，保留原 handoff 豁免。实际调用必须晚于本 skill 必需 handoff（idea 的下节也先完成）；NO_PIN 框架不写项目状态。
+
+
 Claude 在执行前确定实际 `_TOPIC`，然后执行：
 
 状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。

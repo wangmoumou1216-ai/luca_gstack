@@ -87,16 +87,20 @@ function start(sessionId, model = 'gpt-5.6-sol', source = 'startup') {
   return run({hook_event_name: 'SessionStart', session_id: sessionId, model, source, cwd: ROOT});
 }
 function pre(sessionId, toolInput, toolUseId, toolName = 'spawn_agent') {
+  const fixtureState = JSON.parse(readFileSync(stateFileForTest({harness: 'codex',
+    root_session_id: sessionId, state_root: stateRoot}), 'utf8'));
+  const nativePath = rootTranscript(sessionId, {model: fixtureState.root_anchor.model});
   return run({
     hook_event_name: 'PreToolUse', session_id: sessionId, turn_id: 'turn-root',
     tool_use_id: toolUseId, tool_name: toolName, tool_input: toolInput,
-    permission_mode: 'default', cwd: ROOT, model: 'gpt-5.6-sol',
+    permission_mode: 'default', cwd: ROOT, transcript_path: nativePath, model: 'gpt-5.6-sol',
   });
 }
 function subStart(sessionId, agentId, agentType) {
+  const path = transcript({sessionId, agentId, agentType, model: 'gpt-5.6-sol', complete: false});
   return run({
     hook_event_name: 'SubagentStart', session_id: sessionId, turn_id: 'turn-root',
-    agent_id: agentId, agent_type: agentType, permission_mode: 'default', cwd: ROOT,
+    agent_id: agentId, agent_type: agentType, agent_transcript_path: path, permission_mode: 'default', cwd: ROOT,
   });
 }
 function transcript({sessionId, agentId, agentType, model, complete = true}) {
@@ -148,7 +152,143 @@ function recoveryRunner(sessionId, path, extra = {}) {
     tool_input: {command: 'node .codex/workflow-runner.mjs external-skill-scout'}, ...extra});
 }
 
+function nestedNativeChecks() {
+  for (const variant of ['valid', 'critical', 'started-caller', 'sibling-pending', 'ambiguous-caller', 'wrong-started-witness',
+    'unbound', 'wrong-parent', 'wrong-role',
+    'wrong-session', 'completed-caller', 'wrong-turn', 'paused-parent', 'stale-generation']) {
+    const callbackRejected = ['ambiguous-caller', 'wrong-started-witness'].includes(variant);
+    const valid = ['valid', 'critical', 'started-caller', 'sibling-pending'].includes(variant) || callbackRejected;
+    const parent = `root-nested-${variant}`, caller = `agent-nested-${variant}`;
+    start(parent);
+    if (variant !== 'unbound') {
+      pre(parent, {task_name: 'wa', message: 'work', agent_type: 'worker'}, `tool-wa-${variant}`);
+      subStart(parent, caller, 'worker');
+    }
+    if (variant === 'started-caller') start(caller);
+    const path = rootTranscript(caller, {parentId: parent, turnId: 'turn-wa'});
+    const rows = readFileSync(path, 'utf8').trim().split('\n').map(JSON.parse);
+    Object.assign(rows[0].payload, {session_id: parent, thread_source: 'subagent'});
+    Object.assign(rows[0].payload.source.subagent.thread_spawn,
+      {agent_role: variant === 'wrong-role' ? 'quality-gate' : 'worker', depth: 1, agent_path: '/root/wa'});
+    if (variant === 'wrong-parent') rows[0].payload.parent_thread_id = 'foreign-parent';
+    if (variant === 'wrong-session') rows[0].payload.session_id = 'foreign-parent';
+    if (variant === 'completed-caller') rows.push({type: 'event_msg', payload: {type: 'task_complete', turn_id: 'turn-wa'}});
+    writeFileSync(path, rows.map(JSON.stringify).join('\n') + '\n');
+    if (variant === 'paused-parent') run({hook_event_name: 'SessionEnd', session_id: parent});
+    if (variant === 'stale-generation') start(parent, 'gpt-6-astra', 'compact');
+    if (variant === 'sibling-pending') pre(parent,
+      {task_name: 'sibling', message: 'work', agent_type: 'worker'}, 'tool-sibling');
+    const before = state(parent);
+    const tool = `tool-child-${variant}`;
+    const role = variant === 'critical' ? 'quality-gate' : 'worker';
+    const args = {task_name: 'child', message: 'work', agent_type: role, fork_turns: 'none'};
+    const result = run({hook_event_name: 'PreToolUse', session_id: parent,
+      turn_id: variant === 'wrong-turn' ? 'foreign-turn' : 'turn-wa',
+      tool_use_id: tool, tool_name: 'collaborationspawn_agent', tool_input: args,
+      permission_mode: 'default', cwd: ROOT, transcript_path: path});
+    equal(result.hookSpecificOutput.permissionDecision, valid ? 'allow' : 'deny',
+      `${variant}: native parent SID is mapped only to its authenticated caller`);
+    equal(state(parent), before, `${variant}: caller routing never changes ancestor authority`);
+    if (!valid) {
+      equal(state(caller), null, `${variant}: rejected ancestry creates no caller activation`);
+      continue;
+    }
+    equal(Object.values(state(caller).invocations).length, 1, 'nested call belongs to the caller activation');
+    rows.push({type: 'response_item', payload: {type: 'function_call', name: 'spawn_agent',
+      namespace: 'collaboration', call_id: tool, arguments: JSON.stringify(args),
+      internal_chat_message_metadata_passthrough: {turn_id: 'turn-wa'}}});
+    rows.push({type: 'event_msg', payload: {type: 'item_completed',
+      thread_id: variant === 'wrong-started-witness' ? 'foreign-thread' : caller, turn_id: 'turn-wa',
+      item: {type: 'SubAgentActivity', kind: 'started', id: tool, agent_thread_id: 'agent-grandchild'}}});
+    writeFileSync(path, rows.map(JSON.stringify).join('\n') + '\n');
+    if (variant === 'ambiguous-caller') cpSync(path, join(transcriptRoot, `rollout-duplicate-${caller}.jsonl`));
+    if (variant === 'sibling-pending') {
+      const childPath = transcript({sessionId: caller, agentId: 'agent-grandchild',
+        agentType: role, model: 'gpt-5.6-sol', complete: false});
+      equal(run({hook_event_name: 'SubagentStart', session_id: parent, turn_id: 'turn-wa',
+        agent_id: 'agent-grandchild', agent_type: role, agent_transcript_path: childPath, cwd: ROOT}), {},
+      'nested start authenticates the actual parent before binding');
+      equal(state(parent), before, 'nested start cannot bind a different pending ancestor call');
+    }
+    // Some native callbacks retain the ancestor SID and omit the caller path.
+    // The exact started witness must correlate the descendant before acceptance.
+    const completion = subStop(parent, 'agent-grandchild', role, transcript({
+      sessionId: caller, agentId: 'agent-grandchild', agentType: role,
+      model: variant === 'critical' ? 'gpt-6-astra' : 'gpt-5.6-sol',
+    }));
+    if (callbackRejected) {
+      equal(completion.continue, false, `${variant}: forged or ambiguous completion is refused`);
+      equal(Object.values(state(caller).invocations)[0].status, 'pending',
+        `${variant}: rejected callback cannot close caller invocation`);
+      equal(state(parent), before, `${variant}: rejected callback cannot consume ancestor authority`);
+      continue;
+    }
+    equal(completion, {}, 'grandchild completion is accepted in the actual caller activation');
+    equal(Object.values(state(caller).invocations)[0].status, 'accepted',
+      'descendant completion closes its own invocation');
+    equal(state(parent), before, 'descendant completion never consumes the ancestor invocation');
+  }
+}
+
 try {
+  nestedNativeChecks();
+  if (!process.argv.includes('--nested')) {
+  const changedAnchor = 'root-active-model-change';
+  start(changedAnchor, 'gpt-6-astra');
+  const changedDispatch = recoveryPre(changedAnchor, rootTranscript(changedAnchor), {
+    tool_input: {task_name: 'current-review', message: 'judge', agent_type: 'quality-gate',
+      fork_turns: 'all', reasoning_effort: 'xhigh'},
+  });
+  equal(changedDispatch.hookSpecificOutput.permissionDecision, 'allow',
+    'active dispatch reconciles the current native model before selecting the reviewer');
+  equal(changedDispatch.hookSpecificOutput.updatedInput.model, 'gpt-6-astra',
+    'a stale peak anchor cannot suppress the required explicit model override');
+  equal(changedDispatch.hookSpecificOutput.updatedInput.fork_turns, 'none',
+    'review remains independent after current model reconciliation');
+  equal(changedDispatch.hookSpecificOutput.updatedInput.reasoning_effort, 'xhigh',
+    'native model reconciliation preserves user-owned effort');
+  equal(state(changedAnchor).root_anchor.model, 'gpt-5.6-sol',
+    'the cache adopts authenticated current turn evidence, not tool or payload claims');
+  equal(state(changedAnchor).root_generation, 1, 'current model change advances the generation');
+  subStart(changedAnchor, 'agent-current-review', 'quality-gate');
+  equal(subStop(changedAnchor, 'agent-current-review', 'quality-gate', transcript({
+    sessionId: changedAnchor, agentId: 'agent-current-review', agentType: 'quality-gate',
+    model: 'gpt-6-astra',
+  })), {}, 'the selected reviewer still requires matching same-invocation native evidence');
+  equal(Object.values(state(changedAnchor).invocations)[0].status, 'accepted',
+    'a reconciled dispatch accepts only the matching actual model');
+
+  for (const variant of ['missing-path', 'foreign-sid', 'completed-turn', 'wrong-turn', 'missing-model']) {
+    const session = `root-active-source-${variant}`;
+    start(session, 'gpt-6-astra');
+    const before = state(session);
+    const options = variant === 'foreign-sid' ? {metaId: 'other-native-session'}
+      : variant === 'completed-turn' ? {complete: true}
+      : variant === 'wrong-turn' ? {turnId: 'other-turn'} : {};
+    const path = rootTranscript(session, options);
+    if (variant === 'missing-model') {
+      const rows = readFileSync(path, 'utf8').trim().split('\n').map(JSON.parse);
+      delete rows.at(-1).payload.model;
+      writeFileSync(path, rows.map(JSON.stringify).join('\n') + '\n');
+    }
+    equal(recoveryPre(session, variant === 'missing-path' ? join(transcriptRoot, 'missing.jsonl') : path)
+      .hookSpecificOutput.permissionDecision, 'deny', `${variant} cannot refresh an active model anchor`);
+    equal(state(session), before, `${variant} leaves active authority and invocations unchanged`);
+  }
+  const latchedAnchor = 'root-active-model-change-latched';
+  start(latchedAnchor);
+  pre(latchedAnchor, {task_name: 'failed-review', message: 'judge', agent_type: 'quality-gate'},
+    'tool-latched-review');
+  subStart(latchedAnchor, 'agent-latched-review', 'quality-gate');
+  subStop(latchedAnchor, 'agent-latched-review', 'quality-gate', transcript({
+    sessionId: latchedAnchor, agentId: 'agent-latched-review', agentType: 'quality-gate', model: 'gpt-5.6-sol',
+  }));
+  const latchedBefore = state(latchedAnchor);
+  equal(latchedBefore.critical_failure, true, 'model adoption refusal remains latched');
+  equal(recoveryPre(latchedAnchor, rootTranscript(latchedAnchor, {model: 'gpt-6-astra'}))
+    .hookSpecificOutput.permissionDecision, 'deny', 'current model change cannot erase a failed critical invocation');
+  equal(state(latchedAnchor), latchedBefore, 'model refresh preserves the failed activation byte-for-byte');
+
   for (const variant of ['valid', 'no-start', 'ambiguous-start', 'wrong-parent', 'wrong-call', 'wrong-turn',
     'missing-agent', 'reused-agent', 'wrong-role', 'ambiguous-call', 'start-before-call', 'old-ticket', 'critical']) {
     const sid = `root-started-${variant}`, tool = `tool-started-${variant}`, agent = `agent-started-${variant}`;
@@ -434,14 +574,26 @@ try {
     const session = `root-profile-${variant}`, agent = `agent-profile-${variant}`;
     profileRun({hook_event_name: 'SessionStart', session_id: session, model: 'gpt-5.6-sol', source: 'startup'});
     grantProfile(session, variant === 'foreign-sid' ? 'other-native-session' : session);
+    const nativeRoot = join(profileSessions, `rollout-2026-10-01T01-00-00-${session}.jsonl`);
+    cpSync(rootTranscript(session, {metaCwd: profileRoot, contextCwd: profileRoot}), nativeRoot);
+    const before = state(session);
     const dispatched = profileRun({hook_event_name: 'PreToolUse', session_id: session, turn_id: 'turn-root',
       tool_use_id: `tool-${variant}`, tool_name: 'spawn_agent',
+      transcript_path: nativeRoot,
       tool_input: {task_name: 'review', message: 'judge', agent_type: 'quality-gate'}});
-    equal(dispatched.hookSpecificOutput.permissionDecision, 'allow', 'existing profile activation retains dispatch behavior');
-    profileRun({hook_event_name: 'SubagentStart', session_id: session, agent_id: agent, agent_type: 'quality-gate'});
+    if (variant === 'foreign-sid') {
+      equal(dispatched.hookSpecificOutput.permissionDecision, 'deny',
+        'another session source grant cannot refresh an active model anchor');
+      equal(state(session), before, 'foreign source grant leaves active authority unchanged');
+      continue;
+    }
+    equal(dispatched.hookSpecificOutput.permissionDecision, 'allow',
+      'authenticated current profile evidence permits dispatch from an existing activation');
     const original = transcript({sessionId: session, agentId: agent, agentType: 'quality-gate', model: 'gpt-6-astra'});
     const granted = join(profileSessions, `${agent}.jsonl`);
     cpSync(original, granted);
+    profileRun({hook_event_name: 'SubagentStart', session_id: session, agent_id: agent,
+      agent_type: 'quality-gate', agent_transcript_path: granted});
     const stopped = profileRun({hook_event_name: 'SubagentStop', session_id: session,
       agent_id: agent, agent_type: 'quality-gate', agent_transcript_path: variant === 'wrong-home' ? original : granted,
       stop_hook_active: false, last_assistant_message: 'done'});
@@ -544,6 +696,7 @@ try {
     hook_event_name: 'PreToolUse', session_id: anchorSession, turn_id: 'turn-root',
     tool_use_id: 'tool-bad-cwd', tool_name: 'spawn_agent',
     tool_input: {task_name: 'bad_cwd', message: 'work'},
+    transcript_path: rootTranscript(anchorSession),
     permission_mode: 'default', cwd: join(scratch, 'missing-cwd'), model: 'gpt-5.6-sol',
   });
   equal(failedProjectObservation.hookSpecificOutput.permissionDecision, 'deny',
@@ -843,10 +996,13 @@ try {
   // The host lock, rather than that stale snapshot, must decide admission.
   assert.equal(originalHost.includes('export function readActivation('), true);
   writeFileSync(hostFixture, originalHost.replace('export function readActivation(',
-    'function fixtureReadActivation(') + `\nimport {spawnSync as fixtureSpawnSync} from 'node:child_process';\nexport function readActivation(args) {\n  const snapshot = fixtureReadActivation(args);\n  if (args.root_session_id.startsWith('root-native-race-') && snapshot\n      && Object.keys(snapshot.invocations).length === 0\n      && process.env.LUCA_MODEL_ROUTE_INTERLEAVE_CHILD !== '1') {\n    const env = {...process.env, LUCA_MODEL_ROUTE_INTERLEAVE_CHILD: '1'};\n    const payload = {hook_event_name: 'PreToolUse', session_id: args.root_session_id,\n      turn_id: 'turn-root', tool_use_id: 'tool-interleave-first', tool_name: 'spawn_agent',\n      tool_input: {task_name: 'first-review', message: 'judge', agent_type: 'quality-gate'},\n      permission_mode: 'default', cwd: ${JSON.stringify(ROOT)}};\n    const first = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify(payload)});\n    if (first.status !== 0 || JSON.parse(first.stdout).hookSpecificOutput.permissionDecision !== 'allow')\n      throw new Error('interleaved first dispatch failed: ' + first.stderr);\n    const bound = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify({\n        hook_event_name: 'SubagentStart', session_id: args.root_session_id,\n        agent_id: 'agent-interleave-first', agent_type: 'quality-gate', cwd: ${JSON.stringify(ROOT)}})});\n    if (bound.status !== 0) throw new Error('interleaved agent binding failed: ' + bound.stderr);\n  }\n  return snapshot;\n}\n`);
+    'function fixtureReadActivation(') + `\nimport {spawnSync as fixtureSpawnSync} from 'node:child_process';\nexport function readActivation(args) {\n  const snapshot = fixtureReadActivation(args);\n  if (args.root_session_id.startsWith('root-native-race-') && snapshot\n      && Object.keys(snapshot.invocations).length === 0\n      && process.env.LUCA_MODEL_ROUTE_INTERLEAVE_CHILD !== '1') {\n    const env = {...process.env, LUCA_MODEL_ROUTE_INTERLEAVE_CHILD: '1'};\n    const payload = {hook_event_name: 'PreToolUse', session_id: args.root_session_id,\n      turn_id: 'turn-root', tool_use_id: 'tool-interleave-first', tool_name: 'spawn_agent',\n      tool_input: {task_name: 'first-review', message: 'judge', agent_type: 'quality-gate'},\n      permission_mode: 'default', cwd: ${JSON.stringify(ROOT)},\n      transcript_path: ${JSON.stringify(transcriptRoot)} + '/rollout-2026-10-01T01-00-00-' + args.root_session_id + '.jsonl'};\n    const first = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify(payload)});\n    if (first.status !== 0 || JSON.parse(first.stdout).hookSpecificOutput.permissionDecision !== 'allow')\n      throw new Error('interleaved first dispatch failed: ' + first.stderr);\n    const bound = fixtureSpawnSync(process.execPath, [${JSON.stringify(HOOK)}],\n      {cwd: ${JSON.stringify(ROOT)}, env, encoding: 'utf8', input: JSON.stringify({\n        hook_event_name: 'SubagentStart', session_id: args.root_session_id,\n        agent_id: 'agent-interleave-first', agent_type: 'quality-gate', cwd: ${JSON.stringify(ROOT)}})});\n    if (bound.status !== 0) throw new Error('interleaved agent binding failed: ' + bound.stderr);\n  }\n  return snapshot;\n}\n`);
   for (const agentType of ['quality-gate', 'default']) {
     const session = `root-native-race-${agentType}`;
     start(session);
+    cpSync(transcript({sessionId: session, agentId: 'agent-interleave-first',
+      agentType: 'quality-gate', model: 'gpt-6-astra', complete: false}),
+    join(transcriptRoot, 'rollout-interleaved-agent-interleave-first.jsonl'));
     const second = pre(session, {task_name: 'second', message: 'work', agent_type: agentType},
       'tool-interleave-second');
     equal(second.hookSpecificOutput.permissionDecision, 'deny',
@@ -910,6 +1066,7 @@ try {
 
   run({hook_event_name: 'SessionEnd', session_id: lightSession, reason: 'other', cwd: ROOT});
   equal(state(lightSession).status, 'paused', 'SessionEnd pauses activation');
+  }
 } finally {
   for (const fixture of profileFixtures) releaseFixtureRoot(fixture, () => rmSync(fixture, {recursive: true, force: true}));
   rmSync(scratch, {recursive: true, force: true});
