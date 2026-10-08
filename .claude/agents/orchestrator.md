@@ -127,7 +127,7 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
 
       【phase_type 路由（优先判断）】
       IF phase_type == skill_execution：
-        【Pre-flight 检查】读取 .claude/agents/preflight-agent.md，传入 skill_name + topic
+        【Pre-flight 检查】读取 .claude/agents/preflight-agent.md，显式传入 skill_name + topic + execution_mode + 经当前宿主核验的 project_session（框架为 NO_PIN）+ 精确 input_paths（含适用上游）；不得使用缺省模式
         FAIL → 展示缺失项，等用户修复或明确说"跳过检查"后再继续，不启动 skill
         PASS → 继续
         【用户参数前置收集】（execution_context == subagent 时必须执行，不得跳过）
@@ -140,6 +140,7 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
         IF execution_context == subagent：
           用 work-agent-template 的 skill_execution 模式实例化 WA
           填写 MODE=skill_execution、SKILL_TO_EXECUTE、SKILL_PATH（+ 前置收集的用户参数）
+          INHERITED_CONSTRAINTS 显式写是否许可目标 skill 必需内部委托、有限scope、父分配额度与取消边界（§6）；缺许可禁止
           通过 Agent tool 启动 WA（subagent，冷启动隔离上下文）
         IF execution_context == main_agent：
           主 Agent 直接读取 SKILL.md，在当前对话上下文执行
@@ -175,16 +176,16 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
         - Hierarchical: 通用任务分层协调；implement 每层都受 §2.1b 的单活跃门约束
 
   2c  【测试环节】触发 quality-gate 执行本 Phase 的断言
-      - 将 Plan Agent 的断言列表 + 产出路径传入 quality-gate
+      - 按 quality-gate §1.1 传完整 completion_evidence + Plan Agent 断言列表；WA 用 wa_phase，主控用 producer=main 的 main_phase，保留真实 status/outputs_produced/blockers 与当前产物身份
       - quality-gate 运行断言，返回 PASS / FAIL(BLOCKING) / FAIL(WARNING) / CONDITIONAL_PASS
       - Orchestrator 处理测试结果：
-          PASS → 标记该 Phase 完成，继续下一个 Phase
+          PASS → 核当前产物身份与 required 全通过，完成 2c-eval 及当前必需 Human Gate 后才标记该 Phase 完成
           FAIL(BLOCKING) → 暂停受影响依赖，展示 findings；授权内可修复问题交原 owner 返修后重验
                           缺授权、需改变范围/方案或有未决 Human Gate 时才等用户决策；不得跳过失败门
                           如状态为 BLOCKED/NEEDS_CONTEXT，按 plan-agent.md §4 Escalation Format 输出
                           同一 Phase 连续 2 次 FAIL(BLOCKING)、或修复涉及计划变更 →
                           走 plan-agent.md「增量重规划」协议（delta 重规划，不推倒全案）
-          FAIL(WARNING) → 记录 findings，继续执行
+          FAIL(WARNING) → 记录 findings；required 全通过且 2c-eval/当前必需 Human Gate 完成才继续
           CONDITIONAL_PASS → 记录 findings；仅在下游必需项均已通过时继续，否则保留缺口并暂停该依赖
 
   2c-eval 【Eval 记录／权限分离】dispatch quality-gate 前由 Orchestrator 生成唯一
@@ -220,7 +221,7 @@ Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
       - 下一 Phase 已在有效执行授权范围内且无未决 Human Gate → 继续，不重复索取已有批准
       - 缺授权、计划/范围变更或待决人类事项 → 等待真实用户确认；规划不授予执行权限
 
-Step 3  全部 Phase 完成后，触发 quality-gate 运行完整断言列表
+Step 3  全部 Phase 完成后，以 aggregate 的 completion_evidence 传入获批计划冻结的全部 required Phase 集合、每项原记录/适用验收引用及当前产物身份；触发 quality-gate 运行完整断言列表
         Orchestrator 汇总并展示：PASS N / FAIL M / WARN K
         按本节完成边界核对整体需求；断言通过不替代尚未完成的必需实现、采用或发布
 
@@ -252,7 +253,7 @@ Step 4  等待所有 WA 返回完成报告（全部 DONE 或有 BLOCKED）
 Step 5  【结果汇总】将各 WA 的 handoff 路径收集到合并摘要：
         docs/handoff/YYYY-MM-DD-<topic>-parallel-<skill1>+<skill2>-summary.md
         格式：每个 skill 的关键 findings（≤200字/skill）+ 共识点 + 冲突点
-Step 6  触发 quality-gate，传入所有 WA 的 outputs + 汇总摘要路径
+Step 6  触发 quality-gate，按 §1.1 aggregate 传冻结 required Phase 全集、各 WA 原 completion_report/原调用及当前产物身份 + 汇总摘要路径；不得用摘要替代分母
 Step 7  记录 eval（每个 skill 各记一条）
 ```
 
@@ -318,10 +319,10 @@ Step 7  记录 eval（每个 skill 各记一条）
 
   2. WA-N 返回完成报告（JSON: status / outputs_produced / blockers）
   3. 触发测试环节（quality-gate）：
-     → 传入：phase_id + outputs_produced + blockers(来自 WA 完成报告) + Plan Agent 断言列表
+     → 传入：quality-gate §1.1 的 wa_phase completion_evidence（完整原 completion_report + 原调用引用 + 当前产物身份）及 Plan Agent 断言列表
      → 返回：PASS / FAIL / CONDITIONAL_PASS + findings
   4. FAIL → 展示问题 → 主 Agent 修复 or 重新实例化 WA
-  5. PASS → 继续下一 Phase
+  5. PASS → 按 §2.2 完成 recorder 与当前必需 Human Gate 后继续下一 Phase
 ```
 
 **Hierarchical**
@@ -408,23 +409,29 @@ WHILE 有 PENDING 节点:
         仅检查本次路径真实适用的 gate，遵守 applies_when；
         IF gate blocked → 告知用户缺什么 → PAUSE
 
-  3.4a-pf  【Pre-flight 检查】读取 .claude/agents/preflight-agent.md，传入 skill_name + topic
+  3.4a-pf  【Pre-flight 检查】读取 .claude/agents/preflight-agent.md，显式传入 skill_name + topic + execution_mode + 经当前宿主核验的 project_session（框架为 NO_PIN）+ 精确 input_paths（含适用上游）；不得使用缺省模式
         FAIL → 展示缺失项，等用户修复或明确说"跳过检查"后再继续，不启动 skill
         PASS → 继续
 
   3.4b  context 预算检查（见 §4）
         IF > 80% → 写 handoff → 建议新 session → STOP
 
-  3.4c  加载 next_skill 的 SKILL.md → 执行
-        Skill 内部可自由使用 subagent，Orchestrator 不干预
+  3.4c  完整读取 office/references/handoff-protocol.md「受管节点提交」及 next_skill 的 SKILL.md
+        执行前绑定 execution_mode=workflow、精确 node、completion_owner=Orchestrator，节点保持 IN_PROGRESS
+        核局部完成入口已适配受管回交；未适配入口不派发，说明缺口
+        主控直接执行与 WA 委托都只准备产物、自检、证书及 handoff，不在 skill 内写 DONE
+        内部委托遵守 §6 与 WA 的有限许可，不能自由扩派
 
-  3.4d  Skill 完成后：
-        - 确认 `<WORK_ROOT>/docs/handoff/` 有新文件
-        - 以 `_PROJECT_ROOT=<WORK_ROOT>` 调用唯一写入器更新 `.luca/workflow-state.yaml` → status: DONE
-        - 调度 @quality-gate subagent 验证产出
-        - quality-gate PASS → 观察提取（同 2c-obs 三条检查）→ 继续
-        - quality-gate FAIL → 将该节点状态回滚为 IN_PROGRESS；按 §2.2 返修/授权规则处理
-          ——验收未通过不进入后继，不留"DONE 但 gate FAIL"的矛盾态
+  3.4d  Skill 完成后只收回执行记录与提交请求：
+        - 核精确 handoff/当前产物身份与原输出字段，节点仍 IN_PROGRESS
+        - 调度独立 @quality-gate，明确本次 IN_PROGRESS 待验对象、当前 identity 与冻结 required 全集
+        - 核同次独立票及全部 required；按 2c-eval 原样记录，失败/冲突不提交
+        - 完成属于当前节点的必需 Human Gate（见 3.4e/f），未来节点门不阻当前完成
+        - 按共享「受管节点提交」核合并后有效状态及保留字段，才调用原完成 seam 一次写 DONE
+          普通节点使用唯一 writer；prototype-notes 通过同一可信 host binding 的 completeOnce
+        - CONDITIONAL_PASS 仅原合同允许且 required 全通过可终结；exact PASS 门保持
+        - FAIL/UNKNOWN 保持 IN_PROGRESS，按 §2.2 返修；已有产物不重跑外部效果
+        - 完成后观察提取（同 2c-obs 三条检查），才允许后继消费
 
   3.4e  human-in-the-loop 检查点：brainstorm / ux-brainstorm / design-brief / html-prototype
         有未决方案、范围或采用决定时等待真实确认；已确认事实/所选工具/后续授权直接继承。
@@ -437,7 +444,9 @@ WHILE 有 PENDING 节点:
 ### 3.5 断点恢复
 
 ```
-Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 找最后一个 DONE 的 node
+Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 定位本次恢复的精确节点及当前 artifact identity
+        旧 DONE 缺当前对象身份、有效独立票或必需记录时，先阻断其依赖消费，再将精确节点转 IN_PROGRESS 补验；
+        转换前后中断都不能凭旧 DONE 放行，不批改历史。已有有效票/记录复用，不重跑产物/外部效果
 Step 2  读该 node 的 handoff summary 以恢复进度；随后按 next_skill 的当前输入合同及
         handoff-protocol.md 核验全部必需上游。最后 DONE 不替代依赖集合；失败/未知不作成功消费
 Step 3  展示："上次完成了 <last_done>，核心决策：<D-001...>"
@@ -530,7 +539,9 @@ runner 内部任务按原权限可并行；implement 始终 max_active_subagents
 
 - **不做规划。** 规划是 Plan Agent 的职责；Orchestrator 只执行已有的计划。
 - **不执行断言。** 断言执行是测试环节（quality-gate）的职责；Orchestrator 只触发测试并处理结果。
-- **不嵌套 subagent 调度。** Work Agent 内部的 subagent 由 Work Agent 自己管理。
+- **内部委托有界。** task_execution 与 implement 禁止 WA 嵌套；非 implement 的 skill_execution 仅可运行目标 SKILL.md 明确要求且 INHERITED_CONSTRAINTS 显式许可的内部依赖。先核 WA 已消费共用输入/scope/继承约束；需要委托却不适用时保持原 U-ID，等待已有获准路径，不静默换 main_agent。
+- **预算按全树分配。** 在既有 Phase/派发表记录各 skill WA 不重叠额度、原生 handle 与所有在途后代；子级只拆自身剩余预算，不能各复制父总额度。全树在途数受父级获批并发上限约束；追踪或分配未知停止新增派发，不另建生产 scheduler。
+- **取消追到后代。** 逐级停止新动作并用真实宿主取消；无法中断的在途项明确报告，真实完成/确认结束前不释放占用，主 WA turn 结束不等于子树结束。scope/model/effort/effect/Human Gate 权限仍取父交集，独立判官与关键串行门保持；能力缺失按 WA SECTION 4 停门/明确原合同允许的降级。
 - **不修改 skill 内部逻辑。** 只负责"调度谁"和"传递什么"。
 - **不跳过测试环节。** 即使看起来成功，每个 Phase 完成后必须触发 quality-gate。
 - **不自动跳过 human-in-the-loop 检查点。** 继承已有有效批准；“自动继续”不替代尚未作出的真人决定。

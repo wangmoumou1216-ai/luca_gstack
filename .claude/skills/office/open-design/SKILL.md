@@ -428,7 +428,9 @@ PASS 才交付最终 accepted 入口并进入 Phase 6；保留 raw FAIL，不把
 
 ## Phase 6：handoff + 更新 workflow-state（落盘后）
 
-普通与 composite 两分支均从已验证项目绑定冻结 canonical `_PROJECT_ROOT`。中央 writer 非零退出时保留已回收产物，明确报告状态尚未同步并停止依赖后继；不得报告 DONE 或 handoff 成功。
+raw/motion/notes/motion→notes 四路先完成 exact resolution、独立 PREACCEPT/语义验收、当前 Human Gate 与 handoff 校验。受管（completion_owner=Orchestrator）按共享「受管节点提交」回交原字段/证书及身份/提交请求，替代全部 writer，O 验收后重验 exact ref 并一次提交。standalone 无节点不写；internal 仅回父；EXPORTED/STAGED 不完成。
+
+沿 office 冻结已验证 `_PROJECT_ROOT`；writer 失败保留产物、停后继，不报 DONE/handoff 成功。
 
 两分支互斥，以真实已批准 postprocess 范围和完整独立 PASS 选择，环境变量不能选择或授权分支。
 已批准 composite 分支先实际执行 exact ref resolution。仅本地文件来源且无 remote/message
@@ -452,17 +454,15 @@ resolveFinal({ path: final_artifact_ref.path, sha256: final_artifact_ref.sha256,
 flags 可重复，仅编码 caller 当前获准读范围；JSON 不授读权。必须成功并核对返回的
 `accepted_ref`、`final_entry/final_sha256`、`spec_path/spec_sha256`、`source_ref`、`acceptance_ref`
 与原始 base/raw provenance 后，按 P7 唯一例外将 `_OUTPUT` 程序化绑定返回的 `final_entry`，
-保留 `_NODE="open-design"`、`_STATUS="DONE"` 和同一 write_state.py 调用。不能先运行 raw
-完成赋值再改输出，也不能按目录/latest/名字猜证书；父级 handoff/state 仅完成一次。
-composite 分支完全跳过下列普通分支代码块：caller 按成功解析的 JSON 程序化设置这三个变量，
-然后仅调用一次既有 `python3 .claude/skills/office/references/write_state.py`，不再执行 raw 赋值。
+保留 `_NODE="open-design"`、`_STATUS="DONE"`；不得先写 raw 再换 `_OUTPUT`，或按目录/latest/名字猜证书；父级 handoff/state 仅一次。
+composite 跳过下方普通代码，按成功解析 JSON 绑定三变量；受管 skill 只回交，验收后提交者才调用一次原 `python3 .claude/skills/office/references/write_state.py`，不再执行 raw 赋值。
 notes-enabled（含 motion→notes）只解析最新 `notes_final_ref`；`final_artifact_ref` 与之同 path+SHA，
 返回 processor=prototype-notes、candidate/notes_manifest/parent（如有）及当前 source/base/raw provenance 均精确。
 Phase 4 的固定 `resolveODNotesFinal` 返回这一绑定；caller 核真实独立原票后将 `_OUTPUT` 绑定返回 final_entry。
 引用失败即停，不回退 raw/旧 motion；NODE/STATUS/writer 及 disabled/只回收原路径不变。
 
-**仅普通回收分支执行以下原代码；composite 分支禁止执行：**
-状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。
+**验收后仅合法提交者执行普通原代码；受管 skill 只回交，composite 禁止执行：**
+状态块仅使用上述已验证 `_PROJECT_ROOT`；路径检查不授权。
 
 ```bash
 case "${_PROJECT_ROOT:-}" in
@@ -533,7 +533,7 @@ source/parent/NOTES required 集与同版同 hash guideline/data/runtime。raw/p
 
 **Step 1 — 写 handoff**：`docs/handoff/YYYY-MM-DD-<topic>-open-design-handoff.md`（见 Phase 6）
 
-**Step 2 — 更新 workflow-state.yaml**（唯一写入路径＝Phase 6 的 write_state.py；以下 YAML 仅为其产出示例，勿手写、勿作为独立执行步骤重复写入）：
+**Step 2 — 受管回交/验收后提交**（仅 Phase 6 writer；YAML 只示意，勿手写或重复执行）：
 ```yaml
 open-design:
   status: DONE

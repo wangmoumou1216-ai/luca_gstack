@@ -245,6 +245,9 @@ Module A 完成：得分 {N}/100（完整/不完整评分）或 UNKNOWN，AI Slo
 
 **workflow-state 写入：**
 
+受管 workflow（completion_owner=Orchestrator）仍须先满足下方全部写入资格；完成报告与下节 handoff 校验后，按 `references/handoff-protocol.md`「受管节点提交」回交当前产物身份、baseline_score 与原输出字段及提交请求，替代下方 writer。O 独立验收后再次核资格并执行原块一次；保留代码原分数验证，不以删除 baseline_score 绕过。非受管合法路径同样先完成 handoff；UNKNOWN、不完整评分、无节点三类仍不得运行写入块。
+
+
 执行下方保留的写入块前，必须同时确认：已验证项目 pin、当前 workflow 确有本节点、输出与状态路径
 属于同一已授权项目且真实可写、主报告已落盘，以及综合分数真实、完整、可计算。
 不完整评分或 UNKNOWN 只记录在报告及 handoff，不运行该块，不把 UNKNOWN 塞成0或写成完整 DONE 基线。

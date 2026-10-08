@@ -228,7 +228,7 @@ stage/run/recover 权限及状态分开；导出/置入不称生成完成。完�
 完整产出路径与 AI Native 判断。已有块内另记 entry/delivery_mode/coverage_scope、原型保持、
 适配/选择旁车、冻结 Packet 与下游自由度，不复制事实清单。
 
-verified project scope 用 write_state.py 单写 nodes.design-brief；仅选择 workflow 才核其要求上游，
+受管 workflow（completion_owner=Orchestrator）完成上述 handoff 校验后，按 ../references/handoff-protocol.md「受管节点提交」回交当前产物身份、原输出字段及提交请求，替代此处写入；验收后由 O 一次提交。非受管且确有本节点的 verified project scope 用 write_state.py 单写 nodes.design-brief；standalone 无节点不写状态；仅选择 workflow 才核其要求上游，
 standalone 不强制别的节点 DONE。LIMITED/关键未知/缺 handoff 不写 DONE；按事实为 DONE/
 DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED。NO_PIN 框架维护不跑项目 preamble/产出/state。
 不直接追加 CONTEXT.md；经验按 office 治理记忆入口，本轮默认不存。

@@ -22,10 +22,12 @@ effort: low
 ```
 skill_name:       <即将启动的 skill 名称>
 topic:            <调用方明确的当前 topic；standalone 可空>
-execution_mode:   workflow | standalone   # 可选，默认 standalone
+execution_mode:   workflow | standalone   # 直接 standalone 调用可省略；Orchestrator 调用必传
 project_session:  <已验证项目 pin 的 session id；框架/meta 为 NO_PIN>
 input_paths:      <调用方已确认的精确输入路径，含适用的上游 handoff>
 ```
+
+Orchestrator 发起的每次调用（含 parallel_skills 每项）必须显式携带全部五项输入；缺 execution_mode、project_session 或精确 input_paths 时返回 FAIL 并列补项，不启动 skill、不从聊天或“最新”文件猜值。直接 standalone 调用仍默认 standalone。项目上下文须由当前宿主验证；父 SID/路径文本不等于子会话权限，Codex 子会话须核自身可信关联。NO_PIN 只消费获准框架输入，不为补字段制造项目状态。
 
 ---
 

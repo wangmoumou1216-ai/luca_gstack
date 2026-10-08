@@ -71,7 +71,7 @@ prior_decisions: <首轮空列表；后续仅带前票裁决及新证据，不�
    稳定 ID、档位、条件 AI、Human Gate；不从当前草稿自选或缩小要求。逐条核适用性，
    缺 criterion 或无据删项阻断；条件不适用须有源证据与明确 N/A 处置，N/A 不是合格方案数。
 4. 仅此 facet 豁免未来阶段的 WA status=DONE、outputs_produced 存在性、最终 output/handoff
-   和 workflow-state DONE 检查。普通 Free Task Mode 与 Skill Mode 保留全部原有阶段检查。
+   和 workflow-state DONE 检查。普通 Free Task Mode 与 Skill Mode 保留原有完整性、来源、权限与 handoff 检查；分别按 §1 执行完成准入和 §2 本次待验对象检查，不要求未来 DONE。
    独立性、来源、权限、Human Gate 及当前审查内容继续适用，真人偏好沿原决策继承，专家不代选。
    AI-spec 在草稿阶段检查实际 AI 架构内容及 Phase 6 生成承诺，不要求未来文件已存在。
 5. 逐项输出 PASS/FAIL/UNKNOWN 与可核验引用。BLOCKING 的 FAIL 或 UNKNOWN 均阻断；
@@ -118,29 +118,35 @@ Router 修订，父级使用已有 recorder 落账；票绑定当前冻结草稿
 
 ### 1.1 输入
 
-```
-phase_id:    <WA 的 Phase ID，如 "WA-2">
+```yaml
+phase_id: <本次 Phase；aggregate 为本次计划的汇总标识>
 eval_run_id: <调用方生成的本次判定唯一 ID>
-outputs:     <Work Agent 完成报告中的 outputs_produced 列表>
-assertions:  <Plan Agent 定义的断言列表，shell 命令格式>
-blockers:    <Work Agent 完成报告中的 blockers（如有）>
+assertions: <获批计划的本次完整断言列表，shell 命令格式>
+completion_evidence:
+  kind: wa_phase | main_phase | aggregate
 ```
+
+三类输入分别为：
+- `wa_phase`：完整原 WA `completion_report`（含 phase_id、status、outputs_produced、blockers、outputs_skipped 的真实记录（对照冻结 required 产物判定 required skipped））及原调用引用。
+- `main_phase`：主控自身原完成记录，显式 `producer=main`，同样保留真实 phase_id/status/outputs_produced/blockers/outputs_skipped（对照冻结 required 产物）；不能伪造 WA 身份。
+- `aggregate`：本次获批计划精确 path+hash 与派发前冻结的全部 required Phase 集合；每项真实原执行记录及适用独立验收引用。不能以合成 WA 报告或返回数量重建分母。
+
+三类都绑定当前产物身份（精确 path + 当前内容 hash，目录用完整文件清单/hash）；记录里的 phase_id 与真实调用来源及本次输入相互校验。status/outputs/blockers 从原记录读取，不另设可漂移重复字段。引用验收票必须对应当前产物身份；同 phase 换产物不能复用旧票。DESIGN_DRAFT/PREACCEPT 沿 §0 既有 facet，不套本节执行完成准入。
 
 ### 1.2 执行流程
 
 ```
-Step 1  检查 Work Agent 完成报告
-        - status == BLOCKED / NEEDS_CONTEXT → 直接返回 FAIL，列出 blockers，不执行断言
-          （NEEDS_CONTEXT 由 Orchestrator 按 plan-agent.md §4 Escalation Format 上报用户）
-        - status == DONE → 继续
-
-Step 2  验证 outputs_produced 中的每个文件是否实际存在
-        [ -f <path> ] 或 [ -d <path> ]
-
-Step 3  逐条执行 assertions 中的 shell 命令
-        记录每条的结果：PASS / FAIL
-
-Step 4  汇总结果，生成报告（见 §4 报告格式）
+Step 1  先验证 completion_evidence 类别、原记录/来源、status 与当前产物身份
+        - 缺必需记录/status、未知枚举、错 phase、DONE 却有 required skipped/blockers，
+          或 aggregate 缺任何冻结 required Phase → FAIL/NEEDS_CONTEXT，列具体补项，不执行断言
+        - status == BLOCKED / NEEDS_CONTEXT → 保留原原因与 blockers，返回 FAIL，不执行断言
+        - 仅真实 DONE（或原合同允许且 required 全通过的 DONE_WITH_CONCERNS）可进入验收；
+          PLANNED/IN_PROGRESS 尚未执行完成，停止；不从空 blockers 猜 DONE
+        - aggregate 对冻结全集逐项执行上述准入；所有 required 执行完成才继续
+        - 上述准入全部满足后：status == DONE → 继续；自报完成不代替独立判决
+Step 2  验证 outputs_produced 中的每个文件实际存在并重算当前产物身份；旧票不验新 hash
+Step 3  逐条执行 assertions，记录真实 PASS / FAIL；已有 Phase 票不免最终全断言验证
+Step 4  汇总结果，生成报告（见 §4）
 ```
 
 ### 1.3 断言执行规范
@@ -191,9 +197,13 @@ output_path:  <skill 的主产出文件路径>
 handoff_path: <handoff summary 文件路径>
 execution_mode: standalone | workflow
 project_session: <已验证根 pin 或 Codex 原生父子关联的 session id；框架/meta 为 NO_PIN>
+selected_node: <workflow 的精确节点身份；standalone 不适用>
+artifact_identity: <本次待验产物与 handoff 的 path/hash；目录使用完整 inventory/hash>
 ```
 
 ### 2.1 检查维度
+
+workflow 调用须提供明确的 `selected_node`，不得按 skill 名猜测同名历史节点。所有模式在断言前核对 `artifact_identity` 与当前输入；缺失、错配或旧 hash 先退回补齐，不沿用历史票。
 
 #### 通用检查（所有 skill）
 
@@ -202,7 +212,7 @@ project_session: <已验证根 pin 或 Codex 原生父子关联的 session id；
 | **完整性** | 产出文件是否存在、非空、字段完整 | 文件存在 && size > 0 && 无空白必填字段 |
 | **约束合规** | 框架红线与已验证项目 CONTEXT.md 的实际约束是否遵守 | 按任务作用域逐项检查；不把框架 checkout 的品牌当项目约束 |
 | **Handoff 质量** | handoff summary 是否存在、格式合规、≤2000 tokens | 文件存在 && YAML front matter 有 `gate_result` && 有产出路径/位置章节 && 有决策或约束章节 && chars ≤ 8000 |
-| **workflow-state** | 仅 workflow 模式检查已绑定项目状态 | 精确定位 `skill_name` 节点，确认 `status: DONE`；若 `output` / `handoff_path` 非空，必须与输入路径一致，禁止用历史 DONE 节点误判；standalone 不强制该状态 |
+| **workflow-state** | 仅 workflow 模式检查已绑定项目状态 | 精确定位 `skill_name` 节点，接受本次明确选定的 `status: IN_PROGRESS` 待验对象；已有 `status: DONE` 也须重验当前身份/票，状态不证明质量；若 `output` / `handoff_path` 非空，必须与输入路径一致，禁止用历史 DONE 节点误判；standalone 不强制该状态 |
 
 读取产出前按 `.claude/skill-os/runtime/project-session.md` 验证路径作用域。Codex 子会话须以
 `node scripts/project-pin.mjs status --view host --session-id <自身可信 SID>` 的 `CHILD_ASSOCIATED`、
@@ -349,7 +359,7 @@ STAGED 另核对准确项目与全部材料的真实外部读回。不能要求�
 ### Free Task Mode
 
 ```
-1. 检查 Work Agent 完成报告（status / blockers）
+1. 按 §1.1–1.2 验证 completion_evidence 全部准入条件（先于任何断言）
 2. 验证 outputs_produced 文件存在
 3. 逐条执行 assertions 断言
 4. 汇总 → 生成报告
@@ -360,7 +370,7 @@ STAGED 另核对准确项目与全部材料的真实外部读回。不能要求�
 ```text
 1. 验证作用域，读取精确 output_path、handoff_path 与适用 CONTEXT 红线。
 2. 运行 node scripts/check-quality-gates.mjs --handoff <精确绝对路径>。
-3. 仅 workflow：读取已验证 pin 项目的状态，精确核对本 skill 的 DONE/output/handoff；
+3. 仅 workflow：读取已验证 pin 项目的状态，精确核对本次选定节点的 IN_PROGRESS 待验身份/output/handoff；不要求未来 DONE；
    需要整项扫描时运行 --project-session <session-id>，不读共享别名。
 4. 按 §2.1 核对适用维度；前端检查真实视觉/行为与上游决策，材料阶段检查同包内容与读回。
 5. 生成逐项证据报告；缺证据标 UNKNOWN，Human Gate/外部写入授权仍分别检查。

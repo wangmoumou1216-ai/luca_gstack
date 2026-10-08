@@ -857,6 +857,9 @@ node .claude/skills/office/html-prototype/scripts/verify-prototype.mjs \
 
 ### Step 6.2：更新 workflow-state.yaml
 
+本步先准备原字段，完成末尾 handoff 及校验后再处理提交。受管 workflow（completion_owner=Orchestrator）按 `references/handoff-protocol.md`「受管节点提交」回交当前产物身份、原 output 和 blueprint 字段及提交请求，替代下方 writer；验收后的 O 才一次执行保留原块。非受管合法路径也须先完成 handoff；standalone 无节点不写状态，不强加 O/QG。
+
+
 状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。
 
 ```bash
@@ -973,7 +976,7 @@ mkdir -p docs/handoff
 
 workflow-state 写入以 **Phase 6.2 的 `write_state.py` 为唯一真值源**（写 `nodes.figma-demo`：
 status / output=docs/prototype/<topic>/index.html / completed_at + `_EXTRA_JSON` 里的
-`blueprint`=docs/prototype/<topic>/blueprint.yaml）。Phase 6.2 已完成写入，**不要在此另手写一套
+`blueprint`=docs/prototype/<topic>/blueprint.yaml）。受管分支此处只回交；验收后才执行 Phase 6.2 保留的代码一次，**不要在此另手写一套
 顶层 YAML 字段**——手写顶层 `figma-demo:` 键会与脚本产物（`nodes.figma-demo`）结构漂移，且
 blueprint 会写成错误的 `docs/figma/` 路径（该目录保留历史 figma-spec，从不产出 blueprint）。
 

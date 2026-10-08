@@ -104,6 +104,9 @@ AskUserQuestion：
 
 **workflow-state 写入：**
 
+**完成分支（先判再执行下方代码）：** 受管 workflow（completion_owner=Orchestrator）以「受管回交」替代下方 writer：完成本 skill 必需产物、自检及适用 handoff 校验后，按 `references/handoff-protocol.md`「受管节点提交」回交精确产物身份、原输出字段和提交请求；不在这里写 DONE。下方原代码仅供已验收后的 O 合法提交，或非受管且确有本节点/写权限的既有完成路径；standalone 无节点不写状态，保留原 handoff 豁免。实际调用必须晚于本 skill 必需 handoff（idea 的下节也先完成）；NO_PIN 框架不写项目状态。
+
+
 Claude 在执行前必须确定实际 `_TOPIC`（从 `current-topic.txt` 读取，
 或根据当前功能名推断 topic slug），然后执行：
 
