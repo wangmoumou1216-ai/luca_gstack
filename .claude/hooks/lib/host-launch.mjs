@@ -245,7 +245,7 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
     if (JSON.stringify(readback) !== JSON.stringify(next)) throw new Error('host initial binding readback mismatch');
     return readback;
   };
-  const finishStartup = async r => {
+  const finishStartup = async (r, profileRechecked = false) => {
     reconcile(r);
     if (r.receipt) {
       const current = readProjectState(gstackRoot,r.sid,projectsRoot).value;
@@ -257,7 +257,7 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
       ...(r.receipt ? {receipt:r.receipt} : {}),
     };
     if (r.status !== 'ATTACHED') throw codeError('CLAIM_REJECTED');
-    await recheckCurrentProfile(r);
+    if (!profileRechecked) await recheckCurrentProfile(r);
     if (r.cancelRequested) throw codeError('CLAIM_REJECTED');
     r.initialTransactionId ||= randomUUID(); persist(r);
     fault('before-prepare');
@@ -325,13 +325,29 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
     const expected = Buffer.from(r.claimHandle);
     if (!expected.length || supplied.length !== expected.length || !timingSafeEqual(supplied,expected)
       || params.launchNonce !== r.launchNonce || params.hostRunId !== r.request.hostRunId
-      || params.openRequestId !== r.request.openRequestId || ['CANCELLED','FAILED'].includes(r.status)
-      || (!['COMMITTED','ACTIVE_NO_PIN'].includes(r.status) && Date.now()>r.expiresAt)) throw codeError('CLAIM_REJECTED');
+      || params.openRequestId !== r.request.openRequestId || r.cancelRequested
+      || ['CANCELLED','FAILED'].includes(r.status)) throw codeError('CLAIM_REJECTED');
+    const expired = Date.now()>r.expiresAt && !['COMMITTED','ACTIVE_NO_PIN'].includes(r.status);
+    if (expired && !['DISPATCHED','ATTACHED'].includes(r.status)) throw codeError('CLAIM_REJECTED');
     if (!payload || payload.cwd !== gstackRoot || !/^[\w-]{1,36}$/.test(payload.session_id || '')) throw codeError('NATIVE_CONTEXT_INVALID');
     identityRecheck(r);
     if (method === 'attach') {
       if (payload.hook_event_name !== 'SessionStart' || payload.source !== 'startup') throw codeError('NEW_LAUNCH_REQUIRED');
-      if (r.sid) { if (r.sid !== payload.session_id) throw codeError('SID_CONFLICT'); return finishStartup(r); }
+      if (r.sid && r.sid !== payload.session_id) throw codeError('SID_CONFLICT');
+      // User think-time does not invalidate a live App-owned launch. Only the
+      // private parent can renew it, with the original profile and capability.
+      // Reuse this challenge in finishStartup to stay within the hook timeout.
+      if (expired) {
+        await recheckCurrentProfile(r);
+        if (r.cancelRequested) throw codeError('CLAIM_REJECTED');
+      }
+      const completeStartup = async () => {
+        const result = await finishStartup(r, expired);
+        if (r.cancelRequested) throw codeError('CLAIM_REJECTED');
+        if (expired) { r.expiresAt=Date.now()+10*60*1000;r.revision++;persist(r); }
+        return result;
+      };
+      if (r.sid) return completeStartup();
       if (r.status !== 'DISPATCHED') throw codeError('CLAIM_REJECTED');
       const state = readProjectState(gstackRoot,payload.session_id,projectsRoot);
       if (state.raw !== null) throw codeError('NEW_LAUNCH_REQUIRED');
@@ -346,7 +362,7 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
         initializeProjectEventFence({gstackRoot,projectsRoot,sessionId:payload.session_id,harness:'codex',cwd:gstackRoot,
           transcriptPath:payload.transcript_path || '',codexHome:r.request.profileIdentity.sourceRoot.realpath});
       } catch (error) { r.status='FAILED'; r.revision++;persist(r);throw error; }
-      r.sid=payload.session_id;r.status='ATTACHED';r.revision++;persist(r);fault('after-attach');return finishStartup(r);
+      r.sid=payload.session_id;r.status='ATTACHED';r.revision++;persist(r);fault('after-attach');return completeStartup();
     }
     if (method !== 'beforeTool' || payload.hook_event_name !== 'PreToolUse' || r.sid !== payload.session_id) throw codeError('METHOD_DENIED');
     await recheckCurrentProfile(r);

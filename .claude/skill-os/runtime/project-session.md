@@ -48,12 +48,11 @@ requires the reviewed same inode/nonce and an ESRCH dead owner, never age alone.
 
 ## App-owned Host Launch
 
-A newly launched Codex session may receive a verified existing-project binding from the Muse App's
-private Host Launch broker. This is an app-owned launch transaction, not an agent-callable alternative
-to `project.sh switch/new`. The broker accepts parent requests only from the verified App main process;
-native hooks can only claim the frozen launch and session identity. An initial global launch remains
-`NO_PIN`. The private launch journal and source grant live under the protected Codex installation,
-outside the agent-writable framework checkout; their state-file reference is not itself a grant.
+The App's private Host Launch broker can bind a new Codex session to a verified existing project.
+Only the verified App main process issues parent requests; native hooks claim the frozen launch/session
+identity. It is not an agent alternative to `project.sh switch/new`; global launches stay `NO_PIN`.
+Journal and source grants live under protected Codex, outside the writable framework;
+state-file references grant no authority.
 Legacy repository journals require an explicit reviewed upgrade with
 `scripts/migrate-host-launch-journal.mjs --root <canonical-root> --plan <private-manifest>`,
 then `--apply <private-manifest> --expected-sha256 <reviewed-manifest-sha256>`.
@@ -64,6 +63,8 @@ live launches or silently reads the old journal as authority. Other source profi
 and require separate review. Original files remain intact.
 
 App dispatch requires three exact Host Launch commands, trusted and `enabled === true`.
+Idle `DISPATCHED`/`ATTACHED` launches renew only after live App profile and native
+startup checks; cancellation still refuses. First tools always revalidate the profile and native event.
 Native-trust broker requires the same canonical root, IPC, verified Electron parent,
 profile/source revalidation and launch receipt, without the optional source loader.
 `node scripts/codex-trust-hooks.mjs --host-launch` trusts 11 exact healthy registrations;
