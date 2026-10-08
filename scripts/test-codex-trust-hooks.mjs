@@ -18,6 +18,9 @@ function stableRegistration(config) {
       const suffix = hook.command.slice(hook.command.indexOf(marker) + marker.length)
         .replaceAll('$luca_hook_root', '$(git rev-parse --show-toplevel)');
       hook.command = prefix + suffix;
+      if (hook.command.includes('/.codex/host-launch-hook.mjs')) {
+        hook.command = hook.command.replace('; c=$?;', ' 2>> /tmp/luca-gstack-hooks.log; c=$?;');
+      }
     }
   }
   return config;
@@ -240,13 +243,17 @@ test('native exact11 trust accepts source edits without creating an optional sou
   assert.equal(readdirSync(f.root).includes('rpc-state.json'), true);
   assert.equal(readdirSync(join(f.root, 'home')).filter(name => name.includes('.bak-')).length, 1);
 });
-test('native trust refuses command insertion before any official trust write', t => {
-  const f = fixture(t), path = join(f.root, '.codex/hooks.json');
-  const config = JSON.parse(readFileSync(path)); config.hooks.PreToolUse[0].hooks[0].command += '; true';
-  writeFileSync(path, JSON.stringify(config));
-  const result = f.run([]);
-  assert.notEqual(result.status, 0);
-  assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
+test('native trust refuses inserted commands and retired stderr redirection before any official trust write', t => {
+  for (const mutate of [command => command + '; true',
+    command => command.replace('; c=$?;', ' 2>> /tmp/luca-gstack-hooks.log; c=$?;')]) {
+    const f = fixture(t), path = join(f.root, '.codex/hooks.json');
+    const config = JSON.parse(readFileSync(path));
+    config.hooks.PreToolUse[0].hooks[0].command = mutate(config.hooks.PreToolUse[0].hooks[0].command);
+    writeFileSync(path, JSON.stringify(config));
+    const result = f.run([]);
+    assert.notEqual(result.status, 0);
+    assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
+  }
 });
 
 // Codex discovers shared repository registrations at the primary Git worktree.
