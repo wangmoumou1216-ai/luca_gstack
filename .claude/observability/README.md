@@ -6,6 +6,12 @@ This folder records skill feedback without loading long history into every run.
 - `rules.yaml`: active short rules distilled from feedback. Only load through `scripts/get_rules.py`.
 - `scripts/`: deterministic readers/writers.
 
+New observation and rule IDs use a date and UUID suffix so independent checkouts
+can allocate IDs without sharing a counter. Existing IDs and rule references stay
+unchanged. The writer rejects duplicate observation IDs before adding records;
+conflicting historical records must be preserved with their source provenance,
+not silently renumbered or overwritten.
+
 The former per-run `run-log.jsonl` collector was retired on 2026-09-20 after its frozen stream
 remained empty. Do not recreate it as a routine skill-completion side effect; verified skill results
 belong in `memory/evals/eval-log.jsonl` through the quality-gate recording path.

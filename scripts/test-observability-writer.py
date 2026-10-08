@@ -46,8 +46,8 @@ class ObservabilityWriterTests(unittest.TestCase):
             if line.strip()
         ]
         rules_text = (store / "rules.yaml").read_text(encoding="utf-8")
-        rule_ids = re.findall(r"^- id: (R-\d{8}-\d{3,})$", rules_text, re.MULTILINE)
-        source_ids = re.findall(r"^    - (O-\d{8}-\d{3,})$", rules_text, re.MULTILINE)
+        rule_ids = re.findall(r"^- id: (R-\d{8}-(?:\d{3,}|[0-9a-f]{32}))$", rules_text, re.MULTILINE)
+        source_ids = re.findall(r"^    - (O-\d{8}-(?:\d{3,}|[0-9a-f]{32}))$", rules_text, re.MULTILINE)
         return observations, rule_ids, source_ids
 
     def assert_consistent(self, store: Path, expected_count: int):
@@ -109,6 +109,57 @@ class ObservabilityWriterTests(unittest.TestCase):
             self.assertIn("invalid JSON", rejected.stderr)
             self.assertEqual((store / "observations.jsonl").read_text(encoding="utf-8"), malformed)
             self.assertFalse((store / ".write-transaction.json").exists())
+
+    def test_independent_copies_allocate_distinct_observation_and_rule_ids(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script_a, store_a = self.make_fixture(str(Path(tmp) / "checkout-a"))
+            seed = subprocess.run(self.command(script_a, 0), text=True, capture_output=True)
+            self.assertEqual(seed.returncode, 0, seed.stderr)
+            script_b, store_b = self.make_fixture(str(Path(tmp) / "checkout-b"))
+            before = {}
+            for name in ("observations.jsonl", "rules.yaml"):
+                before[name] = (store_a / name).read_bytes()
+                (store_b / name).write_bytes(before[name])
+
+            allocated = []
+            for script, store, index in ((script_a, store_a, 1), (script_b, store_b, 2)):
+                result = subprocess.run(self.command(script, index), text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                allocated.append(json.loads(result.stdout))
+                self.assert_consistent(store, 2)
+                for name, original in before.items():
+                    self.assertTrue((store / name).read_bytes().startswith(original))
+            self.assertNotEqual(allocated[0]["observation"], allocated[1]["observation"])
+            self.assertNotEqual(allocated[0]["rule"], allocated[1]["rule"])
+
+    def test_duplicate_historical_ids_fail_without_changing_either_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script, store = self.make_fixture(tmp)
+            original = ('{"id":"O-20261008-001","message":"first checkout"}\n'
+                        '{"id":"O-20261008-001","message":"second checkout"}\n')
+            (store / "observations.jsonl").write_text(original, encoding="utf-8")
+            rules = "version: 1\nrules: []\n"
+            (store / "rules.yaml").write_text(rules, encoding="utf-8")
+            result = subprocess.run(self.command(script, 1), text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("duplicate observation id", result.stderr)
+            self.assertEqual((store / "observations.jsonl").read_text(encoding="utf-8"), original)
+            self.assertEqual((store / "rules.yaml").read_text(encoding="utf-8"), rules)
+            self.assertFalse((store / ".write-transaction.json").exists())
+
+    def test_legacy_ids_and_rule_references_are_preserved(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script, store = self.make_fixture(tmp)
+            observation = '{"id":"O-20261008-001","message":"legacy"}\n'
+            rules = ('version: 1\nrules:\n- id: R-20261008-001\n'
+                     '  source_observations:\n    - O-20261008-001\n')
+            (store / "observations.jsonl").write_text(observation, encoding="utf-8")
+            (store / "rules.yaml").write_text(rules, encoding="utf-8")
+            result = subprocess.run(self.command(script, 1), text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assert_consistent(store, 2)
+            self.assertTrue((store / "observations.jsonl").read_text(encoding="utf-8").startswith(observation))
+            self.assertTrue((store / "rules.yaml").read_text(encoding="utf-8").startswith(rules))
 
 
 if __name__ == "__main__":

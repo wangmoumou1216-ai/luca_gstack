@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-08",
+  "baseline": "e1663ea73e43b6b9076f41f38a26322413be91be",
+  "eval_imports": [
+    {
+      "run_id": "tri-system-u013-plan-coverage-20261003-r1",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "ae440d9acc9e7e8c592a98c102774a3507c01c402d13b5cd995567b8955eef0b",
+      "status": "FAIL"
+    },
+    {
+      "run_id": "tri-system-u013-value-adoption-20261003-r1",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "1fd3d258f6c5ea5fd3a1fcf7fd48de7d31ddef2af837049b86cefe918a05475b",
+      "status": "FAIL"
+    },
+    {
+      "run_id": "tri-system-u014-value-first-plan-20261003-r1",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "47da0d306c52b4e27ca89f7e563047cb984aee8af0916fc1b4f5d9bcebba3c21",
+      "status": "PASS"
+    },
+    {
+      "run_id": "tri-system-u014-value-first-plan-20261003-r2",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "6274491b8ca034e913bf06c7ea7aa25b3f57da5f820ce97f786d8f01d57c25fa",
+      "status": "PASS"
+    },
+    {
+      "run_id": "U014-METHOD-EXECUTION-R1",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "d9d163cf1ab8d0ebbf5d81d86415ee167b71b348216b00bf5706a825cb475952",
+      "status": "PASS"
+    },
+    {
+      "run_id": "tri-system-u014-readiness-p09",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "0536a24998b61ff70d5bcaf6f4999c8bb36f802f2a330c65ddb793366efe9423",
+      "status": "PASS"
+    },
+    {
+      "run_id": "tri-system-u014-readiness-p10",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "a4b8e3bc717dd2ee43ba192e0ed23a6ae5fe1189b6156c4fd74ff0b06fc97b6d",
+      "status": "PASS"
+    },
+    {
+      "run_id": "tri-system-u014-value-adoption-final",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "452255bc033c2a170f6d8cc4b9154db34eba6cb432fae178d4219b5d080b5863",
+      "status": "FAIL"
+    },
+    {
+      "run_id": "tri-system-u014-adoptable-delta-method",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "67ebf8b61b50eea3d9ad4cab0f603a898caddaa2e76c339e1c01fdb4580ffaeb",
+      "status": "PASS"
+    },
+    {
+      "run_id": "tri-system-u014-focused-decision-method",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "398093334a4ac51d9dfb25583b34c7009b7ea82bb13391ba86238d5bb45adc54",
+      "status": "PASS"
+    },
+    {
+      "run_id": "tri-system-u014-minimal-release-adoption",
+      "source_commit": "6da8c18840a9c09fb3b196c936cd770afa8b8ee5",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "d42aaf3b06237427006da59bb5d8cb6a2e150fb75e986bffb1381b840c60553b",
+      "status": "PASS"
+    },
+    {
+      "run_id": "tri-review-fix-plan-20261003-01",
+      "source_commit": "71cd54a10db5d4fcd13adeef8f0e89855ddab89f",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "b3b7de967df8687776892a5973e8586de0b05badb524b83f017916ed84deb903",
+      "status": "PASS"
+    },
+    {
+      "run_id": "tri-review-fix-final-20261003-01",
+      "source_commit": "71cd54a10db5d4fcd13adeef8f0e89855ddab89f",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "ab9632d7ce992c757479c9bb91e53fe6726447e0e815bbfcc29ab3d3e87197f4",
+      "status": "PASS"
+    },
+    {
+      "run_id": "tri-review-fix-doc-close-20261003-01",
+      "source_commit": "71cd54a10db5d4fcd13adeef8f0e89855ddab89f",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "fd383f76e92d4cad96b69cd6be77c39b4144cae2ff2c20ed9d39aeb1ea167dd1",
+      "status": "PASS"
+    },
+    {
+      "run_id": "design-brief-final-runtime-seal-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "f02d3242e24b0373c91ec74c63de66eb9453ff6fe35950cda3e19038413ee437",
+      "status": "FAIL"
+    },
+    {
+      "run_id": "design-brief-final-methods-panel-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "7fcb496c720eea1e761277b7c2bd5d0e8375aad3b01ab3a7d45cfad4bea04b69",
+      "status": "PASS"
+    },
+    {
+      "run_id": "design-brief-final-runtime-r4-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "60d0c496f8b32ee29dbcf9bab98d2fcf90e969ac6bf0463e8695826a29b06695",
+      "status": "PASS"
+    },
+    {
+      "run_id": "design-brief-final-methods-r4-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "23a23912ee281ffea98ecc24b8b1daaeb749c2de0cd6519884160900a671de03",
+      "status": "PASS"
+    },
+    {
+      "run_id": "design-brief-final-product-r5-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "8946b20c2471d91cfa19869efae739b694b53d2831d4f8bed8140862e1f09da2",
+      "status": "CONDITIONAL_PASS"
+    },
+    {
+      "run_id": "design-brief-final-workflow-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "18fd4b534684e851421b4913c0ecc22755295fc6eea4cee889a73860be166146",
+      "status": "FAIL"
+    },
+    {
+      "run_id": "design-brief-current-skill-holdout-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "eafc5aa54b8d1d4ec118b0f5e508974c92b3a9960ebe3b484f5ee02cae1cdd0e",
+      "status": "PASS"
+    },
+    {
+      "run_id": "design-brief-final-workflow-r2-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "1ad1dd184bb8cc1fa98b399a50e6616f915b515cb03564542e1d818d76b67705",
+      "status": "CONDITIONAL_PASS"
+    },
+    {
+      "run_id": "design-brief-final-c24-isolation-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "b645c050b08565608a7f06e4d293099d038f9d52949aca6759b166c44bffcdbb",
+      "status": "PASS"
+    },
+    {
+      "run_id": "design-brief-completion-redteam-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "11add3811488924a074ec7cb8fa1e0457781cbaabc60c2c3782a9e3ca6c35d32",
+      "status": "FAIL"
+    },
+    {
+      "run_id": "design-brief-completion-redteam-closure-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "07da75630f846c24f1905cfd50383cbe62e41144beef11a48daab3d5fe562355",
+      "status": "FAIL"
+    },
+    {
+      "run_id": "design-brief-completion-redteam-closure-r2-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "42fbd617ea3fdaa52ed310758fbf5f51d2bd6c475400f8af93686c6bb64fa267",
+      "status": "FAIL"
+    },
+    {
+      "run_id": "design-brief-professional-final-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "af8ea0fb38b99d16e67c082319b4959fd734c3c7a467decf60c669027c221187",
+      "status": "CONDITIONAL_PASS"
+    },
+    {
+      "run_id": "design-brief-completion-redteam-closure-r3-20261001",
+      "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "f8d6e8e930159f65782302d0147b451dd9c7e6776f6bb72fc70d2790579c24fb",
+      "status": "PASS"
+    },
+    {
+      "run_id": "idle-hook-plan-20261008-01",
+      "source_worktree": "/Users/luca/.codex/worktrees/5364/luca_gstack",
+      "source_head": "e8d5952238d69794d068f0b44bf6fbecee00c339",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "6a671f063505c81c22fd7c40cef23d0cd858b730e4e49ca287757d5387ae99db",
+      "status": "PASS"
+    },
+    {
+      "run_id": "idle-hook-code-20261008-01",
+      "source_worktree": "/Users/luca/.codex/worktrees/5364/luca_gstack",
+      "source_head": "e8d5952238d69794d068f0b44bf6fbecee00c339",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "6b333e97515e0ce61a0a4947d1fe4cea70e97bd136be42f634f5880448891b77",
+      "status": "CONDITIONAL_PASS"
+    },
+    {
+      "run_id": "idle-hook-publish-doc-20261008-01",
+      "source_worktree": "/Users/luca/.codex/worktrees/5364/luca_gstack",
+      "source_head": "e8d5952238d69794d068f0b44bf6fbecee00c339",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "4b9521e5f9d37981767a7b4274634c2002ba9f2aefae3ce18f785e846f809258",
+      "status": "PASS"
+    },
+    {
+      "run_id": "profile-plan-20261008-01",
+      "source_worktree": "/Users/luca/.codex/worktrees/5364/luca_gstack",
+      "source_head": "e8d5952238d69794d068f0b44bf6fbecee00c339",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "898bd28cb32617d3a931b23611d09e7d3bb5d2160b24871232a332dc9d64b2a4",
+      "status": "PASS"
+    },
+    {
+      "run_id": "profile-code-20261008-01",
+      "source_worktree": "/Users/luca/.codex/worktrees/5364/luca_gstack",
+      "source_head": "e8d5952238d69794d068f0b44bf6fbecee00c339",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "e703130a41cc2c4a50a66ff70028fd018b8099d9e455ff44c76b15f7d8edecf2",
+      "status": "PASS"
+    },
+    {
+      "run_id": "profile-code-r3-20261008-01",
+      "source_worktree": "/Users/luca/.codex/worktrees/5364/luca_gstack",
+      "source_head": "e8d5952238d69794d068f0b44bf6fbecee00c339",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "90a03c98ca02060e254e4b7330f79e1b5c63077b095d6d2127f4f11f407cb279",
+      "status": "PASS"
+    },
+    {
+      "run_id": "profile-code-r4-20261008-01",
+      "source_worktree": "/Users/luca/.codex/worktrees/5364/luca_gstack",
+      "source_head": "e8d5952238d69794d068f0b44bf6fbecee00c339",
+      "source_path": "memory/evals/eval-log.jsonl",
+      "line_sha256": "6c05ac5bf6c7c2f539b515387094199fc248941ee33a15c0ee617546ed68e3f2",
+      "status": "PASS"
+    }
+  ],
+  "observation_import": {
+    "id": "O-20261001-001",
+    "source_commit": "077ee13ca4225e6b67b8070bb5cc2f43c961e592",
+    "source_path": ".claude/observability/observations.jsonl",
+    "line_sha256": "b4075e2fd7cab6a0dfe8e2ea399d1bb9e8f6166f6a122e20cbb2c1a3bf79adc5"
+  },
+  "observation_conflict": {
+    "id": "O-20261008-001",
+    "disposition": "Both original records retained here under source-qualified identities; neither imported into the canonical stream; no original ID reassigned.",
+    "records": [
+      {
+        "source_worktree": "/Users/luca/Desktop/luca_gstack",
+        "source_head": "e1663ea73e43b6b9076f41f38a26322413be91be",
+        "source_path": ".claude/observability/observations.jsonl",
+        "original_line": "{\"id\": \"O-20261008-001\", \"time\": \"2026-10-08T14:25:12+08:00\", \"skill\": \"diagnosing-bugs\", \"source\": \"self_reflection\", \"severity\": \"medium\", \"message\": \"sharedev 下新建会话询问项目用途，却反问 sharedev 还是 luca_gstack\", \"problem\": \"Host Launch 已成功绑定项目，SessionStart 上下文却只输出展示归属与无执行权限，遗漏 App 项目选择已经确认的语义\", \"correction\": \"已修复 session-restore.mjs：仅在验证 binding 且最新 host_launch selection 的项目和 epoch 匹配时注入已确认项目、绝对目录和默认指代；权限仍由原生事件校验。回归见 test-host-launch.mjs。\"}",
+        "line_sha256": "de8e35972f268cb6ee67bd26fddd92872573be83cb43329990ba94e55764f062"
+      },
+      {
+        "source_worktree": "/Users/luca/.codex/worktrees/5364/luca_gstack",
+        "source_head": "e8d5952238d69794d068f0b44bf6fbecee00c339",
+        "source_path": ".claude/observability/observations.jsonl",
+        "original_line": "{\"id\": \"O-20261008-001\", \"time\": \"2026-10-08T10:10:55+08:00\", \"skill\": \"diagnosing-bugs\", \"source\": \"self_reflection\", \"severity\": \"medium\", \"message\": \"Luca app Hook failed 已由实时界面、进程 launchId、启动日志及隔离时间差分复现关联\", \"problem\": \"Host Launch 十分钟启动期限与用户打开空白会话后延迟输入不匹配；stderr 全重定向使终端只显示退出码\", \"correction\": \"诊断时关联同一 launchId 的 createdAt/expiresAt/status 与首条用户消息时间；用真实 broker 在隔离 fixture 中对照延迟握手和立即握手，不改在线凭据\"}",
+        "line_sha256": "fd97a4461a17e4faf3c4085d51f9f7ba7aaefa21283c0fa61ad4e8647ac447f3"
+      }
+    ]
+  },
+  "private_recovery_root": "/Users/luca/Documents/Codex Backups/luca_gstack/2026-10-08-git-reconciliation-162539",
+  "backup_scope": "Five dirty worktrees: tracked/index/untracked bytes; ignored paths inventoried, ignored contents not archived; no worktree deleted.",
+  "retained_detached_ref": "refs/heads/codex/preserve-handoff-9a9a-20261008",
+  "retained_detached_commit": "aafe71e33547defd09dfd6df4845bf353b950bcd"
+}

@@ -360,6 +360,68 @@ test('Claude startup cannot consume a Codex host-only initial binding', async ()
     });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stderr, /Codex startup binding requires the Codex harness/);
+  assert.doesNotMatch(result.stdout, /用户已通过 App 选定/);
+});
+test('startup context resolves this project from the verified App selection, without granting tools', async () => {
+  const f = fixture(), claim = await attached(f, true);
+  mkdirSync(join(f.gstackRoot, '.codex'));
+  mkdirSync(join(f.gstackRoot, '.claude', 'hooks'));
+  const adapter = join(f.gstackRoot, '.codex', 'host-launch-adapter.mjs');
+  const hook = join(f.gstackRoot, '.claude', 'hooks', 'session-restore.mjs');
+  cpSync(new URL('../.codex/host-launch-adapter.mjs', import.meta.url), adapter);
+  symlinkSync(fileURLToPath(new URL('../.claude/hooks/session-restore.mjs', import.meta.url)), hook);
+  const restore = () => spawnSync(process.execPath,
+    [adapter, hook], {
+      cwd: f.gstackRoot, encoding: 'utf8', timeout: 5000,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: f.gstackRoot, MEMORY_ROOT: f.gstackRoot,
+        LUCA_PROJECTS_ROOT: f.projectsRoot, CODEX_HOME: f.sourceRoot, LUCA_ACTUAL_HARNESS: 'codex' },
+      input: JSON.stringify({ ...f.payload, source: 'resume' }),
+    });
+  const check = () => {
+    const before = readProjectState(f.gstackRoot, f.sid).raw;
+    const result = restore();
+    assert.equal(result.status, 0, result.stderr);
+    const context = JSON.parse(result.stdout).hookSpecificOutput;
+    assert.equal(context.hookEventName, 'SessionStart');
+    assert.match(context.additionalContext, /用户已通过 App 选定当前项目: alpha/);
+    assert.match(result.stdout, /用户已通过 App 选定当前项目: alpha/);
+    assert.ok(result.stdout.includes(join(f.projectsRoot, 'alpha')));
+    assert.match(result.stdout, /“这个项目”默认指向上述项目/);
+    assert.match(result.stdout, /框架工作目录仅承载运行时/);
+    assert.match(result.stdout, /无需再次确认项目或重复 switch/);
+    assert.match(result.stdout, /不授予当前轮执行权限/);
+    assert.deepEqual(readProjectState(f.gstackRoot, f.sid).raw, before);
+  };
+  check(); // HOST_BOUND before the first user event, as in the reported session.
+  await assert.rejects(f.broker.claim('beforeTool', { ...claim,
+    nativePayload: { ...f.payload, hook_event_name: 'PreToolUse', turn_id: 'fabricated-turn' } }));
+  const payload = f.appendHuman();
+  await f.broker.claim('beforeTool', { ...claim, nativePayload: payload });
+  const event = readProjectState(f.gstackRoot, f.sid).value.event_control.current;
+  closeAttestedProjectEvent({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+    sessionId: f.sid, eventId: event.event_id, boundaryId: event.boundary_id });
+  check(); // The confirmed selection also survives a normal turn close/resume.
+
+  const statePath = join(f.gstackRoot, '.claude', `.session-project-${f.sid}`);
+  const state = JSON.parse(readFileSync(statePath, 'utf8'));
+  state.selection.last_success.origin = 'user_event';
+  writeFileSync(statePath, JSON.stringify(state));
+  assert.doesNotMatch(restore().stdout, /用户已通过 App 选定/);
+  state.selection.last_success.origin = 'host_launch';
+  state.binding.ino += 1;
+  writeFileSync(statePath, JSON.stringify(state));
+  assert.doesNotMatch(restore().stdout, /用户已通过 App 选定/);
+
+  const global = fixture(); await attached(global);
+  const result = spawnSync(process.execPath,
+    [fileURLToPath(new URL('../.claude/hooks/session-restore.mjs', import.meta.url))], {
+      cwd: global.gstackRoot, encoding: 'utf8', timeout: 5000,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: global.gstackRoot, MEMORY_ROOT: global.gstackRoot,
+        LUCA_PROJECTS_ROOT: global.projectsRoot, CODEX_HOME: global.sourceRoot, LUCA_ACTUAL_HARNESS: 'codex' },
+      input: JSON.stringify(global.payload),
+    });
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /用户已通过 App 选定/);
 });
 test('cancel received during profile revalidation prevents startup commit', async () => {
   let release, entered;

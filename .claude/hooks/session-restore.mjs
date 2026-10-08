@@ -65,6 +65,7 @@ if (ownSid && ['startup', 'resume'].includes(fenceStartSource)) {
 // not even probe their contents (FIFO tests guard against hidden reads). Resume
 // may consume project files only when this exact sid carries a canonical binding.
 let startupBinding = null;
+let startupHostSelection = false;
 if (ownSid) {
   try {
     const projectState = readProjectState(projectRoot, ownSid).value;
@@ -77,6 +78,10 @@ if (ownSid) {
       }
       startupBinding = validatedBindingForState(projectState, PROJECTS_ROOT);
     }
+    const selected = projectState.selection?.last_success;
+    startupHostSelection = Boolean(startupBinding && process.env.LUCA_ACTUAL_HARNESS === 'codex'
+      && selected?.origin === 'host_launch' && selected.target === startupBinding.project
+      && selected.binding_epoch === startupBinding.epoch);
   } catch (error) {
     process.stderr.write(`[session-restore] ⚠️ 本 session 项目 identity 无效，按 NO_PIN 启动：${String(error?.message || error)}\n`);
   }
@@ -231,7 +236,14 @@ const activeProject = startupBinding?.project || '';
 const docsDangling = false;
 const cleared = false;
 if (startupBinding) {
-  process.stdout.write(`[session-restore] 🔗 本会话已验证展示归属: ${activeProject}（不授予当前轮执行权限）\n\n`);
+  if (startupHostSelection) {
+    process.stdout.write(`[session-restore] 用户已通过 App 选定当前项目: ${activeProject}\n`
+      + `项目根目录: ${startupBinding.realpath}\n`
+      + '用户说“这个项目”默认指向上述项目；框架工作目录仅承载运行时。Project Gate 已有明确选择，无需再次确认项目或重复 switch。用户明确切换目标时按新的意图处理。\n'
+      + '收到用户任务后，先读取 .claude/skill-os/runtime/project-session.md，再通过正常工具调用读取上述项目根目录的 CONTEXT.md 和任务所需资料。当前轮执行仍由原生用户事件与 PreToolUse 校验；此上下文不授予当前轮执行权限。\n\n');
+  } else {
+    process.stdout.write(`[session-restore] 🔗 本会话已验证展示归属: ${activeProject}（不授予当前轮执行权限）\n\n`);
+  }
 } else {
   try {
     const projectsRoot = PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJECTS_ROOT 覆盖

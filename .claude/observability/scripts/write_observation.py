@@ -6,7 +6,6 @@ import datetime as dt
 import hashlib
 import json
 import os
-import re
 import sys
 import uuid
 from contextlib import contextmanager
@@ -162,10 +161,10 @@ def commit_texts(texts: list[tuple[Path, str]]) -> None:
         raise
 
 
-def next_id(prefix: str, text: str) -> str:
+def next_id(prefix: str) -> str:
     today = dt.datetime.now().strftime("%Y%m%d")
-    sequences = [int(value) for value in re.findall(rf"\b{prefix}-{today}-(\d+)\b", text)]
-    return f"{prefix}-{today}-{(max(sequences, default=0) + 1):03d}"
+    # Each checkout has its own store and lock; a local counter collides after a fork.
+    return f"{prefix}-{today}-{uuid.uuid4().hex}"
 
 
 def yaml_quote(text: str) -> str:
@@ -173,6 +172,7 @@ def yaml_quote(text: str) -> str:
 
 
 def validate_observations(text: str) -> None:
+    seen = set()
     for number, line in enumerate(text.splitlines(), start=1):
         if not line.strip():
             continue
@@ -182,12 +182,15 @@ def validate_observations(text: str) -> None:
             raise RuntimeError(f"observations.jsonl line {number} is invalid JSON") from error
         if not isinstance(value, dict) or not isinstance(value.get("id"), str):
             raise RuntimeError(f"observations.jsonl line {number} has no record id")
+        if value["id"] in seen:
+            raise RuntimeError(f"duplicate observation id at line {number}: {value['id']}")
+        seen.add(value["id"])
 
 
 def append_rule_text(args, observation_id: str, current: str) -> tuple[str, str | None]:
     if not args.rule:
         return current, None
-    rule_id = next_id("R", current)
+    rule_id = next_id("R")
     text = current
     if not text.strip():
         text = "version: 1\nrules:\n"
@@ -236,7 +239,7 @@ def main():
         rules_text = RULES.read_text(encoding="utf-8") if RULES.exists() else ""
         validate_observations(observations_text)
 
-        observation_id = next_id("O", observations_text)
+        observation_id = next_id("O")
         record = {
             "id": observation_id,
             "time": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
