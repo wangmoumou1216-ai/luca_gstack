@@ -107,6 +107,10 @@ for (const tier of ['reasoning-heavy', 'core-execution', 'guided-execution', 'me
 t('plan-agent 含块 0 前提门', plan.includes('块 0 — 前提门'));
 t('plan-agent 含增量重规划协议', plan.includes('增量重规划（Replan Protocol'));
 t('plan-agent 含块 5 出门自检', plan.includes('块 5 — 出门自检'));
+t('Plan 摘要要求所有 Supervisor/Hierarchical 实例批准',
+  /需要用户确认: 是（任意 Supervisor \/ Hierarchical，包括单阶段及嵌套实例）/.test(plan));
+t('Supervisor 模式表保留单阶段与嵌套批准要求',
+  /^\| \*\*Supervisor\*\* \|[^\n]*\| \*\*必须，包括单阶段及嵌套实例\*\* \|$/m.test(plan));
 t('preflight 含未列出 WARN 规则', pre.includes('无专属检查行'));
 t('preflight 明确 TURN_CLOSED 仍保留有效 binding', pre.includes('`TURN_CLOSED` + 有效 binding 是已绑定状态'));
 t('preflight 不得把 TURN_CLOSED 单独判成失败', pre.includes('不得仅因 `TURN_CLOSED` 判 FAIL'));

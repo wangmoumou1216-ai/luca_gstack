@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-eval_routing.py — 甲类语义路由命中率度量。
+eval_routing.py — keyword 回归与语义标签审查。
 
-把"语义路由解决对吗"从体感变成可测、可回归的数字。测两层：
+keyword 层可确定性计分；semantic 层只审查标签，不能据此宣称实际行为命中率：
 
   keyword-layer（确定性，grader:code）：route-guard 关键词粗网是否把"该命中"的 fixture 路由到对的能力。
     这是可随时跑的回归守卫，与 test-route-guard.mjs 互补（那个测分支正确性，这个测"到对的能力"的召回）。
-  semantic-layer（估计，grader:llm-judge）：route-guard NONE/semantic-fallback 的 semantic-dependent fixture，只能靠模型
-    语义判断该路由到哪。本脚本只【确定性地】把这些 fixture 挑出来 + 导出 judge 工作单；实际判官由
+  semantic 标签审查（grader:llm-judge）：route-guard NONE/semantic-fallback 的 semantic-dependent fixture，只能靠模型
+    语义判断该路由到哪。本脚本只【确定性地】把这些 fixture 挑出来 + 导出 judge 工作单；标签审查判官由
     orchestrator/主循环起（python 起不了 Claude agent，也不该假装能——语义判断只能在模型内发生）。
 
 复用（不重造）：route-guard.mjs 的 dry-run（ROUTE_GUARD_DRY_RUN=1，零副作用）、eval-methodology 的
@@ -17,14 +17,14 @@ grader 选型（keyword=code / semantic=llm-judge）。不依赖已退役的 GEP
   python3 memory/scripts/eval_routing.py --selftest       # 内置小样例自检（断言 keyword 计算正确）
   python3 memory/scripts/eval_routing.py --keyword-only    # 只算 keyword 层命中率；回归数>容忍值 exit 1（verify 门）
   python3 memory/scripts/eval_routing.py --report          # 全报告：keyword 命中率 + semantic-dependent 清单
-  python3 memory/scripts/eval_routing.py --judge           # 导出 semantic-dependent judge 工作单
+  python3 memory/scripts/eval_routing.py --judge           # 导出盲评标签审查工作单（兼容入口）
 
 fixture 格式（memory/evals/routing/fixtures.jsonl，逐行 JSON；// 开头为注释行，仅本脚本可读）：
   {"id","input","expected","layer","scene","note", 可选 "env":{...}}
     layer=keyword  → route-guard 关键词网应确定性到达 expected（算入 keyword 命中率）
-  layer=semantic → route-guard 设计上 NONE/semantic-fallback（无触发词），命中只能靠模型；本脚本挑出交 judge
+  layer=semantic → route-guard 设计上 NONE/semantic-fallback（无触发词），标签待独立审查；本脚本挑出交 judge
     expected 取值（2026-07-13 二轮审查后词表）：
-      具体 skill "/brainstorm"（含隐藏 skill 名如 "redteam"）
+      具体 skill "/brainstorm"（含当前隐藏 skill 名如 "redteam"）
       决策 "PLAN_MODE"/"PLAN_CHECK"/"project:switch:<项目名>"（校验切对了谁；裸 project:switch 宽匹配）/"project:stop"
       多候选 "MULTI:<按字母序逗号拼接>"（如 "MULTI:/tech-spec,systematic-debugging"）
       流程 "flow:design-chain"/"flow:od-design"（OD-first 设计产出链）/
@@ -35,13 +35,13 @@ fixture 格式（memory/evals/routing/fixtures.jsonl，逐行 JSON；// 开头�
       歧义多选 "A|B"（任一即中；标签对抗审查确认存在同等合理路由时使用）
     已删词条：special:od（僵尸——OD 交接本就关键词可达 → "/open-design"）；special:html
     （HTML 预览推送是"产出即推"的执行途中反射、乙类过程纪律，无路由真值，不作 fixture）。
-judge 工作单不内嵌能力面——dispatch 判官时由 orchestrator 在 prompt 提供（真值 = CLAUDE.md
-skill 表 + 语义特例节 + 语义兜底段；fork 判官面必须含 /muse-loop-orchestrate，标签审查 #18 教训）。
+judge 工作单不内嵌能力面——dispatch 判官时由 orchestrator 在 prompt 提供（真值 = 当前活动 catalog 与适用 owner；退役入口不得重新加入）。
 """
 
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import date
@@ -133,11 +133,47 @@ def keyword_correct(fixture, actual):
     return False
 
 
+def active_targets():
+    """Current catalog skills and mapped external capabilities; retired entries never count."""
+    catalog = (REPO_ROOT / '.claude/skill-os/generated/skill-catalog.md').read_text(encoding='utf-8')
+    active, retired = catalog.split('## Retired/unavailable', 1)
+    names = set(re.findall(r'^\| `([^`]+)` \|', active, re.MULTILINE)) - {'references'}
+    routing = (REPO_ROOT / '.claude/skill-os/skill-routing-map.yaml').read_text(encoding='utf-8')
+    names.update(re.findall(r'^    skill: ([\w:-]+)\s*$', routing.split('builtin_skills:', 1)[1], re.MULTILINE))
+    names.difference_update(re.findall(r'^- `([^`]+)`', retired, re.MULTILINE))
+    return names | {'/' + name for name in names}
+
+
+def valid_expected(expected, targets):
+    if not isinstance(expected, str) or expected.strip() != expected:
+        return False
+    decisions = {'direct', 'PLAN_MODE', 'PLAN_CHECK', 'project:gate', 'project:stop',
+                 'project:switch', 'ask:research-first', 'review:dispatch',
+                 'special:sidebar', 'special:luca-open', 'flow:design-chain', 'flow:od-design',
+                 'flow:framework-evolution:benchmark', 'flow:framework-evolution:scout',
+                 'flow:engineering-delivery'}
+    alternatives = expected.split('|')
+    if len(set(alternatives)) != len(alternatives):
+        return False
+    for label in alternatives:
+        if label in targets or label in decisions:
+            continue
+        if label.startswith('project:switch:') and re.fullmatch(r'project:switch:[^\s/|\x00]+', label):
+            continue
+        if label.startswith('MULTI:'):
+            members = label[6:].split(',')
+            if len(members) >= 2 and members == sorted(set(members)) and all(x in targets for x in members):
+                continue
+        return False
+    return True
+
+
 def load_fixtures():
     if not FIXTURES.exists():
         return []
     rows = []
     ids = set()
+    targets = active_targets()
     # 二轮 A-F6：坏行报文件行号（json.loads 只报行内位置，永远 "line 1"，定位极差）。
     for lineno, line in enumerate(FIXTURES.read_text(encoding="utf-8").splitlines(), 1):
         line = line.strip()
@@ -150,6 +186,12 @@ def load_fixtures():
             missing = [key for key in ("id", "input", "expected", "layer") if not row.get(key)]
             if missing:
                 raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行缺少字段: {','.join(missing)}")
+            if not isinstance(row['id'], str) or not row['id'].strip():
+                raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行 id 无效")
+            if not isinstance(row['input'], str) or not row['input'].strip():
+                raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行 input 无效")
+            if not valid_expected(row['expected'], targets):
+                raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行 expected 无效: {row['expected']}")
             if row["id"] in ids:
                 raise SystemExit(f"[eval_routing] FAIL: fixtures 第 {lineno} 行重复 id: {row['id']}")
             if row["layer"] not in {"keyword", "semantic"}:
@@ -227,16 +269,16 @@ def cmd_report():
           f"({sum(1 for r in kw if r['correct'])}/{len(kw)})")
     for m in [r for r in kw if not r["correct"]]:
         print(f"  ✗ {m['id']}: expected={m['expected']} actual={m['actual']}  ⤷ {m['input']}")
-    print(f"\n[semantic-dependent 靠模型判断，需 --judge 度量] {len(sem)} 条：")
+    print(f"\n[semantic 标签待审查；不代表实际 Agent 行为] {len(sem)} 条：")
     for s in sem:
         print(f"  ? {s['id']}: expected={s['expected']} route-guard={s['route_guard_actual']}  ⤷ {s['input']}")
     print("\nsemantic-layer 命中率非本脚本可确定性判定——语义判断只能在模型内发生。"
-          "跑 --judge 导出工作单，由 orchestrator 起 llm-judge 度量。")
+          "跑 --judge 导出标签审查工作单；实际行为须另行采集原生 Agent 轨迹。")
     return 0
 
 
 def cmd_judge():
-    """导出 semantic-dependent judge 工作单（实际判官由 orchestrator/主循环起，非本脚本）。"""
+    """兼容 --judge：只导出标签审查工作单，不度量实际 Agent 行为。"""
     fixtures = load_fixtures()
     if not fixtures:
         print(f"[eval_routing] FAIL: fixtures 为空或缺失（{FIXTURES}）——盲评门不允许真空通过")
@@ -251,31 +293,32 @@ def cmd_judge():
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     with open(key_path, "w", encoding="utf-8") as key:
         for s in sem:
-            key.write(json.dumps({"eval_kind": "routing-answer-key", "id": s["id"], "expected_capability": s["expected"]}, ensure_ascii=False) + "\n")
+            key.write(json.dumps({"eval_kind": "routing-label-answer-key", "id": s["id"], "expected_capability": s["expected"]}, ensure_ascii=False) + "\n")
     with open(out_path, "w", encoding="utf-8") as f:
         for s in sem:
             # 二轮 A-F4：补 scene/note（token 语义线索）+ actual_capability/reason 回填位
             # （与 eval-schema routing_eval_fields 对齐）。能力面不内嵌——由 orchestrator
             # dispatch 判官时在 prompt 提供（见文件头注；fork 面必须含 /muse-loop-orchestrate）。
             f.write(json.dumps({
-                "eval_kind": "routing",
+                "eval_kind": "routing-label-review",
                 "id": s["id"],
                 "input": s["input"],
+                "context": s.get("context", ""),
                 "scene": s.get("scene", "unknown"),
                 "routing_layer": "semantic",
                 "route_guard_actual": s["route_guard_actual"],
                 "judge_question": (
-                    f"给定框架能力面（由 dispatch 方提供），用户请求「{s['input']}」按含义应路由到哪个能力？"
+                    f"本次仅审查路由标签，不测实际 Agent 执行。给定框架能力面及 context，用户请求「{s['input']}」按含义应路由到哪个能力？"
                     "请输出 actual_capability、verdict（pass/fail/unknown）和一句理由；不要猜测或索取标准答案。"
                 ),
                 "actual_capability": None,  # 由 judge 回填：它认为该路由到的能力
                 "verdict": None,            # 由 judge 回填 pass/fail
                 "reason": None,             # 由 judge 回填一句理由
             }, ensure_ascii=False) + "\n")
-    print(f"[eval_routing] 已导出 {len(sem)} 条盲评工作单 → {out_path}")
+    print(f"[eval_routing] 已导出 {len(sem)} 条盲评标签审查工作单 → {out_path}")
     print(f"[eval_routing] 独立 scorer answer key（不得交给判官）→ {key_path}")
     print("下一步：由 orchestrator/主循环对每条起独立 llm-judge（冷启动隔离），回填 verdict，"
-          "再算 semantic-layer 命中率。")
+          "回填仅用于标签审查；不得汇总为实际 semantic-layer 命中率。")
     return 0
 
 
@@ -306,7 +349,7 @@ def main():
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument("--keyword-only", action="store_true", help="只算 keyword 命中率（verify 回归门）")
     g.add_argument("--report", action="store_true", help="全报告")
-    g.add_argument("--judge", action="store_true", help="导出 semantic-dependent judge 工作单")
+    g.add_argument("--judge", action="store_true", help="兼容入口：导出盲评标签审查工作单，不测实际行为")
     g.add_argument("--selftest", action="store_true", help="内置小样例自检")
     args = p.parse_args()
     if args.selftest:

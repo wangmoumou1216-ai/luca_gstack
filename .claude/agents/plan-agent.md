@@ -212,7 +212,7 @@ Plan Agent 接收以下信息（由主 Agent 组装传入）：
 复杂度模式: Solo | Sequential | Parallel | Supervisor | Hierarchical
 理由: <一句话说明选择原因>
 模式可组合: <例：Sequential 外层 + Parallel 内层>
-需要用户确认: 是（Supervisor 多 Phase / Hierarchical）| 否（其他）
+需要用户确认: 是（任意 Supervisor / Hierarchical，包括单阶段及嵌套实例）| 否（其他）
 任务规模 Tier: Lightweight | Standard | Deep
 ```
 
@@ -583,7 +583,7 @@ RECOMMENDATION: <下一步建议动作，给用户可选项>
 | **Solo** | 1-2 文件，低风险，无依赖 | 1（主 Agent） | 否 |
 | **Sequential Chain** | 阶段强依赖，B 等 A 输出 | 1-2，串行 | 否 |
 | **Parallel Fan-out** | 独立子任务，互不干扰 | 2-5，并行 | 否 |
-| **Supervisor** | 需质量保证，Work+Eval 配对 | 2N（WA+EA） | 多 Phase 是 |
+| **Supervisor** | 需质量保证，Work+Eval 配对 | 2N（WA+EA） | **必须，包括单阶段及嵌套实例** |
 | **Hierarchical** | 超复杂，多域多层，不可逆 | 5+，分层 | **必须** |
 
 **模式可嵌套：**

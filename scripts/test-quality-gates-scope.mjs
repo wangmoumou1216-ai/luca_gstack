@@ -96,13 +96,46 @@ try {
   console.log('PASS framework default/explicit: forbidden alias read mutation rejected and restored');
 
   const exact = join(scratch, 'exact-handoff.md');
-  const strictFixture = fixture.replace('gate_result: CONDITIONAL_PASS', 'gate_result: PASS');
+  const strictFixture = fixture.replace('gate_result: CONDITIONAL_PASS', 'gate_result: PASS')
+    .replace('[C3] External result UNKNOWN reason: not observed', '[C3] External result PASS evidence: observed');
   writeFileSync(exact, fixture);
   const unrelated = [join(root, '.claude/agents'), join(root, '.claude/hooks')];
   passes(run(['--handoff', exact], unrelated));
   writeFileSync(exact, strictFixture);
   passes(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated));
   rejects(run(['--handoff', exact, '--require-gate', 'FAIL'], unrelated), /only accepts PASS/);
+  for (const bad of [
+    strictFixture.replace('gate_result: PASS', 'gate_result: PASS\ngate_result: BROKEN'),
+    strictFixture.replace('gate_result: PASS', 'gate_result: BROKEN'),
+    strictFixture.replace('gate_result: PASS', '~~~yaml\ngate_result: PASS\n~~~'),
+    strictFixture.replace('gate_result: PASS', '<!--\ngate_result: PASS\n-->'),
+    strictFixture.replace('gate_result: PASS', '````yaml\n```\ngate_result: PASS\n````'),
+  ]) {
+    writeFileSync(exact, bad);
+    rejects(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated), /gate_result/);
+  }
+  for (const bad of [
+    strictFixture.replace('[C3] External result PASS evidence: observed', '[C3] External result UNKNOWN reason: not observed'),
+    strictFixture.replace('[C3] External result PASS evidence: observed', '[C3] External result FAIL evidence: PASS describes the example'),
+  ]) {
+    writeFileSync(exact, bad);
+    rejects(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated), /criterion.*must be PASS/);
+    passes(run(['--handoff', exact], unrelated));
+  }
+  for (const replacement of [
+    '[C3] External result evidence: example says PASS evidence: observed',
+    '[C3] External result UNKNOWN; evidence: example says PASS evidence: observed',
+  ]) {
+    writeFileSync(exact, strictFixture.replace('[C3] External result PASS evidence: observed', replacement));
+    rejects(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated), /every criteria bullet/);
+  }
+  writeFileSync(exact, strictFixture + '\ncriteria: BROKEN\n');
+  rejects(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated), /exactly one criteria block/);
+  writeFileSync(exact, strictFixture + '\n~~~yaml\ngate_result: BROKEN\n~~~\n<!-- gate_result: FAIL -->\n');
+  passes(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated));
+  rejects(run(['--handoff', exact, '--require-gate', 'PASS', '--require-gate', 'PASS'], unrelated), /duplicate --require-gate/);
+  rejects(run(['--require-gate', 'PASS'], unrelated), /requires --handoff/);
+  rejects(run(['--framework', '--framework']), /duplicate --framework/);
   const commented = fixture.replace('gate_result: CONDITIONAL_PASS\n', '# gate_result: PASS\n');
   writeFileSync(exact, commented);
   rejects(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated), /requires exactly one gate_result/);

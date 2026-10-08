@@ -6,6 +6,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ROUTING_PLAN_FIXTURES } from './routing-plan-v1-suite.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const sandbox = mkdtempSync(join(tmpdir(), 'routing-candidate-hints-'));
@@ -108,6 +109,11 @@ try {
       assert.doesNotMatch(preset, /用户已显式选择/);
       passed++;
     }
+    assessment(run(ROUTING_PLAN_FIXTURES['RP-07b'].request, harness));
+    const selectedPreset = run(ROUTING_PLAN_FIXTURES['RP-12a'].request, harness);
+    assert.match(selectedPreset, /核验用户真实选择/);
+    assert.doesNotMatch(run(ROUTING_PLAN_FIXTURES['RP-12b'].request, harness), /用户已显式选择/);
+    passed += 3;
 
     for (const skill of ['figma-layer', 'muse-loop-orchestrate', 'muse-proto-gen']) {
       const out = run(`$${skill}`, harness);
