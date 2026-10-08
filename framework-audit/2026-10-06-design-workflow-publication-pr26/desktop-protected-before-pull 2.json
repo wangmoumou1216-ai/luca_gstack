@@ -1,8 +1,0 @@
-{
-  "files": {
-    ".claude/observability/observations.jsonl": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
-    "memory/evals/eval-log.jsonl": "a3b696d2ffc55687e4ea369c338e483fadbc4bc7fce336a3ceea2102824963f7",
-    "memory/retrieval-log.jsonl": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020"
-  },
-  "unchanged_since_publication": true
-}

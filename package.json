@@ -1,7 +1,7 @@
 {
   "name": "luca-gstack",
   "version": "0.2.1",
-  "description": "AI Design Workflow OS for CRM product design",
+  "description": "Product-neutral AI design and engineering Skill OS",
   "private": true,
   "engines": {
     "node": ">=20.19.0"

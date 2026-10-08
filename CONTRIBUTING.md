@@ -4,10 +4,11 @@
 
 ## 先决条件
 
-- [Claude Code](https://claude.ai/code) CLI（最新版本）
+- Claude Code 或 Codex；两者使用共享 skill 契约及各自入口
 - Git ≥ 2.x
 - macOS / Linux
-- Node.js ≥ 20.0.0（用于运行 session hooks 和验证脚本）
+- Node.js ≥ 20.19.0 与 npm；完整验证建议 Node.js 22，与 CI 一致
+- Python 3、PyYAML、zsh、ripgrep；浏览器依赖准备见 [README 健康检查](README.md#健康检查)
 
 ## 本地设置
 
@@ -16,10 +17,13 @@
 git clone https://github.com/wangmoumou1216-ai/luca_gstack.git luca_gstack
 cd luca_gstack
 
-# 2. 激活 Git hooks（必须）
+# 2. 安装锁定的 Node 依赖
+npm ci
+
+# 3. 激活 Git hooks（必须）
 git config core.hooksPath .githooks
 
-# 3. 验证环境
+# 4. 完成 README 中的完整检查环境准备后验证
 bash scripts/verify.sh
 ```
 
@@ -56,11 +60,10 @@ docs: update CONTRIBUTING with branch naming rules
 
 新增 skill 必须满足以下要求：
 
-1. **SKILL.md**：在 `.claude/skills/office/<skill-name>/SKILL.md` 创建完整定义文件
-2. **斜杠命令入口**：在 `.claude/commands/<skill-name>.md` 创建入口文件
-3. **Handoff 协议**：skill 完成后必须写 `docs/handoff/` 摘要
-4. **workflow-state 节点**：在 `.claude/workflow-state.yaml` 添加对应节点
-5. **CHANGELOG 更新**：在 `## [Unreleased]` 下记录新增 skill
+1. **定义与注册**：按 [Skill 编写合同](.claude/skill-os/skill-authoring.md) 创建 `.claude/skills/office/<skill-name>/SKILL.md`，维护适用的输入模式、路由与注册源。
+2. **宿主发现**：按入口可见性同步 Claude 命令入口和 Codex `.agents/skills/` 别名；隐藏/internal skill 不应自动变成一级入口。由源配置重建生成视图，并运行注册与上下文一致性检查。
+3. **交接与状态**：遵循 skill 自身及 [office 合同](.claude/skills/office/SKILL.md)；standalone 不补 workflow-state；handoff 遵循具体 skill 合同，office 仅豁免轻量且无下游消费的终端交付，重型 standalone 仍须交接记录。只有已选择 workflow 且项目绑定已验证时，才按对应节点合同更新项目状态。框架维护保持 `NO_PIN`，不写共享 `docs/` 或 workflow-state 别名。
+4. **CHANGELOG 更新**：在 `## [Unreleased]` 下记录新增能力及其原因。
 
 ## PR 流程
 
@@ -75,7 +78,7 @@ docs: update CONTRIBUTING with branch naming rules
 
 - [ ] Skill 有完整的 SKILL.md 定义
 - [ ] 不向 `framework/` 只读目录写入内容
-- [ ] `workflow-state.yaml` 格式合法
+- [ ] 输入、注册与生成视图检查通过；涉及项目 workflow 时按已验证绑定核验状态
 - [ ] 无 API key 或敏感信息（pre-commit 会检测）
 - [ ] CHANGELOG 已更新
 
