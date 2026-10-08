@@ -1,0 +1,34 @@
+{
+  "kind": "emergency-local-focused-commits",
+  "time": "2026-10-01T07:21:17.624549+00:00",
+  "scope_sha256": "166dc91ab74696d916e5eb5ed088d3ded4b83f8a54f0bb767d812bbf291f191d",
+  "commits": [
+    {
+      "kind": "framework",
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "base": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+      "head": "a4e55b6dfada72e604a3ba9737e73710acdfec8c",
+      "files": 18,
+      "committed_frozen_bytes_verified": true
+    },
+    {
+      "kind": "app",
+      "root": "/Users/luca/Desktop/\u9879\u76ee/muse",
+      "base": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+      "head": "c212b5c3c6d1c6f1e379a026625898ef6788a606",
+      "files": 4,
+      "committed_frozen_bytes_verified": true
+    }
+  ],
+  "framework_fresh_precommit": {
+    "PASS": 107,
+    "FAIL": 0,
+    "WARN": 0,
+    "DELEGATED": 1,
+    "log": "/tmp/luca-emergency-framework-commit-02.log",
+    "sha256": "7fe7a572b016468a05e18b4f60866e435422d025b6880d91a22758721a3f8e17"
+  },
+  "native_second_axis_pending": true,
+  "published": false,
+  "installed": false
+}

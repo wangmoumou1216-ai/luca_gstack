@@ -1,0 +1,83 @@
+[
+  {
+    "label": "baseline",
+    "ok": true,
+    "registration": {
+      "status": "PASS",
+      "problems": [],
+      "config_sha256": "140627a4109630882c745121b1f0da62f40a7f8fe1f2ccfaf599b0203a37f280",
+      "hook_count": 11,
+      "expected_digests": [
+        "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+      ],
+      "current_digest": "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+    },
+    "installation_status": "PASS"
+  },
+  {
+    "label": "remove source guard NODE_OPTIONS",
+    "ok": true,
+    "registration": {
+      "status": "PASS",
+      "problems": [],
+      "config_sha256": "ef0fb151c7f4f790db79a81213460f5bc1257b66ea7596598809b5af99c84c7a",
+      "hook_count": 11,
+      "expected_digests": [
+        "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+      ],
+      "current_digest": "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+    },
+    "installation_status": "PASS"
+  },
+  {
+    "label": "move all registrations to SessionStart",
+    "ok": true,
+    "registration": {
+      "status": "PASS",
+      "problems": [],
+      "config_sha256": "12add3941049f3b4317ba8ace2b93c9ea901c20379845f4163655e19e286d018",
+      "hook_count": 11,
+      "expected_digests": [
+        "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+      ],
+      "current_digest": "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+    },
+    "installation_status": "PASS"
+  },
+  {
+    "label": "digest mismatch exits success",
+    "ok": true,
+    "registration": {
+      "status": "PASS",
+      "problems": [],
+      "config_sha256": "16955ac2e4180fa8bc237ce03b558d126d250f0ea7ec40b30f9c5207c14d6149",
+      "hook_count": 11,
+      "expected_digests": [
+        "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+      ],
+      "current_digest": "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+    },
+    "installation_status": "PASS"
+  },
+  {
+    "label": "replace launch tail by true",
+    "ok": true,
+    "registration": {
+      "status": "PASS",
+      "problems": [],
+      "config_sha256": "02706825ff1aa0a506bc5b18289c5d07eccae4a1172c0831cc3025f0487e84a1",
+      "hook_count": 11,
+      "expected_digests": [
+        "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+      ],
+      "current_digest": "dbfbe031cd8ec104616766304c79b7c32e43dccdf4aa1cab62455d480b6dbc1b"
+    },
+    "installation_status": "PASS"
+  },
+  {
+    "label": "actual PreToolUse no-op launch",
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "kind": "luca-ci-shell-dependency-change",
+  "source_commit": "689444174a9a32b1a3fcf92e492cf446e284e4b0",
+  "target_commit": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+  "relative": ".github/workflows/ci.yml",
+  "preimage_sha256": "fff63b76d5315b8398f469987bc80d0f7268ac5453f1bb999e965af90a851bfd",
+  "postimage_sha256": "c354695e7c2c41bec3c08965347e7a5d4314f47311e099685ad15558fb1cd38d",
+  "postimage_bytes": 12630,
+  "patch_sha256": "337aef8b94029ebc6bf7ded5d4c9c131690630011a171b4dfa8812af6bf4dde7",
+  "postimage": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-shell-workflow-resume01.yml.txt",
+    "sha256": "c354695e7c2c41bec3c08965347e7a5d4314f47311e099685ad15558fb1cd38d"
+  }
+}

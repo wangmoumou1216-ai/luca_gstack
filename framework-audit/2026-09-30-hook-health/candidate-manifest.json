@@ -1,0 +1,76 @@
+{
+  "status": "REVIEWED_AUTHORIZED_AWAITING_WINDOW",
+  "candidate_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq",
+  "source_root": "/Users/luca/Desktop/luca_gstack",
+  "files": [
+    {
+      "path": "scripts/codex-hook-health.mjs",
+      "before_sha256": null,
+      "after_sha256": "190ef84d99e7ed84531c1680dec8d39416f7c2d981e7f35d8c88e2d762629b6f",
+      "new": true
+    },
+    {
+      "path": "scripts/codex-trust-hooks.mjs",
+      "before_sha256": "333858e5d3a297c9344e445d63f5eaa95e660794c8acab6b70d0c7cce08d95ec",
+      "after_sha256": "8f8a4106713d550efe5863d3823897ca3ed889d6625c3c793c783f3e41776ee9",
+      "new": false
+    },
+    {
+      "path": "scripts/test-codex-hook-health.mjs",
+      "before_sha256": null,
+      "after_sha256": "7cda389e7fc9cbd8822969a7b69770512ed3fa97f7d2d39c50bc1393721ae2c5",
+      "new": true
+    },
+    {
+      "path": "scripts/test-codex-trust-hooks.mjs",
+      "before_sha256": "b616238b873f38b5668502d2757e9fd7aee9d5c069bef6d6e96cf332af32b49d",
+      "after_sha256": "a2e5ea5cf4dfd7c1c78c43f994e83f984e17172e394b1059956dbe4e84f7a699",
+      "new": false
+    },
+    {
+      "path": "scripts/verify.sh",
+      "before_sha256": "6cf90be0c5d5bec39ffadde202d4f05ec67a024e9539a4e3fe1309f08d78125a",
+      "after_sha256": "f8a88af3a884358aa8de7a49567df000f501cf9d1c35096e2b1d10b5956f636f",
+      "new": false
+    },
+    {
+      "path": "README.md",
+      "before_sha256": "ce8307b0a2ea79237e275b7d85de3ae5e2b83f791b2d19cf756027569058a1bc",
+      "after_sha256": "f2f03d3efc0eb5d7ff2aae37a9f4447c63ee59963f1b38bd00a0b12890639ed6",
+      "new": false
+    },
+    {
+      "path": ".codex/hooks.json",
+      "before_sha256": "5588e34ad2dcec9dc9ff8dc89bcdf56f98b0d16866b20dfb59f0ac4081d4a07b",
+      "after_sha256": "59bd427084ecad0bdcce4d29e69605508ad9e9be38181ad4e941cf07c1ea3e54",
+      "new": false
+    }
+  ],
+  "baseline_source_digest": "a229918d10266b91b6205ec46efb8ab65e3d612b3bd5458762caad617cecebf3",
+  "candidate_source_digest": "e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691",
+  "patch_sha256": "3d90329de723ab5720769576e66f9a2c92ec0568a7920f8658a8da7ce8504729",
+  "activation_effects": [
+    "Coordinate a maintenance window: shared-root reviews complete or explicitly paused, no new review until live verification",
+    "Apply seven baseline-checked files",
+    "Install reviewed source manifest for this root preserving other roots",
+    "Official exact trust update for eleven commands",
+    "Reload session and verify a real tool invocation"
+  ],
+  "git_publication": false,
+  "revision": 3,
+  "baseline_commit": "0c56460e5a0761b7caaa7b628a1bf22fd57a2c09",
+  "candidate_archive_sha256": "9902456b1333b1150b3fba23a61e7c7edf9e749deb348ecd53ea52f2a8b925a4",
+  "rollback_archive_sha256": "43a70cd0a1b7f7374881fa907e1ae594e6d01e88f0211e2fd430200cbff2518b",
+  "release_review": [
+    "release-review/standards-02.md",
+    "release-review/spec-02.md"
+  ],
+  "release_review_status": "PASS_CANDIDATE_ONLY_LIVE_PENDING",
+  "release_review_run_ids": [
+    "hook-release-standards-20260930-02",
+    "hook-release-spec-20260930-02"
+  ],
+  "activation_helper_sha256": "bd0841252789a30d24d7816aaca60298342e26db59ce5cdbab5d3da8c78dc979",
+  "profile_scope_sha256": "1e022403021392ab838f04bab7a1d7f881e4e15eee4bb94f3fae6f0c0b3d7091",
+  "publication_authority": "Latest direct human instruction: 你 现在赶紧收尾，你还有好多提交推送没有做"
+}

@@ -1,0 +1,70 @@
+{
+  "case": "N-A first segment",
+  "surface": "real exec_command/write_stdin; controlled process tasks, no new agents/models/probes",
+  "baseline": {
+    "chunk_id": "a40793",
+    "wall_time_seconds": 0.0000075,
+    "exit_code": 0,
+    "original_token_count": 133,
+    "output": "{\"root\": \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration\", \"input_sha256\": {\"source.json\": \"905188a0b735be7224a51cd90e3a356a98ce5045dfeb550f9d55722d31625432\", \"alpha.py\": \"d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f\", \"beta.py\": \"50c576379a6adc43e0b65bf4227d079af2ae80150a70a91b47982531d112ec99\"}, \"preexisting\": {\"alpha-result.json\": false, \"beta-result.json\": false, \"final-report.json\": false, \"alpha-effects.txt\": false, \"beta-attempts.txt\": false}}\n"
+  },
+  "steps": [
+    {
+      "name": "alpha",
+      "initial": {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "3216c0",
+          "wall_time_seconds": 0.25321475,
+          "session_id": 18948,
+          "original_token_count": 0,
+          "output": ""
+        }
+      },
+      "observed": {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "45f165",
+          "wall_time_seconds": 0.000012125,
+          "exit_code": 0,
+          "original_token_count": 4,
+          "output": "ALPHA_COMPLETED\n"
+        }
+      }
+    },
+    {
+      "name": "beta",
+      "initial": {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "745bba",
+          "wall_time_seconds": 0.250665542,
+          "session_id": 63034,
+          "original_token_count": 0,
+          "output": ""
+        }
+      },
+      "observed": {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "6b99b0",
+          "wall_time_seconds": 0.000012542,
+          "exit_code": 23,
+          "original_token_count": 7,
+          "output": "BETA_SOURCE_NOT_ACCEPTED\n"
+        }
+      }
+    }
+  ],
+  "overall_status": "BLOCKED; beta failed, final dependency unfulfilled",
+  "final_report_created": false,
+  "retries": 0,
+  "scripts_modified": false,
+  "actual_agent_count": 0,
+  "independent_acceptance": "NOT_RUN",
+  "original_helper_failure": {
+    "tool": "functions.exec",
+    "error": "ReferenceError: TextEncoder is not defined",
+    "effect": "Before nested command dispatch; no filesystem write or process relaunch"
+  }
+}

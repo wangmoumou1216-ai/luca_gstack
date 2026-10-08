@@ -1,0 +1,37 @@
+{
+  "status": "STATIC_GATE_PASS_NATIVE_PENDING",
+  "expected_denominator": 135,
+  "source": {
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/brainstorm/SKILL.md": {
+      "sha256": "9a92eb459013e3931ecb7e7e82d45095714b4ea2d8a092610455ab9344d7eac3",
+      "bytes": 43782
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/ux-brainstorm/SKILL.md": {
+      "sha256": "fda273a42fe3c2e24976988bd55d2ba73eb7478bd4adf4684a547674fd149769",
+      "bytes": 38738
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/brainstorm/references/adversarial-review.md": {
+      "sha256": "bcdeda78f299848d99f12f4e6dab692f2fe5ed2ec5fbd4910f6e94b368eeafdf",
+      "bytes": 13323
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/ux-brainstorm/references/adversarial-review.md": {
+      "sha256": "43e7f372aa8c46dbb6e8df352d74901b97051def3cf3eab0ac10e627199dc5a4",
+      "bytes": 8838
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skill-os/codex-viability.yaml": {
+      "sha256": "611813287972b50a27c63ee7d984bb19b05a6daeb514ee884cafe5f85f06fe3d",
+      "bytes": 6410
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/agents/quality-gate.md": {
+      "sha256": "11078c693bff65123d7ded36362b1e8f92a6e957e42913aba04ec366df3b60ff",
+      "bytes": 27250
+    },
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/scripts/test-design-workflow-contract.mjs": {
+      "sha256": "b6137c9db8e2775390fb387c5f687abf99d3d38c7c350f758ccbac8766d2392c",
+      "bytes": 11447
+    }
+  },
+  "source_binding_origin": "worker final static-manifest preceding native dispatch",
+  "supersedes": "parent-current-green source hash set (two later timing notes); earlier evidence retained",
+  "actual_run_sha256": "fd836bc435c97e79aacb684d3cd520200485e4745745fecf6143b6ab9476e97f"
+}

@@ -1,0 +1,46 @@
+[
+  {
+    "id": "F01",
+    "harness": "codex",
+    "arm": "old",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/evidence/F01/receipt.json",
+    "receipt_sha256": "afe834e0f135db6df2bfb7c0f967e6b7c758709010a9e7c540a8088501c11692",
+    "status": "COMPLETED_PENDING_SEMANTIC_REVIEW",
+    "final_outputs": [
+      "{\"decisions\":[{\"ask_user_again\":false,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":null,\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":null,\"id\":\"CONTINUE_APPROVED\",\"next_action\":\"继承覆盖 A、B 的既有批准，继续执行已就绪的 B。\",\"source_reference\":\"orchestrator §2.2、§3.4e；会话授权持续规则\"},{\"ask_user_again\":true,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":null,\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":false,\"id\":\"HUMAN_CHOICE_MISSING\",\"next_action\":\"暂停依赖该选择的 B，向用户询问尚未决定的产品／平台选项，等待真实答案。\",\"source_reference\":\"orchestrator §2.2、§3.4e\"},{\"ask_user_again\":null,\"restart_same_worker\":false,\"consume_missing_result\":false,\"decision_status\":null,\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":null,\"id\":\"WAIT_TIMED_OUT\",\"next_action\":\"保留现有 worker，继续等待其终态并追踪在途结果；单次等待超时不等于 worker 失败，不重复执行已写入的 A。\",\"source_reference\":\"auto §3.3 W9、在途动作处理\"},{\"ask_user_again\":null,\"restart_same_worker\":false,\"consume_missing_result\":false,\"decision_status\":null,\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":null,\"id\":\"FAILED_RETRY_EXHAUSTED\",\"next_action\":\"停止当前 Pipeline 和依赖缺失产出的后继，报告重试已耗尽、阻塞 Phase 与缺失产出，交还用户决定后续处理。\",\"source_reference\":\"auto §3.3 W9\"},{\"ask_user_again\":false,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":\"ADOPTED\",\"new_external_effect_authorized\":false,\"choose_replacement_without_user\":null,\"id\":\"CARRY_ACCEPTED\",\"next_action\":\"交接中将 DEC-01 标为 ADOPTED，继承已有采用决定并继续已批准的设计交接；新的外部发布仍未获授权。\",\"source_reference\":\"handoff-protocol「决策状态标记」；orchestrator §3.4e\"},{\"ask_user_again\":false,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":\"REJECTED\",\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":false,\"id\":\"CARRY_REJECTED\",\"next_action\":\"交接中将 DEC-02 标为 REJECTED，无需重确认否决；替代方案保持未决，依赖它的工作等待用户选择。\",\"source_reference\":\"handoff-protocol「决策状态标记」「待澄清」；orchestrator §3.4e\"},{\"ask_user_again\":false,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":\"REJECTED\",\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":false,\"id\":\"LATEST_CORRECTION\",\"next_action\":\"依据最新真实纠正将 DEC-03 更新为 REJECTED，停止按 C 执行；保留历史记录，替代方案保持未决并等待用户选择。\",\"source_reference\":\"handoff-protocol「决策状态标记」「待澄清」；orchestrator §3.4e\"}]}"
+    ]
+  },
+  {
+    "id": "F02",
+    "harness": "codex",
+    "arm": "new",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/evidence/F02/receipt.json",
+    "receipt_sha256": "25e770177dad7cc20facd0c44d1cfc622098ed93c66fd06807eeec9f7c625f28",
+    "status": "COMPLETED_PENDING_SEMANTIC_REVIEW",
+    "final_outputs": [
+      "{\"decisions\":[{\"ask_user_again\":false,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":null,\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":null,\"id\":\"CONTINUE_APPROVED\",\"next_action\":\"继续执行已批准且就绪的 Phase B，无需重复确认。\",\"source_reference\":\"orchestrator §2.2 Step 2d\"},{\"ask_user_again\":true,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":null,\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":null,\"id\":\"HUMAN_CHOICE_MISSING\",\"next_action\":\"暂停依赖该选择的执行，向用户询问尚未决定的产品/平台选项，等待真实回答。\",\"source_reference\":\"orchestrator §2.2 Step 2d\"},{\"ask_user_again\":null,\"restart_same_worker\":false,\"consume_missing_result\":false,\"decision_status\":null,\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":null,\"id\":\"WAIT_TIMED_OUT\",\"next_action\":\"报告进度，沿 fixture-worker-17 原句柄继续等待或查询状态；不因等待超时标记失败，不重放已完成效果 A。\",\"source_reference\":\"auto §3.3 W9\"},{\"ask_user_again\":null,\"restart_same_worker\":false,\"consume_missing_result\":false,\"decision_status\":null,\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":null,\"id\":\"FAILED_RETRY_EXHAUSTED\",\"next_action\":\"停止当前 Pipeline，暂停依赖缺失产出的后继；报告阻塞阶段、失败原因与重试耗尽，提出手动执行或由用户决定跳过的建议。\",\"source_reference\":\"auto §3.3 W9\"},{\"ask_user_again\":false,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":\"ADOPTED\",\"new_external_effect_authorized\":false,\"choose_replacement_without_user\":null,\"id\":\"CARRY_ACCEPTED\",\"next_action\":\"交接继承 DEC-01 的采用状态及来源 fixture:user-message-8，继续已批准的设计交接；新的外部发布仍未获授权。\",\"source_reference\":\"handoff-protocol「决策状态标记／写入时机」\"},{\"ask_user_again\":false,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":\"REJECTED\",\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":false,\"id\":\"CARRY_REJECTED\",\"next_action\":\"交接继承 DEC-02 的否决状态及来源 fixture:user-message-11，无需重确认否决；替代方案保留未决，等待用户选择。\",\"source_reference\":\"handoff-protocol「决策状态标记／写入时机」\"},{\"ask_user_again\":false,\"restart_same_worker\":null,\"consume_missing_result\":null,\"decision_status\":\"REJECTED\",\"new_external_effect_authorized\":null,\"choose_replacement_without_user\":false,\"id\":\"LATEST_CORRECTION\",\"next_action\":\"按 fixture:user-message-12 将 DEC-03 更新为否决，停止按旧采用执行；替代方案保留未决，等待用户选择，无需重确认撤销。\",\"source_reference\":\"handoff-protocol「写入时机：最新有效更正优先」\"}]}"
+    ]
+  },
+  {
+    "id": "F03",
+    "harness": "claude",
+    "arm": "new",
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/evidence/F03/receipt.json",
+    "receipt_sha256": "2cc8a39548d1ec240d77c48437099c6e9f0c68b9fb18ba4f1f76e1522cd9abb1",
+    "status": "INVALID_OR_INCOMPLETE",
+    "final_outputs": [
+      {
+        "result": "Failed to authenticate: OAuth session expired and could not be refreshed",
+        "structured_output": null,
+        "is_error": true
+      }
+    ]
+  },
+  {
+    "id": "F04",
+    "harness": "claude",
+    "arm": "old",
+    "status": "NOT_STARTED",
+    "reason": "F03 same native Claude credential failed: OAuth session expired and could not be refreshed. No repeated invocation or auth/config mutation."
+  }
+]

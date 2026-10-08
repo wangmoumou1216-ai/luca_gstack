@@ -1,0 +1,25 @@
+{
+  "review_id": "J16",
+  "eval_run_id": "tri-system-u012-orchestration-context-20261003-r2",
+  "record_type": "root summary of actual independent final; original full report/envelope retained in native agent transcript",
+  "status": "FAIL",
+  "passed": 3,
+  "total": 4,
+  "passed_criteria": [
+    1,
+    2,
+    3
+  ],
+  "closed_prior_finding": "J15 F2 auto handoff consumer conflict",
+  "remaining_blocking_finding": "F3: office whole Pre-Task <=5K cap incompatible with mandatory complete dependencies; three ~2K handoffs counterexample",
+  "owner": "W41 current original Context chat",
+  "repair_status": "Owner confirmed same-turn repair in progress; no final candidate acceptance yet",
+  "limits": [
+    "static review only",
+    "routing F1 outside scope",
+    "P08 INVALID/cap8 retained",
+    "actual rule behavior untested",
+    "not adoption or project completion"
+  ],
+  "recorded_at": "2026-10-03T01:21:16.434571+00:00"
+}

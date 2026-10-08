@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-atomic-refutation-20260930-01",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing ROUND6 atomic refutation",
+    "scene": "unknown",
+    "input_summary": "独立只读审查冻结13文件候选；核验7项criteria，执行冻结host/native源码内存反证及两项守卫mutation，亲读native采用日志、注册证据和同版本完整验证结果。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/REPORT.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 7,
+    "total": 7,
+    "findings": []
+  }
+}

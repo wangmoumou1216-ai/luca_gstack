@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "focused-framework-hook-commit-receipt",
+  "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+  "branch": "codex/hook-text-data",
+  "base": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+  "head": "689444174a9a32b1a3fcf92e492cf446e284e4b0",
+  "files": [
+    ".claude/skill-os/runtime/project-session.md",
+    ".codex/hooks.json",
+    ".codex/hook-source-integrity.mjs",
+    "README.md",
+    "scripts/codex-hook-health.mjs",
+    "scripts/install-codex-source-guard.mjs",
+    "scripts/source-guard-review.mjs",
+    "scripts/source-guard-test-fixture.mjs",
+    "scripts/test-codex-child-hook-integrity.mjs",
+    "scripts/test-codex-hook-health.mjs",
+    "scripts/test-codex-trust-hooks.mjs",
+    "scripts/test-controlled-change.mjs",
+    "scripts/test-hook-source-digests.mjs",
+    "scripts/test-prompt-attestation.mjs",
+    "scripts/test-source-guard-preserve.mjs"
+  ],
+  "scope": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CACHE-FINAL-SCOPE-02.json",
+    "sha256": "1eff6622a143d5f94ccbe8babaf2211a457d6d332d4e28e6d98b973e0f8bdd97"
+  },
+  "source_files_and_committed_blobs_verified": 17,
+  "candidate_worktree_clean": true,
+  "verification": {
+    "command": "normal git commit invoking .githooks/pre-commit and bash scripts/verify.sh",
+    "log": "/tmp/luca-hook-resume-framework-commit.log",
+    "log_sha256": "6ef1d44e908fd79222249c6a4eae0eec274f1405e95feec9344f8e2c97232804",
+    "pass": 107,
+    "fail": 0,
+    "warn": 0,
+    "delegated": 1
+  },
+  "publication": "NOT_ATTEMPTED: fresh independent native review vote unavailable",
+  "installed_app_proof": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-app-already-installed.json",
+    "sha256": "003bd6f3127f01479ed2f1746ecdfad976c3cec76b55706b042dbc875b180919"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-10-01T07:53:55.410872+00:00",
+  "status": "FROZEN_BEFORE_LOCAL_COMMIT",
+  "base": "a4e55b6dfada72e604a3ba9737e73710acdfec8c",
+  "owned_file": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-codex-model-route-hook.mjs",
+  "sha256": "72cc1c3f735cd153f6faca4da5b5dc5de044919b97fb7476074a200dd5cd9c18",
+  "delta_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-CI-PORTABILITY-DELTA-01.patch.txt",
+  "delta_sha256": "9e7bc74b7a4ac6c37a4df44b11f1c546704e0b61d2c4343ef08a5be42f2a244a",
+  "evidence_path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-model-linux-ci-muoycn1c/ci-portability-evidence.json",
+  "evidence_sha256": "d5912d90c750c9a7755cf639c7915d0c72dd156bc9357f7fc8a2bd4695100ed1",
+  "change": "profileEnv explicitly sets TMPDIR=profileFixture; assertions and runtime unchanged",
+  "prior_source_reviews": "EMERGENCY-NATIVE-VERDICTS-02.json; native Standards5/5,Spec5/5",
+  "remaining": [
+    "normal precommit",
+    "one narrow genuine native terminal delta review",
+    "ordinary push latest SHA",
+    "exact CI SUCCESS",
+    "ordinary M FF and stable worktree CAS migration",
+    "public trust preserving enabled flags",
+    "normal GUI quit/lease idle/prepared App install/restart",
+    "actual native smoke"
+  ],
+  "pending_original_interactive": "C07/P01-P03; no fabricated completion",
+  "effect_scope": "already human authorized ordinary publication/local install; no force/reset/settings/model/effort override"
+}

@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-03T08:56:09.318226+00:00",
+  "commit": "164290856a20accf74118c4e5911d462b2b4eba3",
+  "local_heads": {
+    "/Users/luca/Desktop/luca_gstack": "164290856a20accf74118c4e5911d462b2b4eba3",
+    "/Users/luca/.codex/worktrees/tri-system-adoptable-fixes/luca_gstack": "164290856a20accf74118c4e5911d462b2b4eba3"
+  },
+  "production_branch": "main",
+  "protected_dirty": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/observability/observations.jsonl",
+      "expected": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
+      "actual": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/evals/eval-log.jsonl",
+      "expected": "39935b75c3774cbf2eff07454e50b0d6aca0b3a3b7d67be9930219a6a7974946",
+      "actual": "39935b75c3774cbf2eff07454e50b0d6aca0b3a3b7d67be9930219a6a7974946",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/retrieval-log.jsonl",
+      "expected": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020",
+      "actual": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020",
+      "unchanged": true
+    }
+  ],
+  "production_tracked_dirty": [
+    ".claude/observability/observations.jsonl",
+    "memory/evals/eval-log.jsonl",
+    "memory/retrieval-log.jsonl"
+  ],
+  "fix_clean": true,
+  "push_exit": 0,
+  "push_note": "Server accepted normal non-force push and reported its bypass of Required Checks expected; no bypass flag used. Actual commit CI run37111287109 is being awaited.",
+  "production_sync": "fetch origin main + merge --ff-only origin/main, both successful",
+  "remote_readback": {
+    "command": "git ls-remote origin refs/heads/main",
+    "sha": "164290856a20accf74118c4e5911d462b2b4eba3",
+    "matches_accepted_commit": true,
+    "at": "2026-10-03T08:56:26.743530+00:00"
+  },
+  "ci_status": "failure",
+  "ci_url": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37111287109",
+  "ci_failure": "verification-exit-contract requires python3 and rg; runner prerequisite unavailable",
+  "remediation": "single CI dependency addition in progress, original Required Checks preserved"
+}

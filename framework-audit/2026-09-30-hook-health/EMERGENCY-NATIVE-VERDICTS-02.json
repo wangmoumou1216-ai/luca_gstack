@@ -1,0 +1,67 @@
+{
+  "kind": "emergency-independent-native-review-verdicts",
+  "scope_sha256": "166dc91ab74696d916e5eb5ed088d3ded4b83f8a54f0bb767d812bbf291f191d",
+  "root_session_id": "01a0f646-42e8-7d92-9db1-b30b44c873d7",
+  "reports": [
+    {
+      "agent_id": "01a0f64b-772a-7c80-9acf-e8e18e5c570e",
+      "turn_status": "completed",
+      "final_report": "Quality Gate: emergency-standards-02  \nStandards verdict: **PASS (5/5)** for frozen implementation and proposed effect scope.\n\n- **S1 PASS:** Strict exception refusal remains in `.codex/codex-hook-adapter.mjs:48,336,375`; `.codex/hooks.json:76` retains Stop replay and `continue:false`. Frozen behavioral results support retained boundaries.\n- **S2 PASS:** `README.md:218` distinguishes command trust from source-byte protection; `scripts/codex-hook-health.mjs:121,155` separates native registration from optional guarded checks.\n- **S3 PASS:** `.codex/model-route-hook.mjs:337` validates native SID, checkout and current turn. `scripts/model-route-host.mjs:181` locks recovery and preserves identity, release and unresolved critical obligations; active-state recovery returns unchanged.\n- **S4 PASS:** `/tmp/luca-native-migration-effect-02.py.txt:34,46,82,92` checks baseline/index/dirty tuples, exact release bytes and FF ancestry; removes only owned repairs; processes f6e9 last. Input-02:15 requires ordinary scoped publication and excludes old guard installation.\n- **S5 PASS:** Packaging helper:138,176 restricts module/metadata/signature changes; installer:16,23,44,55 checks receipt/source/inventory CAS. Independent readback verified **441 ASAR entries, exactly two changed modules**, and all **492 candidate inventory entries**. Input-02:13,19 requires normal GUI shutdown/current lease before apply.\n\nInput/source/patch/helper/receipt hashes matched; final source rehash **22/22 bytes and modes matched**.\n\n**Operational note:** App HEAD is now `c212b5c3c6d1c6f1e379a026625898ef6788a606`, a descendant of reviewed base `b0e39b5…`; scoped bytes remain unchanged. Refresh publication HEAD/ref CAS. Fresh precommit, exact CI, shutdown/lease, apply-time CAS and public trust gates remain outstanding; this review did not execute them.\n\nEVAL_ENVELOPE_JSON\n{\"schema_version\":1,\"producer\":\"quality-gate\",\"eval_run_id\":\"emergency-standards-02-01a0f646-42e8-7d92-9db1-b30b44c873d7\",\"subject\":{\"skill\":\"emergency-standards-02\",\"topic\":\"Emergency native Hook repair Standards review\",\"scene\":\"unknown\",\"input_summary\":\"Independent read-only default-REFUTE Standards review of frozen 22-file repair, migration candidate and prepared App package; no effects or repeated test suites.\",\"output_paths\":[\"/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-NATIVE-REVIEW-INPUT-02.md\",\"/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-FROZEN-SOURCE-02.json\"],\"duration\":\"medium\"},\"verdict\":{\"status\":\"PASS\",\"passed\":5,\"total\":5,\"findings\":[\"WARN: App HEAD advanced to c212b5c3c6d1c6f1e379a026625898ef6788a606; reviewed base remains ancestor and all scoped bytes/modes match. Refresh publication HEAD/ref CAS.\",\"WARN: Verdict covers frozen implementation and proposed procedure only. Fresh precommit, exact CI, normal GUI shutdown/current lease, apply-time CAS and official trust gates remain mandatory and unexecuted by this reviewer.\"]}}",
+      "envelope": {
+        "schema_version": 1,
+        "producer": "quality-gate",
+        "eval_run_id": "emergency-standards-02-01a0f646-42e8-7d92-9db1-b30b44c873d7",
+        "subject": {
+          "skill": "emergency-standards-02",
+          "topic": "Emergency native Hook repair Standards review",
+          "scene": "unknown",
+          "input_summary": "Independent read-only default-REFUTE Standards review of frozen 22-file repair, migration candidate and prepared App package; no effects or repeated test suites.",
+          "output_paths": [
+            "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-NATIVE-REVIEW-INPUT-02.md",
+            "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-FROZEN-SOURCE-02.json"
+          ],
+          "duration": "medium"
+        },
+        "verdict": {
+          "status": "PASS",
+          "passed": 5,
+          "total": 5,
+          "findings": [
+            "WARN: App HEAD advanced to c212b5c3c6d1c6f1e379a026625898ef6788a606; reviewed base remains ancestor and all scoped bytes/modes match. Refresh publication HEAD/ref CAS.",
+            "WARN: Verdict covers frozen implementation and proposed procedure only. Fresh precommit, exact CI, normal GUI shutdown/current lease, apply-time CAS and official trust gates remain mandatory and unexecuted by this reviewer."
+          ]
+        }
+      }
+    },
+    {
+      "agent_id": "01a0f653-1fff-7383-af01-9368a792cbbd",
+      "turn_status": "completed",
+      "final_report": "## Quality Gate: Phase emergency-spec-02\n\nStatus: PASS（5/5，Spec；限定冻结应急范围）\n\n- [PASS] P1：同 SID、当前回合、canonical checkout/native model 验证及恢复 CAS 保留；拒绝无效状态、release 漂移和未决 critical。[恢复实现](/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/model-route-host.mjs:174)\n- [PASS] P2：完整协议固定、exact3、trusted 且 enabled===true；broker 清除旧 loader 环境。[就绪检查](/Users/luca/Desktop/项目/muse/app/host-hook-ready.js:218)\n- [PASS] P3：exact11 原生注册、strict 异常拒绝、Stop 原始输入重放及 continue:false；legacy 保留。[注册](/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.codex/hooks.json:1)\n- [PASS] P4：恢复仅默认 home Agent；provider、runner 和 protected Stop grant 边界明确；旧缓存重载仍 UNVERIFIED。[限制](/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/README.md:231)\n- [PASS] P5：18+4 源码、补丁、协议、迁移输入及包收据匹配；ASAR 两模块字节匹配；最终 22 文件哈希/权限未变。[迁移约束](/tmp/luca-native-migration-effect-02.py.txt:44)\n\n采用冻结行为证据，未重跑测试。可进入后续门禁；实际 precommit、CI、当前 CAS、正常 GUI 退出和公开 trust/enabled 读回仍须通过。本票不证明已部署。\n\nEVAL_ENVELOPE_JSON\n{\"schema_version\":1,\"producer\":\"quality-gate\",\"eval_run_id\":\"emergency-spec-02-01a0f646-42e8-7d92-9db1-b30b44c873d7\",\"subject\":{\"skill\":\"emergency-spec-02\",\"topic\":\"emergency-native-hook-repair\",\"scene\":\"unknown\",\"input_summary\":\"独立只读 Spec 终验：核对冻结应急修复 P1–P5、22 个源码文件及权限、补丁与协议哈希、迁移助手和 prepared App package。采用冻结行为证据；未执行部署或重复测试。后续实际 precommit、CI、CAS、GUI 退出与公开授信读回仍是硬门禁。\",\"output_paths\":[\"/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-FROZEN-SOURCE-02.json\",\"/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-NATIVE-REVIEW-INPUT-02.md\",\"/tmp/luca-native-migration-effect-02.py.txt\",\"/tmp/luca-native-migration-candidate-02.json\",\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-DFtDa5/receipt.json\"],\"duration\":\"heavy\"},\"verdict\":{\"status\":\"PASS\",\"passed\":5,\"total\":5,\"findings\":[]}}",
+      "envelope": {
+        "schema_version": 1,
+        "producer": "quality-gate",
+        "eval_run_id": "emergency-spec-02-01a0f646-42e8-7d92-9db1-b30b44c873d7",
+        "subject": {
+          "skill": "emergency-spec-02",
+          "topic": "emergency-native-hook-repair",
+          "scene": "unknown",
+          "input_summary": "独立只读 Spec 终验：核对冻结应急修复 P1–P5、22 个源码文件及权限、补丁与协议哈希、迁移助手和 prepared App package。采用冻结行为证据；未执行部署或重复测试。后续实际 precommit、CI、CAS、GUI 退出与公开授信读回仍是硬门禁。",
+          "output_paths": [
+            "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-FROZEN-SOURCE-02.json",
+            "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-NATIVE-REVIEW-INPUT-02.md",
+            "/tmp/luca-native-migration-effect-02.py.txt",
+            "/tmp/luca-native-migration-candidate-02.json",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-DFtDa5/receipt.json"
+          ],
+          "duration": "heavy"
+        },
+        "verdict": {
+          "status": "PASS",
+          "passed": 5,
+          "total": 5,
+          "findings": []
+        }
+      }
+    }
+  ]
+}

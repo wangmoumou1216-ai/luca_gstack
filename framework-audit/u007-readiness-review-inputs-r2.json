@@ -1,0 +1,106 @@
+{
+  "created_at": "2026-10-02T20:25:58.074867+00:00",
+  "scope": "J06 delta review; no behavior release",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-task-r2.md",
+      "bytes": 9688,
+      "sha256": "2c7c0395b2ac10d4e20f6fc97f0ce3dc454315dcda64d344147e924c07ee62ee"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-6.md",
+      "bytes": 4640,
+      "sha256": "4238376c4138210fd992af1fc98447cae18e16fece78abc6aabda5f4c4e1ab9a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r4.json",
+      "bytes": 3972,
+      "sha256": "0d3da9db81b058eb7ab74094a3bd00b4aaf71553b6f96e9b4eed1f5e7bf767a1"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r3-to-r4.diff",
+      "bytes": 25494,
+      "sha256": "351fe6882a302db0bc942a4089f3d73116907cd33cf7103b068c70ac1fb2fa41"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r1.md",
+      "bytes": 9582,
+      "sha256": "26e9ee62add8d3d9d2c2541957ad15c5e8b6cb9bd17913596a8553691dfba718"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r1-envelope.json",
+      "bytes": 10129,
+      "sha256": "eead50f06b542d0bf58c0b309907923b06659adfd6ea54d443b63281e5b468d7"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "bytes": 31446,
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "bytes": 30229,
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "bytes": 24464,
+      "sha256": "1406739d77c6025cac9b7efc1cd4621d0c1a3ed51a456273df26f7f3db1c88a3"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "bytes": 19955,
+      "sha256": "c9a95ac014676c7ea50121a5e59e446a845ce448474b45d2ebc6f0fcd48a8775"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "bytes": 44384,
+      "sha256": "ce5372b72266a8c99edd2c1b0a91f555cf34e99e04033ff7918a9d022550659f"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "bytes": 50143,
+      "sha256": "9f0a32d28fb937224ab6aed5a00a31eb53f4d7ba031969c92f509af359bb97f2"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "bytes": 32357,
+      "sha256": "fa583ca373a60d32e7172baec7690402e67e7e9d4ae3720a13a371dacabd3b57"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-w21-routing-zjp1ta4z/mcp-baseline-safe.json",
+      "bytes": 723,
+      "sha256": "75e6f29d1214fceff35cf04f9094e49ee644d6a94fc9816c6c5b952c322c08c6"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-w21-routing-zjp1ta4z/mcp-process-override-safe.json",
+      "bytes": 1139,
+      "sha256": "e779c3e799a6740bdab0671a1bf3b948914edc7aafe4d75b5d133de062cd2012"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-w21-routing-zjp1ta4z/mcp-after-safe.json",
+      "bytes": 697,
+      "sha256": "8419c32da14f765ad92468a03ee58600c1897bcaa66f99e23e7f75c49af79791"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w23-backup-6cd0udmw/red.json",
+      "bytes": 859,
+      "sha256": "de0ae7ceef16f505a6078b4c1b2c28d35bab2b2d7bdbce2610cf72d554df9d27"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w23-backup-6cd0udmw/red.tap",
+      "bytes": 3314,
+      "sha256": "3b53f966505ae2ad6a3d07cccfaa7fc011f4f678642a3efd0eaa13fb993788e3"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w23-backup-6cd0udmw/green.json",
+      "bytes": 1252,
+      "sha256": "fbe6373085610a4c5802e3cd3860a2e98f8deb7cdc791b34a66929861258a465"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w23-backup-6cd0udmw/green.tap",
+      "bytes": 12816,
+      "sha256": "bc8bd5c5bfada966218eb8d36acc9e432a95f47ad6832582d99025e18c99bdb0"
+    }
+  ]
+}

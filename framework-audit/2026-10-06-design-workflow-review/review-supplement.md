@@ -1,0 +1,4 @@
+# Additional bounded question
+F8 (new hypothesis encountered while checking the repair boundary): quality-gate.md Skill Mode requires >=3 approaches for both brainstorm and ux-brainstorm, while brainstorm scope matrix allows Lightweight to skip approaches and Standard to have 2–3. This could reject a contract-valid artifact if F3 is fixed by calling this QG without scope-aware criteria. Assess whether conflict is real and if so classify and include only a minimum alignment with the producer scope contract, not a new scoring framework. See quality-gate.md:201–206, brainstorm/SKILL.md scope matrix and Phase 4, UX brainstorm scheme count.
+
+For R7 actively consider existing early Phase 1 -> page-context §7 loading; a correctly complying agent could discover the headless-only limitation early. Test whether generic default/fallback instructions still conflict, rather than claiming there is no early disclosure.

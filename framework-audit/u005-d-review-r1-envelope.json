@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u005-d-20261003-r1",
+  "subject": {
+    "skill": "U005",
+    "topic": "Independent candidate input qualification and static review",
+    "scene": "unknown",
+    "input_summary": "J03 independent non-author review against fixed D1–D6; frozen task and manifest, complete candidate, actual CLI events, neutral purposes and F facts, and directed semantic checks of six public development cases. No A, old implementation, private material, behavior runs, network or writes.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u005-independent-design.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 6,
+    "total": 6,
+    "findings": [
+      "Static freeze only; behavioral effectiveness and superiority remain untested.",
+      "Historical F provenance, absolute isolation and service-resolved model identity remain unverified; model-receipt waiver does not prove equivalence.",
+      "Reviewer exact token and wall-clock accounting unavailable; 21 local read/check commands, one retained parser failure, zero writes/network/behavior runs/additional agents."
+    ]
+  }
+}

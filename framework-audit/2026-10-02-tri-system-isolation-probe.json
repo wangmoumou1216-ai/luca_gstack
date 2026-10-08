@@ -1,0 +1,21 @@
+{
+  "work_dir": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/tri-system-planning-yfglniro",
+  "pid": 68510,
+  "argv": [
+    "codex",
+    "exec",
+    "--cd",
+    "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/tri-system-planning-yfglniro",
+    "--sandbox",
+    "read-only",
+    "--skip-git-repo-check",
+    "--json",
+    "--output-last-message",
+    "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-isolation-probe.md",
+    "-"
+  ],
+  "report": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-isolation-probe.md",
+  "event_log": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-isolation-probe.jsonl",
+  "stderr": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-isolation-probe.stderr",
+  "purpose": "P2 input isolation feasibility only; no model override; no hooks/rules/config bypass"
+}

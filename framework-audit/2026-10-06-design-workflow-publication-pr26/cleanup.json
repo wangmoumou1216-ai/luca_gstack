@@ -1,0 +1,8 @@
+{
+  "confirmed_archived": [
+    "/Users/luca/.codex/worktrees/design-workflow-commit-check/luca_gstack",
+    "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack"
+  ],
+  "confirmation": "list_artifacts attachmentType=archived_worktree",
+  "evidence_preserved_before_archive": true
+}

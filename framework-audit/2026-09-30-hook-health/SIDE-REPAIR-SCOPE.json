@@ -1,0 +1,13 @@
+{
+  "scope": "one-off public settings transaction; not repository source publication",
+  "files": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/repair-sidecar-settings.mjs.txt",
+      "sha256": "8299b01cfb5f3ec89ca9239d61762a2c2608a21bf9bd272ab868fe7dc9e158b1"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/sidecar-settings-repair-manifest.json",
+      "sha256": "73bdc24d6d62f5de765d63fa12af1927a0d251952183c51b57b6fbf62872d9cc"
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "review": "J13",
+  "eval_run_id": "tri-system-u007-readiness-20261003-r9",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-11.md",
+      "sha256": "83287caebeb8751b1497130ad5fbc81dc7dd054787922902bcda608c99327bd6",
+      "bytes": 6620
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r9-interface-clarification.md",
+      "sha256": "aae7bce0584c3f24423b2f4065818d11ec524056b7595d653fcd39fe48f98e05",
+      "bytes": 1727
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-core-only-direction-20261003.md",
+      "sha256": "fc56ed01e8b361680842a0d6388aa660c52fa25392feac2db8944aad754a7294",
+      "bytes": 2366
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r9-native-trace-report.md",
+      "sha256": "2a5339477684d32c478de846c9af3d4de193172ad771c3d2a4e4ba1ac30a691a",
+      "bytes": 2997
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r9-driver-report.md",
+      "sha256": "d59a41a66b81e0ee99140c764feb82addfcf775c7650ffd7781255eb9addfdb7",
+      "bytes": 3216
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-case-draft.json",
+      "sha256": "dad2401ee212b52c48125fb19706dde86cac5aa52d9799d59bf0f563fb7f51fb",
+      "bytes": 28404
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-registration-draft.json",
+      "sha256": "1ed564b6d3b5382b55dccdb85925bbeb005c1bcb0d56e6b91d548cdc37b0f059",
+      "bytes": 6975
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-manifest-draft.json",
+      "sha256": "3abe12a440fe0837bd8d6311444c1dd0d251d16191f3d4bd342578dbb4937daa",
+      "bytes": 11011
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-preparation.json",
+      "sha256": "906f04ad8a474d22cc2333883050e67efbd8e04624e70be4c9edc3084323e605",
+      "bytes": 13450
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-launch.py",
+      "sha256": "3c46e624e2ad5b4090788f2984cc36f79499f3efd9e36d90ca877ccc66973afc",
+      "bytes": 10787
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-probe-program-r8.py",
+      "sha256": "56fa4f358c982813f736244d543c3f17468d09aae80cb04d1a5fe6eac5b1d2a4",
+      "bytes": 6075
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/native-trace.mjs",
+      "sha256": "afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce",
+      "bytes": 21081
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/native-trace.test.mjs",
+      "sha256": "3d18363963e0383c3e077805d573606d66b5ef1c36a66719dd0bb13376884f22",
+      "bytes": 17822
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "9a704cd1a8076d3b061668481b83a99a398f88880bd18b1f41b32c00efb1028a",
+      "bytes": 57957
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "8b317c01dec819b682fea59a80821d250caa4358e87a344c63b3d4bbf6048f68",
+      "bytes": 77442
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+      "bytes": 24895
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/sources.json",
+      "sha256": "b64aaf1fa1672b73435a6b8bbed6972174a91fc1d08547b4153cac12afdf659a",
+      "bytes": 7802
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/evidence.json",
+      "sha256": "e6c0329cf98d3d812280a3ed448086f0fea95f16c125339a9e78408dcabd9551",
+      "bytes": 5266
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/tests-final.json",
+      "sha256": "a32334e3f542b7a26e046816864b3d665cdade1bcabec7852748629353bed5f6",
+      "bytes": 723
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/tests-final.tap",
+      "sha256": "42e4b80ef68d37e2b4fefb37293dcfa328a43035e8dc697ac6b7a3e75ed310a8",
+      "bytes": 5797
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/synthetic-index.json",
+      "sha256": "2ccd7492c0edac5f884f26526dad2b6a9b988791660e216044523fa1a2d8f45d",
+      "bytes": 2735
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w34-evidence-mo8f9d2e/evidence.json",
+      "sha256": "2bae68f1b6b01d89f1dfd8e112accdb42354b506acfd679a496fc5650cff0265",
+      "bytes": 5843
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w34-evidence-mo8f9d2e/final-targeted-2.tap",
+      "sha256": "a346ad789aa6251f9523bc178716a1eeaefbe80d181a2cfe453691578eaabe8f",
+      "bytes": 1886
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w34-evidence-mo8f9d2e/full.tap",
+      "sha256": "b995cf7688aad912d6b289a806d1d7929523552f908fd8f77540ed1de4ed2510",
+      "bytes": 16460
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/sources/rollout-trace__README.md",
+      "sha256": "5d8c177a38dec8e8b44530f0c0add531160a93c98e522e00d0240c97a4423adc",
+      "bytes": 8345
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/sources/rollout-trace__src__raw_event.rs",
+      "sha256": "94768a4fbd6a3c5b4a5bf792b4b57bb01793b7b3fbfb8f3415027d407420165f",
+      "bytes": 11562
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/sources/rollout-trace__src__writer.rs",
+      "sha256": "5efa68c044b9f880e3ee1db7d208fecdea806a6e1fbdfa2f9037b74e076c6d4a",
+      "bytes": 9445
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/sources/rollout-trace__src__payload.rs",
+      "sha256": "d3b3b8318f3e79da1195821a6f3bb0437474e5d231bf29e3364b4ccaa441ed95",
+      "bytes": 1931
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/sources/rollout-trace__src__tool_dispatch.rs",
+      "sha256": "ae664b2957c0e7c515b4642c6538f81db3463d72ed4f12eb72e394970ba3edc1",
+      "bytes": 15369
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/sources/rollout-trace__src__model__runtime.rs",
+      "sha256": "3ebf213a69880f12c62ff374746141ea0df8a1621e2035c51589c3e565df3c15",
+      "bytes": 12946
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w33-native-trace-tdcvtb5a/sources/code-mode-protocol__src__runtime.rs",
+      "sha256": "a64d60e9e7d2c1812ace64825d4009f12d1d4ef572c5ba04602acc44658e1094",
+      "bytes": 5721
+    }
+  ]
+}

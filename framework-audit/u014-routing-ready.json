@@ -1,0 +1,51 @@
+{
+  "status": "READY_FOR_ROOT_INTAKE",
+  "framework_candidate_commit": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/8812/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "repository_path": "scripts/tri-system-eval/conditions.mjs",
+      "before_sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+      "sha256": "81b3cde5a44e6fb3d60145be7c14578098534a8444adc4d6d20c2b7d1b1edd4c",
+      "snapshot": "/tmp/u014-routing-c-351w34c6/final/scripts/tri-system-eval/conditions.mjs",
+      "bytes": 25184
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/8812/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "repository_path": "scripts/tri-system-eval/conditions.test.mjs",
+      "before_sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920",
+      "sha256": "cea5b35c866bd8c157685d9f7425d11365f894b817c6f382f24c5c43f27f718f",
+      "snapshot": "/tmp/u014-routing-c-351w34c6/final/scripts/tri-system-eval/conditions.test.mjs",
+      "bytes": 25121
+    }
+  ],
+  "delta_path": "/tmp/u014-routing-c-351w34c6/module-delta.patch",
+  "delta_sha256": "319d681680c7dde79e4204c8fe24b756f695c7268770ee9d9327e02ca2a28c83",
+  "tests": {
+    "argv": [
+      "node",
+      "--test",
+      "scripts/tri-system-eval/conditions.test.mjs"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/8812/luca_gstack",
+    "exit": 0,
+    "elapsed_seconds": 1.485
+  },
+  "stdout": "/tmp/u014-routing-c-351w34c6/handoff-tests.stdout",
+  "stderr": "/tmp/u014-routing-c-351w34c6/handoff-tests.stderr",
+  "test_summary": "22/22, original 20 retained + 2 C identity/drift tests; existing exclusion test covers B and C",
+  "candidate_manifest_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-candidate-source-manifest.json",
+  "candidate_manifest_sha256": "4d9e5596cca7923288b705494738e44dabd2c15211d6b8fca190aad6d4ff9093",
+  "interface": "materializeCondition({conditionId: C, sourceRoot: candidateManifest.root, sourceManifestPath: candidateManifestPath, destination})",
+  "legacy_compatibility": "/tmp/u014-routing-c-351w34c6/compatibility-summary.json",
+  "legacy_compatibility_note": "B/T/S/I full return values and byte digests match pre-change builder, except destination root. The final exclusion guard is inactive for the frozen baseline/C manifests; no evaluation source record is present.",
+  "candidate_material_sha256": "a6b96f9dbbce96bc48905d8563eb1e1aed2c16b44b3482493154c209e869e225",
+  "original_10_framework_files": "unchanged; matched root cd0cff15 before work",
+  "scope": "Only these two evaluation files; no source framework change, native model/probe/network/config/commit/push",
+  "handoff_immutability": "No further edit to these two files without notifying root. Remaining authorized work is existing U011 mechanism/case/review input completion.",
+  "pending": [
+    "Root integration, qualification and comparison registration",
+    "Module mechanism/case/independent H review inputs in existing U011",
+    "Actual model consumption, value, quality and migration acceptance are not established by build/tests"
+  ]
+}

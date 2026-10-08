@@ -1,0 +1,67 @@
+{
+  "frozen_at": "2026-10-03T06:32:26.211094+00:00",
+  "base": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "head": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-tri-system-assessment-master-plan.md",
+      "sha256": "7bde6cb9232187e89d99e4075337feebaeb7f29d9e9c1ece524cb3360968ed6e",
+      "lines": 343
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-evaluation-execution-plan-v4.md",
+      "sha256": "7a374a1c94941bad9d8023fb8de2966d848461334863b8efaec5bc49e6237b50",
+      "lines": 402
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-routing-plan.md",
+      "sha256": "f80c0f02273105a34364b9c10fc09160ad6df55c0559c201a7c0940420816674",
+      "lines": 135
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-orchestration-plan.md",
+      "sha256": "b9f8a64d7937bdcda8f369c8496ce8584e215927d29155af3d1e875500f55a95",
+      "lines": 149
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-p2-context-plan.md",
+      "sha256": "b60c479a724bf31bac6a671abc0afc31750b6ee328ff0e895733e6af4fb3eee4",
+      "lines": 133
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-continuous-module-ownership.md",
+      "sha256": "8f0a4212abf5ef5140bb37133676923523d7da693e7c45b00f3e63f33892e5d4",
+      "lines": 36
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-continuous-module-addendum-1.md",
+      "sha256": "65f7c6c1de3c9bac740c2cab64311838196aecddf50f74154864b2ea0925df90",
+      "lines": 5
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-continuous-module-addendum-2.md",
+      "sha256": "619656377bf4470ebda50536e768880bd21c55e2d0c27e15347323e27bce70ae",
+      "lines": 38
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-final-candidate-manifest.json",
+      "sha256": "447757cf52432b3df58ee9ad8579ccb49900e1e96be67dfb45934686b9169e32",
+      "lines": 120
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u008-results.md",
+      "sha256": "387808db709a627a44b16752ac87f5d70e2d951ff069b9d780bca22a104b4352",
+      "lines": 31
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u011-recommendation.md",
+      "sha256": "aa1198f221319d59e3b1dc08be1cc7e94a04fa08148882f50b1a0fb318256737",
+      "lines": 57
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-migration-and-three-agent-workpacks.md",
+      "sha256": "726cc69e1a18020e1dc97abaa8d22b2a7463e60df0eb0b481f949f2f8c9ab9e4",
+      "lines": 67
+    }
+  ]
+}

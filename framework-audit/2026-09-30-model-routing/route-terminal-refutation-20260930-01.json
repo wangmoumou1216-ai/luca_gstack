@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-terminal-refutation-20260930-01",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing ROUND5 terminal refutation",
+    "scene": "unknown",
+    "input_summary": "Independent review of frozen ROUND5 against C1–C7; read-only artifact verification and deterministic in-memory execution of candidate host/native logic.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/REPORT.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 5,
+    "total": 7,
+    "findings": [
+      "C6 FAIL: Native admission uses a stale unlocked activation snapshot. Deterministic interleaving B-read-empty, A-admit, B-resume returns allow twice and leaves two pending critical native invocations. beginCriticalPreparation and prepareInvocation lack a locked pending-invocation admission check.",
+      "C7 UNKNOWN: Actual astra adoption and matching completion independently verified for four turns across two native logs; registered fixture hashes and eleven read-only gates verified, but full-verify-result.json remains RUNNING."
+    ]
+  }
+}

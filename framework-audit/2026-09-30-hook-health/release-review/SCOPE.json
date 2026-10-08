@@ -1,0 +1,222 @@
+{
+  "review_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq",
+  "production_root": "/Users/luca/Desktop/luca_gstack",
+  "baseline": "FILE_SET plus candidate.patch",
+  "base_commit": "0c56460e5a0761b7caaa7b628a1bf22fd57a2c09",
+  "patch": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/candidate.patch",
+  "patch_sha256": "faa9282bb2aacf2a9da738fa358632d400170fdeb10da8215921bedc3a644b19",
+  "files": [
+    {
+      "relative_path": ".claude/hooks/controlled-change-guard.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/controlled-change-guard.mjs",
+      "sha256": "7a5a3d47f1beeca4a3ec2213f4d5e735d749084567431aac6f8c158d5a9c82fc"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/codex-child-project.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/codex-child-project.mjs",
+      "sha256": "02139c51c4815e6766ff58d874f75c10da61b82b4776f7042f8a721d18f9f492"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/event-attestation.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/event-attestation.mjs",
+      "sha256": "fa46750b6e1323af5e5dc1445a9f7df4999ba9a59691f8df4443daf1540bc5f6"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/git-env.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/git-env.mjs",
+      "sha256": "63f19a2f6e2757b6efb5ce17c2c0830c807eb5d629de99e87ff52fe55e6781a0"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/harness.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/harness.mjs",
+      "sha256": "2ac959d4a04af980863ddea4b2c4263ff52ec14fb91af7fd694530a34a25591a"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/host-launch.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/host-launch.mjs",
+      "sha256": "457ff9038cc5df1409d711c053478a92517b8f5331f59cceda7eeff4867fbc99"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/memroot.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/memroot.mjs",
+      "sha256": "84efa17c488da1b596e4b58a37e096ddfe5a4cf62d06d713c6802b573bd7186f"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/project-event-closure.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/project-event-closure.mjs",
+      "sha256": "82b5aa13ed014b30d5c264a45d2a7a5430ca7352079308377c93dc77f0f54e66"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/project-host-view.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/project-host-view.mjs",
+      "sha256": "4aaaacffc862a94e211182d0d812176f7fff31580de365dd1dbb7cd30a13444c"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/project-read-grants.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/project-read-grants.mjs",
+      "sha256": "14a865804f9378adbe8892ddff5d314359271a1491bc30b1a4146f90982d60dd"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/project-selection.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/project-selection.mjs",
+      "sha256": "1ccb5f15e3c39dd90a843f9cc1297332217945c8960412ac435133d60de0b11f"
+    },
+    {
+      "relative_path": ".claude/hooks/lib/project-substrate.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/lib/project-substrate.mjs",
+      "sha256": "d06015d39668b8e12f1749dcd8d85f462fc404f3b0de90edf07d7a3bd80bd533"
+    },
+    {
+      "relative_path": ".claude/hooks/post-edit.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/post-edit.mjs",
+      "sha256": "0a91e1c04747e71cd7973edcd60d3624384043bfa1a7e97a2318b261cf199522"
+    },
+    {
+      "relative_path": ".claude/hooks/project-scope-guard.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/project-scope-guard.mjs",
+      "sha256": "56143bf3386fba9a77a7585b970666269718ef652c5b02f3bd46c68dcd8f29f2"
+    },
+    {
+      "relative_path": ".claude/hooks/route-guard.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/route-guard.mjs",
+      "sha256": "ca233766d7f97e4cb7733ed901b7f43b6069fb12c70e7b0eb18fc2bb5575315c"
+    },
+    {
+      "relative_path": ".claude/hooks/session-end.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/session-end.mjs",
+      "sha256": "af74e264eed2f5c789cd850ba56d07e6780f34f0bc2255e332efc0029167b0ef"
+    },
+    {
+      "relative_path": ".claude/hooks/session-restore.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/session-restore.mjs",
+      "sha256": "10ef4912c835e75c8e5f0b239bf2dd4e66788ceb34b830d13c365e3861997a04"
+    },
+    {
+      "relative_path": ".claude/hooks/session-sync.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.claude/hooks/session-sync.mjs",
+      "sha256": "2a782c41d0edce6c476a2989d431a1c4ed7aa5e5468580ab2df44ed6022e72ac"
+    },
+    {
+      "relative_path": ".codex/codex-hook-adapter.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/codex-hook-adapter.mjs",
+      "sha256": "c0107d70c75a1371b2ab2efa9a2df323a1b3960fa29c0e99dd6a2c4adeedda71"
+    },
+    {
+      "relative_path": ".codex/codex-source-guard-bootstrap.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/codex-source-guard-bootstrap.mjs",
+      "sha256": "f4c5dd3d5996e1fe09b74a7f564b79a8b49fdffe4c88165deac5810feb864e32"
+    },
+    {
+      "relative_path": ".codex/codex-source-guard-loader.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/codex-source-guard-loader.mjs",
+      "sha256": "d784256e26da61a7d46fa5d47ac4e5c549f81b69e820d3bb69da3fa89f2fbf30"
+    },
+    {
+      "relative_path": ".codex/hooks.json",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/hooks.json",
+      "sha256": "9ba3cb4b7ed0a5fe09f3ae11b253b34e527ce3aea7293b90e5481d2b94417216"
+    },
+    {
+      "relative_path": ".codex/host-launch-adapter.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/host-launch-adapter.mjs",
+      "sha256": "0a2b35dfdfe552eae177f0b96ae600dbcc1a4d3dfcded8436e951fec565216d8"
+    },
+    {
+      "relative_path": ".codex/host-launch-hook.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/host-launch-hook.mjs",
+      "sha256": "03ef627c982aac4ff675a81bf85e332e242c0c19f6c60d72a6f4587f2e52bee9"
+    },
+    {
+      "relative_path": ".codex/model-route-hook.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/model-route-hook.mjs",
+      "sha256": "9d686b8ed9eb434580e3fa33f67aa8e910e2c2d6f2c21d7f8593f852f7e0f696"
+    },
+    {
+      "relative_path": ".codex/model-routing-bindings.example.json",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/model-routing-bindings.example.json",
+      "sha256": "ca1e6c823e6a87d4be58e4fccd8e666963051ce4ffa457679eb6911ad0cc717e"
+    },
+    {
+      "relative_path": ".codex/stop-integrity-failure.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/stop-integrity-failure.mjs",
+      "sha256": "406758f657317488b36556c7f076b22862867afae9640ed6f4c3bff61a8a7b4c"
+    },
+    {
+      "relative_path": ".codex/workflow-runner.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/.codex/workflow-runner.mjs",
+      "sha256": "d794913d9c003549dae33545f1d09a6704f41190fa4b2b66905e8aa4e7a8c531"
+    },
+    {
+      "relative_path": "README.md",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/README.md",
+      "sha256": "a05236cdd71e7bf89eec2d1ff15ffdd3bb6d661ab87e6207f0702329a351a35e"
+    },
+    {
+      "relative_path": "scripts/codex-hook-health.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/codex-hook-health.mjs",
+      "sha256": "c0070e48f56d3a3cda2c93fc6f46a57e8d0f1a11b23429f4555acecc5fddb1fe"
+    },
+    {
+      "relative_path": "scripts/codex-trust-hooks.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/codex-trust-hooks.mjs",
+      "sha256": "2bfe1f64a595a3e793c1ea914095e035c03ab9e262288bf6549304cda3c9e531"
+    },
+    {
+      "relative_path": "scripts/install-codex-source-guard.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/install-codex-source-guard.mjs",
+      "sha256": "d9dbbebd924f2240218e70b9ba0dbb4a5f10303a18c9ca7b90c7eb0343e15bd7"
+    },
+    {
+      "relative_path": "scripts/model-route-host.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/model-route-host.mjs",
+      "sha256": "1d7f3b3cd91a9c60c2afa1e594a5a5af1d10cad89e10ef6ca6998ea21bb533be"
+    },
+    {
+      "relative_path": "scripts/test-auto-open.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/test-auto-open.mjs",
+      "sha256": "367b54ccf71651433870671f61721b386bd37ed1597887178132821b0be47ccd"
+    },
+    {
+      "relative_path": "scripts/test-codex-adapter.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/test-codex-adapter.mjs",
+      "sha256": "b34cc88b170073944a94dafca6b2b419b2d1d84a65ffe020c2a66ea58980c205"
+    },
+    {
+      "relative_path": "scripts/test-codex-child-hook-integrity.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/test-codex-child-hook-integrity.mjs",
+      "sha256": "9ff642a68a066f241bcb15cc1f01812d8b683097e94bd871ee5fae6975d3bdfa"
+    },
+    {
+      "relative_path": "scripts/test-codex-hook-health.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/test-codex-hook-health.mjs",
+      "sha256": "b97c71efafe17775db428b04c8f4ab1a191cd216fef0be2a39d61c4d5f9bb04c"
+    },
+    {
+      "relative_path": "scripts/test-codex-trust-hooks.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/test-codex-trust-hooks.mjs",
+      "sha256": "1c18253aa68a28178cc900a22e4df5b54781eea49999fb070fb17ca886154e55"
+    },
+    {
+      "relative_path": "scripts/test-hook-source-digests.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/test-hook-source-digests.mjs",
+      "sha256": "7a2d3823eb71497b7df4daf2098cda99ac8c104c6d6ed843c87f59569aecf076"
+    },
+    {
+      "relative_path": "scripts/test-source-guard-preserve.mjs",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/test-source-guard-preserve.mjs",
+      "sha256": "ea5508515ce122e6f3cb90f5e28bea55c67334d1fafd798e5ac8ad79438b1cfb"
+    },
+    {
+      "relative_path": "scripts/verify.sh",
+      "absolute_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq/scripts/verify.sh",
+      "sha256": "f8a88af3a884358aa8de7a49567df000f501cf9d1c35096e2b1d10b5956f636f"
+    },
+    {
+      "relative_path": "activation/activate-reviewed.py",
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/activate-reviewed.py",
+      "sha256": "802dea5c2f218f7105dcc5a9ed5ac7e6f49c986ae9772d0b9a69c0baaa40deac"
+    }
+  ],
+  "project_session": "NO_PIN",
+  "authority": "Read-only review and isolated runtime reproduction; no production source/install/trust/Git publication changes"
+}

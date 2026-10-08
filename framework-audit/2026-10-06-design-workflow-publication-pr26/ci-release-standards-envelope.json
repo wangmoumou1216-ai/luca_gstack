@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "wf-20261006-ci-release-standards",
+  "subject": {
+    "skill": "code-hygiene:Standards",
+    "topic": "ci-release-credential-delta",
+    "scene": "unknown",
+    "input_summary": "Read-only Standards review of the single persist-credentials:false addition after c8471dc; checked 77 source hashes, retained credential reproduction, security guard preservation, blocking behavior and job isolation. Release commit/push/remote CI remain separate gates.",
+    "output_paths": [
+      "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.github/workflows/ci.yml"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": []
+  }
+}

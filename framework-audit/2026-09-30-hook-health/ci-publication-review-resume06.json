@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-cache-ci-publication-20261001-resume06",
+  "subject": {
+    "skill": "CI-SHELL-PUBLICATION-RESUME-02",
+    "topic": "hook-cache-ci-publication",
+    "scene": "unknown",
+    "input_summary": "Readonly default-REFUTE review of frozen CI publication payload against seven criteria: exact commit, unchanged reviewed sources, precommit, anonymous remote state, preservation CAS, bounded push and failed-CI evidence. No test reruns, credential access, publication or activation.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CI-SHELL-PUBLICATION-RESUME-02.json"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 7,
+    "total": 7,
+    "findings": []
+  }
+}

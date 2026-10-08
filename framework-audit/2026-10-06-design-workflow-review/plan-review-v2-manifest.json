@@ -1,0 +1,405 @@
+{
+  "purpose": "E3 cold plan review v2; U-002 draft-facet and severity corrections; production unchanged",
+  "head": "d211bd3c1479720836219b035ec9963d278efa49",
+  "files": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/agents/orchestrator.md",
+      "sha256": "8002e2ef9966368fdc443d1c6968b05eee7c37985d05b222ba8575ee7e25dee3"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/agents/quality-gate.md",
+      "sha256": "4c16a87530af2b3c9b00f876b734b4807aea933c310d79d9e1f204e8222b7c69"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/agents/references/plan-design-guidance.md",
+      "sha256": "71f6da283256af06d54722dc9690164c9cb2425dc89cebf3792d0ee0db6fce0f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/agents/references/plan-engineering-modes.md",
+      "sha256": "aa20d80370718580cf3148b1923990b2f03254f8bcd81459569bdbf6cddca60e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/codex-viability.yaml",
+      "sha256": "05718cc213e45ada0d1a28e306c7486aa5075f4ea6aadce6d50d49d8132ac7ba"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/auto.json",
+      "sha256": "3a44b9d3323e5fe2f1ea60d1ec010ac16a532478fde09b00ddab913e005e1cde"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/brainstorm.json",
+      "sha256": "303349ee23eaa9e2a6cf4f8c433a969dbfb07e6f5a6f0b2f1bf6cb5aed715cf6"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/code-hygiene.json",
+      "sha256": "17f526c708b1526a174d80844b129ac86a943fdbc5b58b929a5d047fdfcdda88"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/code-recon.json",
+      "sha256": "c047586d382a8bfe225ccc9d06e3aedb2d60e86e62f9a90541530079ddb21771"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/code-review.json",
+      "sha256": "765a2e0fcf3cff5c226c11c5c5de76a102bb1a08c1a08431d647b0db7aba9eeb"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/codebase-design.json",
+      "sha256": "ae022bfb2a3589509b4edb99487b6a87282fe7381dd3810cf670dca28cebc0a5"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/compare.json",
+      "sha256": "4e2dbe4db6b62cd284b793bb4f20db775af162f7fd97af7022a9c6f2ae78581b"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/deepresearch.json",
+      "sha256": "27ca275cba88be3109737eab6186c6ae329523575fe86c4b92596561f7d51e48"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/design-brief.json",
+      "sha256": "3d6c61f2fe1aed7d1058dc3cf5940c7f0535c02b07d04248e5be84e40aa07b08"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/diagnosing-bugs.json",
+      "sha256": "f245894919dc105d5c119b2ff4a30cb3aafcc75b3672327682e799f7523df391"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/domain-modeling.json",
+      "sha256": "a0015a2a119eca7f79edef18511d77b29c6080db094ac3601969e936aca9750a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/evals.json",
+      "sha256": "934b0222cd31626ca8069ad4e11dff9d3435abd053b7a459d1fda1ebe3f7635e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/figma-demo.json",
+      "sha256": "b4a167381042ac08ad7530c2957ff95e0822b81f4a4edb21e99ac0bf2a807296"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/grilling.json",
+      "sha256": "fef891076a484f2a0026cb3eb09779a2921bc5869f93cceaf7e60a89c3aadd72"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/handoff.json",
+      "sha256": "cdff1954744d65ab129dfe58086663ff31e5bd4ade845b3751d70e72723bb437"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/html-prototype.json",
+      "sha256": "c0be04af724e2bbd6bd61e1762d6b10521b9b04c5b817ab6f92a212b4a6daa1c"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/idea.json",
+      "sha256": "92f537555aaccac5b62529b401426a9a52dbd85b1ede22b2134cceba07b44329"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/implement.json",
+      "sha256": "a1a3cce256b9e4e36f533092ff880c476c89781311a3e4eafd0060502759fe28"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/insight-synthesis.json",
+      "sha256": "c4e7eecaea60ad76d0c0808be18d5e3e34976b61acf75c6bc8cde1a53ce1825e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/issue-triage.json",
+      "sha256": "fc1b7b06df14665d7053cc18542abb5e60bd93c4c43ba798a51c06d2bf9733e3"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/loop-me.json",
+      "sha256": "ee0b4ddf7cf65791aa3f201bf1aa5f0e2c8c44c9dc51adfc66dac5d9343aa421"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/magicpath.json",
+      "sha256": "ea218fafdc0c55d26e0f4abc93ac82daf476a829a194b41af494bac4ade4af03"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/motion-polish.json",
+      "sha256": "8901ceb72de0ae84d4cc41514adde3532c3c2d917b1d8a76afbf0281cf6d5f71"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/muse-req-triage.json",
+      "sha256": "47fc4178b960efaf83cfb808f760cc0f3c3b4ea02a0a6af2ab0f93ef2cbe7b4a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/open-design.json",
+      "sha256": "b794adb6c7bbd8f6bec6ee0f708c5875a84c207d21d0ea495e051bfece14b7c4"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/prototype-notes.json",
+      "sha256": "4a53cee4df85d2545ecc7d291064100f07dea21de37d238f31e3ca8d8b977757"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/quick-research.json",
+      "sha256": "1a07a34736c28902768c8f31008a1601b7760cc4622c14fb2b21f6f34b164058"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/redteam.json",
+      "sha256": "0093a97d748b0144586c08d957e5c1749d4cf136f51237460af4185434469607"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/research-kit.json",
+      "sha256": "f3f63806ec238c83a029ddd07d26cf7873d8817ac6f8f24fc6eec884e569f343"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/resolving-merge-conflicts.json",
+      "sha256": "59ab1b0ea59b35e8fbd1ccfcb3e55bc7360712b0fa87cdf50822896a99ee837d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/retro.json",
+      "sha256": "ddbead879af5c4a4136da6b60683dd2950d00eee3d975ab7efe69b537c516a47"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/setup-wizard.json",
+      "sha256": "f0adbc82297db7f2ed64e79d8016ab6f46772d600c9ae1844bde893989a29753"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/superpowers-brainstorming.json",
+      "sha256": "66c503c2cf2c95cac0c6cb73215008a287a674d4a86a9702e9013dafc798e76a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/task-plan.json",
+      "sha256": "3cc0af99f72b4f9a9ec6c514e888ef36180ef436bf2926f84b0cb19924237e68"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/tech-spec.json",
+      "sha256": "1153543254b5d1a5f98c82a286e172f45787070f74321278fbe8fb626ec4b015"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/to-spec.json",
+      "sha256": "a0ce8975cd83efe39c339e92a33d7733bb9c9bbf35009ee2ac8e4edf4bcba9e3"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/to-tickets.json",
+      "sha256": "a28b5ffbdbd399c346320165c4f65fa6e279b4fd2b6f29322bc56ca41e91ebcf"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/ux-audit.json",
+      "sha256": "b017ad6e46f14d0e8cd163e00eec11fb5f7009ad9ec2ecea91c41f5b26c18af5"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/ux-brainstorm.json",
+      "sha256": "18342bf70897f352e0c8c420aaeb7038b18a224e1a82c3c69d9a1f694998ac30"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/ux-research.json",
+      "sha256": "8d1150868458db790f7141864ea397fbed66ba0dbc0792db9e6c1e7830a091b8"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/ux-writing.json",
+      "sha256": "64fe46593c9fe3fa4d42f4a0e8a0ac979cb0c501cb29d82e955bf4a99e121ba3"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/wait-what.json",
+      "sha256": "fb3e71f124758ea3a49288f89c8324722dd53c8983801079d3bc4b20b78b76ca"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/wayfinder.json",
+      "sha256": "88c10a4f01672b37d5659b15d620ea0104d2395b37db0a3124070b4069257ea1"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/writing-for-agents.json",
+      "sha256": "b4d83c206ee2ef8d849bf9838843d5b7cfee17f2bc4c5903219da8e96c6b88fe"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/writing-workshop.json",
+      "sha256": "1ccdb649bacb7229437457ff2457452096d2237af2cc766a8362461dc8b93d00"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/input-modes.yaml",
+      "sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/model-routing.yaml",
+      "sha256": "1fead141706c67b1e3a5ade9b4ac1fd1a5520d5f619d1e75eb861682446f3791"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/optional-workflow-graph.yaml",
+      "sha256": "8a266250a08ac6f939162430a5c131baf534e72801703d616dfa45e071fbf6f4"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/routing-chain-check.md",
+      "sha256": "9be42589271e467118dceac0ca0b56ebcfed2f550deee0b6e08db2ef16589287"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/runtime/page-context.md",
+      "sha256": "772a63116b2be445602d109671abd2361ce55a2a2666201703d4bc15ddb8f5bc"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/runtime/project-session.md",
+      "sha256": "c75e34d9dcfa5cafde745090bc5a9673c84b1aba18548ad647ff8f74e8651821"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/runtime/workflow-mode.md",
+      "sha256": "e6573465a8d369d0da3b7a5954ff58e191ccd8315cdad69c9da505ff5d55f0f5"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/skill-invariants.md",
+      "sha256": "e1df5b5d85fd099c3429f1cf896cf70e695c787ed37de8188a18a935bf7104b6"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/auto/SKILL.md",
+      "sha256": "c887eb42f6e4f192de08cd7f520a8b5cc8e8dcff2a5a5af1efacf885f31a39a7"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/brainstorm/SKILL.md",
+      "sha256": "cb48d7ffed032cd2ab18320cdbc560f48ae6206e4136ba09406680deacd54a5d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/brainstorm/references/adversarial-review.md",
+      "sha256": "9277609f8dafef5541480a2a7112a99580db14af91ffa852455483461026c6e9"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/challenge/SKILL.md",
+      "sha256": "f2ef29f2700a801db8574af90f1fceecb9d14f24d6e31499b145b9db522ba926"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/design-brief/SKILL.md",
+      "sha256": "6817d572af94bbc2939ea22971523ee2774257fe56e3bd5416444b5330606a49"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/evals/SKILL.md",
+      "sha256": "9e98b60d2a9357535bdae7938335df72d6d6364faada34bdd2a28f36f69e7d0e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/figma-demo/SKILL.md",
+      "sha256": "7d70d49688ce7888769540cbfeb6f6c57e0883bce561c827e74722704bba161b"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/html-prototype/SKILL.md",
+      "sha256": "c9b5bd9f4c4812e8a0d7a7fc62319261833458dfbd69372058c57bf062ad3735"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/idea/SKILL.md",
+      "sha256": "02923b17e30902d004d1c3fe0eabef472ecfb75fcc4d86f1b3384925c39aab94"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/implement/SKILL.md",
+      "sha256": "ab8b4a326cc44f13f01c9b5a240cbe1d406b434c82c53c350bfa3a28939c4ce4"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/open-design/SKILL.md",
+      "sha256": "60fe9c39cae30e77949ea7f88eb1cc28572199aada4d1a22ee3862b7f41b54d9"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/redteam/SKILL.md",
+      "sha256": "a00fcd07aa4be9220fb27c51093092f59c732a7fc8b278d239770f80513c7f18"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/references/ai-native-design-framework.md",
+      "sha256": "3c5a8f37f69e48d4b8b34fab261d586c3a66f25215b561d478990d5480091fd6"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/references/ai-native-taste-anchors.md",
+      "sha256": "32437e731794b028108e49ff66cf93a9386558639a25cbbdaf573b2c5c13514d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+      "sha256": "ab5262eb6940e3b5f914147ff66030d7a843f0848d038a6ce73a042334a55cf2"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/references/write_state.py",
+      "sha256": "2c1caf2c41cc6ad4a19ebbc818c51498d2dcfc84ef7f511f72d02c3f86ebf2ad"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/retro/SKILL.md",
+      "sha256": "4780d8a3d8baa3eb8d4cdb8d1c7e2b45455e72f3efc8d717458b26d6fb173191"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/task-plan/SKILL.md",
+      "sha256": "38e80538d73367b87ffac747aa2d6121e4088d0ecd90341d00c1652eba689d60"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/tech-spec/SKILL.md",
+      "sha256": "c12f3f61942375551c72bea203f5c8d2d5e12573188da362fce33b7fe4050c90"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/to-spec/SKILL.md",
+      "sha256": "665fa35ab69ded74b625b3240fd2340762d45d5efd0282276aa472fec3eb9d90"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/ux-audit/SKILL.md",
+      "sha256": "b511d773b0b9ff866e466e9e8311036c1a5444261cd635301e6de7dfc6c928e5"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/ux-brainstorm/SKILL.md",
+      "sha256": "c4a0ce65bc5db6b9152e247461d9da4143bd8f18cb27928fe132d73de4526949"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/ux-brainstorm/references/adversarial-review.md",
+      "sha256": "69c3f254e50e1c39f26032ff4617ce09694d4b4aa52e9f43ef2f42c8789d947d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.github/workflows/ci.yml",
+      "sha256": "11eb779568c141bdae0cec3ef3568326d4712ecf01e78ba193b5535616a279a1"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-06-design-workflow-review/FINDINGS.md",
+      "sha256": "e9396c8282926219b5085e53f27ca5e2e5fd8cbb9f3ceb0ca45bb3206560acaa"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-06-design-workflow-review/PLAN.md",
+      "sha256": "6e2ed3c76fb939468088800f3d82bb0925157be282fd2f7b573855f913f63f3a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-06-design-workflow-review/review-request.md",
+      "sha256": "419dae40349825ffa8cc6eb9ad8c4996ff1716d17158f71228b53155b513c7e9"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-06-design-workflow-review/review-supplement.md",
+      "sha256": "1b8b30a52f28b0a4776783701a258868fc4ff8fd5872677bb9c788b6eb3f0a35"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/build-agent-context.py",
+      "sha256": "a4fd415325e78e11cd1320f4c42acbebb1220f615495bfdc09d91dadcf7733f1"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/check-ci-contract.mjs",
+      "sha256": "f4c23ce74db0fb94016548f1d8f7e12db6b3027c00a18d23cba8bd5ef2dd770a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/check-quality-gates.mjs",
+      "sha256": "a28baee2e649b189d0a2c19bad07b88dd02cd691ebdf7c46027a4282d8c4ba45"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/original-copy-handoff.mjs",
+      "sha256": "a957ba7114b1f742b6fee6d4a4956f54e7fc7fbfd718755f9281f002acb75b76"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-ci-contract.mjs",
+      "sha256": "4e226d051e1c48b664d08ca38878df32163d489424a5377b8c207dfd37fcc44f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-engineering-delivery-skills.mjs",
+      "sha256": "39672b75f85e059ae2c64b7b7fe1d8916477b391660a6c7daadffa0463753f7f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-matt-skills-adaptation.mjs",
+      "sha256": "04220e7064cb657f530e4aae9ae84b02ce11beaf0a10d21ffbd4dbe5c486f917"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-original-copy-handoff.mjs",
+      "sha256": "2c10c81e139c560cfc2c421705aa7be40fc7bf94216ae57cb19362d469a23e35"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-project-gate-v34-mutations.mjs",
+      "sha256": "cdc2226eb5ff0c57d3bef7fdaa4004caee3e67b37dd273251ab4082e52c91987"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-project-selection-v34.mjs",
+      "sha256": "b1b4ae742e0137a235fbec2edb400caf8031f63dd985a152463d8888e5cf2851"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-workflow-state-guard.py",
+      "sha256": "4f87398636955ebafb08b13bb0f6995f7b0ec52879ec8e11a565150f3dbac48d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/verify.sh",
+      "sha256": "4e12ba2d7d577a36f5b28145ee12764ab02215bbc074e266daaf2dfee2b7c7f4"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/scripts/record_eval.py",
+      "sha256": "9a2b360ab69271d54d3eb99f12f0b553f1efe2fff17f2a99aa237445413dd58b"
+    }
+  ],
+  "new_proposed_files": [
+    "/Users/luca/Desktop/luca_gstack/scripts/test-design-workflow-contract.mjs"
+  ]
+}

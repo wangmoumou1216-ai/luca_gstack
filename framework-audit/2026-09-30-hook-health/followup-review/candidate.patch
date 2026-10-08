@@ -1,0 +1,366 @@
+diff --git a/.claude/hooks/project-scope-guard.mjs b/.claude/hooks/project-scope-guard.mjs
+index f013c14..e1f154f 100644
+--- a/.claude/hooks/project-scope-guard.mjs
++++ b/.claude/hooks/project-scope-guard.mjs
+@@ -22,9 +22,8 @@
+ // （行首/空白/引号/重定向符 后紧跟 docs/），覆盖 mkdir -p docs/…、cat > docs/…、"docs/…" 等常见形态；
+ // 文件类工具（Write/Edit/Read/…）的 file_path 重写是**精确**的。含空格的项目名在无引号 Bash 场景下
+ // 可能不完美（罕见，kebab 命名不受影响）。
+-// 已知误伤（2026-07-14 实证，接受的权衡）：docs/ 作为**字符串字面量**（grep 模式/echo 文本/JSON
+-// payload）同样命中 anchor——未绑定被 deny、绑定被静默改写。anchor 无法区分"模式"与"路径"，收窄
+-// anchor 会漏真路径（安全侧优先）；处置=deny 文案给出改写指引，不改重写逻辑。
++// 仅遮罩已识别命令的数据位（搜索模式、带引号的文本 heredoc、静态 Python 单次文本写入等）；
++// 真实路径继续拒绝或重定向。未知语法保守扫描，复杂文本写入优先使用明确 file_path 的文件工具。
+ //
+ // Claude Code PreToolUse 契约（已核）：stdin JSON = { session_id, tool_name, tool_input }；
+ //  重定向：stdout 打印 {"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{…整份输入…}}}
+@@ -513,12 +512,62 @@ function exactReadBrokerMaintenance(command) {
+   return String(command || '').trim() === 'node --check scripts/project-read.mjs';
+ }
+ 
++// Recognize one complete, static Python text write, never an arbitrary interpreter
++// body. Keeping the plain Path target visible lets the existing scope checks bite.
++function literalPythonTextWrite(command) {
++  const source = String(command || '');
++  const header = /^python3[ \t]+(?:-[ \t]+)?<<(['"])([A-Za-z_][A-Za-z0-9_]*)\1[ \t]*\r?\n/.exec(source);
++  if (!header) return null;
++  const end = new RegExp(`^${escapeRe(header[2])}\\r?(?:\\n|$)`, 'm').exec(source.slice(header[0].length));
++  if (!end || source.slice(header[0].length + end.index + end[0].length).trim()) return null;
++  const bodyEnd = header[0].length + end.index;
++  let cursor = header[0].length;
++  const consume = pattern => {
++    const match = pattern.exec(source.slice(cursor, bodyEnd));
++    if (!match) return false;
++    cursor += match[0].length;
++    return true;
++  };
++  const stringLiteral = ({ target = false } = {}) => {
++    const start = cursor;
++    if (!target && /^[rR]/.test(source[cursor] || '')) cursor++;
++    const quote = source[cursor];
++    if (quote !== "'" && quote !== '"') { cursor = start; return null; }
++    const triple = source.slice(cursor, cursor + 3) === quote.repeat(3);
++    if (target && triple) { cursor = start; return null; }
++    const delimiter = triple ? quote.repeat(3) : quote;
++    cursor += delimiter.length;
++    const valueStart = cursor;
++    while (cursor < bodyEnd) {
++      if (source.slice(cursor, cursor + delimiter.length) === delimiter) {
++        const value = source.slice(valueStart, cursor);
++        cursor += delimiter.length;
++        if (target && /[\x00-\x1f\\$`*?\[\]{}~]/.test(value)) return null;
++        return { start, end: cursor, value };
++      }
++      if (source[cursor] === '\\') { cursor += 2; continue; }
++      if (!triple && /[\r\n]/.test(source[cursor])) return null;
++      cursor++;
++    }
++    return null;
++  };
++  if (!consume(/^\s*from[ \t]+pathlib[ \t]+import[ \t]+Path[ \t]*\r?\n\s*Path[ \t]*\([ \t]*/)) return null;
++  const target = stringLiteral({ target: true });
++  if (!target || !target.value || !consume(/^[ \t]*\)[ \t]*\.[ \t]*write_text[ \t]*\(\s*/)) return null;
++  const content = stringLiteral();
++  if (!content) return null;
++  if (!consume(/^\s*(?:,[ \t]*encoding[ \t]*=[ \t]*(?:'utf-8'|"utf-8")[ \t]*)?\)[ \t\r\n]*$/)) return null;
++  return { target: target.value, content };
++}
++
+ // Search patterns are data, not path operands. Mask only the pattern argument of a
+ // small, explicit command subset and only when an explicit path operand follows it.
+ // Unknown options remain unmasked (conservative fallback), while real path operands
+ // continue through the normal redirect/deny logic.
+ function maskSearchPatternArguments(command) {
+   const ranges = [];
++  const pythonWrite = literalPythonTextWrite(command);
++  if (pythonWrite) ranges.push(pythonWrite.content);
+   // All masking branches use the same quote/escape-aware operator scan. Raw
+   // substring tests here would mistake literal | or << for shell syntax.
+   const shellSyntax = source => {
+@@ -671,7 +720,7 @@ function maskSearchPatternArguments(command) {
+     command: masked,
+     restore(value) {
+       let restored = value;
+-      for (const [marker, original] of restorations) restored = restored.replace(marker, original);
++      for (const [marker, original] of restorations) restored = restored.replace(marker, () => original);
+       return restored;
+     },
+   };
+@@ -921,7 +970,10 @@ function frameworkWriteDeny(tool, inp) {
+     return isFrameworkPath(p) ? String(p) : null;
+   }
+   if (tool === 'Bash') {
+-    const cmd = String(inp.command || '');
++    const original = String(inp.command || '');
++    const pythonWrite = literalPythonTextWrite(original);
++    if (pythonWrite && isFrameworkPath(pythonWrite.target)) return pythonWrite.target;
++    const cmd = pythonWrite ? maskSearchPatternArguments(original).command : original;
+     // fw 匹配：仓根绝对路径 <gstackRoot>/framework/（A#2 手滑级绝对路径）或 (./)framework/（相对）
+     const escAbs = join(gstackRoot, 'framework').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     const fw = '(?:' + escAbs + '/|(?:\\./)?framework/)';
+@@ -1128,7 +1180,7 @@ function main() {
+       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+         permissionDecisionReason: 'project-pin.mjs 是 hook/project.sh 的内部事务接口，不能作为同轮绕过 terminal/epoch 的项目工具调用。' } });
+     }
+-    if (mentionsReadBrokerInvocation(cmd)) {
++    if (mentionsReadBrokerInvocation(guardCmd)) {
+       if (exactReadBrokerInvocation(cmd, sid)) passThrough();
+       if (!exactReadBrokerMaintenance(cmd)) {
+         return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
+diff --git a/.codex/hooks.json b/.codex/hooks.json
+index 5545175..6fd9fe1 100644
+--- a/.codex/hooks.json
++++ b/.codex/hooks.json
+@@ -7,7 +7,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 恢复 session 上下文",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "additionalContextLimit": 0
+           }
+         ]
+@@ -17,7 +17,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 固定根模型路由",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "additionalContextLimit": 0
+           }
+         ]
+@@ -29,7 +29,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 路由检查",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "additionalContextLimit": 0
+           }
+         ]
+@@ -42,7 +42,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 项目边界检查",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       },
+@@ -52,7 +52,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 解析子任务模型",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       }
+@@ -63,7 +63,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       }
+@@ -73,7 +73,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; luca_stop_payload=$(cat); printf '%s' \"$luca_stop_payload\" | MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0; printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0"
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; luca_stop_payload=$(cat); printf '%s' \"$luca_stop_payload\" | MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0; printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0"
+           }
+         ]
+       }
+@@ -84,7 +84,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       }
+@@ -96,7 +96,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 核验子任务模型证据",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       }
+@@ -106,7 +106,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "timeoutSec": 30
+           }
+         ]
+@@ -115,7 +115,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in e2ca1945db477cc2f1cf073c80e34c8cb58c4f25d9ac2fb5a1d48d0982f59691) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 9baf60202a9b997e212edda2a520e549640b83e79595b67355bef68d98dc84fd) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "timeoutSec": 30
+           }
+         ]
+diff --git a/README.md b/README.md
+index 8671424..179fadf 100644
+--- a/README.md
++++ b/README.md
+@@ -205,6 +205,12 @@ Context 窗口被当作有限资源主动管理，防止溢出丢状态：
+ | **Stop** | session-sync | 拦截未沉淀的实质工作、写 checkpoint；真正关闭回合时撤销 turn grant |
+ | **SessionEnd** | session-end | 会话真正结束时清理本 session 的计数和全部 read grants（僵尸窗口归零） |
+ 
++交接正文提到 `docs/` 或共享状态路径时，优先用文件工具的明确目标路径写入。
++项目守卫也识别带引号 heredoc 中的单次静态 Python 文本写入：
++`from pathlib import Path` 后接 `Path('字面目标').write_text('字面正文')`，可指定 `encoding='utf-8'`。
++正文保持原字节，只有真实目标参与拒绝或 pin 重定向；真实共享状态、会话控制文件与只读母版仍受保护。
++动态目标、f-string、附加语句、无引号 heredoc 和其他解释器代码继续按保守路径检查。
++
+ Codex Hook 更新后，先运行只读体检 `node scripts/codex-hook-health.mjs`。
+ 体检独立固定已审注册协议：事件、matcher、完整加载/恢复命令、超时和上下文限制；
+ 只允许源码摘要随已审代码更新。主动改变注册协议时，须同审并更新体检中的协议指纹。
+diff --git a/scripts/test-project-scope-guard.mjs b/scripts/test-project-scope-guard.mjs
+index 63ce2c9..32b46c7 100644
+--- a/scripts/test-project-scope-guard.mjs
++++ b/scripts/test-project-scope-guard.mjs
+@@ -5,7 +5,7 @@
+ //
+ // 全程 hermetic：任务专用 LUCA_PROJECTS_ROOT + 临时 CLAUDE_PROJECT_DIR，不改写 HOME。
+ import { spawnSync, spawn } from 'child_process';
+-import { mkdtempSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFileSync, existsSync, realpathSync, statSync } from 'fs';
++import { cpSync, mkdtempSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFileSync, existsSync, realpathSync, statSync } from 'fs';
+ import { tmpdir } from 'os';
+ import { dirname, join, resolve } from 'path';
+ import { fileURLToPath } from 'url';
+@@ -142,14 +142,29 @@ function makeEnv({ pins = {}, nestedFramework = false } = {}) {
+   }
+   return { root, gstack, projects, codexHome };
+ }
+-function run(env, payload, extraEnv = {}, { addDefaultBoundary = true } = {}) {
++function run(env, payload, extraEnv = {}, { addDefaultBoundary = true, viaAdapter = false } = {}) {
+   const sid = String(payload?.session_id || '');
+   const observed = {
+     ...payload,
+     ...(!payload?.cwd ? { cwd: env.gstack } : {}),
+     ...(addDefaultBoundary && sid && !payload?.turn_id && !payload?.prompt_id ? { turn_id: `turn-${sid}` } : {}),
+   };
+-  const r = spawnSync('node', [HOOK], {
++  let argv = [HOOK];
++  if (viaAdapter) {
++    const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
++    if (!env.adapterReady) {
++      assert.equal(spawnSync('git', ['init', '-q', env.gstack]).status, 0);
++      for (const file of ['.codex/codex-hook-adapter.mjs', '.claude/hooks/controlled-change-guard.mjs', 'scripts/controlled-change.mjs']) {
++        mkdirSync(dirname(join(env.gstack, file)), { recursive: true });
++        cpSync(join(repo, file), join(env.gstack, file));
++      }
++      cpSync(join(repo, '.claude/hooks/lib'), join(env.gstack, '.claude/hooks/lib'), { recursive: true });
++      cpSync(HOOK, join(env.gstack, '.claude/hooks/project-scope-guard.mjs'));
++      env.adapterReady = true;
++    }
++    argv = [join(env.gstack, '.codex/codex-hook-adapter.mjs'), join(env.gstack, '.claude/hooks/project-scope-guard.mjs')];
++  }
++  const r = spawnSync('node', argv, {
+     input: JSON.stringify(observed),
+     cwd: env.gstack,
+     env: {
+@@ -1135,6 +1150,91 @@ for (const command of ['cd "$TASKROOT" && ls', 'read TASKROOT; cd "$TASKROOT" &&
+   });
+ }
+ 
++check('IDENTITY-DATA-008 literal Python text write preserves payload and executes in temp scope', () => {
++  const env = makeEnv();
++  const target = join(env.gstack, 'handoff.md');
++  const content = 'docs/handoff .. .claude/workflow-state.yaml .claude/current-topic.txt\n'
++    + '.claude/.session-project-example .claude/host-launch\n'
++    + 'cp generated framework/x; $(touch should-not-exist)';
++  const command = `python3 - <<'PY'\nfrom pathlib import Path\nPath(${JSON.stringify(target)}).write_text(${JSON.stringify(content)}, encoding='utf-8')\nPY`;
++  const out = run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } });
++  assert.equal(out, null, 'literal content is data; the explicit temp target is the only path operand');
++  const written = spawnSync('bash', ['-c', command], { cwd: env.gstack, encoding: 'utf8' });
++  assert.equal(written.status, 0, written.stderr);
++  assert.equal(readFileSync(target, 'utf8'), content);
++  assert.equal(existsSync(join(env.gstack, 'should-not-exist')), false);
++});
++
++check('IDENTITY-DATA-009 pinned Python write rewrites only the target', () => {
++  const env = makeEnv({ pins: { S: 'alpha' } });
++  const content = "docs/handoff and .claude/workflow-state.yaml remain document text: $& $$ $` $'";
++  const command = `python3 - <<'PY'\nfrom pathlib import Path\nPath('docs/review.md').write_text(${JSON.stringify(content)})\nPY`;
++  const out = run(env, { session_id: 'S', tool_name: 'Bash', tool_input: { command } });
++  assert.equal(out?.hookSpecificOutput?.updatedInput?.command,
++    command.replace("'docs/review.md'", `'${abs(env, 'alpha', 'docs')}/review.md'`));
++});
++
++check('IDENTITY-DATA-010 literal Python write retains real target protections', () => {
++  const env = makeEnv();
++  for (const target of ['docs/x.md', '.claude/workflow-state.yaml', '.claude/current-topic.txt',
++    '.claude/.session-project-example', '.claude/host-launch/x', 'framework/x.md']) {
++    const command = `python3 - <<'PY'\nfrom pathlib import Path\nPath(${JSON.stringify(target)}).write_text('harmless')\nPY`;
++    assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } })
++      ?.hookSpecificOutput?.permissionDecision, 'deny', target);
++  }
++});
++
++check('IDENTITY-DATA-011 Python masking refuses dynamic or additional execution', () => {
++  const env = makeEnv();
++  for (const body of [
++    `from pathlib import Path\nPath('/tmp/x').write_text(f\"{Path('docs/x').read_text()}\")`,
++    `from pathlib import Path\nPath('/tmp/x').write_text('docs/handoff'); Path('docs/x').read_text()`,
++    `from pathlib import Path\nPath('/tmp/x').write_text('docs/handoff')\nimport os`,
++    `from pathlib import Path\nPath(destination).write_text('docs/handoff')`,
++    `from pathlib import Path\nPath('d\\x6fcs/x').write_text('docs/handoff')`,
++  ]) {
++    const command = `python3 - <<'PY'\n${body}\nPY`;
++    assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } })
++      ?.hookSpecificOutput?.permissionDecision, 'deny', body);
++  }
++});
++
++check('IDENTITY-DATA-012 Python literal variants preserve protected-looking text', () => {
++  const env = makeEnv();
++  for (const content of [
++    `'''docs/handoff\n.claude/workflow-state.yaml\nframework/x'''`,
++    `r"docs/handoff \\n .claude/current-topic.txt"`,
++    `'docs/handoff \\'quoted\\' text'`,
++    `'''guidance\nnode scripts/project-read.mjs read\nSCOPE=".claude/host-launch"\n$SCOPE'''`,
++  ]) {
++    const command = `python3 <<"TEXT"\nfrom pathlib import Path\nPath('/tmp/example.txt').write_text(${content}, encoding="utf-8")\nTEXT\n`;
++    assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } }), null, content);
++  }
++  for (const command of [
++    `python3 <<PY\nfrom pathlib import Path\nPath('/tmp/x').write_text('docs/handoff $(cat docs/x)')\nPY`,
++    `python3 <<'PY'\nfrom pathlib import Path\nPath('/tmp/x').write_text('docs/handoff')\nPY\ncat docs/x`,
++    `python3 <<'PY'\nfrom pathlib import Path\nPath('/tmp/x').write_text('docs/handoff' + Path('docs/x').read_text())\nPY`,
++  ]) assert.equal(run(env, { session_id: 'NP', tool_name: 'Bash', tool_input: { command } })
++    ?.hookSpecificOutput?.permissionDecision, 'deny', command);
++});
++
++check('IDENTITY-DATA-013 Codex adapter preserves data and enforces real target boundaries', () => {
++  const env = makeEnv({ pins: { S: 'alpha' } });
++  const content = "docs/handoff .claude/workflow-state.yaml .claude/.session-project-example cp x framework/x $& $'";
++  const command = target => `python3 - <<'PY'\nfrom pathlib import Path\nPath(${JSON.stringify(target)}).write_text(${JSON.stringify(content)})\nPY`;
++  for (const tool of ['Bash', 'shell', 'local_shell']) {
++    const payload = target => ({ hook_event_name: 'PreToolUse', session_id: 'NP', tool_name: tool,
++      tool_input: { command: command(target) } });
++    assert.equal(run(env, payload(join(env.gstack, 'handoff.txt')), {}, { viaAdapter: true }), null, tool);
++    for (const target of ['docs/x', '.claude/.session-project-example', 'framework/x']) {
++      assert.equal(run(env, payload(target), {}, { viaAdapter: true })?.hookSpecificOutput?.permissionDecision, 'deny', `${tool}: ${target}`);
++    }
++    const pinned = run(env, { ...payload('docs/review.md'), session_id: 'S' }, {}, { viaAdapter: true });
++    assert.equal(pinned?.hookSpecificOutput?.permissionDecision, 'allow');
++    assert.equal(pinned?.hookSpecificOutput?.updatedInput?.command, command(abs(env, 'alpha', 'docs/review.md')));
++  }
++});
++
+ check('IDENTITY-PATH-024d project-scope guard source is checkout-portable', () => {
+   const source = readFileSync(HOOK, 'utf8');
+   const localMachinePrefix = ['/Users', 'luca', 'Desktop'].join('/');

@@ -1,0 +1,530 @@
+# Orchestrator — 多步任务执行协调器 v4.1
+
+**定位：** 主 Agent 进入"多步执行模式"时的行为规范。
+**本文件是行为模式文档，不注册为 subagent**（无 frontmatter 是有意的——2026-07-14 双重身份修复：
+此前 frontmatter 使其可被 `subagent_type: orchestrator` spawn，与"NOT a subagent dispatcher、
+主 session 行为模式"的自我定义矛盾；行为语义不变，只撤销误导性注册面）。
+**两种运行模式：**
+- **Free Task Mode** — 执行任何复杂任务（以 Plan Agent 的计划为输入）
+- **Skill Workflow Mode** — 执行设计工作流（以 skill 图谱为输入）
+
+**与 Plan Agent 的关系：**
+```
+Plan Agent 负责规划（输出计划 + 断言）
+Orchestrator 负责执行（按计划执行 + 验证断言）
+
+Plan Agent → 计划 → Orchestrator Free Task Mode → 结果
+`<WORK_ROOT>/.luca/workflow-state.yaml` → skill 图谱 → Orchestrator Skill Workflow Mode → handoff
+```
+
+---
+
+## 1. 激活条件
+
+| 触发 | 进入模式 |
+|------|---------|
+| Plan Agent 产出了执行计划，且所选模式的批准门已满足 | **Free Task Mode** |
+| 任意复杂任务，用户批准计划后 | **Free Task Mode** |
+| 用户输入 `/office` 并选择推荐流程 | **Skill Workflow Mode** |
+| 用户说"继续流程/进入下一步/从断点恢复" | 读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 判断 mode |
+| 用户已选 Workflow，且其绑定状态有 PENDING/IN_PROGRESS 节点 | **Skill Workflow Mode**，核验后续执行授权 |
+
+**不激活：**
+
+| 情况 | 处理方式 |
+|------|---------|
+| 单文件编辑 / 问答 | Solo Mode，主 Agent 直接执行 |
+| 2 文件无依赖可并行 | Parallel Fan-out，主 Agent 同一消息并发调用，不进入 Orchestrator（≥3 文件即命中 Plan Agent 触发条件 1） |
+| 用户直接调用单个 skill | Standalone 模式，skill 自行运行，不走 Orchestrator |
+
+> **冲突解决规则：** 若 workflow-state 有 PENDING 节点且用户同时点名某个 skill：优先执行该 standalone skill。只有已有明确恢复授权时才按 §3.5 续 Workflow；单凭状态文件不激活流程。
+
+---
+
+## 2. Free Task Mode（通用多步任务执行）
+
+### 2.1 适用场景
+
+任何复杂任务，无论是否涉及 skill：
+- 搭建工程基础设施（git、CI、hooks）
+- 实现新功能（memory 系统、新 skill、新脚本）
+- 重构多文件系统
+- 任何 Plan Agent 已产出计划的任务
+
+### 2.1a `implement` authority admission
+
+`implement` 进入 Free Task Mode 时，只接收 Plan Agent `implement compile` 产出的 canonical plan：
+其中必须有最终 gated task-plan 的 exact path+SHA-256、repo baseline、无 placeholder 的 exact U-ID
+集合、Files/Verification，以及单列的 Git/external effects，并有用户对同一 payload 的明确批准。
+启动前回算 task-plan SHA 与 baseline；任一漂移、旧计划 authority、空/占位 U-ID 都必须拒绝并返回
+重编译。engineering-delivery preset 或 optional graph 只能说明路由选择，不能替代批准或扩大 scope。
+
+执行严格限制在 approved U-ID 的 scope。unexpected failure/regression 进入 `diagnosing-bugs` 的
+diagnose-only 回路；只有真实 Git conflict 才进入 `resolving-merge-conflicts`。两条异常回路只继承
+父 U-ID 已批准的读写/effect authority，不得扩权，完成后回到原 U-ID 再验证。Orchestrator 不因
+`implement` 自动 stage、commit 或 push；这些 effects 仍须各自的人类 gate 与一次性授权。
+
+领域歧义条件分支：仅当获批父 U-ID 的合同依赖术语、实体归属或关系边界时，完整读取
+`.claude/skills/office/domain-modeling/SKILL.md` 后调用；传入父 U-ID、问题、触发条件、
+scope 与 inherited authority/effect intersection。分析或写入只能取父权限交集，
+open_questions 回原 owner，随后恢复原 U-ID；不新增 workflow state/节点，不自动定案。
+
+### 2.1b `implement` 单一集成链调度
+
+`implement` 的实际执行优先使用本节，不走通用 Parallel Fan-out/parallel_skills 或分层并发
+例外。`max_active_subagents=1` 覆盖 worker、探索、merger 与 reviewer；不得嵌套另派执行者。
+依赖 frontier 是可选择集合而非并发许可，本文件其它模式不能绕过此门。
+
+1. 从同一 approved canonical plan 读 graph、U-ID、context pointers、integration root/ref/tip、
+   ownership/preimages、所有明确 effect。实际读回 tip 与工作区；变动、未授权 Git 或 ownership
+   冲突 BLOCKED，回原 U-ID。可选 exploration 只用一个真实冷 explorer、批准范围/外部笔记
+   落点，先 completed/同次 accepted 再进入实现；不借源码读取扩大权限。
+2. 重算 **ready frontier**：所有前置已真实 DONE 且 verification 通过，无未决 HITL/冲突；稳定
+   U-ID 升序取一个。冻结派发时真实 integration tip、文件 tuple、唯一 owner、保护项和读取
+   指针。worker 必须核验自己 workspace/branch/tip/preimages 与绑定一致，不能 reset/rebase/
+   覆盖来消除差异。工作区、branch 或独立 worktree 仅用计划批准的具体方式。
+3. 在原 U-ID 内执行已确认 seam 的 TDD 纵切：真实 red→最小实现→green，定期 typecheck/
+   focused tests；保留同仓其他 worker/user edits。完成报告含实际 diff、命令/输出/退出、
+   tip/preimages/ownership 与剩余 blocker，不能靠自报 success 更新 graph。
+4. 前一个真实 completed 后核验同 invocation accepted、原生 ID/输入 SHA/起止，再由 owner
+   读回实际 diff/pre/postimages。需要集成时用已批准 normal Git effect，先复核 integration tip
+   未漂移，保存真实 integration verification；共享路径按集成后实际字节交下一单元。缺票/
+   tip 漂移/验证失败暂停该依赖链；不用 reset、强推、自动 close ticket 或新执行器。
+5. 集成并验证通过才把该 U-ID 标 DONE，重算 frontier，再派下一个。quality-gate、merger/
+   explorer 都与实现者串行，不留下“后台可并发”例外。planned red 不当 unexpected failure；
+   真实 regression/conflict 仍用 §2.1a 的原 U-ID 异常回路。
+6. 全部依赖完成后跑相关完整 suite，再走 code-review→code-hygiene Mode D 的独立 Standards/
+   Spec 闭合。失败或 UNKNOWN 不标 ready。发布准备时全文读
+   `.claude/skills/office/implement/references/pull-request.md`，以实际 base/head/diff 和证据写
+   Summary / Evidence / Merge Danger；发送/创建/标 ready、commit/push 和 tracker close 各须
+   精确真实授权，没有就交付草稿与缺口，不编 PR/check 链接。
+7. 最后只归档本任务创建、已获批且可恢复的自身受管理 worktree；不删除其它会话或用户 checkout。
+   保留原 U-ID、context pointers、集成/审查与 Git 回执，恢复从实际 tip 和未完成队列开始。
+
+来源：source20 的 task graph/frontier/integration 方法、source22 的 PR 表述方法；本文件为
+唯一执行所有者，`implement` facade 与 Plan 不自行执行或关闭投影票据。
+
+### 2.2 执行流程
+
+```
+Step 1  读取 Plan Agent 输出的计划
+        - 获取总 Phase 数、当前 Phase、编排模式
+        - 恢复时读本次精确 checkpoint/产物与有效授权，核已完成效果及在途句柄；
+          状态文字不代替当前事实，按 §2.2 收取在途执行，不从头重派
+        - 将断言列表交给测试环节保管（Orchestrator 不执行断言）
+
+Step 2  Phase 执行循环（WHILE 有未完成 Phase）
+
+  2a  context 预算检查（见 §4）
+      按实际上下文压力与交接需要判断；轮数提醒本身不停止执行。
+
+  2b  按计划编排执行当前 Phase
+      仅选择 required 前置已通过且权限仍有效的未完任务；IN_PROGRESS 先观察原调用。
+      失败/缺证停对应依赖，其他独立已授权任务沿 §2.2/§5 的原并发限制执行。
+
+      【phase_type 路由（优先判断）】
+      IF phase_type == skill_execution：
+        【Pre-flight 检查】读取 .claude/agents/preflight-agent.md，传入 skill_name + topic
+        FAIL → 展示缺失项，等用户修复或明确说"跳过检查"后再继续，不启动 skill
+        PASS → 继续
+        【用户参数前置收集】（execution_context == subagent 时必须执行，不得跳过）
+        扫描该 SKILL.md 中需用户选择的参数（AskUserQuestion 步骤 / "ask the user" 字样，
+        如 deepresearch 的 research_depth 档位）：
+          有 → 先核用户已有明确选择及其适用范围，将仍有效的选择以显式参数写入 WA prompt；
+               尚未选择、已被更正或相互冲突时，才在主会话询问缺失项并等真实响应；
+               禁止静默替用户选档、禁止依赖 skill 内 headless fallback 兜底
+               （来源：2026-06-12 用户指示"需要询问我是哪种调研档位，不允许静默处理"）
+          无 → 继续
+        IF execution_context == subagent：
+          用 work-agent-template 的 skill_execution 模式实例化 WA
+          填写 MODE=skill_execution、SKILL_TO_EXECUTE、SKILL_PATH（+ 前置收集的用户参数）
+          通过 Agent tool 启动 WA（subagent，冷启动隔离上下文）
+        IF execution_context == main_agent：
+          主 Agent 直接读取 SKILL.md，在当前对话上下文执行
+          （skill 内部协议负责写 handoff，Orchestrator 不重复写）
+          skill 完成后展示产出与判定；经 2c 验证/记录、2d 授权检查后继续，
+          缺授权或需要采用/产品取舍时等待真实确认，不重复已确认事实。
+          （不更新 workflow-state.yaml，该文件是 Skill Workflow Mode 专属）
+        IF approved open-design postprocess_plan selects motion-polish：
+          机械 scoped recovery 后、最终语义验收前按 OD Phase 4–6 和
+          .claude/skill-os/runtime/prototype-delivery.md 启动已授权 internal 子单元
+          不等待 raw semantic PASS 或未来 OD DONE handoff；保留 raw FAIL 与全部原 D/STATE/AC
+          只在同一未完成 Phase 修复已批准范围，final 完整独立 PASS + exact final_artifact_ref
+          resolve 后回 OD Phase 5/6 完成父级一次；required FAIL/UNKNOWN 不前进、不进 TS
+        → 进入 2c 测试环节：按本次 skill authority 验产物与适用交接，
+          已选择项目 Workflow 的节点保留项目 handoff；显式会话 handoff 验 OS 临时产物，
+          不为它再造项目交接或写 workflow-state，NO_PIN 不穿共享 docs 别名
+      ELSE（phase_type == task_execution，默认）：
+        按编排模式执行：
+        - Solo: 主 Agent 直接执行
+        - Sequential: 串行执行子任务
+        - Parallel Fan-out: 通用任务并发；implement 一律按 §2.1b ready 队列每次一个
+        - Supervisor: 启动 Work Agent → 完成后进入 2c 测试环节
+        - Hierarchical: 通用任务分层协调；implement 每层都受 §2.1b 的单活跃门约束
+
+  2c  【测试环节】触发 quality-gate 执行本 Phase 的断言
+      - 将 Plan Agent 的断言列表 + 产出路径传入 quality-gate
+      - quality-gate 运行断言，返回 PASS / FAIL(BLOCKING) / FAIL(WARNING) / CONDITIONAL_PASS
+      - Orchestrator 处理测试结果：
+          PASS → 保留结果，完成 2c-eval 记录后才按 2d 标记并继续
+          FAIL(BLOCKING) → 停止依赖，展示并保留 findings；同范围修复已获明确授权且无
+                          未决 Human Gate/未授权 effect 时修复后重验，否则等用户决策（修复/跳过/终止）
+                          如状态为 BLOCKED/NEEDS_CONTEXT，按 plan-agent.md §4 Escalation Format 输出
+                          同一 Phase 连续 2 次 FAIL(BLOCKING)、或修复涉及计划变更 →
+                          走 plan-agent.md「增量重规划」协议（delta 重规划，不推倒全案）
+          FAIL(WARNING) / CONDITIONAL_PASS → 保留原判定、真实退出码与附带条件，
+                          按 gate 的适用范围进入 2d；未满足的 required 项仍阻断依赖，
+                          不把 warning/条件性结果改写成完整 PASS
+
+  2c-eval 【Eval 记录／权限分离】dispatch quality-gate 前由 Orchestrator 生成唯一
+        `eval_run_id` 并作为输入传入。quality-gate 只返回报告 + `EVAL_ENVELOPE_JSON`，不写文件。
+        Orchestrator 从响应中逐字提取该 JSON（**不得改写 verdict、passed/total 或 findings**），
+        保存到 parent-owned 临时文件后执行：
+        `python3 memory/scripts/record_eval.py --verdict-file <临时文件>`
+        recorder 负责 strict schema、run identity、状态/计数一致性、SHA-256 与幂等冲突校验。
+        同一 run_id + 同一 digest 是幂等成功；同一 run_id + 不同 digest 是 BLOCKING 冲突。
+        luca_gstack 环境中缺 envelope、recorder 失败或冲突 → 标记 `EVAL_RECORD_FAILED`，不得
+        伪造 `recorded/skipped`，也不得把 Phase 标成完整完成；可原样重试记录，但不可重判或改判。
+
+  2c-obs  【观察提取（Hermes-lite）】质量验证通过后，主 Agent 快速检查：
+      ① Work Agent 完成报告里有没有 non-obvious blockers？
+      ② Plan Agent 是否标记了某类风险（本 session 或跨 session 出现 ≥2 次）？
+      ③ 执行过程中发现了不在 CLAUDE.md / semantic facts 里的约束？
+      满足任一 → 立即运行：
+        python3 memory/scripts/propose_semantic.py \
+          --domain skill-rule \
+          --fact "<skill名>: <一句话规则>" \
+          --confidence high --stable \
+          --evidence "<复现/来源>" --scope "<skill名>" --reviewer "luca"
+        （--stable 缺 evidence/scope/reviewer 会被 propose_semantic exit 2 拒收，三项必填）
+      全否 → 跳过，继续 2d
+      注：以上三条件只产生 semantic 候选（宽进严出，晋升另有 promotion_ready 门禁），不受四信号
+      门槛约束；person 层（全局 feedback）/项目本地 MEMORY.md 写入须过
+      `.claude/skill-os/extraction-bar.md` 四信号门槛，且除信号①外不得在执行中途写。
+      补漏回验：本 Phase 若发生过「用户打断纠正产出物」且归因判为 L3/L4 但治理动作尚未落地
+      （协议：.claude/skill-os/correction-attribution.md），在此补跑对应处置；已落地则跳过（幂等）。
+
+  2d  各模式的继续检查（Supervisor/Hierarchical 同时展示阶段摘要）
+      - 核实际终态、当前 Phase 的产物/测试与必要 eval 记录；完整通过才标 DONE。
+        允许保留的 warning/defer 按既有状态标 DONE_WITH_CONCERNS，不伪造完整通过。
+      - 前置验证及必要 eval 记录通过，下一 Phase 已获明确批准，且无未决 Human Gate、
+        也无本次有效授权未覆盖的新 effect → 直接继续，不重复询问。
+      - 缺少批准、范围变化或需要真人决定 → 说明具体待决项，等待真实响应；
+        沉默、超时或笼统“自动继续”均不替代该项决定。
+      - 失败、缺证或未完成的前置停在对应依赖链；implement 仍以 §2.1a–b 为准。
+
+Step 3  全部 Phase 完成后，触发 quality-gate 运行完整断言列表
+        Orchestrator 汇总并展示：PASS N / FAIL M / WARN K
+        所有 required 产物/验证/记录及在途处置闭合才称整体完成；未解失败/缺片继续列出，
+        不能仅因 PENDING 清空或部分 Group 成功就宣称全部完成。
+
+Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时（Scene A/B/D）：
+        回读 tech-spec §RTM「测试准则」列，逐条判 pass / fail + 证据，三维框架——
+        completeness（需求全实现）/ correctness（符合 spec 意图与边界）/
+        coherence（设计决策反映在代码）。
+        结果写入收尾 handoff 的 criteria: 块（handoff-protocol v3.2 既有绑定点，不造新格式）。
+        - FAIL 项 → 呈用户裁决；判定为蓄意偏离 → 在 tech-spec「Coverage Gate Result」节
+          追加 delta 行：MODIFIED: <原准则> → <新准则> (reason)
+        - 全 PASS → 同节追加 SHIPPED: <date> / acceptance: <收尾 handoff 路径>
+        - Scene C / 无 tech-spec handoff → 跳过本步（标注 N/A）
+        - 模型：Codex quality-gate 按 common MR-004/peak，冷启动且关键失败不降级。
+          Claude 兼容路径 dispatch quality-gate 时传 model: fable（fable_whitelist P0
+          出门前裁决；fable 不可用→降级 opus 并告知）——见 §5 Dispatch 规则
+```
+
+**已派发工作的观察与消费：** 绑定当前调用实际返回的原生 agent/task/process 句柄，
+使用当前宿主提供的 wait/status/read 能力观察同一次执行。等待超时只表示本次等待结束，
+沿原句柄继续观察，不据此重派或重启；idle、ACK 或进度消息均不等于任务成功。
+实际终态、完成报告和所需产物/验证齐备后，才可消费结果；失败/未知/部分完成保留原始
+输出并阻断依赖。终态失败后的修复沿既有失败协议，另次执行不能覆盖原失败。
+没有可用观察能力或句柄丢失时，如实报告缺口并暂停依赖链，不猜测已完成或已停止。
+失败只阻断受影响依赖；其他已授权且无依赖冲突的工作可继续，所有在途句柄仍须收取终态
+或报告无法观察/中断的事实。汇总时保留失败/缺片，未解决的 required 输入不进入成功合并。
+§5 的关键调用证据门和 implement 的单活跃门仍优先，不从本条取得新的并发权限。
+
+### 2.2-pf Parallel Skill Fan-out（非交互 Skill 并行执行）
+
+**适用条件：** 仅非 implement 的通用计划声明 `parallel_skills`，且所有 skill 均为非交互型
+（`execution_context: subagent`）。implement 不能走本节，按 §2.1b 串行。
+
+```
+Step 1  读取 parallel_skills 列表（见 plan-agent.md §并行 Skill 声明语法）
+Step 2  对每个 skill 运行 Pre-flight 检查 + 用户参数前置收集（见 §2b），全部 PASS 才继续
+Step 3  同一条消息中并发启动所有 Work Agent（每个独立冷启动上下文）
+        每个 WA 使用 skill_execution 模式，skill_name 不同
+Step 4  按 §2.2 观察各 WA 的实际终态与完成报告；有 BLOCKED/NEEDS_CONTEXT 时先停依赖，
+        其余在途任务仍按原句柄观察或按已授权取消处理，不能把部分返回当全部结束
+Step 5  【结果汇总】将各 WA 的 handoff 路径收集到合并摘要：
+        docs/handoff/YYYY-MM-DD-<topic>-parallel-<skill1>+<skill2>-summary.md
+        格式：每个 skill 的关键 findings（≤200字/skill）+ 共识点 + 冲突点
+Step 6  触发 quality-gate，传入所有 WA 的 outputs + 汇总摘要路径
+        required 失败/缺片仍按 §2c 停依赖，汇总摘要不把缺项变成成功
+Step 7  记录 eval（每个 skill 各记一条）
+```
+
+**限制：**
+- 交互型 skill（brainstorm、ux-brainstorm、design-brief）禁止并行
+- 最多同时并行 3 个 skill（超过则分批串行）
+- 并行 skill 之间不得有数据依赖（如 ux-research 依赖 brainstorm PRD → 不可并行）
+
+### 2.3 5 种编排模式执行规范
+
+**Solo**
+- 主 Agent 直接执行任务，不派执行 worker
+- 主 Agent 完成产物及必要自检；Phase 的独立质量门仍按 §2c 触发，不用自检替代
+
+**Sequential Chain**
+- Phase 有顺序依赖，前 Phase 产出作为后 Phase 的输入
+- 不跳过，不并行，按序执行
+
+**Parallel Fan-out**
+- 在**同一条消息**中发起多个独立操作（工具并发调用）
+- 按 §2.2 回收真实结果与失败，所需输入验证通过后合并；缺片不省略，统一验证仍保留
+
+**Supervisor（Work Agent + Eval Agent 配对）**
+```
+对每个需要质量保证的 Phase：
+  1. 用 .claude/agents/work-agent-template.md 实例化 Work Agent prompt
+     → 填写 15 个核心变量（含派发时解析的绝对 WORK_ROOT）+ 2 个条件变量（skill_execution 专用：SKILL_TO_EXECUTE、SKILL_PATH）+ 1 个可选变量（AVAILABLE_SKILL_PATHS）
+     → 见模板变量清单；所有占位符必须被替换，不得保留字面量 {{VARIABLE}}
+     → 如果 Plan Agent 的 Phase 定义中有 skills_needed 字段：
+         填写可选变量 AVAILABLE_SKILL_PATHS（路径列表）
+         否则省略该变量（字面量 {{AVAILABLE_SKILL_PATHS}} 残留时模板有 guard，会自动跳过）
+     → 通过 Agent tool 的 prompt 字段传入完整 prompt
+     → 沿 TASK_CONTEXT 传原始目标、当前 Phase 与最新有效用户授权的来源；沿
+       INHERITED_CONSTRAINTS 传本次 scope、唯一写 owner、效果边界和未决 Human Gate。
+       PRIMARY_OUTPUTS / DONE_CRITERIA 保留原验收；仅传父任务有效权限与本 Phase 的交集，
+       不新增必填变量，不以“已派发”替代用户授权。
+     → PRIMARY_OUTPUTS 在派发前相对 WORK_ROOT 解析成固定绝对路径；后台任务不得跟随共享 display aliases 或后续项目切换改变落点
+     → required 多切片/来源合并测量前，完整读取 .claude/agents/references/evidence-receipts.md；
+       派发前 pre-freeze expected 范围/版本/方法与原分母，不能按返回数量重建。
+       在既有 PRIMARY_OUTPUTS / outputs_produced 原样传递 observed、GAP、失败/拒绝理由与真实
+       tool-read/measurement 输出，保留 base/graft 及已有 native invocation/adoption receipts；
+       required GAP 停依赖，optional 仅降对应 claim，不另造完成状态或通用 scheduler。
+     → 取消时先停止尚未派发的新工具动作，再用当前 harness 的中断 primitive；已发出或无法中断的动作必须报告为在途，不能冒称撤销
+
+**Skill 路径映射表（填写 `{{AVAILABLE_SKILL_PATHS}}` 时参照此表）：**
+
+| skill 名称 | SKILL.md 路径 |
+|-----------|--------------|
+| `idea` | `.claude/skills/office/idea/SKILL.md` |
+| `brainstorm` | `.claude/skills/office/brainstorm/SKILL.md` |
+| `deepresearch` | `.claude/skills/office/deepresearch/SKILL.md` |
+| `ux-research` | `.claude/skills/office/ux-research/SKILL.md` |
+| `ux-brainstorm` | `.claude/skills/office/ux-brainstorm/SKILL.md` |
+| `design-brief` | `.claude/skills/office/design-brief/SKILL.md` |
+| `open-design` | `.claude/skills/office/open-design/SKILL.md` |
+| `motion-polish` | `.claude/skills/office/motion-polish/SKILL.md` |
+| `html-prototype` | `.claude/skills/office/html-prototype/SKILL.md` |
+| `figma-demo` | `.claude/skills/office/figma-demo/SKILL.md` |
+| `magicpath` | `.claude/skills/office/magicpath/SKILL.md` |
+| `task-plan` | `.claude/skills/office/task-plan/SKILL.md` |
+| `tech-spec` | `.claude/skills/office/tech-spec/SKILL.md` |
+| `ux-audit` | `.claude/skills/office/ux-audit/SKILL.md` |
+| `quick-research` | `.claude/skills/office/quick-research/SKILL.md` |
+| `code-recon` | `.claude/skills/office/code-recon/SKILL.md` |
+
+注入格式：`- <路径> — <何时调用该 skill>`（每个 skill 一行）。未指定时填"无"。
+
+  2. 按 §2.2 核验 WA-N 实际终态与完成报告（JSON: status / outputs_produced / blockers）
+  3. 触发测试环节（quality-gate）：
+     → 传入：phase_id + outputs_produced + blockers(来自 WA 完成报告) + Plan Agent 断言列表
+     → 返回：PASS / FAIL / CONDITIONAL_PASS + findings
+  4. FAIL → 按 §2c 的原失败/有效修复授权处理；在途未终结不能重派
+  5. PASS → 按 §2d 检查下一 Phase 的既有授权与未决门，再继续
+```
+
+**Hierarchical**
+- 顶层 Orchestrator 管理多个 Worker Group
+- 每个 Worker Group 可以是 Sequential / Parallel / Supervisor
+- 首次执行前必须有真实计划批准；仍有效的批准继承，不因恢复或阶段完成重复确认
+- 建议每个顶层 Phase 完成后写 checkpoint（防 context 溢出）
+
+**Hierarchical 失败恢复协议：**
+```
+某 Worker Group 内部 WA 失败时：
+  1. 记录失败的 WA-ID、失败的 Phase、blockers 内容
+  2. 检查该 WA 的影响范围：是否有其他 Group 依赖其产出？
+     - 无下游依赖 → 隔离失败，继续其他 Worker Group；完成后再处理失败 WA
+     - 有下游依赖 → 暂停依赖链上的所有 Group，按 Escalation Format 告知用户
+  3. 按 plan-agent.md §4 的 Escalation Format 输出：
+     STATUS / REASON / ATTEMPTED / RECOMMENDATION
+  4. 已授权同范围修复按 §2c 执行；缺授权或需要跳过/改变计划时等待具体用户选择。
+     跳过不授予消费缺失 required 输入的权利；须明确依赖如何处置，不把失败改成成功
+  5. 修复后从失败的 Phase 续点，已完成的 Group 不重跑
+```
+
+---
+
+## 3. Skill Workflow Mode（设计工作流执行）
+
+### 3.1 适用场景
+
+专用于 luca_gstack 设计工作流 skill 链路：
+`idea → brainstorm → ux-research → ux-brainstorm → design-brief → open-design`
+
+`open-design` 是设计产出首选（optional-workflow-graph.yaml `design_output.primary`）；
+`magicpath` / `html-prototype` 是独立备选能力，按 `design_output.fallback_trigger` 的真实用户选择
+或已批准的具名备用计划调用；故障不自动授予换工具权。OD 同项目桌面恢复不属于跨工具切换。
+
+### 3.2 启动流程
+
+```
+Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → topic, scene, 各 node status
+Step 2  继承用户已选流程及当前精确输入；输入 entry 与 scene 分开。
+        已选路径存在 → 沿其恢复已完成节点，不重跑；
+        选择直接设计且输入就绪 → 读 optional-workflow-graph.yaml 的 design_entry_paths，
+        按 pipeline / existing_requirements / prototype_visual_refinement 选 Brief 起始路径；
+        不要求用户另说“跳过”，也不因无 PRD 先补完整需求链。
+Step 3  仅尚需发现或明确选择场景整链时按 scene 推荐路径变体（见 §3.3）；
+        机制/多方案未定回对应 owner；关键入口不明等待真实答案。
+Step 4  只在本次选定路径内核已完成/失败/在途事实，选择首个可执行未完 node；
+        在途节点先沿原句柄观察，required 前置未完则停依赖，不重复派发。
+        路径外节点不伪标 DONE，不拿它们的 handoff 阻塞短入口。
+Step 5  读本次路径实际选定上游的精确 handoff summary（`<WORK_ROOT>/docs/handoff/`）；
+        已有需求/原型直接来源由 Brief 继承，不制造上游 handoff。
+Step 6  执行技能循环（见 §3.4）
+```
+
+### 3.3 路径复杂度推荐
+
+| 信号 | 低复杂度 | 高复杂度 |
+|------|---------|---------|
+| 涉及页面数 | 单页/组件 | 多页/全流程 |
+| 是否有竞品参考 | 有明确参考 | 无参考，从零探索 |
+| AI Native 改造 | 否 | 是 |
+| 业务逻辑 | 标准 CRUD | 审批流/权限/多角色 |
+| 信息量 | 详细需求文档 | 一句话需求 |
+
+```
+Scene A 高复杂度 → [idea → deepresearch → brainstorm → ux-research → ux-brainstorm → design-brief → open-design]
+Scene A 中复杂度 → [idea → brainstorm → design-brief → open-design]
+Scene B 高复杂度 → [brainstorm → ux-audit → ux-research → ux-brainstorm → design-brief → open-design]
+Scene B 低复杂度 → [ux-audit → design-brief → open-design]
+Scene C            → [ux-audit → design-brief → open-design]
+Scene D            → 全量路径（Agent化本身是高复杂度）
+```
+
+本节场景复杂度建议不能覆盖 §3.2 已选路径或就绪设计入口；Brief 仍执行全部质量门，
+短路径仅省去不适用的上游，不省略状态、来源、模板冲突、冻结或最终采用。
+各 scene 的 `fallback_paths` 只供用户明确改选或已批准具名备用计划时使用；
+OD daemon 不可达而无该授权时暂停，报告连接问题，不自动 dispatch 其他生成器。
+
+### 3.4 Skill 执行循环
+
+```
+WHILE 本次选定路径仍有未完节点（PENDING / IN_PROGRESS / 待修复）:
+
+  3.4a  检查 handoff gate（optional-workflow-graph.yaml）
+        仅检查本次路径真实适用的 gate，遵守 applies_when；
+        IF gate blocked → 告知用户缺什么 → PAUSE
+
+  3.4a-pf  【Pre-flight 检查】读取 .claude/agents/preflight-agent.md，传入 skill_name + topic
+        FAIL → 展示缺失项，等用户修复或明确说"跳过检查"后再继续，不启动 skill
+        PASS → 继续
+
+  3.4b  context 预算检查（见 §4）
+        按实际上下文压力与交接需要判断；轮数提醒本身不停止执行。
+
+  3.4c  加载 next_skill 的 SKILL.md → 执行
+        main_agent 继承当前有效授权；subagent 沿 §2.3 的现有字段传背景/约束并按 §2.2 观察。
+        Skill 内部可自由使用 subagent，Orchestrator 不干预
+
+  3.4d  Skill 完成后：
+        - 核本次精确产物/handoff、实际终态及上游消费条件，不以目录有新文件替代本次结果
+        - 调度 @quality-gate subagent 验证产出
+        - 按 2c-eval 保留并记录原 envelope；PASS 且必要记录成功后，才以
+          `_PROJECT_ROOT=<WORK_ROOT>` 调用唯一写入器更新 `.luca/workflow-state.yaml` → status: DONE
+        - warning/条件性结果保留限制，required 未满足不放行；观察提取同 2c-obs，下一节点走 3.4e
+        - quality-gate FAIL/UNKNOWN 或缺证/记录失败 → 不标 DONE，保留原失败，按 §2c 处理
+
+  3.4e  human-in-the-loop 检查点：brainstorm / ux-brainstorm / design-brief / html-prototype
+        有未决方案、范围或采用决定时等待真实确认；已确认事实/所选工具/后续授权直接继承。
+        Brief 完成不产生新的执行授权；同一已授权链可以继续，但最终 bundle/TAC采用、
+        未决产品决定及本次有效授权未覆盖的 effect 的 Human Gate 保持，不能以“自动”绕过。
+
+  3.4f  用户确认后，将采纳决策标记 [ADOPTED]，否决方案标记 [REJECTED]
+```
+
+### 3.5 断点恢复
+
+```
+Step 1  在已验证绑定根内读 workflow-state、所选路径及已完成/失败/在途节点。
+        沿本次原生句柄核在途状态；失去句柄按 §2.2 报缺口，不能当 PENDING 直接重派。
+Step 2  读本次精确 handoff/checkpoint、原目标、最新有效授权/更正和已完成效果。
+Step 3  完整读取 `.claude/skill-os/runtime/long-session.md` 后核当前事实；
+        旧 DONE 与 DONE_WITH_CONCERNS 均核产物和限制，不仅凭状态或“最后一个”确定续点。
+        已失效/失败的 required 依赖先修复；展示首个真正未完点及在途处置。
+Step 4  已有明确继续授权且无未决 Human Gate/未授权 effect → 进入 §3.4；
+        否则说明具体缺口，等真实确认。恢复不重跑已完成效果。
+```
+
+---
+
+## 4. Context 预算管理（两种模式共用）
+
+轮数仅作非强制提醒。route-guard 的轮数 checkpoint 提示不能换算为 token 占用率，
+也不能单凭轮数或 compact 提醒强制停止、压缩或切换 session。宿主未提供实际占用数据时
+标为未知；已配置的真实资源上限仍须遵守。
+
+确有上下文压力、需要交接或到达既有必要阶段边界时，完整读取
+`.claude/skill-os/runtime/long-session.md` 并使用已有 checkpoint。保留原目标、最新授权、
+当前证据、在途句柄及首个未完点；是否需要新 session 依据实际连续性风险，不另建状态协议。
+
+**新 session 恢复指令：**
+```
+请在新 session 中输入：
+"继续 <topic>，从 <next-phase/next-skill> 开始"
+使用本次精确 checkpoint/handoff 与计划；NO_PIN 按 long-session 的框架/临时路径恢复。
+```
+
+---
+
+## 5. 模型路由（强制传参：Claude；Codex 按角色执行）
+
+真值源：`.claude/skill-os/model-routing.yaml`。Codex native/runner 只消费顶层 common
+`model_routing`：正常执行/事实收集继承 anchor，已登记的关键审查身份使用 peak，机械任务
+使用已批准且确实更低的 light。模型名和相对顺序来自私有 binding，effort 保持用户设置；
+未知关系和关键采用证据失败均拒绝，不自动降级，也不由 caller 的 model 参数覆盖政策。
+独立审查一律 `fork_turns: none`，是否换模型不改变独立性要求。
+
+原生身份以 `dispatch.native_agent_types` 为准。当前 default/worker 走 MR-001，explorer
+走 MR-006，quality-gate 走 MR-004；未登记的 MR-002/003/005/007 原生用途不能靠 prompt
+或显式 model 参数宣称已接通。方案裁决可用现有 quality-gate 的 MR-004/peak；新增身份
+需单独登记、配置并验证。Workflow runner 按精确 workflow/phase 路由，没有 omit/inherit 豁免。
+
+Codex native 的关键调用在完成证据落盘前，暂停新的 native/runner 派发；已绑定 agent_id
+也不代表证据闭合。因此原生关键会审按顺序完成。通用非 implement 计划的非关键调用或已准入
+runner 内部任务按原权限可并行；implement 始终 max_active_subagents=1，不使用这项例外。
+新的 runner 必须等待既有关键义务闭合。
+
+下表和后面的 alias 传参/降级规则只描述延期的 Claude adapter 兼容合同，不证明 Claude
+具备 Codex 的运行时强制能力，也不能覆盖 Codex 关键场景政策。
+
+| 能力档 | 任务类型 | 当前解析（2026-07-10） |
+|---------|---------|---------|
+| reasoning-heavy | **仅判定场景**（fable_whitelist：出门前裁决/对抗判定/翻案复审/plan-mode 规划期）| Fable（不可用→降级 Opus）|
+| core-execution | 承重执行：写代码、tech-spec/task-plan、原型、OD/Claude Design 编排、交互式设计 skill、deepresearch、判官常规 | Opus |
+| guided-execution | 轻执行/checklist 审查/一般检索（默认档）| Sonnet |
+| mechanical | 机械执行、格式化、简单验证、preflight | Haiku |
+
+**Claude 兼容 Dispatch 规则：**
+1. spawn 任何 subagent 时，按真值源解析 tier→alias 并**显式传 Agent tool 的 `model` 参数**（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin）。
+2. `skill_execution` Phase → 该 skill 的 `recommended-model` tier；`task_execution` Phase → 计划中该 Phase 的 `model_tier`（缺省 core-execution）。
+3. **传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist` 条目**（本文件相关点位：Step 3b 合同回验判定 dispatch quality-gate 时传 fable 覆盖其 opus pin）。拿不准 → 用 opus，不得猜 fable。
+4. **降级链**：fable 调用失败（配额/不可用）→ 自动降 opus 重试，并在产出中告知用户本次判定运行在降级档。
+5. 发现真值源未收录的档位变化 → 先提示用户更新真值源再调度（活规则）。
+调度时向用户展示：`"下一步是 <task>，使用 <model>（依据：<tier/白名单条目>）"`
+
+---
+
+## 6. 不做的事
+
+- **不做规划。** 规划是 Plan Agent 的职责；Orchestrator 只执行已有的计划。
+- **不执行断言。** 断言执行是测试环节（quality-gate）的职责；Orchestrator 只触发测试并处理结果。
+- **不嵌套 subagent 调度。** Work Agent 内部的 subagent 由 Work Agent 自己管理。
+- **不修改 skill 内部逻辑。** 只负责"调度谁"和"传递什么"。
+- **不跳过测试环节。** 即使看起来成功，每个 Phase 完成后必须触发 quality-gate。
+- **保留真实 human-in-the-loop 决定。** 已授权继续按 §2d/§3.4e 执行；“自动继续”不替代未决决定或未批准 effect。
+
+<!-- FILE_END: orchestrator.md -->

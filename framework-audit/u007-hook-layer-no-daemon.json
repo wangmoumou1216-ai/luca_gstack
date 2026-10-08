@@ -1,0 +1,127 @@
+{
+  "kind": "read-only config-layer root-cause diagnostic",
+  "model_calls": 0,
+  "hook_executions": 0,
+  "global_writes": 0,
+  "methods": [
+    "initialize",
+    "config/read",
+    "hooks/list"
+  ],
+  "hypothesis": "standalone no-daemon avoids shared daemon config reuse",
+  "records": [
+    {
+      "root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o",
+      "argv": [
+        "/Users/luca/.local/bin/codex",
+        "--no-daemon",
+        "app-server",
+        "--listen",
+        "stdio://",
+        "-c",
+        "projects.\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o\".trust_level=\"trusted\""
+      ],
+      "layers": [
+        {
+          "name": {
+            "type": "sessionFlags"
+          },
+          "disabledReason": null,
+          "version": "sha256:4a2e5a63e05bc0264962bc14e491de37a01d2170ff06fbdada9205494d91d0ec",
+          "hooks_present": false,
+          "features_hooks": null,
+          "this_project_trust": null
+        },
+        {
+          "name": {
+            "type": "project",
+            "dotCodexFolder": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o/.codex"
+          },
+          "disabledReason": "To load project-local config, hooks, and exec policies, add /private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o as a trusted project in /Users/luca/.codex/config.toml.",
+          "version": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "hooks_present": false,
+          "features_hooks": null,
+          "this_project_trust": null
+        },
+        {
+          "name": {
+            "type": "user",
+            "file": "/Users/luca/.codex/config.toml",
+            "profile": null
+          },
+          "disabledReason": null,
+          "version": "sha256:bc37d98641c8b8732ba8d7b7aff393b057872ae124d4f211b34323fbb48de099",
+          "hooks_present": true,
+          "features_hooks": null,
+          "this_project_trust": null
+        },
+        {
+          "name": {
+            "type": "system",
+            "file": "/etc/codex/config.toml"
+          },
+          "disabledReason": null,
+          "version": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "hooks_present": false,
+          "features_hooks": null,
+          "this_project_trust": null
+        }
+      ],
+      "hooks": [
+        {
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o",
+          "errors": [],
+          "warnings": [],
+          "hooks": [
+            {
+              "source": "user",
+              "sourcePath": "/Users/luca/.codex/hooks.json",
+              "eventName": "preToolUse",
+              "enabled": true,
+              "trustStatus": "trusted",
+              "currentHash": "sha256:a0c5ace2ede39423d59f9c2f3b97a17112b9fbaa5d0398eea7f7440ce2029202",
+              "key": "/Users/luca/.codex/hooks.json:pre_tool_use:0:0"
+            },
+            {
+              "source": "user",
+              "sourcePath": "/Users/luca/.codex/hooks.json",
+              "eventName": "permissionRequest",
+              "enabled": true,
+              "trustStatus": "trusted",
+              "currentHash": "sha256:86e461f78eb8b74543bf145588266ab8d22dca11d5c50be7aed15192ff592956",
+              "key": "/Users/luca/.codex/hooks.json:permission_request:0:0"
+            },
+            {
+              "source": "user",
+              "sourcePath": "/Users/luca/.codex/hooks.json",
+              "eventName": "postToolUse",
+              "enabled": true,
+              "trustStatus": "trusted",
+              "currentHash": "sha256:bb49352eeb142155279a4b88044a9324c8d806198ef9d10e2695a7255d7aec57",
+              "key": "/Users/luca/.codex/hooks.json:post_tool_use:0:0"
+            },
+            {
+              "source": "user",
+              "sourcePath": "/Users/luca/.codex/hooks.json",
+              "eventName": "userPromptSubmit",
+              "enabled": true,
+              "trustStatus": "trusted",
+              "currentHash": "sha256:0fa90362de5751e5c8c74bd52f5ba4ffdfe66385f13532892518ceb68d3cc955",
+              "key": "/Users/luca/.codex/hooks.json:user_prompt_submit:0:0"
+            },
+            {
+              "source": "user",
+              "sourcePath": "/Users/luca/.codex/hooks.json",
+              "eventName": "stop",
+              "enabled": true,
+              "trustStatus": "trusted",
+              "currentHash": "sha256:94aee49be5e856aeed2a23ab772e23db8efe558f7d14e3cb31034d4adeac0dff",
+              "key": "/Users/luca/.codex/hooks.json:stop:0:0"
+            }
+          ]
+        }
+      ],
+      "effective_features_hooks": null
+    }
+  ]
+}

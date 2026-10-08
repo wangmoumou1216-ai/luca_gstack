@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-release-profile-standards-20260930-03",
+  "subject": {
+    "skill": "code-review",
+    "topic": "hook-health configuration-profile standards supplement",
+    "scene": "unknown",
+    "input_summary": "NO_PIN；配置目录补充独立只读审查，冻结范围及内存失败注入。真实启用与会话验收不包含在本票。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/SCOPE-03.json"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "CONDITIONAL_PASS",
+    "passed": 5,
+    "total": 6,
+    "findings": [
+      "Minor：test-activation-reviewed.py:40 的空 CODEX_HOME 默认处理与执行器不一致；显式空值导致两条回退测试提前 KeyError。非阻断，建议统一夹具默认处理并增加空值用例。"
+    ]
+  }
+}

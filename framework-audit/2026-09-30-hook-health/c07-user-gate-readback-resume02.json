@@ -1,0 +1,16 @@
+{
+  "kind": "c07-user-gate-readback",
+  "at": "2026-10-01T04:42:27.222985+00:00",
+  "blocked_audit_goal_turn": 2,
+  "status": "NEEDS_CONTEXT",
+  "thread_id": "01a0f0f0-35db-7c21-bb53-4881b35a0972",
+  "title": "评估分层智能路由",
+  "release_at": "2026-10-01T04:21:15.091109+00:00",
+  "rollout_path": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T14-11-09-01a0f0f0-35db-7c21-bb53-4881b35a0972.jsonl",
+  "latest_rollout_timestamp": "2026-09-30T23:25:17.938Z",
+  "native_after_release_anchors": [],
+  "official_api_status": "notLoaded",
+  "official_api_latest_turn_completed_at": 1790810717,
+  "user_response_received": false,
+  "next": "Actual normal desktop reload and one real ordinary user prompt; no proxy CLI/API prompt."
+}

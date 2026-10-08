@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-10-03T03:18:23.618811+00:00",
+  "command": [
+    "git",
+    "ls-remote",
+    "--heads",
+    "origin",
+    "refs/heads/codex/tri-system-evaluation"
+  ],
+  "exit_code": 0,
+  "stdout": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3\trefs/heads/codex/tri-system-evaluation\n",
+  "stderr": "",
+  "expected_sha": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "local_head": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "tracking_sha": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "worktree_status": "",
+  "remote_exact_match": true
+}

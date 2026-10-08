@@ -1,0 +1,39 @@
+{
+  "scope": "P2监督期间只读基线身份复核；不等于U-002完整用途分母或行为验证完成",
+  "observed_at": "2026-10-02T14:31:38.368735+00:00",
+  "framework_root": "/Users/luca/Desktop/luca_gstack",
+  "head": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "tracked_dirty": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/observability/observations.jsonl",
+      "bytes": 26607,
+      "sha256": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
+      "disposition": "用户原有日志，仅核身份；不修改、不当实现变更或候选输入"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/evals/eval-log.jsonl",
+      "bytes": 94266,
+      "sha256": "39935b75c3774cbf2eff07454e50b0d6aca0b3a3b7d67be9930219a6a7974946",
+      "disposition": "用户原有日志，仅核身份；不修改、不当实现变更或候选输入"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/retrieval-log.jsonl",
+      "bytes": 152635,
+      "sha256": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020",
+      "disposition": "用户原有日志，仅核身份；不修改、不当实现变更或候选输入"
+    }
+  ],
+  "untracked_implementation_paths": [],
+  "read_evidence": [
+    "49177f",
+    "9f7cd5",
+    "d08711",
+    "e63373"
+  ],
+  "other_untracked_exclusions": [
+    ".workbuddy/：无本次读取/修改需要",
+    "framework-audit/：来源与本任务产物；不当被测实现",
+    "旧hook-health/model-routing审计：无本轮消费必要，不读内容"
+  ],
+  "remaining_required": "正式开工前按v3§4.5补齐受保护用途来源分母、相关源码字节及隔离B纳入/排除；当前检查不宣称完成此项。"
+}

@@ -1,0 +1,36 @@
+{
+  "settingsPath": "/Users/luca/Library/Application Support/luca/state-v2/settings.json",
+  "settingsSha": "b2ccf56bcc2df385bed75638bb16e244a6db85291bc2268b31c1bd8e7715bede",
+  "storeRevision": 14,
+  "connectionRevision": 2,
+  "credentialRevision": 3,
+  "mode": "direct",
+  "activation": {
+    "configRevision": 2,
+    "credentialRevision": 3,
+    "activatedAt": "2026-09-30T08:04:02.414Z",
+    "readiness": "confirmed"
+  },
+  "beforeSidecar": {
+    "binary": "/tmp/selE2E-G8btIK/.local/bin/codex-luca-aihub",
+    "codexHome": "/tmp/selE2E-G8btIK/.codex-aihub-test"
+  },
+  "afterSidecar": {
+    "binary": "/Users/luca/.local/bin/codex-luca-aihub",
+    "codexHome": "/Users/luca/.codex-aihub-test"
+  },
+  "modules": [
+    {
+      "path": "/Users/luca/Desktop/项目/muse/app/settings-store.js",
+      "sha256": "17c81b841893b14ee58a671c21121d10407d40d91af4eef3c7b462db52bb411c"
+    },
+    {
+      "path": "/Users/luca/Desktop/项目/muse/app/state-writer.js",
+      "sha256": "77f2f85d8fbf4ba26fec80e80c602d1207b41a1a85c5b6a55da609caecf9a5c4"
+    },
+    {
+      "path": "/Users/luca/Desktop/项目/muse/app/codex-connections.js",
+      "sha256": "1e838adbeea579ed1fbb48011d68170cc46043f4fcb72c21848967ebe33da56f"
+    }
+  ]
+}

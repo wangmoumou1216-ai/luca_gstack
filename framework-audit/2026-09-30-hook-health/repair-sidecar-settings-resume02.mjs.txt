@@ -1,0 +1,276 @@
+// Preparation only until exact-byte native review and normal Luca shutdown close.
+// Execute this frozen file through Node stdin; all application imports come from the signed installed ASAR.
+import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
+import net from 'node:net';
+import os from 'node:os';
+import path from 'node:path';
+import {createHash, randomUUID} from 'node:crypto';
+import {spawnSync} from 'node:child_process';
+import {isDeepStrictEqual} from 'node:util';
+import {pathToFileURL} from 'node:url';
+
+const AUDIT='/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health';
+const SELF=AUDIT+'/repair-sidecar-settings-resume02.mjs.txt';
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+const require=(value,message)=>{if(!value)throw Error(message);};
+const frozen=value=>{if(value&&typeof value==='object'){for(const child of Object.values(value))frozen(child);Object.freeze(value);}return value;};
+export const MANIFEST=frozen({
+  schema_version:1,kind:'luca-sidecar-settings-repair-resume02',
+  runtime:{path:'/Users/luca/.hermes/node/bin/node',version:'v22.23.1',sha256:'2e3f1286a7eb3736346ed1803e458a0ff909e2b2d5bc746144dcb76970e9b99d'},
+  systemCli:{path:'/Users/luca/.local/bin/codex',
+    realPath:'/Users/luca/.codex/packages/standalone/releases/0.159.3-aarch64-apple-darwin/bin/codex',
+    bytes:240351424,mode:0o755,sha256:'4d210f7c5a18fd0386434df23b5bdbb8c0e7257d3e8a2b30b0769c8bbe99a878'},
+  installedApp:{path:'/Applications/luca.app',
+    asarSha256:'c37006952486488286c1c8d70fc25d4aeafcee0b79d72c6c20305de3a3e0cda6',
+    headerSha256:'7f6711289e6c4c484c240d1d199c168375c75ae70f8db7cef9fced80101bf718',
+    infoSha256:'fd80301f927a000a338e64fe603acc376c56b9e7028d00e127ef51d8fc70f3a6'},
+  modules:{
+    'package.json':{bytes:365,sha256:'feb1eadc48e25ab61ef335bbf2a9e1d734be73d1f20bf72d6295101adce08bb6'},
+    'settings-store.js':{bytes:26726,sha256:'1f108ca2622174f7d24a5c01595103ecc92b4c402c7660fd596cb66b72aeb099'},
+    'state-writer.js':{bytes:15931,sha256:'77f2f85d8fbf4ba26fec80e80c602d1207b41a1a85c5b6a55da609caecf9a5c4'},
+    'codex-connections.js':{bytes:13057,sha256:'1e838adbeea579ed1fbb48011d68170cc46043f4fcb72c21848967ebe33da56f'}},
+  settingsPath:'/Users/luca/Library/Application Support/luca/state-v2/settings.json',
+  settingsSha256:'eb34592a91ba05f8c007c89ede84e51bf08e8a6c50015f22fd4a5ed515f42f55',
+  appId:'com.luca.muse.session-v2',profileId:'codex:active',
+  storeRevision:20,connectionRevision:6,credentialRevision:3,
+  connection:{profileId:'codex:active',revision:6,config:{mode:'system',
+    direct:{baseUrl:'https://aihub.firstshare.cn/v1',model:'gpt-6.1-sol',wireApi:'responses',serviceTier:'priority',
+      credentialRef:'luca:codex.aihub_direct',inheritProxy:false,proxyUrl:'',codexHome:'/Users/luca/.luca/codex/aihub-direct'},
+    sidecar:{binary:'/tmp/selE2E-G8btIK/.local/bin/codex-luca-aihub',codexHome:'/tmp/selE2E-G8btIK/.codex-aihub-test'}},
+    savedAt:'2026-10-01T01:53:26.486Z',source:'explicit'},
+  activation:{configRevision:6,credentialRevision:null,activatedAt:'2026-10-01T01:53:26.486Z',readiness:'external'},
+  credentialTargets:{'codex-direct':{status:'confirmed',revision:3,operationId:null,hasSecret:true,error:null}},
+  afterSidecar:{binary:'/Users/luca/.local/bin/codex-luca-aihub',codexHome:'/Users/luca/.codex-aihub-test'},
+  receiptPath:AUDIT+'/sidecar-settings-repair-resume02-result.json',
+});
+export const manifestSha256=sha(JSON.stringify(MANIFEST));
+
+async function regular(file,{privateFile=false,limit=128*1024*1024}={}){
+  require(path.isAbsolute(file)&&await fs.realpath(file)===file,'noncanonical evidence path');
+  const before=await fs.lstat(file,{bigint:true});
+  require(before.isFile()&&!before.isSymbolicLink()&&before.size<=BigInt(limit),'unsafe evidence file');
+  if(privateFile)require(before.uid===BigInt(process.getuid())&&(before.mode&0o077n)===0n,'untrusted private settings');
+  const fd=await fs.open(file,fsSync.constants.O_RDONLY|fsSync.constants.O_NOFOLLOW);
+  try{
+    const opened=await fd.stat({bigint:true});
+    require(opened.dev===before.dev&&opened.ino===before.ino,'evidence changed while opening');
+    const bytes=await fd.readFile(),after=await fd.stat({bigint:true}),named=await fs.lstat(file,{bigint:true});
+    require(BigInt(bytes.length)===opened.size&&after.size===opened.size&&after.mtimeNs===opened.mtimeNs
+      &&named.dev===opened.dev&&named.ino===opened.ino,'evidence changed while reading');
+    return bytes;
+  }finally{await fd.close();}
+}
+
+function verifySignature(app){
+  const result=spawnSync('/usr/bin/codesign',['--verify','--deep','--strict',app],{encoding:'utf8',timeout:30000});
+  require(!result.error&&result.status===0,'installed App signature failed');
+}
+
+export async function loadInstalledPublicModules(manifest=MANIFEST){
+  const app=manifest.installedApp.path,archivePath=path.join(app,'Contents/Resources/app.asar');
+  require(await fs.realpath(app)===app,'installed App root changed');
+  verifySignature(app);
+  const archive=await regular(archivePath),infoPath=path.join(app,'Contents/Info.plist'),info=await regular(infoPath);
+  require(sha(archive)===manifest.installedApp.asarSha256&&sha(info)===manifest.installedApp.infoSha256,'installed App frozen bytes changed');
+  require(archive.length>=16,'ASAR truncated');
+  const headerSize=archive.readUInt32LE(4),jsonSize=archive.readUInt32LE(12);
+  require(archive.readUInt32LE(0)===4&&archive.readUInt32LE(8)===headerSize-4&&jsonSize>0
+    &&headerSize===8+Math.ceil(jsonSize/4)*4&&8+headerSize<=archive.length,'ASAR header invalid');
+  const headerBytes=archive.subarray(16,16+jsonSize);
+  require(sha(headerBytes)===manifest.installedApp.headerSha256,'ASAR header changed');
+  const header=JSON.parse(headerBytes),contents={};
+  for(const [name,expected]of Object.entries(manifest.modules)){
+    const item=header.files?.[name];
+    require(item&&!item.link&&!item.files&&item.unpacked!==true&&Number.isSafeInteger(item.size)&&item.size===expected.bytes
+      &&typeof item.offset==='string'&&/^(0|[1-9][0-9]*)$/.test(item.offset),'public module is not a packed regular file');
+    const offset=8+headerSize+Number(item.offset);
+    require(Number.isSafeInteger(offset)&&offset+item.size<=archive.length,'public module range invalid');
+    const bytes=archive.subarray(offset,offset+item.size);
+    require(sha(bytes)===expected.sha256&&item.integrity?.algorithm==='SHA256'
+      &&item.integrity.hash===expected.sha256,'public module byte approval changed');
+    contents[name]=bytes;
+  }
+  require(JSON.parse(contents['package.json']).type==='module','installed package is not ESM');
+  verifySignature(app);
+  require((await regular(archivePath)).equals(archive)&&(await regular(infoPath)).equals(info),'installed App changed during authentication');
+  const snapshot=await fs.mkdtemp(path.join(await fs.realpath(os.tmpdir()),'luca-sidecar-public-api-'));
+  await fs.chmod(snapshot,0o700);
+  for(const [name,bytes]of Object.entries(contents)){
+    const file=path.join(snapshot,name);await fs.writeFile(file,bytes,{flag:'wx',mode:0o600});
+    require((await regular(file)).equals(bytes),'authenticated snapshot changed before import');
+  }
+  const modules={};
+  for(const name of ['state-writer.js','settings-store.js','codex-connections.js'])
+    modules[name]=await import(pathToFileURL(path.join(snapshot,name)).href);
+  return {modules,snapshot};
+}
+
+export function assertPreimage(bytes,manifest){
+  require(sha(bytes)===manifest.settingsSha256,'settings preimage hash changed');
+  const before=JSON.parse(bytes);
+  require(before.schemaVersion===2&&before.revision===manifest.storeRevision
+    &&before.connectionRevision===manifest.connectionRevision&&before.credentialRevision===manifest.credentialRevision,'settings revision changed');
+  require(isDeepStrictEqual(before.connections?.[manifest.profileId],manifest.connection)
+    &&isDeepStrictEqual(before.activation?.[manifest.profileId],manifest.activation)
+    &&isDeepStrictEqual(before.credentialTargets,manifest.credentialTargets),'public settings preimage changed');
+  require(manifest.connection.config.mode==='system'&&manifest.activation.configRevision===manifest.connection.revision
+    &&manifest.activation.credentialRevision===null&&manifest.activation.readiness==='external','reviewed system activation required');
+  return before;
+}
+
+const fileIdentity=metadata=>[metadata.dev,metadata.ino,metadata.size,metadata.mtimeNs,metadata.ctimeNs,metadata.mode].map(String).join(':');
+
+export async function authenticateSystemCli(executable){
+  // The installed public status function always accepts system mode. This repair adds an explicit executable gate.
+  try{
+    await fs.access(executable.path,fsSync.constants.X_OK);
+    require(await fs.realpath(executable.path)===executable.realPath,'System CLI resolved target changed');
+    const fd=await fs.open(executable.realPath,fsSync.constants.O_RDONLY|fsSync.constants.O_NOFOLLOW);
+    try{
+      const opened=await fd.stat({bigint:true});
+      require(opened.isFile()&&opened.size===BigInt(executable.bytes)&&(opened.mode&0o7777n)===BigInt(executable.mode),
+        'System CLI frozen type/size/mode changed');
+      const hash=createHash('sha256'),buffer=Buffer.alloc(1024*1024);let total=0;
+      while(true){const {bytesRead}=await fd.read(buffer,0,buffer.length,null);if(!bytesRead)break;
+        total+=bytesRead;require(total<=executable.bytes,'System CLI changed during authentication');hash.update(buffer.subarray(0,bytesRead));}
+      const after=await fd.stat({bigint:true}),named=await fs.lstat(executable.realPath,{bigint:true});
+      require(total===executable.bytes&&hash.digest('hex')===executable.sha256
+        &&fileIdentity(after)===fileIdentity(opened)&&fileIdentity(named)===fileIdentity(opened)
+        &&await fs.realpath(executable.path)===executable.realPath,'System CLI frozen bytes changed');
+      return fileIdentity(opened);
+    }finally{await fd.close();}
+  }catch(error){throw Error('System CLI unavailable or frozen identity changed: '+error.message);}
+}
+
+export function systemReadiness(config,connectionsApi,executable,identity){
+  if(config.mode!=='system')return {ok:false,reason:'system mode required'};
+  try{
+    fsSync.accessSync(executable.path,fsSync.constants.X_OK);
+    require(fsSync.realpathSync(executable.path)===executable.realPath
+      &&fileIdentity(fsSync.lstatSync(executable.realPath,{bigint:true}))===identity,'System CLI identity drift');
+    const local=connectionsApi.codexConnectionStatus(config,{codexBin:executable.path,mode:'system',checkCredential:false});
+    return local?.available===true?{ok:true,kind:'external'}:{ok:false,reason:local?.reason||'system connection unavailable'};
+  }catch{return {ok:false,reason:'System CLI unavailable or changed after authentication'};}
+}
+
+export async function requireNoLiveWriter({storageRoot,appId},writerApi){
+  const port=writerApi.deterministicWriterPort({storageRoot,appId});
+  await new Promise((resolve,reject)=>{
+    const socket=net.createConnection({host:writerApi.WRITER_HOST,port});
+    let settled=false,connected=false;
+    // Drain the public lease greeting and close gracefully; resetting a greeting socket can disturb its owner.
+    const finish=error=>{if(settled)return;settled=true;clearTimeout(timer);socket.end();socket.unref();error?reject(error):resolve();};
+    const timer=setTimeout(()=>finish(Error('writer lease probe uncertain')),750);
+    socket.once('connect',()=>{connected=true;});socket.on('data',()=>{});
+    socket.once('end',()=>finish(Error(connected?'active writer lease or foreign listener; close Luca normally':'writer lease probe uncertain')));
+    socket.once('error',error=>finish(error.code==='ECONNREFUSED'?null:Error('writer lease probe refused')));
+  });
+}
+
+async function recordReceipt(file,value,initial=false){
+  if(!initial)require(JSON.parse(await regular(file,{privateFile:true})).operationId===value.operationId,'receipt owner changed');
+  const destination=initial?file:file+'.'+randomUUID()+'.tmp';
+  const handle=await fs.open(destination,'wx',0o600);
+  try{await handle.writeFile(JSON.stringify(value,null,2)+'\n');await handle.sync();}finally{await handle.close();}
+  if(!initial){require((await fs.lstat(file)).isFile()&&!(await fs.lstat(file)).isSymbolicLink(),'receipt identity changed');await fs.rename(destination,file);}
+  const directory=await fs.open(path.dirname(file),'r');try{await directory.sync();}finally{await directory.close();}
+}
+
+export async function repairOffline({manifest=MANIFEST,modules,apply=false}){
+  const writerApi=modules['state-writer.js'],settingsApi=modules['settings-store.js'],connectionsApi=modules['codex-connections.js'];
+  const storageRoot=path.dirname(manifest.settingsPath);
+  require(await fs.realpath(storageRoot)===storageRoot,'settings storage root changed');
+  const beforeBytes=await regular(manifest.settingsPath,{privateFile:true}),before=assertPreimage(beforeBytes,manifest);
+  const candidate=connectionsApi.serializableCodexConnection({...before.connections[manifest.profileId].config,sidecar:manifest.afterSidecar});
+  require(isDeepStrictEqual(candidate,{...manifest.connection.config,sidecar:manifest.afterSidecar}),
+    'normalization would change unrelated configuration');
+  require(connectionsApi.validateDirectConfig(candidate).ok,'preserved Direct configuration is invalid');
+  require(path.isAbsolute(manifest.afterSidecar.binary)&&path.isAbsolute(manifest.afterSidecar.codexHome),'Sidecar target path invalid');
+  await fs.access(manifest.afterSidecar.binary,fsSync.constants.X_OK);
+  require((await fs.stat(manifest.afterSidecar.codexHome)).isDirectory(),'Sidecar home missing');
+  const systemIdentity=await authenticateSystemCli(manifest.systemCli);
+  const requireSystemReady=()=>{const ready=systemReadiness(candidate,connectionsApi,manifest.systemCli,systemIdentity);require(ready.ok,ready.reason);};
+  requireSystemReady();
+  await requireNoLiveWriter({storageRoot,appId:manifest.appId},writerApi);
+  require(!(await fs.lstat(manifest.receiptPath).catch(error=>{if(error.code==='ENOENT')return null;throw error;})),
+    'repair already attempted; inspect its durable receipt');
+  if(!apply)return {status:'PREFLIGHT_PASS_NO_MUTATION',revision:before.revision,connectionRevision:manifest.connection.revision,
+    mode:'system',sidecarBefore:manifest.connection.config.sidecar,sidecarAfter:manifest.afterSidecar,manifestSha256:sha(JSON.stringify(manifest))};
+  // The public lease acquisition is the only authority for subsequent settings transactions.
+  const writer=await writerApi.createStateWriter({storageRoot,appId:manifest.appId});
+  let journal=null;
+  try{
+    require(writer.lease.mode==='writer','active application writer; no lease recovery is authorized');
+    assertPreimage(await regular(manifest.settingsPath,{privateFile:true}),manifest);
+    requireSystemReady();
+    let expectedState=structuredClone(before),expectedRevision=manifest.storeRevision;
+    const guardedWriter={lease:writer.lease,read:writer.read,
+      async transaction(spec,mutate){
+        const committed=await writer.transaction({...spec,expectedRevision},(draft,context)=>{
+          require(isDeepStrictEqual(draft,expectedState),'settings full preimage changed under writer transaction');
+          return mutate(draft,context);
+        });
+        expectedRevision=committed.revision;expectedState=structuredClone(committed.state);return committed;
+      }};
+    const forbidden=()=>{throw Error('credential backend access is outside this repair');};
+    const validateConnection=({profileId,config})=>{
+      const normalized=connectionsApi.serializableCodexConnection(config);
+      return profileId===manifest.profileId&&config.mode==='system'&&isDeepStrictEqual(config,candidate)
+        &&isDeepStrictEqual(normalized,candidate)&&connectionsApi.validateDirectConfig(config).ok
+        ?{ok:true,config:normalized}:{ok:false,reason:'configuration exceeds reviewed Sidecar field patch'};
+    };
+    const store=settingsApi.createSettingsStore({writer:guardedWriter,credentialBackend:{status:forbidden,set:forbidden,remove:forbidden},
+      validateConnection,readiness:args=>validateConnection(args).ok
+        ?systemReadiness(args.config,connectionsApi,manifest.systemCli,systemIdentity):{ok:false,reason:'system mode required'}});
+    const operationId='hook-sidecar-resume02-'+randomUUID();
+    const prepared={status:'PREPARED',operationId,settingsPreimageSha256:manifest.settingsSha256,systemCliSha256:manifest.systemCli.sha256,
+      manifestSha256:sha(JSON.stringify(manifest)),at:new Date().toISOString()};
+    await recordReceipt(manifest.receiptPath,prepared,true);journal=prepared;
+    const saved=await store.connectionSave({profileId:manifest.profileId,patch:{sidecar:manifest.afterSidecar},
+      baseConnectionRevision:manifest.connection.revision,expectedCredentialRevision:manifest.credentialRevision,operationId:operationId+'-save'});
+    journal={...journal,status:'SAVED_SYSTEM_ACTIVATION_PENDING',savedRevision:saved.connection.revision};
+    await recordReceipt(manifest.receiptPath,journal);
+    await store.connectionActivate({profileId:manifest.profileId,expectedConnectionRevision:saved.connection.revision,
+      expectedCredentialRevision:manifest.credentialRevision,operationId:operationId+'-activate'});
+    const after=await writerApi.readJsonState(manifest.settingsPath,{schemaVersion:2});
+    const expected=structuredClone(before);
+    expected.revision=before.revision+2;expected.connectionRevision=before.connectionRevision+1;
+    expected.connections[manifest.profileId]=after.connections[manifest.profileId];
+    expected.activation[manifest.profileId]=after.activation[manifest.profileId];
+    for(const suffix of ['-save','-activate']){
+      const id=operationId+suffix;require(after.receipts[id]?.status==='complete','public operation receipt missing');expected.receipts[id]=after.receipts[id];
+    }
+    const connection=after.connections[manifest.profileId],activation=after.activation[manifest.profileId];
+    require(isDeepStrictEqual(after,expected)&&isDeepStrictEqual(connection.config,candidate)
+      &&connection.revision===before.connectionRevision+1&&connection.profileId===manifest.profileId&&connection.source==='explicit'
+      &&activation.configRevision===connection.revision&&activation.credentialRevision===null&&activation.readiness==='external',
+      'settings readback or unrelated-field preservation failed');
+    journal={...journal,status:'PUBLIC_TRANSACTION_APPLIED_SYSTEM_MODE_PRESERVED',revisionBefore:before.revision,revisionAfter:after.revision,
+      connectionRevision:connection.revision,mode:connection.config.mode,sidecar:connection.config.sidecar,
+      credentialRevision:after.credentialRevision,activation,settingsReadbackSha256:sha(await regular(manifest.settingsPath,{privateFile:true})),
+      gui:'UNVERIFIED: normal Luca startup and real three-mode empty-draft acceptance required'};
+    await recordReceipt(manifest.receiptPath,journal);return journal;
+  }catch(error){
+    if(journal)await recordReceipt(manifest.receiptPath,{...journal,status:'FAILED_REQUIRES_FRESH_REVIEW',error:error.message,
+      recovery:'Do not rerun, raw-write settings/legacy state, remove leases, or automatically select Sidecar. Inspect public receipts and revisions; review only the unfinished transaction.'});
+    throw error;
+  }finally{await writer.close();}
+}
+
+async function main(args){
+  require(args.length===4||(args.length===5&&args[4]==='--apply'),
+    'Usage: node --input-type=module - --helper-sha <SHA> --manifest-sha <SHA> [--apply] < frozen-helper');
+  require(args[0]==='--helper-sha'&&/^[a-f0-9]{64}$/.test(args[1])&&args[2]==='--manifest-sha'&&args[3]===manifestSha256,
+    'exact helper and embedded manifest SHA required');
+  require(sha(await regular(SELF))===args[1],'reviewed helper bytes changed');
+  require(process.execPath===MANIFEST.runtime.path&&process.version===MANIFEST.runtime.version
+    &&sha(await regular(process.execPath))===MANIFEST.runtime.sha256,'reviewed Node runtime changed');
+  const {modules,snapshot}=await loadInstalledPublicModules();
+  const result=await repairOffline({modules,apply:args.includes('--apply')});
+  console.log(JSON.stringify({...result,helperSha256:args[1],publicApiSnapshot:snapshot}));
+}
+
+if(process.argv[1]==='-'){
+  try{await main(process.argv.slice(2));}catch(error){console.error(JSON.stringify({status:'REFUSED_NO_UNREVIEWED_RETRY',error:error.message}));process.exitCode=1;}
+}

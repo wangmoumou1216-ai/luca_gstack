@@ -1,0 +1,171 @@
+{
+  "version": "1.2",
+  "status": "PREPARED_FOR_INDEPENDENT_R2",
+  "start_utc": "2026-10-02T16:08:45.359190+00:00",
+  "case_freeze_utc": "2026-10-02T16:35:44.944171+00:00",
+  "prior_independent_verdict": {
+    "version": "1.1",
+    "status": "FAIL",
+    "failed_categories": [
+      "J3 visible-rule versus exact-criterion mismatch",
+      "J4 insufficient operation/dependency/event novelty"
+    ]
+  },
+  "construction_checks": {
+    "cases_checked": 18,
+    "artifact_schema_and_fixed_value_checks": 37,
+    "required_key_mutations_rejected": 37,
+    "source_nodes_walked": 89,
+    "events_checked": 23,
+    "semantic_rules_bound_to_visible_sources": 56,
+    "positive_alternative_witnesses": 5,
+    "negative_relation_witnesses_rejected": 3,
+    "formal_behavior_runs": 0,
+    "field_patterns_with_visible_basis": 277,
+    "field_patterns_using_semantic_relations": 36
+  },
+  "per_case_binding_audit": [
+    {
+      "case_id": "D01",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 1,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "D02",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 0,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "D03",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 3,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "D04",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 3,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "D05",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 0,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "D06",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 6,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H01",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 1,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H02",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 1,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H03",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 0,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H04",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 0,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H05",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 5,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H06",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 2,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H07",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 3,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H08",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 4,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H09",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 0,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H10",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 0,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H11",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 5,
+      "independent_review": "pending_r2"
+    },
+    {
+      "case_id": "H12",
+      "visible_rule_binding": "bounded_self_check_pass",
+      "relational_paths": 4,
+      "independent_review": "pending_r2"
+    }
+  ],
+  "bounded_novelty_audit": [
+    {
+      "case_id": "H07",
+      "compared_development_id": "D04",
+      "operation_dependency_event_structure_differs": true,
+      "signature_sha256": "807084d7395a910e141a918c294df049a172375aa9bfe85aa23981f40aa2e3dd"
+    },
+    {
+      "case_id": "H08",
+      "compared_development_id": "D04",
+      "operation_dependency_event_structure_differs": true,
+      "signature_sha256": "bbd2b5326d3715ef20a9e6f0fede6a42347522f8a1bd9737e4a41a92086c1b79"
+    },
+    {
+      "case_id": "H11",
+      "compared_development_id": "D06",
+      "operation_dependency_event_structure_differs": true,
+      "signature_sha256": "4f727250b661eaaaa2ac12f811005b33ceb91b01d3cd133232f2429dcfa174af"
+    },
+    {
+      "case_id": "H12",
+      "compared_development_id": "D06",
+      "operation_dependency_event_structure_differs": true,
+      "signature_sha256": "65a73c9b4162629c843f5600470fa681a00a95c94c814187358a7f1283d0a2c3"
+    }
+  ],
+  "qualification": "Self-check only. Planted witnesses do not establish a complete semantic judge or candidate success. No new general driver, cases or formal behavior runs. Independent J r2 has not yet run.",
+  "selfcheck_failures": [
+    {
+      "kind": "transient syntax error in first self-check command",
+      "effect": "Python parse failed before any file mutation or check; corrected once and rerun"
+    }
+  ],
+  "terminal_status_contract": "Shared conditional rule is visible before either authority outcome; no future event is disclosed."
+}

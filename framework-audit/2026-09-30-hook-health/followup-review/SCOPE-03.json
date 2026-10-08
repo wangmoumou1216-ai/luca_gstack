@@ -1,0 +1,34 @@
+{
+  "review_root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+  "base": "1ea5d2364cb2b706e8183b3a51ea079b6a1c71da",
+  "files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.claude/hooks/project-scope-guard.mjs",
+      "relative": ".claude/hooks/project-scope-guard.mjs",
+      "sha256": "6794bdd6caa678445b0c0ab0a67f3dd4a8090db294ae94ee530b9b1615fe7e4d"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-project-scope-guard.mjs",
+      "relative": "scripts/test-project-scope-guard.mjs",
+      "sha256": "aee99ef5c745318ea0ff46a61cd5d28addd574f0f36d99d1f1fea4d91d07a05f"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.codex/hooks.json",
+      "relative": ".codex/hooks.json",
+      "sha256": "4bb7777130c6849d078856b366c33e7af0dc752111c7944d47742ed74f965145"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/README.md",
+      "relative": "README.md",
+      "sha256": "434aee3173e2e3df1dfddc1cb8813e5249f4ef82d4ab127c32eaf54c04f00250"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-project-gate-v34-mutations.mjs",
+      "relative": "scripts/test-project-gate-v34-mutations.mjs",
+      "sha256": "cdc2226eb5ff0c57d3bef7fdaa4004caee3e67b37dd273251ab4082e52c91987"
+    }
+  ],
+  "diff_sha256": "caab0d34f8581c87b0837866c5ca58991d1b9b130af59d2129150a5211509329",
+  "patch": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/followup-review/candidate-03.patch",
+  "source_digest": "1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469"
+}

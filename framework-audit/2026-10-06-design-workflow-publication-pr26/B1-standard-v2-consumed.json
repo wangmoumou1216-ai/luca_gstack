@@ -1,0 +1,16 @@
+{
+  "mechanical_consumption": "VALID",
+  "decision": "FAIL",
+  "may_enter_phase6": false,
+  "passed": 8,
+  "total": 10,
+  "counts": {
+    "critical": 0,
+    "high": 0
+  },
+  "draft_sha256": "0bef05fc4e43165a06892305697b294c0426bd2cce1e47e1049af13906df3862",
+  "input_file_sha256": "c5b21e87c466af986588153271b2d893f0a9533591fc8905fa340b361e01f723",
+  "native_invocation_id": "d6180a55-44bf-4132-b260-4c6063abda8a",
+  "native_input_sha": "80b8a5448cf71fb92e8a1cb8c9cc859d75bbb9e91718316b20830f38e8750bed",
+  "response_sha256": "69f9971ee4ccb7b4bb9e41c03b1a8a3e054bed25c484e693a45fc2713328f661"
+}

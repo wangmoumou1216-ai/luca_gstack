@@ -1,0 +1,36 @@
+{
+  "eval_run_id": "route-live-activation-20260930-01",
+  "source": "/Users/luca/.codex/sessions/2026/09/30/rollout-2026-09-30T14-31-46-01a0f103-15d3-7170-8323-a4cccaa0e5cd.jsonl",
+  "session": {
+    "id": "01a0f103-15d3-7170-8323-a4cccaa0e5cd",
+    "forked_from_id": null,
+    "source": {
+      "subagent": {
+        "thread_spawn": {
+          "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+          "depth": 1,
+          "agent_path": "/root/route_live_activation",
+          "agent_nickname": "Hegel",
+          "agent_role": "quality-gate"
+        }
+      }
+    },
+    "agent_role": "quality-gate",
+    "parent_thread_id": "01a0f05f-e05c-7693-b844-326c9eb66b75"
+  },
+  "actual_turn": {
+    "turn_id": "01a0f103-1637-78f3-a222-9bc448eb50d1",
+    "model": "gpt-6-astra",
+    "effort": "high"
+  },
+  "same_turn_complete": true,
+  "cold_dispatch": true,
+  "native_start_and_readonly_tools": "PASS",
+  "verdict": {
+    "status": "PASS",
+    "passed": 4,
+    "total": 4,
+    "findings": []
+  },
+  "patch_sha256": "9b2c53963b74f829af785b0167a0055fb35cad1fdf71668438f3bd8fdac54361"
+}

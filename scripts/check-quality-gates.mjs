@@ -8,6 +8,38 @@ const GATE_RE = /^gate_result:[ \t]*(PASS|FAIL|CONDITIONAL_PASS)(?:[ \t]+\([^\r\
 const CRITERIA_RE = /^criteria:[ \t]*$/m;
 const CRITERIA_BLOCK_RE = /^criteria:[ \t]*\r?\n((?:[ \t]+-[^\r\n]*(?:\r?\n|$))+)/m;
 const CRITERION_LINE_RE = /^[ \t]*-[ \t]*["']?\[(C\d+)\].*?(PASS|FAIL|UNKNOWN).*$/gm;
+function strictCriterion(line) {
+  // The verdict precedes the first evidence/reason field. Never search its value.
+  const prefix = line.match(/^(.*?)[ \t]+(?:证据|原因|evidence|reason)[ \t]*[:：]/i)?.[1];
+  const match = prefix?.match(/^[ \t]*-[ \t]*["']?\[(C\d+)\][^\r\n]*\b(PASS|FAIL|UNKNOWN)[ \t]*$/);
+  return match ? [line, match[1], match[2]] : null;
+}
+
+function exactHandoffText(content) {
+  const lines = content.replace(/<!--[\s\S]*?(?:-->|$)/g, '').split(/\r?\n/);
+  const kept = [];
+  let fence = null;
+  for (const line of lines) {
+    const marker = line.trimStart().match(/^(`{3,}|~{3,})(.*)$/);
+    if (fence) {
+      if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && !marker[2].trim()) fence = null;
+      continue;
+    }
+    if (marker) { fence = marker[1]; continue; }
+    if (!/^\s*#/.test(line)) kept.push(line);
+  }
+  return kept.join('\n');
+}
+
+function exactGateValues(content) {
+  const clean = exactHandoffText(content);
+  const fields = clean.match(/^[ \t]*gate_result[ \t]*:[^\r\n]*$/gm) || [];
+  return fields.map((field) => {
+    const value = field.match(GATE_RE);
+    assert.ok(value, `invalid gate_result field: ${field}`);
+    return value[1];
+  });
+}
 
 function read(path) {
   return readFileSync(join(root, path), 'utf8');
@@ -19,9 +51,13 @@ const args = process.argv.slice(2);
 let requested = null;
 let sessionId = null;
 let frameworkOnly = false;
+let requiredGate = null;
 for (let i = 0; i < args.length; i++) {
   const flag = args[i];
-  if (flag === '--framework') frameworkOnly = true;
+  if (flag === '--framework') {
+    assert.equal(frameworkOnly, false, 'duplicate --framework');
+    frameworkOnly = true;
+  }
   else if (flag === '--handoff' || flag === '--project-session') {
     const value = args[++i];
     assert.ok(value && !value.startsWith('--'), `${flag} requires ${flag === '--handoff' ? 'a file path' : 'a session id'}`);
@@ -32,9 +68,15 @@ for (let i = 0; i < args.length; i++) {
       assert.equal(sessionId, null, 'duplicate --project-session');
       sessionId = value;
     }
+  } else if (flag === '--require-gate') {
+    const value = args[++i];
+    assert.equal(requiredGate, null, 'duplicate --require-gate');
+    assert.equal(value, 'PASS', '--require-gate only accepts PASS');
+    requiredGate = value;
   } else throw new Error(`unknown argument: ${flag}`);
 }
 assert.ok(!frameworkOnly || (!requested && !sessionId), '--framework cannot be combined with project or handoff scope');
+assert.ok(requiredGate === null || requested !== null, '--require-gate requires --handoff');
 
 let projectRoot = null;
 if (sessionId !== null) {
@@ -77,12 +119,25 @@ if (requested !== null) {
   assert.match(handoffPath, /-handoff\.md$/, 'handoff validator only accepts *-handoff.md');
   assert.equal(existsSync(handoffPath), true, `handoff file not found: ${requested}`);
   const content = readFileSync(handoffPath, 'utf8');
-  assert.match(content, GATE_RE, `${requested} missing gate_result`);
-  assert.match(content, CRITERIA_RE, `${requested} missing criteria block`);
-  const criteriaBlock = content.match(CRITERIA_BLOCK_RE);
+  const exactContent = exactHandoffText(content);
+  if (requiredGate !== null) {
+    const gateValues = exactGateValues(content);
+    assert.equal(gateValues.length, 1, `${requested} requires exactly one gate_result field`);
+    assert.equal(gateValues[0], requiredGate, `${requested} gate_result must be ${requiredGate}`);
+  } else {
+    assert.match(content, GATE_RE, `${requested} missing gate_result`);
+  }
+  const validationContent = requiredGate !== null ? exactContent : content;
+  if (requiredGate !== null) {
+    assert.equal((validationContent.match(/^[ \t]*criteria[ \t]*:[^\r\n]*$/gm) || []).length, 1, `${requested} requires exactly one criteria block`);
+  }
+  assert.match(validationContent, CRITERIA_RE, `${requested} missing criteria block`);
+  const criteriaBlock = validationContent.match(CRITERIA_BLOCK_RE);
   assert.ok(criteriaBlock, `${requested} criteria block must contain bullet lines`);
   const bullets = criteriaBlock[1].split(/\r?\n/).filter((line) => line.trim());
-  const criteria = [...criteriaBlock[1].matchAll(CRITERION_LINE_RE)];
+  const criteria = requiredGate !== null
+    ? bullets.map(strictCriterion).filter(Boolean)
+    : [...criteriaBlock[1].matchAll(CRITERION_LINE_RE)];
   assert.equal(criteria.length, bullets.length,
     `${requested} every criteria bullet must contain [C#] and PASS|FAIL|UNKNOWN`);
   assert.ok(criteria.length >= 3 && criteria.length <= 7,
@@ -90,6 +145,9 @@ if (requested !== null) {
   assert.equal(new Set(criteria.map((match) => match[1])).size, criteria.length,
     `${requested} criteria labels must be unique`);
   for (const criterion of criteria) {
+    if (requiredGate !== null) {
+      assert.equal(criterion[2].toUpperCase(), requiredGate, `${requested} criterion ${criterion[1]} must be PASS`);
+    }
     const evidence = criterion[2] === 'UNKNOWN'
       ? /(证据|原因|evidence|reason)\s*[:：]/i
       : /(证据|evidence)\s*[:：]/i;

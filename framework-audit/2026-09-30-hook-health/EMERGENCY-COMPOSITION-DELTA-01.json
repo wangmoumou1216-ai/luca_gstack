@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-10-01T08:21:28.942716+00:00",
+  "status": "FROZEN_BEFORE_NORMAL_COMMIT",
+  "base": "cf7872ecbc4e5f85c64afede9843e2eabc3a98c0",
+  "owned_file": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-verify-composition.mjs",
+  "sha256": "74d72c91fa98e5e0e7a5bcd89da54357c9c2ce9478397acca7ae0d24df6e2b20",
+  "delta_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/EMERGENCY-COMPOSITION-DELTA-01.patch.txt",
+  "delta_sha256": "62db2ce7138ae0ba8c119c6431655412566d8235adce67140e813b8979c14d1a",
+  "evidence_path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-composition-ci-f8d38gph/evidence.json",
+  "evidence_sha256": "23973ff8f6cfe05fc9dcf3b7dba64312ace437cb9c13c51ead9bae9b68436e60",
+  "production_changed": false,
+  "prior_scope": "Original22 frozen; testmodel TMPDIR delta previously actual native3/3; this is new testfixture1 file only",
+  "remaining": [
+    "normal required precommit",
+    "one narrow native terminal delta",
+    "ordinary push",
+    "new exact CI6/6",
+    "MFF/publictrust preserving enabled",
+    "normalLucaquit/install/restart",
+    "true native recovery + migrationhelpergate"
+  ],
+  "original_interactive": [
+    "C07",
+    "P01-P03"
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "collected_at": "2026-10-02T21:25:40.622577+00:00",
+  "probe_id": "P06",
+  "classification": "FAILED_TO_OBTAIN_NATIVE_COMMAND_EVIDENCE",
+  "root_review_tools": [
+    "68f69c",
+    "a0586c",
+    "3c5651"
+  ],
+  "root_read_scope": "Complete final result and actual completed assistant message read; all RPC lines parsed for relevant events, not claimed full semantic read of all raw lines.",
+  "result": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p06-vjfi0jng/runs/u007-p06-native-appserver-r1/evidence/result.json",
+    "sha256": "7717e3ff8d22d420794af116a7e596906e58830471d5a798c3efffc4162f7216"
+  },
+  "rpc": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p06-vjfi0jng/runs/u007-p06-native-appserver-r1/evidence/rpc.jsonl",
+    "sha256": "bb34fb7c1dcaa1077d6444da9c0215d1ac448d5acd4a35a2c7b7059d7b496be2"
+  },
+  "launch": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-launch.json",
+    "sha256": "81a22e6fcd996535edfba469602d8005a40180a85985e333d61d5577f2104a65"
+  },
+  "actual": {
+    "driver_status": "INVALID_RUN",
+    "launch_exit": 1,
+    "native_commands": 0,
+    "dynamic_actions": 1,
+    "model_threads": 1,
+    "model_turns": 1,
+    "usage_updates": [
+      {
+        "totalTokens": 20215,
+        "inputTokens": 19951,
+        "cachedInputTokens": 0,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 264,
+        "reasoningOutputTokens": 0
+      },
+      {
+        "totalTokens": 40936,
+        "inputTokens": 40649,
+        "cachedInputTokens": 19712,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 287,
+        "reasoningOutputTokens": 0
+      }
+    ],
+    "engine_stage": "inputs_delivered",
+    "checkpoints": [
+      "request_delivered",
+      "inputs_delivered"
+    ],
+    "writes": [],
+    "artifacts": [
+      {
+        "path": "output/probe-result.json",
+        "exists": false,
+        "error": "ENOENT",
+        "revoked": false
+      }
+    ],
+    "interruptions": [
+      {
+        "thread_id": "01a0fe7d-b656-74d3-a194-99eadb6e3946",
+        "turn_id": "01a0fe7d-be4c-7b11-8b1f-e75c00434ba0",
+        "reason": "OBSERVED_TOKEN_BUDGET",
+        "requested_at": 1790976182473,
+        "response": {},
+        "terminal": {
+          "threadId": "01a0fe7d-b656-74d3-a194-99eadb6e3946",
+          "turn": {
+            "id": "01a0fe7d-be4c-7b11-8b1f-e75c00434ba0",
+            "items": [],
+            "itemsView": "notLoaded",
+            "status": "interrupted",
+            "error": null,
+            "startedAt": 1790976048,
+            "completedAt": 1790976182,
+            "durationMs": 133754
+          }
+        },
+        "confirmed": true
+      }
+    ],
+    "cleanup": [
+      {
+        "signal": "SIGTERM",
+        "at": 1790976182477,
+        "sent": true
+      },
+      {
+        "signal": "SIGKILL",
+        "at": 1790976183477,
+        "error": "ESRCH"
+      }
+    ],
+    "transport_exit": {
+      "code": 0,
+      "signal": null,
+      "at": 1790976182487
+    },
+    "unfinished_turns": [],
+    "outer_timed_out": false,
+    "elapsed_seconds": 137.98,
+    "parent_checks": {
+      "denied_marker_unchanged": true,
+      "no_outside_write": true,
+      "no_case_write": true,
+      "runtime_package_unchanged": true
+    }
+  },
+  "interpretation": [
+    "No target command, no eight-check stdout, no native package/loader result, no output artifact. Boundary remains UNKNOWN; absence of outside writes is not proof of denied attempts.",
+    "Actual first model response was commentary promising command; next response called inputs_delivered checkpoint. New order was requested but not followed; cannot claim command-first succeeded.",
+    "Initial usage input19951/output264=20215; total input40649/output287=40936, cache19712 included not added. Four reconnect diagnostics retained; no attribution of exact lost tokens or model incapability.",
+    "Profile/model identity response matches but is metadata, not command permission evidence.",
+    "Budget interruption confirmed terminal, transport exit0; wrapper exit1, not outer timeout.",
+    "All six capability slots consumed. No P07, no formal release, no increased budgets or hidden access authorized by this record."
+  ]
+}

@@ -40,8 +40,10 @@ const ts = read('.claude/skills/office/tech-spec/SKILL.md');
 const tp = read('.claude/skills/office/task-plan/SKILL.md');
 const compile = read('.claude/agents/references/plan-engineering-modes.md');
 const office = read('.claude/skills/office/SKILL.md');
+const implement = read('.claude/skills/office/implement/SKILL.md');
 const handoff = read('.claude/skills/office/references/handoff-protocol.md');
 const evalMethod = read('.claude/skill-os/eval-methodology.md');
+const planGraph = read('scripts/check-plan-graph.mjs');
 
 // 1. OD-first 锚（当轮漂移正是三处全漏，缺一即复发）
 t('plan-agent 含 open-design（设计产出路由）', plan.includes('open-design'));
@@ -67,6 +69,12 @@ t('Plan/TP/QG 真消费 current-instance owner', plan.includes('project-verifica
   && tp.includes('project-verification.md') && qg.includes('project-verification.md') && qg.includes('before/after'));
 t('Orchestrator/QG 真消费原分母 receipts', orch.includes('evidence-receipts.md')
   && qg.includes('evidence-receipts.md') && orch.includes('pre-freeze expected') && qg.includes('measurement'));
+
+// 12. Plan admission must be an executable, compositional first-dispatch seam.
+t('strict graph mode blocks external blockers', planGraph.includes('--require-no-external-blockers')
+  && planGraph.includes('external dependencies are not all PASS'));
+t('implement/orchestrator cite compositional plan checks', orch.includes('check-plan-graph.mjs')
+  && implement.includes('check-plan-approval.mjs') && implement.includes('check-plan-identity.mjs'));
 
 // 2. 状态枚举同步
 for (const s of ['PLANNED', 'IN_PROGRESS', 'DONE', 'DONE_WITH_CONCERNS', 'BLOCKED', 'NEEDS_CONTEXT'])
@@ -99,6 +107,10 @@ for (const tier of ['reasoning-heavy', 'core-execution', 'guided-execution', 'me
 t('plan-agent 含块 0 前提门', plan.includes('块 0 — 前提门'));
 t('plan-agent 含增量重规划协议', plan.includes('增量重规划（Replan Protocol'));
 t('plan-agent 含块 5 出门自检', plan.includes('块 5 — 出门自检'));
+t('Plan 摘要要求所有 Supervisor/Hierarchical 实例批准',
+  /需要用户确认: 是（任意 Supervisor \/ Hierarchical，包括单阶段及嵌套实例）/.test(plan));
+t('Supervisor 模式表保留单阶段与嵌套批准要求',
+  /^\| \*\*Supervisor\*\* \|[^\n]*\| \*\*必须，包括单阶段及嵌套实例\*\* \|$/m.test(plan));
 t('preflight 含未列出 WARN 规则', pre.includes('无专属检查行'));
 t('preflight 明确 TURN_CLOSED 仍保留有效 binding', pre.includes('`TURN_CLOSED` + 有效 binding 是已绑定状态'));
 t('preflight 不得把 TURN_CLOSED 单独判成失败', pre.includes('不得仅因 `TURN_CLOSED` 判 FAIL'));

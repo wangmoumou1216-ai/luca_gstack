@@ -1,0 +1,1543 @@
+#!/usr/bin/env node
+// UserPromptSubmit hook: project context gate + route hints + checkpoint reminder
+import {
+  closeSync,
+  constants as fsConstants,
+  existsSync,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readFileSync,
+  readSync,
+  readlinkSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+  unlinkSync,
+} from 'fs';
+import { join } from 'path';
+import { execSync } from 'child_process';
+import { createHash, randomUUID } from 'crypto';
+import {
+  PROJECTS_ROOT,
+  NATIVE_RELEASE_DIRECTIVE,
+  projectNameFromLink,
+  queueProjectEventCandidate,
+  readProjectState,
+  validateProjectName,
+  validatedBindingForState,
+} from './lib/project-substrate.mjs';
+import { actualHarness } from './lib/harness.mjs';
+import { resolveCodexChildProject } from './lib/codex-child-project.mjs';
+import {
+  READ_GRANTS_ENABLED,
+  closeGrants,
+} from './lib/project-read-grants.mjs';
+
+// cwd 漂移时 hook 内部路径会整体失效（实测 /tmp 日志 196 次 Cannot find module），优先用 Claude Code 注入的项目根
+const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+const dryRun = process.env.ROUTE_GUARD_DRY_RUN === '1' || process.argv.includes('--dry-run');
+let runtimeCurrentProject = '';
+
+function normalize(value) {
+  return String(value || '').toLowerCase().replace(/\s+/g, '');
+}
+
+// Background-task notifications and cross-session messages reach UserPromptSubmit exactly like a
+// user turn, but the native source never records them as one. Routing them used to print an
+// executable switch transaction the session could never complete, inviting the agent to switch
+// projects on a peer's behalf. Recognition here is display-side only: a miss restores the old hint,
+// never authority, because attestation independently refuses to treat these as human turns.
+function isHarnessMessage(prompt) {
+  return /^\s*<(?:cross-session-message|task-notification)[\s>]/.test(String(prompt || ''));
+}
+
+function promptForRouting(prompt) {
+  const kept = String(prompt || '').split(/\r?\n/).filter((line) =>
+    !/^(?:本会话)?只读引用(?:目录)?[：:]\s*.+\s*$/.test(line.trim()));
+  return kept.join('\n').trim() || '显式只读引用外部资料';
+}
+
+// 空白保留归一：nameMatchesIn 的边界判定需要"这里原本有空格"这条证据，而 normalize() 把
+// 空白全删之后空格就不再是边界（见下方缺口②）。只做小写 + 空白折叠，不做删除。
+function normalizeLoose(value) {
+  return String(value || '').toLowerCase().replace(/\s+/g, ' ');
+}
+
+// 项目名词边界匹配（2026-07-14 P5 修复；2026-09-09 判据重写）：projectGate 具名匹配与 pin 层
+// affirmsCur 共用同一套严谨度——此前 affirmsCur 用裸 includes()，"amusement" 会误绑 pin=muse（实证）。
+//
+// 2026-09-09 一次补齐同一条判据上的三个缺口（封闭集合按全集补，不按 bug 补）：
+//   ① 只判 indexOf 的**第一处**出现，于是词序决定路由。实证：`修掉 muse app 的 CLI 更新……
+//      权威读序 1) muse 仓的 CLAUDE.md` —— 第一处 `museapp` 正确地不算命中，函数就此
+//      return false，后面收边干净的 `muse 仓的` 根本没被看过 → namedProject 落空 →
+//      classifyRoutingScope 走 mixed_ambiguous → NEEDS_CONTEXT，整条 /goal 绑不上项目。
+//      改为同一判据对**每个**出现位置各跑一次（正则天然扫全串）。
+//   ② normalize() 删空白 ⇒ 空格不再是边界：`muse app` 被连成 `museapp`，后界成了 latin 延续。
+//      改为名字逐字拼 `\s*`、在**保留空格**的文本（normalizeLoose）上匹配：空格恢复为边界，
+//      而名字自带空格（`ai 宠物提示`）的宽松命中能力不变——写空格、不写空格都照中。
+//   ③ 长名只查后界、不查前界 ⇒ `amuse`、`luca-gstack-muse` 这类前缀粘连误命中。①放开位置后
+//      这个缺口的暴露面变大，故同轮补齐：前后两界用同一字符类。
+// 判据本身不放松：无分隔的粘连（museapp / amusement / muse-loop）仍然不命中。
+function nameMatchesIn(text, name) {
+  const normalizedName = normalize(name);
+  if (!normalizedName) return false;
+  // 逐字转义后用 `\s*` 相连：等价于旧的"两侧都删空白"的宽松 containment，但把空格留在文本
+  // 里供边界判定使用。逐字转义确保项目名里的 . * + - 等不会被当成正则元字符。
+  const body = [...normalizedName]
+    .map(ch => ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('\\s*');
+  // 长名：只有 latin 标识符延续字符不算边界（CJK/空格/标点/串首尾都算边界，所以
+  // "luca-dev 的任务" 照常命中）。短名 ≤2：CJK 也算延续，避免名 "AI" 误中 "AI方案"。
+  const cls = normalizedName.length <= 2 ? '一-鿿a-z0-9' : 'a-z0-9_-';
+  return new RegExp(`(?<![${cls}])${body}(?![${cls}])`, 'i').test(text);
+}
+
+// 并发隔离（G2，2026-07-04）：UserPromptSubmit stdin 公共字段 session_id，供轮次计数
+// per-session 隔离。sanitize 表达式与 session-sync.mjs / post-edit.mjs 逐字一致。
+let hookSessionId = '';
+let hookPayload = {};
+let hookBoundaryId = '';
+let hookHarness = '';
+function parsePrompt() {
+  try {
+    const raw = readFileSync(0, 'utf8'); // fd 0 直读：比 '/dev/stdin' 在 CI/管道下更可移植
+    try {
+      const data = JSON.parse(raw || '{}');
+      hookPayload = data;
+      hookSessionId = String(data.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
+      hookHarness = data.prompt_id ? 'claude' : data.turn_id ? 'codex' : actualHarness();
+      // Claude transcript rows expose no independent turn/boundary edge. Bind
+      // them to the native session boundary instead of trusting a hook-only ID.
+      hookBoundaryId = hookHarness === 'claude'
+        ? hookSessionId
+        : String(data.turn_id || data.prompt_id || '');
+      return String(data.prompt || data.message || '');
+    } catch {
+      process.stderr.write(`[route-guard] ⚠️  stdin JSON 解析失败（内容前20字: ${raw.slice(0, 20)}），路由跳过。\n`);
+    }
+  } catch {
+    // stdin unavailable in some non-interactive runs.
+  }
+  return '';
+}
+
+function loadRoutes(yamlPath) {
+  let content;
+  try {
+    content = readFileSync(yamlPath, 'utf-8');
+  } catch {
+    return [];
+  }
+  const routes = [];
+  let currentSection = null;
+  let currentEntry = null;
+
+  for (const line of content.split('\n')) {
+    if (line.startsWith('framework_flows:')) {
+      currentSection = 'framework_flow';
+      continue;
+    }
+    if (line.startsWith('project_skills:')) {
+      currentSection = 'project';
+      continue;
+    }
+    if (line.startsWith('builtin_skills:')) {
+      currentSection = 'builtin';
+      continue;
+    }
+    if (line.startsWith('project_context:')) {
+      currentSection = 'context';
+      continue;
+    }
+    if (!currentSection || currentSection === 'context') continue;
+
+    const skillMatch = line.match(/^  ([\w-]+):(\s*)$/);
+    if (skillMatch) {
+      if (currentEntry?.triggers?.length) routes.push(currentEntry);
+      currentEntry = { type: currentSection, invoke: '', hint: '', scope: 'any', triggers: [], w: 7 };
+      continue;
+    }
+    if (!currentEntry) continue;
+
+    const invokeM = line.match(/^\s+invoke:\s+"?([^"#\n]+?)"?\s*$/);
+    const skillM = line.match(/^\s+skill:\s+"?([^"#\n]+?)"?\s*$/);
+    const hintM = line.match(/^\s+hint:\s+"(.+?)"\s*$/);
+    const scopeM = line.match(/^\s+scope:\s+"?([^"#\n]+?)"?\s*$/);
+    const weightM = line.match(/^\s+weight:\s+(\d+)/);
+    const triggersM = line.match(/^\s+triggers:\s+\[(.+)\]/);
+
+    if (invokeM) currentEntry.invoke = invokeM[1].trim();
+    if (skillM && !currentEntry.invoke) currentEntry.invoke = skillM[1].trim();
+    if (hintM) currentEntry.hint = hintM[1];
+    if (scopeM) currentEntry.scope = scopeM[1].trim();
+    if (weightM) currentEntry.w = parseInt(weightM[1], 10);
+    if (triggersM) {
+      currentEntry.triggers = triggersM[1]
+        .split(',')
+        .map(t => t.trim().replace(/^['"]|['"]$/g, ''))
+        .filter(Boolean);
+    }
+  }
+  if (currentEntry?.triggers?.length) routes.push(currentEntry);
+  return routes;
+}
+
+function envList(name) {
+  return String(process.env[name] || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function listProjects() {
+  const fromEnv = envList('ROUTE_GUARD_PROJECTS');
+  if (fromEnv.length) return fromEnv;
+  const projectsRoot = PROJECTS_ROOT; // FIX-2/WS-B2：支持 LUCA_PROJECTS_ROOT 覆盖（cloud/异机）
+  try {
+    return readdirSync(projectsRoot)
+      .filter(name => {
+        try {
+          return statSync(join(projectsRoot, name)).isDirectory();
+        } catch {
+          return false;
+        }
+      })
+      .sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'));
+  } catch {
+    return [];
+  }
+}
+
+function readCurrentProject(projects) {
+  // 显式设置（含空串="无激活项目"）即生效——空串回退真实 symlink 会让 dry-run 测试
+  // 依赖宿主机的项目状态（G3 修复测试时发现）。
+  if (process.env.ROUTE_GUARD_CURRENT_PROJECT !== undefined) return process.env.ROUTE_GUARD_CURRENT_PROJECT;
+  // Production routing identity comes only from the validated session binding.
+  // The shared docs symlink is display state, never an identity source.
+  if (!dryRun) return runtimeCurrentProject;
+  try {
+    const docsPath = join(projectRoot, 'docs');
+    const target = readlinkSync(docsPath);
+    // FIX-2：4 个 marker 站点统一走单一裁决 helper（known-projects 最长前缀匹配，无命中回退首段）。
+    // 旧实现在此做多段 slice + endsWith 兜底，与其余 3 站的首段正则在**嵌套**路径下发散
+    // （…/项目/muse/lucagstack/docs → 'muse/lucagstack' vs 'muse'）= cross-hook 项目身份分裂。
+    return projectNameFromLink(target, { projects });
+  } catch {
+    return '';
+  }
+}
+
+// U-003：项目归属不是「meta 关键词豁免表」。先找具名 downstream identity，再用同一组
+// 数据规则区分纯框架对象与框架×未具名项目混合对象；复杂度只在范围闭合后计算。
+const FRAMEWORK_SCOPE_RULES = [
+  // Treat the framework's explicit identity plus an immediately-adjacent generic
+  // label as one scope signal. Otherwise "lucagstack项目" is split into
+  // framework + downstream and becomes a false mixed-scope gate. Keep genuine
+  // downstream objects later in the sentence visible to the residual matcher.
+  // The optional "a" covers the observed one-character typo "lucagstck" without
+  // widening downstream project alias resolution or granting switch authority.
+  { id: 'runtime', pattern: /luca[_\s-]?gsta?ck(?:\s*(?:框架|项目|仓库))?|skill\s*os/i },
+  { id: 'runtime-files', pattern: /(?:AGENTS|CLAUDE)\.md|workflow-state/i },
+  { id: 'runtime-paths', pattern: /\.claude\/hooks|\.codex\/hooks|memory\/scripts|framework-audit/i },
+  { id: 'runtime-guards', pattern: /project-scope-guard|route-guard|session-restore/i },
+  // “自我成长”本身可能是下游产品功能，不能裸豁免 Project Gate。只收具名 workflow，
+  // 或用户明确在纠正“自我成长流程”的路由归属这一窄语境。
+  { id: 'framework-evolution', pattern: /framework-evolution(?:-scout)?|(?:命中|应该|不是).{0,12}自我成长流程|自我成长流程吗|自我演进流程|框架演进流程/i },
+  { id: 'routing-meta', pattern: /项目(?:上下文)?门禁|路由(?:守卫|规则|闭环)?|plan\s*(?:agent|mode)/i },
+  { id: 'framework-meta', pattern: /框架(?:自身|自审|治理)?|规则执行闭环|\bhooks?\b/i },
+];
+
+const FRAMEWORK_CONTROL_RULES = [
+  { id: 'approval', pattern: /我(?:已经)?直接批准执行|不用再.{0,8}批准|批准(?=.{0,16}(?:方案|计划|执行))|(?:给你|授予你).{0,8}(?:最大|全部|完整)?权限/ },
+  { id: 'execution-continuation', pattern: /继续执行|开始执行|直接执行|按.{0,12}计划.{0,8}(?:执行|完成|跑)|直接跑完|跑完|跑到底/ },
+];
+
+const DOWNSTREAM_SCOPE_RULES = [
+  { id: 'project', pattern: /(?:产品|业务|下游|一个|某个)?项目(?:里|内|中|的)?/ },
+  { id: 'product', pattern: /产品|业务|页面|功能|需求|客户|订单|原型|用户|接口|数据库|应用|网站|代码库|仓库|模块|\bcrm\b/i },
+];
+
+// 范围词有极性：明确说“不是/不涉及下游项目”是在收窄范围，不能再把其中的
+// “产品/项目”当成正向 downstream 证据。这里只消去语义闭合的否定短语；同句中
+// 另有“页面/功能/某个项目”等正向对象时仍会由 DOWNSTREAM_SCOPE_RULES 命中。
+const NEGATED_DOWNSTREAM_SCOPE_RULES = [
+  {
+    id: 'not-downstream-project',
+    pattern: /(?:不是|并非|不属于|不涉及|无关(?:于)?|非)\s*(?:任何)?\s*(?:下游)?\s*(?:产品|业务)?\s*项目(?:任务|工作)?/i,
+  },
+  {
+    id: 'no-downstream-binding',
+    pattern: /(?:不要|不得|无需|禁止)\s*(?:激活|确认|切换)(?:(?:\s*[、，,或和与]\s*)(?:激活|确认|切换))*\s*(?:任何)?\s*(?:下游)?\s*(?:产品|业务)?\s*项目/i,
+  },
+];
+
+function matchingScopeRuleIds(value, rules) {
+  return rules.filter(rule => rule.pattern.test(value)).map(rule => rule.id);
+}
+
+function stripScopeRules(value, rules) {
+  let residual = value;
+  for (const rule of rules) {
+    const flags = `${rule.pattern.flags.replaceAll('g', '')}g`;
+    residual = residual.replace(new RegExp(rule.pattern.source, flags), ' ');
+  }
+  return residual;
+}
+
+function projectIdentityText(prompt) {
+  // 保留空白（见 nameMatchesIn 缺口②）。触发词剥离随之改成允许字间空白的正则，
+  // 与旧的"先删空白再 split"逐例等价。
+  let text = normalizeLoose(prompt);
+  for (const trigger of ['新项目', '新需求', '新功能']) {
+    text = text.replace(new RegExp([...trigger].join('\\s*'), 'g'), '');
+  }
+  return text;
+}
+
+function classifyRoutingScope(prompt, projects, currentProject) {
+  const namedProject = projects.find(name => nameMatchesIn(projectIdentityText(prompt), name));
+  // Some clients surface hook output inside the next visible message. That
+  // diagnostic text is evidence about the framework, not fresh project intent;
+  // in particular, the standard "新项目还是继续老项目" wording must not feed
+  // back into this classifier and manufacture another Project Gate.
+  const isRouteGuardReport = /UserPromptSubmit\s+hook\s*\(completed\).*hook\s+context:\s*\[route-guard\]/is.test(prompt);
+  const frameworkSignals = matchingScopeRuleIds(prompt, FRAMEWORK_SCOPE_RULES);
+  const controlSignals = matchingScopeRuleIds(prompt, FRAMEWORK_CONTROL_RULES);
+  const scopeResidual = stripScopeRules(
+    stripScopeRules(prompt, FRAMEWORK_SCOPE_RULES),
+    FRAMEWORK_CONTROL_RULES,
+  );
+  const negatedDownstreamSignals = matchingScopeRuleIds(scopeResidual, NEGATED_DOWNSTREAM_SCOPE_RULES);
+  const residual = stripScopeRules(scopeResidual, NEGATED_DOWNSTREAM_SCOPE_RULES);
+  const downstreamSignals = matchingScopeRuleIds(residual, DOWNSTREAM_SCOPE_RULES);
+
+  // 具名 identity 仍决定最高优先级的 scope，但不再丢掉同句中的框架/续接信号：目标项目
+  // 已经激活时 Gate 已满足，后面的 complexity 必须还能看见这些信号。
+  if (namedProject) {
+    return { kind: 'named_downstream', namedProject, frameworkSignals, controlSignals, downstreamSignals, negatedDownstreamSignals };
+  }
+  if (isRouteGuardReport) {
+    return { kind: 'pure_framework_meta', frameworkSignals: [...new Set([...frameworkSignals, 'route-guard-report'])], controlSignals, negatedDownstreamSignals };
+  }
+  if (!frameworkSignals.length && !controlSignals.length) return { kind: 'ordinary' };
+
+  if (downstreamSignals.length) {
+    const affirmsCurrent = /当前项目|这个项目|本项目/.test(residual) && currentProject;
+    if (affirmsCurrent) {
+      return { kind: 'current_downstream', project: currentProject, frameworkSignals, controlSignals, downstreamSignals, negatedDownstreamSignals };
+    }
+    return { kind: 'mixed_ambiguous', frameworkSignals, controlSignals, downstreamSignals, negatedDownstreamSignals };
+  }
+
+  return { kind: 'pure_framework_meta', frameworkSignals, controlSignals, negatedDownstreamSignals };
+}
+
+// 对话延续/状态询问豁免（G3）：UserPromptSubmit 是“可以检查”的事件，不是“新任务开始”的
+// 证据。短 check-in、引用上一轮判断、要求换种说法，以及带明确续接词的长句都属于同一任务。
+// 真正的项目声明在 projectGate 里先检查；明确 skill 词仍会在 skillDecision 命中，因此这里
+// 放宽续接识别不会吞掉“继续项目”或“继续做个原型”。
+const CONTINUATION_RE = /^\s*(?:都|全部|现在)?(?:继续|接着来|接着做|然后呢|下一步|往下走|好了吗|行了吗|怎么样|进度如何|到哪(?:一步)?了|卡住了|卡在哪|完成了吗|做完了吗|还在跑吗|等一下|先停|暂停|停一下|不用了|就这样|可以了|收到)(?:一下)?[吧呢吗呀啊了的！!。.？?…\s]*$/;
+const CONTEXTUAL_FOLLOWUP_RE = /(?:刚才|上一轮|上一条|上面|前面|这个判断|这个说法|你刚才|你再(?:检查|想想|解释|说明)|接着(?:写|做|说|看|检查|整理|完成)|说我能听懂的话|换(?:个|一种)说法|简单(?:点|一点)|说清楚|用大白话|没听懂)/;
+// 第二人称 agent 进度必须有句首/分句边界和句尾，避免把“订单进度是多少”或
+// “修改页面显示你的进度是多少”吞成闲聊。完成通知同样只收不带业务对象的窄形态。
+const AGENT_PROGRESS_FOLLOWUP_RE = /(?:^|[，,。.!！?？；;\s])(?:(?:你|你这边)(?:现在)?(?:的)?|(?:这次|本次|当前)(?:任务|工作)(?:的)?)(?:整体)?进度(?:是|到)?(?:多少|如何|怎么样)(?=$|[，,。.!！?？；;\s])/;
+const COMPLETION_NOTICE_FOLLOWUP_RE = /(?:^|[，,。.!！?？；;\s])(?:你)?(?:在)?(?:都|全部|这项|这次|本次|当前任务|当前工作)?(?:做完|完成)(?:了|以后|之后|时)?(?:再)?(?:告诉|通知)我(?=$|[，,。.!！?？；;\s])/;
+// 并行 session 的存在说明是当前协作上下文，不是“把本会话交出去”的 /handoff 请求。
+// 只收完整陈述句；带“请你接手”等后续动作时不命中。
+const CONCURRENT_SESSION_CONTEXT_RE = /^\s*我(?:这边)?有(?:一个|个)?\s*session\s*(?:正在|在)\s*(?:做|处理|执行|进行)\s*[^，,。.!！?？；;\n]{1,80}(?:的)?(?:治理|工作|任务|处理)[。.!！]?\s*$/i;
+// 会话 handoff 是项目无关工具。只豁免“明确把当前会话交给新 agent/session”这一窄意图；
+// handoff-protocol、项目级 workflow handoff 等普通提及不能命中。
+const SESSION_HANDOFF_INTENT_RE = /(?:^\s*[$/]?handoff(?:\s|$)|会话交接|生成(?:一份)?交接文档|(?:把)?(?:当前|这个)会话\s*交给(?:下个|下一个)\s*(?:agent|session)|新\s*session\s*接手(?:当前|这个)会话|session\s+handoff)/i;
+function isContinuation(prompt) {
+  const text = prompt.trim();
+  return CONTINUATION_RE.test(text)
+    || CONTEXTUAL_FOLLOWUP_RE.test(text)
+    || AGENT_PROGRESS_FOLLOWUP_RE.test(text)
+    || COMPLETION_NOTICE_FOLLOWUP_RE.test(text)
+    || CONCURRENT_SESSION_CONTEXT_RE.test(text);
+}
+
+function complexityDecision(prompt, routingScope = { kind: 'ordinary' }) {
+  const text = normalize(prompt);
+  const signals = [
+    {
+      name: '框架执行续接',
+      weight: 6,
+      test: () => routingScope.controlSignals?.length > 0 && (
+        routingScope.kind === 'pure_framework_meta' ||
+        (['named_downstream', 'current_downstream'].includes(routingScope.kind) && routingScope.frameworkSignals?.length > 0)
+      ),
+    },
+    {
+      name: '多模块',
+      weight: 3,
+      test: t => {
+        // G3-C3（2026-07-04）：'claude' 从系统词除名——助手自身名字在 meta 提问里高频出现，
+        // 与任一其他系统词共现即误发多模块(w3)，把闲聊/咨询误升级 PLAN_MODE。
+        const sys = ['obsidian', 'figma', 'lark', '飞书', 'mac', '桌面', 'desktop', '卡片', '数据库', 'api', 'memory', '知识库', '定时', '调度', 'scheduler', '推送'];
+        return sys.filter(s => t.includes(normalize(s))).length >= 2;
+      },
+    },
+    { name: '规划意图', weight: 3, regex: /整体规划|整体设计|整体方案|全链路|端到端|系统设计|做个规划|规划一下|大框架|架构设计/ },
+    { name: '多需求并列', weight: 2, regex: /第一.*第二|首先.*其次|一方面.*另一方面|(?:功能|模块|系统).{1,20}(?:功能|模块|系统)/ },
+    { name: '跨系统集成', weight: 3, regex: /定时.*推送|记录.*学习|学习路径|知识图谱|跨.*聚合|个性化.*推荐|每日.*定时|每天.{0,4}[个张次]|一天.{0,4}[个张次]|设置.{0,8}时间|定时.{0,6}(吐|推|发|提醒|生成)/ },
+    { name: '显式复杂', weight: 4, regex: /负责的功能|复杂的需求|复杂功能|plan\s*agent|task编排|多个skill|skill.*组合|这是一个复杂/ },
+    // Audit C3: explicit user plan request — plan-agent.md:38 lists this as
+    // the 5th trigger condition. Standalone weight 6 puts it past the PLAN_MODE
+    // threshold; uses normalized-text regex (normalize() lowercases).
+    { name: '用户明确要求 plan', weight: 6, regex: /先做个计划|先做计划|plan\s*一下|想清楚再做|做个计划再说|做个规划再说/ },
+    {
+      // 2026-07-12：'新项目复杂需求' → '多功能需求'。原信号被"新项目/新需求"前缀锁死，
+      // 已有项目里的多功能需求（"给现有系统加订单查询、库存管理、报表导出"）拿不到分 →
+      // route-guard STOP → 静默直接执行（用户实测根因）。改为 build/add 意图门 + 双阈值，
+      // 覆盖已有项目。weight 6 单独命中即 PLAN_MODE（Plan Agent 人类卡点，误报只花一次确认）。
+      name: '多功能需求',
+      weight: 6,
+      test: t => {
+        // 摄入语境反担保（2026-07-13 fable review B-F4）：会议纪要/语料整理是 /idea 的地盘，
+        // 枚举功能点是其常态，不是构建请求。
+        if (/会议纪要|语音稿|讨论记录|原始语料|整理(这|一)段/.test(prompt)) return false;
+        // 汇报文语境（B-F3 部分缓解；门级贴文噪声仍是已知残留——所有复杂度信号共有）。
+        if (/周报|日报|评审报告/.test(prompt)) return false;
+        // 诊断/事故语境反担保 v2（B-F5：v1 裸名词'异常/故障/延迟'误伤可观测域构建需求——
+        // "新增监控看板：异常统计、延迟分布"被整域压制。改句式框架：名词仅在"出现了/发生了"
+        // 叙述框架内才算诊断语境；'排查/诊断'要求祈使形'一下'）。压制后落回 skillDecision
+        // （可能 STOP 或关键词命中），由语义路由契约兜底。
+        if (/为什么|怎么回事|变慢|都报错|报错了|出错|崩溃|失败了|排查一下|诊断一下|(出现|发生)了.{0,8}(延迟|异常|故障|问题)/.test(prompt)) return false;
+        // build/add 意图：原新项目前缀词 ∪ 明确构建动词（刻意不含"支持"等宽词，避免劫持单功能编辑）
+        if (!/新项目|新需求|新功能|想做一个|想做个|要做一个|要做个|新做一个|新做个|新建|新增|搭建|开发|实现|做一个|做个|加一个|加个|加上|构建|上线|集成|添加|增加/.test(prompt)) return false;
+        // 连接词单列（B-F2：连接词混在 caps 里让 enum 路径被"然后"击穿——"加个红、黄、蓝，然后保存"
+        // 曾误升 PLAN_MODE）。连接词仍计入 capHits>=4 总门（保持既有行为），但不算"真功能词"。
+        const connectors = ['然后', '可以', '还能', '并且', '以及'];
+        const caps = [...connectors, '入口', '形式', '设置', '吐出', '展示', '唤起', '一天', '每天', '每日', '自动', '定时', '同步', '提醒', '统计', '拖拽',
+          // UI/function nouns commonly enumerated in product reqs.
+          '登录', '注册', '权限', '头像', '侧边栏', '按钮', '弹窗', '列表', '详情', '表单', '搜索', '筛选', '编辑', '创建', '导出', '导入',
+          // 2026-07-12：补自然产品功能域名词，让"订单查询/库存管理/报表导出"等真需求可计分。
+          '订单', '库存', '报表', '消息', '通知', '审批', '看板', '报销', '结算', '对账', '仪表盘', '工作流', '下单', '支付', '退款', '收藏', '标签', '角色', '菜单', '评论'];
+        const capHits = caps.filter(c => t.includes(normalize(c))).length;
+        const featureHits = caps.filter(c => !connectors.includes(c) && t.includes(normalize(c))).length;
+        // 顿号枚举数（在 raw prompt 上数 '、'，normalize 虽保留 '、' 但 raw 更稳）。>=2 ≈ >=3 项枚举。
+        const enumCount = (prompt.match(/、/g) || []).length;
+        // capHits>=4：4+ 功能名词即复杂（不论长度）。enum 路径要求至少 1 个真功能词（连接词不算）。
+        return capHits >= 4 || (enumCount >= 2 && featureHits >= 1);
+      },
+    },
+    {
+      // 2026-07-28 认知/研究轴：此前 7 个信号全在"构建轴"（做东西），研究-理解类诉求
+      //（"看一下 X 是什么 / 有什么优势 / 能不能借鉴"）complexityScore 恒 0，于是下方 STOP
+      // 分支那颗防"把 STOP 当直接执行"的提示钉对研究类**永不触发**。而 research 词表是
+      // 刻意做窄的（quick_research 自注"宽表述靠语义兜底"）——两者叠加让研究轴成了唯一
+      // 的单层保护，构建轴却有词表+复杂度网双层。本信号补齐这个不对称。
+      // 实证两次同型失效：7-22 CRM 与 7-28 pi，均为 harness 注入 "Do not use deep-research
+      // unless requested" 被当成豁免、裸奔 WebSearch，被用户打断质问。
+      // weight 2 是刻意的：只为把 score 顶过 0 以触发提示钉，**不追求**到 PLAN_MODE 阈值 6
+      //（研究诉求不该每次强制走 Plan Agent）。取 2 而非 3 是为了让它与任一 w3 信号叠加仍
+      // 只到 5——否则"了解一下整体架构设计"会同时命中"规划意图"(w3) 而恰好 6 分误升 PLAN_MODE。
+      name: '研究/认知诉求',
+      weight: 2,
+      test: t => {
+        // 反担保1：诊断/排错是 debug 不是 research（句式框架同"多功能需求"B-F5）。
+        if (/为什么|怎么回事|报错|出错|崩溃|失败了|排查|诊断|修一下|修复/.test(t)) return false;
+        // 反担保2：指向本地具体代码对象的"看一下"属平凡任务豁免，不是研究。
+        if (/这个文件|这段代码|这个函数|这个变量|这一?行|第\d+行|日志/.test(t)) return false;
+        // 双要素（认知动词 ∧ 认知对象）——单要素太宽："看看状态"/"什么意思"都会误发。
+        const cognitiveVerb = /了解|看一下|看看|搞懂|弄清楚|研究|摸清|调研|评估|对比|比较|学习|熟悉/;
+        // "怎么做/如何X" 系列刻意不写死成"怎么做的"——实测"了解一下 X 是怎么做状态管理的"
+        // 会因中间插入宾语而整条漏掉，而这正是最常见的研究句式。
+        const cognitiveObject = /框架|架构|机制|原理|设计思路|怎么做|如何做|怎么设计|如何设计|怎么实现|如何实现|怎么处理|如何处理|怎么运作|如何运作|怎么工作|是什么|优势|劣势|区别|差异|竞品|开源|生态|最佳实践|借鉴|值不值得|要不要用|能不能用|适不适合/;
+        return cognitiveVerb.test(t) && cognitiveObject.test(t);
+      },
+    },
+  ];
+  let complexityScore = 0;
+  const firedSignals = [];
+  for (const signal of signals) {
+    const hit = signal.regex ? signal.regex.test(prompt) : signal.test(text);
+    if (hit) {
+      complexityScore += signal.weight;
+      firedSignals.push(signal.name);
+    }
+  }
+  if (complexityScore >= 6) {
+    return { decision: 'PLAN_MODE', complexityScore, signals: firedSignals };
+  }
+  return { complexityScore, signals: firedSignals };
+}
+
+// Engineering-delivery 新能力只在 route loader 无法表达的两个窄缝处写手工语义：
+// 1) wayfinder 自动建议的三条件与；2) preset 的显式选择而非普通提及。
+// 六项 skill 的普通 semantic route 仍只读 skill-routing-map.yaml。
+const WAYFINDER_MULTI_SESSION_RE = /(?:跨\s*(?:session|会话)|多(?:个)?会话|multi[-\s]?session|长期分阶段|多人接力)/i;
+const WAYFINDER_FOG_RE = /(?:路线不清|路径不清|不知道从哪开始|决策纠缠|范围迷雾|方向不清|fog(?:gy)?|fog[-\s]?of[-\s]?war)/i;
+
+function wayfinderAutoPredicate(prompt, complexity) {
+  return Number(complexity?.complexityScore || 0) >= 6
+    && WAYFINDER_MULTI_SESSION_RE.test(prompt)
+    && WAYFINDER_FOG_RE.test(prompt);
+}
+
+function explicitEngineeringDeliverySelection(prompt) {
+  const preset = '(?:engineering[-\\s]?delivery(?:\\s+preset)?|工程交付(?:\\s*preset|预设|流程))';
+  const selection = new RegExp(
+    `(?:选择|启用|采用|使用)\\s*${preset}|(?:按|按照)\\s*${preset}\\s*(?:执行|走|继续)|(?:run|use|enable|select)\\s+(?:the\\s+)?${preset}`,
+    'i',
+  );
+  if (!selection.test(prompt)) return false;
+
+  // 询问、评审、否定都只是提及，不能制造 preset selection authority。
+  const nonSelection = new RegExp(
+    `(?:不(?:要)?|没有?|别|无需)\\s*(?:选择|启用|采用|使用|按)|(?:要不要|是否|能否|怎么|为什么).{0,16}${preset}|(?:评审|复审|审查|介绍|解释).{0,16}${preset}|(?:do\\s+not|don't|did\\s+not|should\\s+we|how\\s+to|review)\\s+.{0,16}${preset}`,
+    'i',
+  );
+  return !nonSelection.test(prompt);
+}
+
+function softSkillDecision(prompt, routes) {
+  const text = normalize(prompt);
+  const promptLower = prompt.toLowerCase();
+  const scored = routes.map(route => {
+    let score = 0;
+    const matchedTokens = [];
+    for (const trigger of route.triggers) {
+      const t = normalize(trigger);
+      // G3-C2（2026-07-04）：纯 latin trigger 不做 3-6 字滑窗子串——那是 'design'⊂'designer'、
+      // 'claude'⊂'claude-api' 类误报的根源。改为完整 trigger + 词边界匹配（保留空格的小写原文）；
+      // CJK/混合 trigger 维持子串逻辑（中文无词边界，滑窗是刻意设计）。
+      if (/^[a-z0-9 ._-]+$/i.test(trigger)) {
+        const esc = trigger.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(promptLower)) {
+          score += Math.min(t.length, 6);
+          matchedTokens.push(trigger.toLowerCase());
+        }
+        continue;
+      }
+      // Keep exact CJK/mixed phrases eligible, but do not let a generic
+      // four-character fragment from a longer trigger become a soft route.
+      // For example, “已确认的” is only a fragment of the to-spec trigger and
+      // carries no evidence that the user wants specification synthesis.
+      if (text.includes(t)) {
+        score += Math.min(t.length, 6);
+        matchedTokens.push(trigger);
+        continue;
+      }
+      let bestLen = 0;
+      for (let len = Math.min(t.length, 6); len >= 5; len--) {
+        for (let i = 0; i <= t.length - len; i++) {
+          const sub = t.slice(i, i + len);
+          // 混合 trigger（如'接入Claude'）滑出的纯 latin 碎片（'claude'）与 C2 同病——
+          // 纯 ASCII 窗口一律跳过，latin 匹配只走上面的完整 trigger + 词边界路径。
+          if (!/[^\x00-\x7f]/.test(sub)) continue;
+          if (text.includes(sub)) { bestLen = len; matchedTokens.push(sub); break; }
+        }
+        if (bestLen) break;
+      }
+      score += bestLen;
+    }
+    return { route, score, matchedTokens: [...new Set(matchedTokens)] };
+  });
+  return scored
+    .filter(e => e.score >= 4)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(e => softCandidate(e.route.invoke || e.route.hint, e.matchedTokens));
+}
+
+function softCandidate(skill, evidenceItems) {
+  return {
+    skill,
+    evidence: (Array.isArray(evidenceItems) ? evidenceItems : [evidenceItems])
+      .map(item => String(item || '').trim())
+      .filter(Boolean),
+  };
+}
+
+function frameworkFlowMode(flow, prompt) {
+  if (flow !== 'framework-evolution') return 'default';
+  // 显式点名 scout 是模式 1/1b，不被同句里的“评估”等宽词改写成模式 2。
+  if (/framework-evolution-scout/i.test(prompt)) return 'scout';
+  const explicitBenchmark = /对标|全面对一对|全面对比|深度对比|深评|benchmark|\bmode\s*2\b|模式\s*2/i.test(prompt);
+  const comparativeBenchmark = /对比|比较|评估/.test(prompt)
+    && /harness|框架|体系|仓库|repo|开源/i.test(prompt);
+  return explicitBenchmark || comparativeBenchmark ? 'benchmark' : 'scout';
+}
+
+// AGENTS.md 的 slashless alias 契约：只有消息首 token 与真实 command 文件完全对应时，
+// 才等价为斜杠命令。这样既兼容会拦截斜杠的客户端，也不把正文 casual mention 或隐藏
+// skill 目录误当一级入口。
+function visibleSlashlessAlias(prompt) {
+  const name = prompt.match(/^\s*([a-z][\w-]*)(?:\s|$)/i)?.[1]?.toLowerCase();
+  if (!name) return '';
+  return existsSync(join(projectRoot, '.claude/commands', name + '.md')) ? '/' + name : '';
+}
+
+function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
+  const direct = prompt.match(/^[$/][a-z][\w-]*/i)?.[0];
+  // Explicit calls bypass the keyword registry, so retirement must also close
+  // this path. Keep other direct names and their existing dispatch semantics.
+  const retiredName = (direct?.slice(1) || prompt.match(/^\s*([a-z][\w-]*)(?:\s|$)/i)?.[1] || '').toLowerCase();
+  if (retiredName === 'figma-layer') {
+    return {
+      decision: 'STOP', reason: 'retired_skill', candidates: [],
+      message: 'figma-layer 已退役，不能调度旧重建链或据此执行 Figma 写入。历史产物仍可在已授权作用域内只读查询；新设计需求按当前 catalog 和用户所选工具处理。',
+    };
+  }
+  if (['muse-loop-orchestrate', 'muse-proto-gen'].includes(retiredName)) {
+    return {
+      decision: 'STOP', reason: 'retired_skill', candidates: [],
+      message: `${retiredName} 已退役，不可调度；不会自动启动替代流程。独立需求分诊与原型验收能力保留，请按当前 catalog 明确选择。`,
+    };
+  }
+  if (direct) {
+    const skill = direct.startsWith('$') ? `/${direct.slice(1)}` : direct;
+    return { decision: 'SINGLE_SKILL', skill, candidates: [skill] };
+  }
+
+  const slashlessSkill = visibleSlashlessAlias(prompt);
+  if (slashlessSkill) {
+    return { decision: 'SINGLE_SKILL', skill: slashlessSkill, candidates: [slashlessSkill] };
+  }
+
+  const routes = loadRoutes(join(projectRoot, '.claude/skill-os/skill-routing-map.yaml'))
+    .filter(route => route.scope !== 'framework_meta' || routingScope.kind === 'pure_framework_meta')
+    // YAML 是候选短语 SSOT，但线性 loader 无法辨认「不要启用」/「要不要启用」。
+    // 对这一个 preset 先过纯函数语义门，防止否定/询问被字面子串反向选中。
+    .filter(route => route.invoke !== 'engineering-delivery' || explicitEngineeringDeliverySelection(prompt));
+  const text = normalize(prompt);
+
+  // ADR-0002 stopgap: longest-match-wins disambiguation (CJK-safe; no \b).
+  // Collect, per matched route, the exact normalized triggers that matched.
+  // 纯拉丁触发词按词边界匹配（2026-09-02 skill 职责审计）：normalize() 去空格后的裸子串匹配
+  // 会把 'auto'⊂autoload / 'auto'⊂auto-merge / 'word'⊂password,keyword 变成**高置信 SINGLE_SKILL**
+  // （实测 10/10；SINGLE 不受语义契约复核保护，无下游兜底）。CJK 无词边界概念、保持原逻辑；
+  // 只给 ASCII 触发词加边界，并在**原始文本**（保留空格）上匹配 —— 这正是源注释里
+  // "normalize() strips spaces so \b is unreliable" 的解法：多词短语用 \s* 兼容
+  // 'code review' / 'codereview' 两种写法，故不再需要依赖去空格文本。
+  const rawText = String(prompt || '').toLowerCase();
+  // 首字符允许 . - _：`.docx` 这类前导标点的触发词此前不满足本判据，会静默落回**旧的无边界**
+  // 子串路径——正是本次修复要关掉的那条（独立复审 2026-09-02 实测 readme.docx.bak 命中）。
+  const LATIN_TRIGGER = /^[a-z0-9._-][a-z0-9\s._-]*$/i;
+  const latinHit = (trigger) => {
+    const body = trigger.trim().toLowerCase().split(/\s+/)
+      .map(seg => seg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*');
+    return new RegExp(`(?<![a-z0-9-])${body}(?![a-z0-9-])`, 'i').test(rawText);
+  };
+  const triggerHit = (raw, t) => (LATIN_TRIGGER.test(raw.trim()) ? latinHit(raw) : text.includes(t));
+  let matched = routes
+    .map(route => ({
+      route,
+      matchedTriggers: route.triggers
+        .map(raw => ({ raw, t: normalize(raw) }))
+        .filter(({ raw, t }) => t && triggerHit(raw, t))
+        .map(({ t }) => t),
+    }))
+    .filter(entry => entry.matchedTriggers.length);
+
+  // If a shorter matched trigger is a substring of a longer matched trigger
+  // from a DIFFERENT, STRICTLY HIGHER-WEIGHT route that also matched, the
+  // shorter one is shadowed (e.g. 调研[w6]⊂设计调研[w7]). Drop shadowed
+  // triggers; drop the route entirely if none survive. Generic — no
+  // hand-maintained blacklist.
+  // The strict weight guard (other.route.w > entry.route.w) is a safety net:
+  // never silently drop an equal/higher-weight candidate, else a safe
+  // ambiguity (tie → MULTI/STOP) collapses into a confident WRONG route.
+  // E.g. 多维表格[lark_base w9] ⊂ 飞书多维表格[lark_sheets w9] are a tie and
+  // must stay → STOP, not silently resolve to lark_sheets.
+  // Known limitation: English substring-in-word (research⊂research-proof)
+  // is NOT fixed here — normalize() strips spaces so \b is unreliable for
+  // multi-word English; deferred to ADR-0005 description-based routing.
+  const allMatched = matched.flatMap(e => e.matchedTriggers.map(t => ({ t, route: e.route })));
+  matched = matched
+    .map(entry => {
+      const surviving = entry.matchedTriggers.filter(t =>
+        !allMatched.some(other =>
+          other.route !== entry.route && other.t.length > t.length && other.t.includes(t)
+          && other.route.w > entry.route.w));
+      return { ...entry, matchedTriggers: surviving };
+    })
+    .filter(entry => entry.matchedTriggers.length);
+
+  const hits = matched.map(entry => entry.route).sort((a, b) => b.w - a.w);
+
+  if (!hits.length) {
+    if (routingScope.kind === 'pure_framework_meta' || isContinuation(prompt)) {
+      return { decision: 'NONE' };
+    }
+    const looksLikeTask = prompt.length > 5
+      && !prompt.match(/^(你好|hi\b|hello\b|谢谢[你您]?[！!。]?$|好的[！!。]?$|ok[！!。]?$|是的[！!。]?$|明白[了]?[！!。]?$|没问题[！!。]?$)/i)
+      && !prompt.endsWith('?') && !prompt.endsWith('？')
+      && !/[吗呢么][！!。.\s]*$/.test(prompt)
+      && !isContinuation(prompt);
+    if (!looksLikeTask) return { decision: 'NONE' };
+    const softCandidates = softSkillDecision(prompt, routes);
+    return {
+      decision: 'NONE',
+      reason: 'no_keyword_match',
+      semanticFallback: true,
+      softCandidates,
+    };
+  }
+
+  // 元问句抑制（2026-09-02 skill 职责审计）：句子只是**提到**某个 skill 的关键词，却在问它
+  // 是什么/在哪/谁改的/聊聊——关键词层无法区分「提及」与「要求执行」，于是「这个 PRD 文件放哪个
+  // 目录了」得到高置信 SINGLE /brainstorm（实测这类 11 条）。命中元问句形态时把 SINGLE 降级为
+  // STOP + 软候选：**不静音**（候选仍会出现在 STOP 的提示里），只撤掉那份没有依据的确定性。
+  const META_QUESTION_RE = /(?:这个|那个|该)?[^，。？?]{0,12}(?:是什么(?:意思|的缩写)?|是啥|什么意思|(?:是)?干嘛(?:用)?的|(?:是)?干什么用的|这个(?:词|单词|缩写|概念|话题|流程|文件|目录))|(?:(?:文件|目录|脚本|配置|日志|文档|产物|报告)[^，。？?]{0,4}(?:放(?:在)?哪|在哪)|放哪个(?:目录|文件)|在哪个(?:目录|文件)|被谁(?:改|删|动)|谁(?:改|写|删)的|出现了?几次|目录结构|怎么走|多少人)|(?:只是|就是)问(?:一?下)?|聊聊|翻(?:译|得|更好)/;
+  // 请求词豁免：出现明确祈使/委托标记时，元问句形态只是**修饰**（"深度研究一下 X 是什么"仍是
+  // 研究请求），不得抑制。对抗集实测：无此豁免会误杀 6/10 条合法请求。
+  // 含「再/然后 + 动词」的复合句（先问位置、再要动作）此前被整句抑制——独立复审实测：
+  // 「这个脚本放哪个目录，再cleanup一下」被降级。祈使标记补齐到覆盖第二分句。
+  const REQUEST_MARKER_RE = /帮我|请你?|麻烦|给我|来一份|写一份|写个|生成|做一个|做个|跑一下|跑个|跑一遍|运行一下|处理一下|清理一下|执行|开始|研究一下|深度研究|调研一下|全面调研|查证|审查|评审|复审|梳理|拆任务|拆一下|出一份|整理|设计一下|优化一下|重构|[再然]后?[^，。？?]{0,6}(?:跑|做|改|清|查|写|生成|处理|执行)|再\s*\w/;
+  const looksMetaQuestion = META_QUESTION_RE.test(prompt) && !REQUEST_MARKER_RE.test(prompt);
+
+  const topWeight = hits[0].w;
+  const candidates = hits.filter(hit => hit.w >= topWeight - 1);
+  const unique = [...new Map(candidates.map(hit => [hit.invoke || hit.hint, hit])).values()];
+
+  // framework_flow 不参与抑制：它是治理流程入口，不走"提及 vs 执行"这套判别。
+  if (unique.length === 1 && looksMetaQuestion && unique[0].type !== 'framework_flow') {
+    return {
+      decision: 'STOP',
+      reason: 'meta_question_about_keyword',
+      softCandidates: [softCandidate(
+        unique[0].invoke || unique[0].hint,
+        'keyword matched but the prompt reads as a question *about* the term',
+      )],
+    };
+  }
+
+  if (unique.length === 1) {
+    if (unique[0].type === 'framework_flow') {
+      const flow = unique[0].invoke || unique[0].hint;
+      return {
+        decision: 'FRAMEWORK_FLOW',
+        flow,
+        mode: frameworkFlowMode(flow, prompt),
+        routeType: unique[0].type,
+        candidates: [flow],
+      };
+    }
+    return {
+      decision: 'SINGLE_SKILL',
+      skill: unique[0].invoke || unique[0].hint,
+      routeType: unique[0].type,
+      candidates: [unique[0].invoke || unique[0].hint],
+    };
+  }
+
+  return {
+    decision: 'MULTI_SKILL',
+    candidates: unique.map(hit => hit.invoke || hit.hint),
+    routes: unique.map(hit => ({ type: hit.type, skill: hit.invoke || hit.hint })),
+  };
+}
+
+// PLAN_CHECK 扩展点：命中此 set 的 SINGLE_SKILL 会被升级为 PLAN_CHECK（外部计划确认门）。
+//
+// 母版默认【空】（2026-07-04 流程优化 G4，红队裁决后定稿）：原成员 deepresearch/
+// ux-research/figma-demo 已全部迁入 plan-agent.md「条件 2 豁免（内部 HITL 编排类）」
+// 名单——三者 SKILL.md 各自内含 fan-out 前的用户确认门（ux-research 介入点1 研究规划
+// 确认不可跳过；figma-demo Step 2.3 映射确认；deepresearch Step 0.2 深度问询——内门较弱、
+// 只问深度不问计划，但该 skill 纯只读无不可逆操作，Plan Agent 其余 4 条件经 CLAUDE.md
+// ③ 仍适用，buildDecision 的复杂度硬门也先于本 set 生效，接受这一取舍）。
+// 这修正了 2026-07-03 注释"它们无等价内部确认步骤"的说法——那一版把"内容确认"与
+// "计划确认"混为一谈；真实差异是内门强弱，不是有无（G4 红队 R4 裁决，正面改写不静默覆盖）。
+//
+// ⚠️ 本 set + 下方 PLAN_CHECK 分支是 fork/env 扩展点，**勿当死代码清理**（code-hygiene
+// 死代码算子注意）：保留通用 env 扩展点；测试经 ROUTE_GUARD_HEAVY_SKILLS 注入回归该分支。
+// env 格式：ASCII 逗号分隔 skill 名；带不带前导 / 均可——下方初始化自动补全双形态。
+const HEAVY_ORCHESTRATOR_SKILLS = new Set(
+  envList('ROUTE_GUARD_HEAVY_SKILLS').flatMap(s => {
+    const bare = s.replace(/^\//, '');
+    return [bare, `/${bare}`];
+  })
+);
+
+// ══════════════════════════════════════════════════════════════════════════
+// E1 别名解析（RESOLVE）—— hook 只**记录候选**，永不授权、永不择一、永不生成命令。
+// 别名真值在下游项目自己的 <PROJECTS_ROOT>/<canonical>/.luca/project.json；
+// **框架内不出现任何产品名字面量**。缺该文件 = 只有 canonical 名可用，合法且不报错。
+// 切不切项目由 LLM 层按语义路由契约决定——这一层拿不到语义证据，所以这一层不裁决。
+// ══════════════════════════════════════════════════════════════════════════
+const ALIAS_LIMITS = {
+  rootEntries: 512, projects: 256, manifestBytes: 8192, totalBytes: 262144,
+  aliasesPerProject: 16, aliasesGlobal: 2048,
+  aliasMinCp: 2, aliasMaxCp: 80, aliasMaxBytes: 256, candidates: 8,
+};
+// 保留词：别名不得取这些（取了会让任何一句带该词的话都产出候选，等于噪音发生器）
+const ALIAS_RESERVED = new Set([
+  'app', 'application', 'project', 'product', 'system', 'software',
+  '项目', '工程', '应用', '产品', '系统', '软件', '页面', '界面', '功能',
+]);
+const ALIAS_MANIFEST_KEYS = new Set(['schema_version', 'canonical_project', 'aliases']);
+
+function foldAlias(value) {
+  return String(value).normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+function aliasCharsForbidden(value) {
+  return /[\p{Cc}\p{Cf}]/u.test(value) || value.includes('/') || value.includes('\\');
+}
+// O_NOFOLLOW + regular-file fstat + limit+1 读取 + dev/ino/size 复核。
+// 任何一步不满足都返回 null（该项目只剩 canonical 名可用），绝不抛出。
+function readManifestBytes(path) {
+  let fd;
+  try {
+    fd = openSync(path, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+  } catch { return null; }
+  try {
+    const pre = fstatSync(fd);
+    if (!pre.isFile()) return null;
+    const buf = Buffer.alloc(ALIAS_LIMITS.manifestBytes + 1);
+    const read = readSync(fd, buf, 0, buf.length, 0);
+    if (read > ALIAS_LIMITS.manifestBytes) return null;
+    const post = fstatSync(fd);
+    if (post.dev !== pre.dev || post.ino !== pre.ino || post.size !== pre.size || post.size !== read) return null;
+    return buf.subarray(0, read);
+  } catch {
+    return null;
+  } finally {
+    try { closeSync(fd); } catch { /* fd 已失效，忽略 */ }
+  }
+}
+// 重复键感知：JSON.parse 会静默保留最后一个同名键。schema 只有三个合法键，且合法值里
+// 出现的字符串后面跟的是 `,`/`]` 而非 `:`，故按 `"key"\s*:` 计数即可判重复。
+function parseManifestStrict(text) {
+  for (const key of ALIAS_MANIFEST_KEYS) {
+    const hits = text.match(new RegExp(`"${key}"\\s*:`, 'g'));
+    if (hits && hits.length > 1) return null;
+  }
+  let doc;
+  try { doc = JSON.parse(text); } catch { return null; }
+  if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return null;
+  for (const key of Object.keys(doc)) if (!ALIAS_MANIFEST_KEYS.has(key)) return null;
+  if (doc.schema_version !== 1) return null;
+  if (typeof doc.canonical_project !== 'string' || !doc.canonical_project) return null;
+  if (doc.aliases !== undefined && !Array.isArray(doc.aliases)) return null;
+  return doc;
+}
+// 返回 { complete, entries: Map<foldedSurface, canonical> }。
+// complete=false（越界/普查超限）时**只保留 canonical 名**，非 canonical 名一律不解析。
+function readAliasRegistry(projects) {
+  const entries = new Map();
+  let complete = true;
+  const canonicalFolded = new Set();
+  for (const name of projects) {
+    const folded = foldAlias(name);
+    if (folded) { entries.set(folded, name); canonicalFolded.add(folded); }
+  }
+  if (projects.length > ALIAS_LIMITS.projects) return { complete: false, entries };
+  let totalBytes = 0;
+  let globalAliases = 0;
+  const ownerOf = new Map();
+  const rejected = new Set();
+  for (const name of projects) {
+    let dir;
+    try {
+      dir = join(PROJECTS_ROOT, name, '.luca');
+      // `.luca` 与 manifest 均不得是符号链接；canonical 包含性检查
+      if (!lstatSync(dir).isDirectory()) continue;
+    } catch { continue; }
+    const bytes = readManifestBytes(join(dir, 'project.json'));
+    if (!bytes) continue;
+    totalBytes += bytes.length;
+    if (totalBytes > ALIAS_LIMITS.totalBytes) { complete = false; break; }
+    const doc = parseManifestStrict(bytes.toString('utf8'));
+    if (!doc) continue;
+    if (doc.canonical_project !== name) continue;      // 一份 manifest 只能声明自己
+    const seenHere = new Set();
+    const list = doc.aliases || [];
+    if (list.length > ALIAS_LIMITS.aliasesPerProject) continue;
+    for (const raw of list) {
+      if (typeof raw !== 'string') { seenHere.clear(); break; }
+      if (aliasCharsForbidden(raw)) continue;
+      const folded = foldAlias(raw);
+      // 深审 MINOR-9：字符检查必须在**归一化之后**再跑一次——`ａ／ｂ` 的全角斜杠
+      // NFKC 之后才变成 `/`，只查 raw 会让 §3.1「拒绝斜杠反斜杠」形同虚设。
+      if (aliasCharsForbidden(folded)) continue;
+      if (!folded) continue;
+      const cp = [...folded].length;
+      if (cp < ALIAS_LIMITS.aliasMinCp || cp > ALIAS_LIMITS.aliasMaxCp) continue;
+      if (Buffer.byteLength(folded, 'utf8') > ALIAS_LIMITS.aliasMaxBytes) continue;
+      if (ALIAS_RESERVED.has(folded)) continue;
+      if (canonicalFolded.has(folded)) continue;        // 别名不得等于某个 canonical ID
+      if (seenHere.has(folded)) continue;               // 规范化后同项目内重名
+      seenHere.add(folded);
+      if (ownerOf.has(folded) && ownerOf.get(folded) !== name) { rejected.add(folded); continue; }
+      ownerOf.set(folded, name);
+      globalAliases += 1;
+      if (globalAliases > ALIAS_LIMITS.aliasesGlobal) { complete = false; break; }
+    }
+    if (!complete) break;
+  }
+  if (!complete) {
+    const canonicalOnly = new Map();
+    for (const folded of canonicalFolded) canonicalOnly.set(folded, entries.get(folded));
+    return { complete: false, entries: canonicalOnly };
+  }
+  for (const [folded, owner] of ownerOf) {
+    if (rejected.has(folded)) continue;                 // 一名多主：整条别名作废
+    if (!entries.has(folded)) entries.set(folded, owner);
+  }
+  return { complete: true, entries };
+}
+// 规范化并保留到原始下标的映射，使 span 始终指向**原始 prompt**。
+function foldWithMap(text) {
+  const out = [];
+  const map = [];
+  let pendingSpace = false;
+  for (let i = 0; i < text.length; i++) {
+    const folded = text[i].normalize('NFKC').toLowerCase();
+    if (/^\s+$/.test(folded)) { pendingSpace = true; continue; }
+    if (pendingSpace) { if (out.length) { out.push(' '); map.push(i); } pendingSpace = false; }
+    for (const ch of folded) { out.push(ch); map.push(i); }
+  }
+  return { text: out.join(''), map };
+}
+// `项目|工程` 相邻与否**只记录**为 marker_present，绝不决定候选成不成立（变异体 2）。
+const ALIAS_MARKER_SKIP = /[\s"'`«»「」『』()（）[\]【】{}<>《》,，、.。:：;；!！?？~-]/;
+function markerNear(raw, start, end) {
+  const scan = (from, step) => {
+    let i = from;
+    let skipped = 0;
+    while (i >= 0 && i < raw.length && skipped < 4 && ALIAS_MARKER_SKIP.test(raw[i])) { i += step; skipped += 1; }
+    if (i < 0 || i >= raw.length) return false;
+    if (step > 0) return raw.startsWith('项目', i) || raw.startsWith('工程', i);
+    return raw.slice(Math.max(0, i - 1), i + 1) === '项目' || raw.slice(Math.max(0, i - 1), i + 1) === '工程';
+  };
+  return scan(end, 1) || scan(start - 1, -1);
+}
+// RESOLVE：扫描原始 prompt，记录「哪些产品名出现在哪里」。
+// 引号、反引号、否定、疑问、转述、从句结构**一律不看**（§3.3 六轮红队结论：
+// 确定性 hook 判不了中文否定；在授权轴引回任何机械否定都是命名变异体）。
+function resolveAliasCandidates(prompt, projects) {
+  const registry = readAliasRegistry(projects);
+  if (!registry.entries.size) return null;
+  const folded = foldWithMap(String(prompt || ''));
+  if (!folded.text) return null;
+  const found = [];
+  const seen = new Set();
+  for (const [surface, canonical] of registry.entries) {
+    let from = 0;
+    for (;;) {
+      const idx = folded.text.indexOf(surface, from);
+      if (idx === -1) break;
+      from = idx + 1;
+      const start = folded.map[idx];
+      const end = folded.map[idx + surface.length - 1] + 1;
+      const key = `${canonical} ${start} ${end}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      found.push({
+        surface: String(prompt).slice(start, end),
+        canonical,
+        span_start: start,
+        span_end: end,
+        marker_present: markerNear(String(prompt), start, end),
+      });
+    }
+  }
+  if (!found.length) return null;                        // 零候选 → 该对象缺席
+  found.sort((a, b) => a.span_start - b.span_start || a.span_end - b.span_end);
+  if (found.length > ALIAS_LIMITS.candidates) {
+    // 第 9 条触发 cap 拒绝：不截断、不择一，整体不产候选。
+    return { schema_version: 1, status: 'CAP_EXCEEDED', registry_complete: registry.complete, candidates: [] };
+  }
+  return { schema_version: 1, status: 'OK', registry_complete: registry.complete, candidates: found };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// E2 非计分信号（§4.1）—— 设置页交互结构请求 route score = 0 被当成「不需要 skill/flow」。
+// 三段**互不重叠**的证据齐全即置 semanticRouteAxis=interface_structure_change。
+// 该信号**不计分、不派 scene/skill/flow、不改 Plan Agent 五条件**；此处**同样不做否定判定**
+// （§3.3：确定性 hook 判不了中文否定，语义判定属于 LLM 层）。negation_context 原样记录
+// **整条 prompt 的原始字节**，让 LLM 层自己读。
+//
+// 三腿**不要求同从句**：2026-08-30 会审推翻了原设计——`帮我优化下设置页面，功能堆砌太严重了很难找`
+// 的结构腿落在第二个从句，「同从句」约束会把 E2 自己的复现串判为阴性。一条把自己要修的 bug
+// 判为阴性的规则，不能作为该 bug 的修复。而且「从句」对未分词中文没有定义，与 §3.3 删掉整套
+// 否定判定所用的论据是同一条。误报的唯一后果是 LLM 多读一句原文；漏报的后果是 E2 复发。取宽。
+// ══════════════════════════════════════════════════════════════════════════
+const E2_LEGS = [
+  ['change', /优化|重组|重构|改版|重新设计|拆分|归组|调整|optimize|reorganize|redesign|restructure|refactor|split|regroup/gi],
+  ['surface', /页面|界面|设置|偏好设置|交互|布局|侧栏|导航|page|screen|settings|preferences|\bUI\b|interface|interaction|layout|sidebar|navigation/gi],
+  ['structure', /功能堆砌|层级|信息架构|分组|拥挤|很难找|难找|找不到|结构|feature pile-up|hierarchy|information architecture|grouping|crowded|hard to find/gi],
+];
+// 「一段证据不能兼任两腿」：三腿各自的命中区间必须两两不相交。逐腿枚举全部命中后做
+// 小规模回溯，避免「设置」既算界面腿又被「信息架构」里的片段重复计入这类假阳性。
+function pickDisjointLegs(text) {
+  const perLeg = E2_LEGS.map(([leg, re]) => {
+    const spans = [];
+    re.lastIndex = 0;
+    for (let m = re.exec(text); m; m = re.exec(text)) spans.push({ leg, start: m.index, end: m.index + m[0].length, text: m[0] });
+    return spans;
+  });
+  if (perLeg.some(spans => !spans.length)) return null;
+  const chosen = [];
+  const overlaps = (a, b) => a.start < b.end && b.start < a.end;
+  const walk = (i) => {
+    if (i === perLeg.length) return true;
+    for (const span of perLeg[i]) {
+      if (chosen.some(prev => overlaps(prev, span))) continue;
+      chosen.push(span);
+      if (walk(i + 1)) return true;
+      chosen.pop();
+    }
+    return false;
+  };
+  return walk(0) ? chosen.slice() : null;
+}
+function interfaceStructureSignal(prompt) {
+  const text = String(prompt || '');
+  if (!text) return null;
+  const legs = pickDisjointLegs(text);
+  if (!legs) return null;
+  return {
+    schema_version: 1,
+    axis: 'interface_structure_change',
+    evidence: legs.map(({ leg, start, end, text: matched }) => ({ leg, span_start: start, span_end: end, surface: matched })),
+    // 整条 prompt 的原始字节——不截断、不挑从句。判断留给 LLM 层。
+    negation_context: text,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// E2 最小义务（§4.2）—— **任务载体，不是拦截器**（2026-08-31 luca 裁决）。
+// 任何状态都**不拦 Stop、不拒 scope、不拦任何东西**；唯一动作是 `PENDING` 时每轮注入一行提醒。
+// 拦截只在「模型想结束时」生效，是最晚的一道；UserPromptSubmit **每轮都跑**，
+// 覆盖面更大更早，正对「不认路」这个根因。代价明写：保证从「挡得住」退成「全程看得见」。
+//
+// 状态机：SIGNAL_UNCONFIRMED → PENDING → DEFERRED_BY_PROJECT_CHANGE → SATISFIED
+//                                                                  ↘ CANCELLED / SUPERSEDED
+// R-11（本执行口径，随 E3 收紧）：§4.2 写「升 PENDING 的唯一途径 = 下一个**经认证的**人类事件带着
+// **肯定式任务指令**」。这句在当前范围内字面不可实现——「经认证」是 E3 的惰性认证层（已按会审
+// 裁决拆出），「肯定式」是语义判断而 §3.3 刚论证 hook 判不了。故取**非语义代理**：
+// Claude 侧 UserPromptSubmit 只在真实用户回合触发，「认证」在结构上已满足；
+// 「肯定式任务指令」取「下一个人类回合**再次产出 E2 信号**」（用户重述了同一类诉求），
+// 其余任何事件按 §4.2 直接删除 SIGNAL_UNCONFIRMED。E3 落地后把这一处换成真认证即可，
+// 状态机与注入面不必改。
+// ══════════════════════════════════════════════════════════════════════════
+const OBLIGATION_INJECTION_CAP = 20;   // 无界提醒本身就是缺陷（对齐 checkpoint 的 100 轮封顶惯例）
+// 整句即取消——沿用本文件既有的「整句锚定」手法，不新建词表机制；判错的唯一后果是少一行提醒。
+const OBLIGATION_CANCEL_RE = /^\s*(?:算了|不用了|不做了|别做了|取消|停|停一下|先停|暂停|就这样)[吧呢吗呀了的！!。.？?…\s]*$/;
+// 深审 MINOR-11：`.gitignore` 注释声称「上限 262,144 B」，而落盘处原本无任何上限。
+// 截断只发生在**超限**时，正常任务的字节永远完整（§4.2「不截断、不丢任何 UX 约束」针对的是
+// 三腿从句截断，不是拒绝一个 256 KiB 的病态输入）；截断时留标记，让读者知道这不是全文。
+const OBLIGATION_TEXT_CAP = 262144;
+function cappedTaskText(prompt) {
+  const text = String(prompt || '');
+  if (Buffer.byteLength(text, 'utf8') <= OBLIGATION_TEXT_CAP) return text;
+  let out = text;
+  while (Buffer.byteLength(out, 'utf8') > OBLIGATION_TEXT_CAP - 32) out = out.slice(0, -64);
+  return `${out}\n[route-guard: truncated at ${OBLIGATION_TEXT_CAP} bytes]`;
+}
+function obligationPath(sid) {
+  // 文件名**不得**以 `.session-project-` 开头：check-project-links.mjs 会把该前缀当项目 pin 误解析。
+  return join(projectRoot, '.claude', `.session-obligation-${sid}`);
+}
+function readObligation(sid) {
+  try {
+    const doc = JSON.parse(readFileSync(obligationPath(sid), 'utf8'));
+    return doc && typeof doc === 'object' && doc.schema_version === 1 ? doc : null;
+  } catch { return null; }
+}
+function writeObligation(sid, doc) {
+  try { writeFileSync(obligationPath(sid), `${JSON.stringify(doc)}\n`); } catch { /* 提醒不得让路由失败 */ }
+}
+function clearObligation(sid) {
+  try { unlinkSync(obligationPath(sid)); } catch { /* 本就不存在 */ }
+}
+// ≤40 字摘要**渲染时派生、不落盘**（避免第二份可能与原文不一致的副本）。
+// NFC → 控制字符与换行折叠为单空格 → 按**码位**取前 40（不是字节，避免切出半个多字节字符）→ 补 `…`。
+function obligationSummary(text) {
+  const flat = String(text || '').normalize('NFC').replace(/[\p{Cc}\p{Cf}\s]+/gu, ' ').trim();
+  const cp = [...flat];
+  return cp.length > 40 ? `${cp.slice(0, 40).join('')}…` : flat;
+}
+// 返回本轮结束后的义务（或 null）。**只读写状态文件，不产生任何拦截效果。**
+function advanceObligation({ sid, prompt, signal, decision }) {
+  const existing = readObligation(sid);
+  const isSwitch = decision?.decision === 'PROJECT_SWITCH';
+  const dispatched = Array.isArray(decision?.recommendedSkills) && decision.recommendedSkills.length > 0;
+  const cancelled = OBLIGATION_CANCEL_RE.test(String(prompt || '').trim());
+
+  if (!existing) {
+    // 光有信号只落 SIGNAL_UNCONFIRMED：**不注入、不给 capability**（确认门，原 R27 BLOCKER）。
+    if (!signal) return null;
+    const doc = {
+      schema_version: 1, state: 'SIGNAL_UNCONFIRMED',
+      exact_task_text: cappedTaskText(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
+      injected_turns: 0, superseded: 0,
+    };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  if (cancelled) { clearObligation(sid); return { ...existing, state: 'CANCELLED' }; }
+  if (existing.state === 'SIGNAL_UNCONFIRMED') {
+    // 升 PENDING 的唯一途径；其余任何事件直接删除它。
+    if (!signal) { clearObligation(sid); return null; }
+    const doc = {
+      ...existing, state: 'PENDING',
+      exact_task_text: cappedTaskText(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
+      injected_turns: 0,
+    };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  // 项目切换：转 DEFERRED 并**保留原始任务字节**，事务提交后（下一轮）恢复。
+  if (isSwitch) {
+    const doc = { ...existing, state: 'DEFERRED_BY_PROJECT_CHANGE' };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  // 深审 BLOCKER-3：这条恢复分支原本 return 在计数分支**之前**且不计数，于是任何
+  // `PROJECT_SWITCH` 回合都会把注入预算整份退还——交替 `切到 X` / 普通消息 40 轮实测
+  // `injected_turns` 恒为 0、注入 40 次不停。而无有效绑定时 decision 会被**每轮重写**成
+  // PROJECT_SWITCH，这条路径一点都不exotic。恢复同样要计费，20 轮封顶才是真封顶。
+  if (existing.state === 'DEFERRED_BY_PROJECT_CHANGE') {
+    const restored = (existing.injected_turns || 0) + 1;
+    if (restored > OBLIGATION_INJECTION_CAP) { clearObligation(sid); return { ...existing, state: 'CANCELLED' }; }
+    const doc = { ...existing, state: 'PENDING', injected_turns: restored };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  if (dispatched) { clearObligation(sid); return { ...existing, state: 'SATISFIED' }; }
+  if (signal) {
+    // 新的肯定式任务指令 → 旧义务 SUPERSEDED，新的接替（同一 sid 只保留一条）。
+    const doc = {
+      ...existing, state: 'PENDING', superseded: (existing.superseded || 0) + 1,
+      exact_task_text: cappedTaskText(prompt), exact_task_sha256: createHash('sha256').update(String(prompt)).digest('hex'),
+      injected_turns: 0,
+    };
+    writeObligation(sid, doc);
+    return doc;
+  }
+  const injected = (existing.injected_turns || 0) + 1;
+  if (injected > OBLIGATION_INJECTION_CAP) { clearObligation(sid); return { ...existing, state: 'CANCELLED' }; }
+  const doc = { ...existing, injected_turns: injected };
+  writeObligation(sid, doc);
+  return doc;
+}
+
+// 携带模式（§3.2）：信号必须穿过 `buildDecisionCore` 的**全部**早返。
+// 用包装器而不是在每个 return 各补一次 spread——后者在新增分支时会静默漏掉
+// （实测：upstream 6aaa1c6 新增的 `explicitEngineeringDeliverySelection → FRAMEWORK_FLOW`
+// 早返，计划成稿时并不存在）。包装器对将来新增的早返同样生效。
+function buildDecision(prompt) {
+  const decision = buildDecisionCore(prompt);
+  if (!decision || typeof decision !== 'object') return decision;
+  try {
+    const aliasResolution = resolveAliasCandidates(prompt, listProjects());
+    if (aliasResolution) decision.aliasResolution = aliasResolution;
+  } catch { /* RESOLVE 是证据记录，不得让路由整体失败 */ }
+  try {
+    const signal = interfaceStructureSignal(prompt);
+    // 不计分、不派 skill/flow、不改 Plan Agent 五条件——只挂一个 LLM 层可读的证据对象。
+    if (signal) decision.semanticRouteAxis = signal;
+  } catch { /* 同上：信号是证据不是判定 */ }
+  return decision;
+}
+
+function buildDecisionCore(prompt) {
+  const projects = listProjects();
+  const currentProject = readCurrentProject(projects);
+  const routingScope = classifyRoutingScope(prompt, projects, currentProject);
+  const complexity = complexityDecision(prompt, routingScope);
+
+  // 2026-07-13 fable review B-F1：显式 / 或 $ 直呼 = 用户最新明确请求（规则优先级 #1），不被
+  // 复杂度门替换——旧行为里 PLAN_MODE 会吞掉 '/brainstorm 新增A、B、C' 的直呼，还压过 fork
+  // 较软 PLAN_CHECK 门。直呼时复杂度降级为 planHint 附加（提醒仍在，直呼归还）。
+  const directCall = /^[$/][a-z][\w-]*/i.test(prompt) || !!visibleSlashlessAlias(prompt)
+    || /^(?:muse-loop-orchestrate|muse-proto-gen)(?:\s|$)/i.test(prompt);
+  if (!directCall && complexity.decision === 'PLAN_MODE') {
+    if (!wayfinderAutoPredicate(prompt, complexity)) return complexity;
+    return {
+      ...complexity,
+      recommendedSkills: ['/wayfinder'],
+      recommendationEvidence: { huge: true, multi_session: true, fog: true },
+    };
+  }
+
+  // Preset 选择不是 skill 命中，也不是 authority；它只在 Project Gate 和 Plan
+  // complexity 之后产生一个编译元数据入口。未选择时完全不读 optional graph。
+  if (!directCall && explicitEngineeringDeliverySelection(prompt)) {
+    return {
+      decision: 'FRAMEWORK_FLOW',
+      flow: 'engineering-delivery',
+      mode: 'selected-preset-compile',
+      routeType: 'framework_flow',
+      candidates: ['engineering-delivery'],
+      complexityScore: complexity.complexityScore,
+      signals: complexity.signals,
+      selectionAuthorityEffect: 'none',
+    };
+  }
+
+  const skillResult = skillDecision(prompt, routingScope);
+  if (
+    skillResult.decision === 'SINGLE_SKILL' &&
+    HEAVY_ORCHESTRATOR_SKILLS.has(skillResult.skill)
+  ) {
+    return {
+      ...skillResult,
+      decision: 'PLAN_CHECK',
+      complexityScore: complexity.complexityScore,
+      signals: complexity.signals,
+    };
+  }
+
+  return { ...skillResult, complexityScore: complexity.complexityScore, signals: complexity.signals, hasActiveProject: !!currentProject, planHint: complexity.complexityScore >= 6 };
+}
+
+// 评审轴提示钉（2026-07-31）。刻意是**独立分支**：不进 complexityScore、不挂 hasActiveProject——
+//   ① 7 个复杂度信号全在构建轴，"review 一遍你做的内容"恒 0 分，挂上去钉子永不出现；
+//   ② 若做成第 9 个复杂度信号，会把"评审一下这个复杂功能"从 4 分推到 6 分误触 PLAN_MODE。
+//   挂在 STOP / SINGLE_SKILL / PROJECT_STOP / PROJECT_SWITCH 四支（不只 STOP）：R4 的两种失效
+//   形态是"没映射上"和"映射错"——后者恰恰
+//   表现为高置信 SINGLE（实测"评审一下这份 PRD"→SINGLE /brainstorm，撤 ux_audit 泛词前是 MULTI），
+//   只挂 STOP 等于把 R4 自己点名的第二形态交还给记忆召回。钉不改决策，只多一行文本。
+//   覆盖面含被撤的 ux_audit 泛词语义（挑毛病/有什么问题/给建议）：撤词是为停掉"任何评审意图→
+//   截图 skill"的错误确定性，若提示钉不接住，这些句子就从"错的确定"退成"完全裸奔"=净变差。
+//   latin 词带边界（preview⊃review）；研究轴优先（"评估一下这个架构设计"属研究不属评审）。
+//   文案只放指针不复制 R4 证据标准（唯一权威落点在 R4，内联副本必漂移）。
+function reviewAxisHint(decision) {
+  if ((decision.signals || []).includes('研究/认知诉求')) return '';
+  // 2026-08-03 补：验收/品味/对齐/一致性 —— 实现后评审实测这四类评审意图零命中，
+  // 「对一下 PRD、原型和 figma」还会被 MULTI 误导到 /brainstorm、/figma-layer（去写 PRD 或搭 Figma）。
+  // 「对齐/一致性」收窄为复合词，避免撞「对齐设计稿」这类生产意图。
+  if (!/评审|复审|审一遍|审查一下|复查一下|复查一遍|把关一下|挑毛病|有什么问题|有没有问题|给点建议|给些建议|验收一下|做一次验收|交付验收|品味检查|跑一次品味|对齐检查|一致性检查|是否一致|对不对得上|(^|[^a-z])review([^a-z]|$)/i.test(prompt)) return '';
+  return '\n[route-guard] 🔎 评审请求信号——先判**评审对象**（代码/设计文档/页面/skill 产出/翻案）再定形态，别被上面的词表命中带偏：全文 .claude/skill-os/routing-chain-check.md R4（资产索引非决策树，对不上时自建评审编排；证据标准在那里，是下限不是上限）。';
+}
+
+function decisionToHints(decision) {
+  switch (decision.decision) {
+    case 'NONE': {
+      if (decision.reason !== 'no_keyword_match') return [];
+      const softCandidates = decision.softCandidates || [];
+      const candidateHint = softCandidates.length
+        ? ` 可参考但不得自动执行的候选：${softCandidates.map(c => c.skill).join('、')}。`
+        : '';
+      return [`[route-guard] ↪ 未命中路由词表，不阻断本轮任务；按用户语义继续判断是否需要 skill/流程。${candidateHint}`];
+    }
+    case 'HARNESS_MESSAGE':
+      return ['[route-guard] ↪ harness 合成消息（后台任务通知或跨 session 消息）：不做项目路由，也不授予项目权限；按内容自行判断，项目切换只能由用户本人提出。'];
+    case 'NEEDS_CONTEXT':
+      return [`[route-guard] 🧭 NEEDS CONTEXT — ${decision.message}`];
+    case 'PROJECT_STOP': {
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}` + reviewAxisHint(decision);
+      if (!decision.planHint) return [base];
+      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：确认项目后必须先读 .claude/agents/plan-agent.md 走 Plan Agent，禁止直接进单个 skill。`];
+    }
+    case 'PROJECT_SWITCH': {
+      // 框架自维护碰撞（2026-07-31）：产品线名同时是项目名时（如 muse），"清理/评审 muse 的 hook"
+      //   会命中命名即切换，而 meta/框架 session 明令不得 switch（踩并行 session 指针）。加信息不改
+      //   决策：命中框架路径/制品词时提醒这条例外，由模型判断自己是不是框架 session。
+      //   正则**必须与 M3 豁免的第二条件同集**（:220）——两处对"什么算框架制品"的口径分叉，
+      //   就会出现"豁免认它是框架活、警示却不认"的盲区（实测"评审一下 muse 工具通道的 hook 改动"
+      //   曾漏警示，因当时少了 hook|路由 两词）。改一处必须同改另一处。
+      const frameworkSelfMaint = /\.claude\/hooks|memory\/scripts|scripts\/|\.mjs|\.py|luca_gstack|路由|hook|框架自/i.test(prompt)
+        ? '\n[route-guard] ⚠️ 同时命中框架路径/制品词：若本 session 是框架/meta 维护（非该项目的产品工作），**不要 switch**（会踩并行 session 的激活指针），直接在框架检出上作业。'
+        : '';
+      const operation = decision.operation === 'new' ? 'new' : 'switch';
+      const command = decision.projectMutation
+        || `./scripts/project.sh ${operation} ${decision.project} --session-id <sid> --tx <missing> --expected-epoch <missing>`;
+      const base = `[route-guard] 🧭 PROJECT GATE — ${decision.message}\n本轮是 SWITCH_ONLY；只执行这一条事务命令，成功后立即结束本轮：${command}` + frameworkSelfMaint + reviewAxisHint(decision);
+      if (!decision.planHint) return [base];
+      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：切换后先走 Plan Agent。`];
+    }
+    case 'FRAMEWORK_FLOW': {
+      if (decision.flow === 'engineering-delivery') {
+        return [
+          '[route-guard] 🧩 ENGINEERING DELIVERY PRESET — 用户已显式选择可选 preset；这只是 routing metadata，不授予写入、Git、网络或 external effect authority。\n' +
+          '读取 optional-workflow-graph.yaml 的 engineering-delivery 建议边，以 compile-only selection envelope 进入 Plan Agent；不跳过 canonical tech-spec/task-plan gate，不预造代码 U-ID。\n' +
+          '最终 task-plan SHA-256 冻结后，由 Plan Agent 编译 exact U-ID，用户对同一 SHA/baseline/U-ID/path/effect/assertion payload 再次确认后才能交 Orchestrator。',
+        ];
+      }
+      const modeHint = decision.mode === 'benchmark'
+        ? '模式 2（对标深评）：先完整读取 .claude/skill-os/evolution/BENCHMARK-RUNBOOK.md，按 inventory→matrix→rubric→红队→复审→人类 GATE 执行。'
+        : '模式 1/1b（演进 scout）：先读取 .claude/skill-os/evolution/CHECKPOINT.md；Claude 用 Workflow framework-evolution-scout，Codex 用 .codex/workflow-runner.mjs 等价执行。';
+      return [
+        `[route-guard] 🧬 FRAMEWORK FLOW — 高置信命中顶层流程 ${decision.flow}（${decision.mode}）。\n` +
+        `${modeHint}\n` +
+        'deepresearch / quick-research 只作为流程内部的证据采集阶段，不得替代顶层自成长流程；框架/meta session 不切换下游项目。',
+      ];
+    }
+    case 'PLAN_MODE':
+      if ((decision.recommendedSkills || []).includes('/wayfinder')) {
+        return [
+          `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}）；同时满足 huge AND multi-session AND fog。\n` +
+          '仍为 PLAN MODE，不降级为 SINGLE_SKILL。必须先读取 .claude/agents/plan-agent.md，由 Plan Agent 重验三条件后才可进入具名 /wayfinder mode。\n' +
+          '等用户确认计划后，再进入 Orchestrator 模式执行。',
+        ];
+      }
+      return [
+        `[route-guard] 🧠 PLAN MODE — 检测到复杂任务信号（${decision.signals.join('、')}，总分 ${decision.complexityScore}；关键词近似判定，权威口径以 .claude/agents/plan-agent.md 触发条件表为准）\n` +
+        '禁止直接路由到单个 skill。必须先读取 .claude/agents/plan-agent.md，输出 Phase 分解计划。\n' +
+        '等用户确认计划后，再进入 Orchestrator 模式执行。',
+      ];
+    case 'PLAN_CHECK': {
+      const prefix = decision.routeType === 'builtin' ? '内置 skill: ' : '项目 skill: ';
+      return [
+        `[route-guard] ⚠️ PLAN CHECK — 高置信命中${prefix}${decision.skill}，该 skill 被登记为需外部计划确认的重型编排器。\n` +
+        '执行前先读 .claude/agents/plan-agent.md 的「触发条件」表（唯一权威口径，本提示不复述），\n' +
+        '满足任一条件 → 输出 Phase 计划，等用户确认后再执行。',
+      ];
+    }
+    case 'SINGLE_SKILL': {
+      const prefix = decision.routeType === 'builtin' ? '内置 skill: ' : '项目 skill: ';
+      const base = `[route-guard] ✅ 高置信命中 → 建议调用${prefix}${decision.skill}` + reviewAxisHint(decision);
+      // 直呼+复杂内容（B-F1）：直呼已归还，复杂度以提醒附加，权威口径仍是 plan-agent.md。
+      if (!decision.planHint) return [base];
+      return [base + `\n[route-guard] 🧠 复杂度分 ${decision.complexityScore}（${(decision.signals || []).join('、')}）≥6：直呼已尊重；执行前按 plan-agent.md 触发条件表自查，满足任一先出计划。`];
+    }
+    case 'MULTI_SKILL':
+      // 2026-08-03：MULTI 同样挂评审钉。实现后评审实测「对一下 PRD、原型和 figma 是否一致」
+      // 落 MULTI → 候选是 /brainstorm、/figma-layer（生产类 skill），会把一个评审请求
+      // 导向"去写 PRD / 去搭 Figma"。候选相近时评审提示比在单命中时更需要。
+      return [
+        '[route-guard] 🔀 MULTI — 路由命中多个候选（权重相近，无法自动决策）。\n' +
+        '你必须在执行任何操作前，先主动询问用户选择哪个 skill，禁止自行判断。\n' +
+        `候选列表（供用户选择）：${decision.candidates.join(', ')}` + reviewAxisHint(decision),
+      ];
+    case 'STOP': {
+      if (decision.reason === 'retired_skill') return [`[route-guard] ⛔ RETIRED — ${decision.message}`];
+      const routingOwner = `${actualHarness() === 'codex' ? 'AGENTS.md' : 'CLAUDE.md'} K2/K4`;
+      const softCandidates = decision.softCandidates || [];
+      const candidateHint = softCandidates.length
+        ? '\n基于语义推断，最可能的 skill：\n' +
+          softCandidates.map((c, i) =>
+            `  ${i + 1}. ${c.skill}（参考依据：${c.evidence.join('、')}）`
+          ).join('\n') +
+          `\n语义映射清晰可按 ${routingOwner} 路由；否则展示候选请用户确认或补充。`
+        : `\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 ${routingOwner} 路由（平凡任务豁免适用）。`;
+      // 2026-07-12：STOP 决策已带 complexityScore（buildDecision:485）。有激活项目 + 复杂度信号>0 时，
+      // 确定性提醒读当前宿主根的路由规则（别把 STOP 当"直接执行"）。
+      // 2026-07-28：研究轴与构建轴分文案。同一颗钉子，但"搞懂某事"和"做某事"该被提醒的
+      // 下一步不同——构建轴指向 Plan Agent，研究轴指向研究三档选档。
+      // 2026-07-31：评审轴走共享 helper reviewAxisHint（STOP 与 PROJECT GATE 两路复用，见其上注释）。
+      const researchAxis = (decision.signals || []).includes('研究/认知诉求');
+      const reviewReminder = reviewAxisHint(decision);
+      const complexReminder = (decision.complexityScore > 0 && decision.hasActiveProject)
+        ? (researchAxis
+          ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 ${routingOwner} 在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
+          : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 ${routingOwner} 评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
+        : '';
+      return [
+        '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint + reviewReminder + complexReminder,
+      ];
+    }
+    default:
+      return [];
+  }
+}
+
+// Close the "inject" half of the learning loop: when a prompt routes to a
+// skill, auto-surface that skill's active observability rules (distilled from
+// past feedback) so they reach the agent deterministically at routing time,
+// instead of depending on the model to remember `get_rules.py`. JS-native parse
+// of rules.yaml (no subprocess); scene-agnostic (route-guard does not classify
+// scene); silent when a skill has no rules (no empty-channel noise).
+function loadRules(rulesPath) {
+  let text;
+  try {
+    text = readFileSync(rulesPath, 'utf8');
+  } catch {
+    return [];
+  }
+  return text.split(/^- id:/m).slice(1).map(b => {
+    const id = (b.match(/^\s*(\S+)/) || [])[1] || 'R-UNKNOWN';
+    const status = (b.match(/^\s+status:\s*(\S+)/m) || [])[1] || 'active';
+    const severity = (b.match(/^\s+severity:\s*(\S+)/m) || [])[1] || 'medium';
+    const skillsRaw = (b.match(/^\s+skills:\s*\[([^\]]*)\]/m) || [])[1] || '';
+    const skills = skillsRaw
+      .split(',')
+      .map(s => s.trim().replace(/^['"]|['"]$/g, ''))
+      .filter(Boolean);
+    const rule = ((b.match(/^\s+rule:\s*(.+?)\s*$/m) || [])[1] || '').replace(/^["']|["']$/g, '');
+    return { id, status, severity, skills, rule };
+  });
+}
+
+function ruleApplies(rule, skill) {
+  if ((rule.status || 'active') !== 'active') return false;
+  const skills = rule.skills || [];
+  if (skill !== '*' && skills.length && !skills.includes('*') && !skills.includes(skill)) return false;
+  return true;
+}
+
+function matchedSkills(decision) {
+  if (!decision) return [];
+  if (decision.decision === 'SINGLE_SKILL' || decision.decision === 'PLAN_CHECK') {
+    return decision.skill ? [decision.skill] : [];
+  }
+  return [];
+}
+
+function ruleHintsForSkills(skills) {
+  const all = loadRules(join(projectRoot, '.claude', 'observability', 'rules.yaml'));
+  if (!all.length) return [];
+  const seen = new Set();
+  const out = [];
+  for (const raw of skills) {
+    const skill = String(raw || '').replace(/^\//, '').trim();
+    if (!skill || seen.has(skill)) continue;
+    seen.add(skill);
+    const matches = all.filter(r => ruleApplies(r, skill));
+    if (!matches.length) continue;
+    out.push(
+      `[route-guard] 📏 ${skill} 活跃规则(${matches.length})（学习闭环自动注入，执行时必须遵守）：\n` +
+      matches.slice(0, 20).map(r => `  - ${r.id} [${r.severity}]: ${r.rule}`).join('\n')
+    );
+  }
+  return out;
+}
+
+const prompt = parsePrompt();
+const routingPrompt = promptForRouting(prompt);
+const hints = [];
+let topLevelProjectState = null;
+let projectStateError = '';
+let childProjectAssociation = null;
+if (!dryRun && prompt && hookSessionId) {
+  try {
+    const current = readProjectState(projectRoot, hookSessionId).value;
+    topLevelProjectState = current;
+    runtimeCurrentProject = validatedBindingForState(current, PROJECTS_ROOT)?.project || '';
+    if (hookHarness === 'codex' && current.state === 'NO_PIN') {
+      childProjectAssociation = resolveCodexChildProject({
+        gstackRoot: projectRoot,
+        projectsRoot: PROJECTS_ROOT,
+        childSessionId: hookSessionId,
+        cwd: hookPayload.cwd || projectRoot,
+        codexHome: process.env.CODEX_HOME || '',
+      });
+      if (childProjectAssociation) runtimeCurrentProject = childProjectAssociation.binding.project;
+    }
+    if (current.state === 'NO_PIN') {
+      try { unlinkSync(join(projectRoot, '.claude', `.session-inherited-${hookSessionId}`)); } catch { }
+    }
+  } catch (error) {
+    projectStateError = String(error?.message || error);
+  }
+}
+
+let decision = null; // 提升到外层：pin 层（另一 if 块）需读它判定"命名即切换自切"
+if (prompt) {
+  decision = isHarnessMessage(prompt)
+    ? { decision: 'HARNESS_MESSAGE', message: 'harness 合成消息（后台任务通知或跨 session 消息）', signals: [] }
+    : buildDecision(routingPrompt);
+  if (dryRun) {
+    process.stdout.write(JSON.stringify(decision, null, 2) + '\n');
+    process.exit(0);
+  }
+  if (hookSessionId) {
+    try {
+      if (projectStateError) throw new Error(projectStateError);
+      const releaseRequested = prompt === NATIVE_RELEASE_DIRECTIVE;
+      if (!childProjectAssociation) queueProjectEventCandidate({
+        gstackRoot: projectRoot,
+        projectsRoot: PROJECTS_ROOT,
+        sessionId: hookSessionId,
+        boundaryId: hookBoundaryId,
+        cwd: hookPayload.cwd || projectRoot,
+        harness: hookHarness,
+        prompt,
+        promptId: hookPayload.prompt_id || '',
+        intent: { kind: releaseRequested ? 'release' : 'turn' },
+      });
+      // UserPromptSubmit records only neutral turn evidence. It never turns a
+      // project-name mention into a selection proposal or a switch command.
+      if (releaseRequested) hints.push('[route-guard] 本会话解绑仅在 PreToolUse/Stop 验证精确原生用户事件后生效；不要运行指定 session 的解绑 CLI。');
+    } catch (error) {
+      hints.push(`[route-guard] ⛔ PROJECT STATE — ${String(error?.message || error)}。本轮不得访问项目路径。`);
+    }
+  }
+  hints.push(...decisionToHints(decision));
+  hints.push(...ruleHintsForSkills(matchedSkills(decision)));
+}
+
+// E2 每轮注入（§4.2a）。**接线硬约束**：
+// 1) 放在**顶层**、独立于上面那个 project-state 块——放进那个块里会被它的 hookSessionId 条件
+//    与 catch 吞掉，于是在 `PROJECT_SWITCH` 回合静默不注入，而那正是义务必须存活（转 DEFERRED）
+//    的一轮（终审 MAJOR-2）。
+// 2) 只写 `hints` 通道、**不写 `decision`**：dry-run JSON 由上面的 process.exit(0) 天然隔离，
+//    Codex adapter 会把非 JSON 包成 additionalContext 且 additionalContextLimit:0，输出契约不受污染。
+// 3) 自带 try/catch，异常一律静默跳过注入——注入是提醒，不得因它让 route-guard 失败（变异体 17）。
+if (!dryRun && prompt && hookSessionId) {
+  try {
+    const obligation = advanceObligation({
+      sid: hookSessionId, prompt, signal: decision?.semanticRouteAxis || null, decision,
+    });
+    if (obligation && obligation.state === 'PENDING') {
+      hints.push(`[route-guard] 📌 当前有未完成任务：${obligationSummary(obligation.exact_task_text)}`
+        + `（完整字节见 ${obligationPath(hookSessionId)}）`);
+    }
+  } catch { /* 提醒失败不得影响本轮路由 */ }
+}
+
+// E1/E2 证据渲染到**生产面**。没有这一段，`aliasResolution` / `semanticRouteAxis` 只活在
+// dry-run JSON 里——而 dry-run 只有测试会开，`.claude/settings.json` 与 `.codex/hooks.json`
+// 都不设 ROUTE_GUARD_DRY_RUN，于是真实 harness 一个字都看不到，整个修复等于没接线。
+// （深审 BLOCKER-1/6 实测：改前改后真实输出**逐字节相同**。这正是「模块+单测全绿≠生效」。）
+// 接线纪律与义务注入一致：顶层、独立 try/catch、只写 hints 不写 decision。
+// 措辞刻意是「证据，非授权 / 非判定」——这一层不裁决，切不切、走不走 skill 由 LLM 层按
+// 语义路由契约判断（§3.2「RESOLVE 永不授权」、§4.1「信号不计分不派 skill」）。
+if (!dryRun && prompt) {
+  try {
+    const candidates = decision?.aliasResolution?.candidates || [];
+    if (candidates.length) {
+      const shown = candidates.map(c => `「${c.surface}」→ ${c.canonical}`).join('、');
+      const canonicalTargets = [...new Set(candidates.map(c => normalize(c.canonical)).filter(Boolean))];
+      const currentProject = normalize(readCurrentProject(listProjects()));
+      const matchesCurrentBinding = currentProject
+        && canonicalTargets.length === 1
+        && canonicalTargets[0] === currentProject;
+      const suffix = matchesCurrentBinding
+        ? '。唯一候选与当前路由项目一致，本 hook 不生成 PROJECT_SWITCH；继续按本轮任务路由。'
+        : '。是否切换由你按语义路由契约判断；多个候选一律不代选。';
+      hints.push(`[route-guard] 🔎 别名候选（证据，非授权；本 hook 不裁决切换）：${shown}${suffix}`);
+    } else if (decision?.aliasResolution?.status === 'CAP_EXCEEDED') {
+      hints.push('[route-guard] 🔎 别名候选超过上限，本轮不产候选（证据缺席，非拒绝）。');
+    }
+    if (decision?.semanticRouteAxis) {
+      const legs = decision.semanticRouteAxis.evidence.map(e => `${e.leg}:${e.surface}`).join(' / ');
+      hints.push(`[route-guard] 🧩 界面结构变更信号（证据，非判定；不计分、不派 skill）：${legs}`
+        + '。这类请求 route score 常为 0，别据此认为「不需要 skill/flow」。');
+    }
+  } catch { /* 证据渲染失败不得影响本轮路由 */ }
+}
+
+if (!dryRun && prompt) {
+  // 并发隔离（G2）：有 sid 时轮次计数 per-session；无 sid（测试/管道）回退共享旧文件名
+  const counterFile = join(projectRoot, '.claude',
+    hookSessionId ? `.session-turn-count-${hookSessionId}` : '.session-turn-count');
+  let turns = 0;
+  try {
+    turns = parseInt(readFileSync(counterFile, 'utf8').trim()) || 0;
+  } catch {}
+  turns++;
+  try {
+    writeFileSync(counterFile, String(turns));
+  } catch {}
+  // 4c（claude5-unhobble）：20/40/每20、100 封顶；harness 已原生自动摘要，不再建议 /compact
+  if (turns === 20 || turns === 40 || (turns > 40 && turns % 20 === 0 && turns <= 100)) {
+    hints.push(`[route-guard] 📋 Checkpoint 提醒：已进行 ${turns} 轮对话，建议写入 Checkpoint。`);
+    // 2026-08-03 低频治理 skill 确定性下沉：retro/evals 的需求时刻（大流程收尾）没有产物信号，
+    // 靠"自觉想起"实证不可靠（同日实证：提取 6/6 次全靠 Stop hook 强制、零次自觉）。
+    // 长 session 提醒是它们唯一的确定性通道；40 轮起提示（20 轮的 session 多半还没到收尾）。
+    if (turns >= 40) {
+      hints.push(`[route-guard] ↳ 长 session 治理：若本 session 已完成完整流程链/重大交付，收尾前考虑 retro 复盘（隐藏 skill，按名调用）；workflow 模式下各节点指标记录归 evals。`);
+    }
+  }
+
+}
+
+// ── 单真值源 behind 兜底提醒（2026-07-16 luca 点名）：落后 tracking 分支即每条消息提醒，
+// pull 后自动消失。只查本地 ref（~10ms，fetch 由 session-restore 后台刷新 + verify S23 负责）。fail-open。
+try {
+  const gitOpt = { cwd: projectRoot, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] };
+  const up = execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', gitOpt).trim();
+  const behind = parseInt(execSync(`git rev-list --count HEAD..${up}`, gitOpt).trim(), 10);
+  if (behind > 0) hints.push(`[route-guard] ⬇️ 本检出落后 ${up} ${behind} 条——动框架前请先 git pull（单真值源纪律，pull 后本提醒消失）。`);
+} catch {}
+
+if (hints.length > 0) process.stdout.write(hints.join('\n') + '\n');

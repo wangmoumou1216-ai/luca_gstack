@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "status": "HOLD_NATIVE_SESSION_DENIAL_AND_OBSERVABILITY_GAP",
+  "source_root": "/Users/luca/Desktop/luca_gstack",
+  "source_head": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "source_manifest": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json",
+  "unblind_record": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-first-unblind.json",
+  "implementation_contract": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-implementation-contract.md",
+  "implementation_contract_sha256": "74c43c98dd2fc88df66c84d660c0f044deae35d7223e9a6c17b05ace22ec04a6",
+  "conditions": [
+    {
+      "id": "B",
+      "status": "IMPLEMENTED_NOT_RELEASED",
+      "policy_reference": "u007-implementation-contract.md#2"
+    },
+    {
+      "id": "T",
+      "status": "IMPLEMENTED_NOT_RELEASED",
+      "policy_reference": "u007-implementation-contract.md#2"
+    },
+    {
+      "id": "S",
+      "status": "IMPLEMENTED_NOT_RELEASED",
+      "policy_reference": "u007-implementation-contract.md#2"
+    },
+    {
+      "id": "I",
+      "status": "IMPLEMENTED_NOT_RELEASED",
+      "policy_reference": "u007-implementation-contract.md#2"
+    }
+  ],
+  "runtime_release": {
+    "status": "BUILD_ONLY",
+    "reason": "J06 accepts the two offline driver repairs. Formal comparison remains blocked by unproven live model command boundary and applicability-specific B/S rule-loader input gaps. P05 alone does not prove every simple task unmeasurable. W24 repairs exact missing rule inputs; no formal or production release.",
+    "independent_review": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r2-envelope.json",
+      "sha256": "2b96604f5cdec227dd2dd93fea6d7dd9cf96e3f97db513ec722ce48dba3c3448",
+      "verdict": "FAIL",
+      "passed": 1,
+      "total": 4,
+      "accepted_scope": "Only two driver defects closed offline; no native command boundary or formal comparison release"
+    },
+    "prior_manifest": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-comparison-manifest-before-j05.json",
+      "sha256": "b3a7c3ec28964b75ebb6b66dbfd6bb5a5180198b58d760f5e463c897c6b2bc30"
+    },
+    "previous_independent_reviews": [
+      {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r1-envelope.json",
+        "sha256": "eead50f06b542d0bf58c0b309907923b06659adfd6ea54d443b63281e5b468d7",
+        "verdict": "FAIL",
+        "passed": 1,
+        "total": 6
+      }
+    ],
+    "prior_j06_manifest": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-comparison-manifest-before-j06.json",
+      "sha256": "eb56171ba13272840b31a955a79f869236c0e8646afabd4f4657b0d42c0c0965"
+    }
+  },
+  "budgets": {
+    "development_runs": 24,
+    "hidden_runs": 96,
+    "additional_runs": 24,
+    "total_runs": 144,
+    "capability_driver_probes_max": 6,
+    "reserved_migration_retest": 8,
+    "max_concurrent_chains": 3,
+    "simple": {
+      "wall_seconds": 1200,
+      "observed_tokens": 40000,
+      "tool_actions": 30
+    },
+    "heavy": {
+      "wall_seconds": 3600,
+      "observed_tokens": 120000,
+      "tool_actions": 90
+    }
+  },
+  "protected_uses": [
+    "USE-01",
+    "USE-02",
+    "USE-03",
+    "USE-04",
+    "USE-05",
+    "USE-06",
+    "USE-07",
+    "USE-08",
+    "USE-09",
+    "USE-10",
+    "USE-11",
+    "USE-12",
+    "USE-13",
+    "USE-14"
+  ],
+  "required_migration_evidence": {
+    "changed_routing_context_entry": [
+      "normal continuation",
+      "relevant-owner fallback",
+      "required human decision retained",
+      "reject stale identity or missing authority"
+    ],
+    "changed_result_or_recovery_semantics": [
+      "failed dependency retained",
+      "valid retry and downstream consumption",
+      "fresh resume preserves prior effects and current change",
+      "failed switch rollback continues old path"
+    ]
+  },
+  "same_quality": {
+    "dimensions": [
+      "correctness",
+      "completeness",
+      "usability",
+      "rework_burden"
+    ],
+    "target": [
+      3,
+      3,
+      3,
+      3
+    ],
+    "tolerance": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "controls_must_pass": true,
+    "paired_by": [
+      "case",
+      "trial"
+    ]
+  },
+  "created_at": "2026-10-02T17:40:22.387491+00:00",
+  "interface_addenda": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-1.md",
+      "sha256": "953caf31e773b35bfc05c8993141f5d5f543b6202c30c8d6ccf7d1340073f70f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-2.md",
+      "sha256": "1a308a1e849f67e10f5acb9ecae5a130b93c99d069b5a8bd0d15d1ff9e7a7830"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-3.md",
+      "sha256": "a73d065a3169231f48e0cac954f109b377f4fa206b748358f72b52103f2dbee6"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-4.md",
+      "sha256": "5ea1a081c26ed680969929cfa69898be0562e5d4e4bfc9452ef4706c13f1534a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-5.md",
+      "sha256": "5727306f38a0b5779d0e18c51f0ff73ab5386bf3f6c2a5ddc252946ca106ed3a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-6.md",
+      "sha256": "4238376c4138210fd992af1fc98447cae18e16fece78abc6aabda5f4c4e1ab9a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-7.md",
+      "sha256": "a165d7b60bb5fc97fd39b7456e539b0bdc515d58d0c74793bd96c118eca9fb89"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-8.md",
+      "sha256": "93b425c87b76ec8bb8ed63aca862fef361ddcf72e3eea4fc526badeaa5056a0d"
+    }
+  ],
+  "updated_at": "2026-10-02T20:39:05.170659+00:00",
+  "next_allowed_work": "Original routing owner performs W24 only under addendum7: exact rule-loader/input closure and offline source/copy parity. Root integrates and obtains independent review. P06 remains unregistered; no formal comparison or production release.",
+  "staff_call_allocation": {
+    "preparation": 24,
+    "review_advice": 28,
+    "total": 52,
+    "revision": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-7.md"
+  },
+  "current_collected_implementation": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r5.json",
+    "sha256": "5c0f67466637b74e95f337ca2a1dd922b7902c2bd688f6de63db18fc1ee6de50"
+  },
+  "latest_capability_attempt": {
+    "probe_id": "P06",
+    "root_evidence": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-root-evidence.json",
+    "sha256": "ef0d8e461591252b4ea25d3e369b21f444855e33b901771d061626f9ea080e99",
+    "native_command_count": 0,
+    "formal_release": false,
+    "correction": "Actual native exec_command dispatch attempt recovered from scoped logs; filesystem denial in unified_exec.open_session, path unknown; RPC/result still missing."
+  },
+  "next_action": "Collect W25 driver repair and W26 cross-module RED/GREEN; N04 minimal native launch advice. No P07 registered.",
+  "current_resource_allocation": {
+    "work_cap": 26,
+    "review_cap": 26,
+    "staff_total": 52,
+    "work_assigned": 26,
+    "review_advice_assigned": 11,
+    "capability_used": 6,
+    "capability_cap": 6,
+    "formal_runs": 0
+  },
+  "latest_independent_review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r4.md",
+    "sha256": "88944193bf1e1fcea7c6ea45330e2a9cb6dedfdda9743435b61de156a9de931d",
+    "formal_release": false
+  },
+  "current_diagnosis": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-dispatch-diagnosis.json",
+    "sha256": "562f5c3ab4b9fc437c82eee994c188907b901ebf523fd286c521412e16ba50c6"
+  }
+}

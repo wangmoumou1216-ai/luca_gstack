@@ -1,0 +1,190 @@
+{
+  "review_stage": "DESIGN_DRAFT",
+  "skill_name": "brainstorm",
+  "scope_tier": "Standard",
+  "round": 1,
+  "eval_run_id": "wf-20261006-B1-standard-v1",
+  "project_session": "NO_PIN",
+  "draft": {
+    "body": "# PRD：可靠的工作流状态事务（U-001-a 审查夹具）\n\n**Source Research**：本次已授权框架审计 E1 与已批准计划 U-001-a；仅覆盖该单元。\n**Scope Tier**：Standard。**Status**：DRAFT。框架 NO_PIN 测试夹具，不是最终交付文件。\n\n## Problem Frame\n同一项目的状态 CLI 遇到损坏 YAML 时会覆盖历史节点并报告成功；两个并发读改写进程可丢失先提交的节点。需要保证调用者能区分完整同步、拒写和事实源已提交但显示投影过期。\n**Job-to-be-Done**：当已授权调用者同步节点时，需要保留此前事实并得到准确结果；现有错误分支把失败变成初始化，代价是历史数据与后继执行依据丢失。\n\n## Demand Evidence\n最强信号：E1 独立执行真实 CLI，node/topic/组合损坏输入均退出 0 并擦除数据；受控真实进程竞争丢失更新。最弱信号：未观察生产事故或原生调度中的并发竞争。未知：真实项目中竞争频率。用户已明确批准计划并要求解决、验证、发布。\n\n## Research & Decision Coverage Matrix\n| Claim ID | Source | Claim / Decision | Confidence | Disposition | PRD Destination | Rationale |\n|---|---|---|---|---|---|---|\n| C1 | E1 C1 / PLAN U001a | 损坏输入拒写，仅missing初始化 | high | REQUIREMENT | R1,AE1 | 保留历史事实源 |\n| C2 | E1 C2 / PLAN U001a | 完整稳定锁事务避免旧快照覆盖 | high | REQUIREMENT | R2,AE2,AE4 | 独立CLI调度复现 |\n| C3 | PLAN U001a projection | 同锁原子投影、明确部分提交与修复 | user_confirmed | REQUIREMENT | R3,AE3 | 不承诺两文件原子性 |\n| C4 | PLAN U001a Approach | extra准入与已有形态错误保留 | user_confirmed | REQUIREMENT | R1,AE1 | 三CLI入口一致 |\n| C5 | PLAN U001a 提交 | 同目录临时文件flush/fsync/replace及失败清理、未知字段保留 | user_confirmed | REQUIREMENT | R2,AE1,AE4 | 现有接口patch |\n| C6 | PLAN U001a 锁 | 项目.luca稳定inode、不删除、有限等待/非零超时/退出释放 | user_confirmed | REQUIREMENT | R2,AE4 | 完整锁生命周期 |\n| C7 | PLAN U001a Test scenarios | missing/valid/corrupt/empty/list/null/wrong nodes；三入口；extra；写入/replace；投影；不同node/topic-node/同node；timeout/exit | user_confirmed | ACCEPTANCE | AE1–AE4 | 逐项验收不隐含删除 |\n| C8 | PLAN U001a Verification | 拒写及锁移除red、恢复green、原分母实际输出持久化 | user_confirmed | ACCEPTANCE | AE5,Success Criteria | 验证测试能检测错误 |\n| C9 | PLAN U001a 接口/平台 | 既有_PROJECT_ROOT/节点字段、macOS/Linux fcntl、其他平台unsupported | user_confirmed | SCOPE_BOUNDARY | R2,Dependencies,Scope Boundaries | 无新依赖 |\n| C10 | PLAN §1 / USER | 采用中央writer局部修复 | user_confirmed | REQUIREMENT | R1–R3,Recommended Approach A | 真实用户批准 |\n| C11 | PLAN §1 +本fixture Phase4候选 | 拒绝常驻队列/第二套编排器 | user_confirmed | REJECTED_DIRECTION | Recommended Approach → Rejected Directions | 新生命周期超批准范围 |\n| C12 | PLAN §1 | 拒绝仅串行建议 | user_confirmed | REJECTED_DIRECTION | Recommended Approach → Rejected Directions | 不能保留坏文件 |\n| C13 | PLAN §1 | 拒绝只加rename | user_confirmed | REJECTED_DIRECTION | Recommended Approach → Rejected Directions | 不能防丢更新 |\n| C14 | PLAN §1 | 拒绝仅文档警告 | user_confirmed | REJECTED_DIRECTION | Recommended Approach → Rejected Directions | 不能替代状态完整性 |\n| C15 | PLAN U001b / E1 C3 | 旁路调用者另单元迁移，中央票不冒称全系统安全 | user_confirmed | PREMISE | Premises,Weakest Assumption,Scope Boundaries | 保证仅参与入口的writer |\n| C16 | E1 C2 / PLAN §1 | 未观察生产事故或原生并发、频率未知 | explicit | DEFERRED | Demand Evidence,Outstanding Questions | 不以此扩大修复 |\n\n## Status Quo\n中央 CLI 直接覆写 YAML；topic 与 node 在一个 CLI 内分两次读改写；异常被视作空字典。项目 session 锁不覆盖状态事务。\n\n## Target Users & Narrowest Wedge\n主要使用者是已获项目授权的状态同步调用者。最小范围是现有 Python writer 的项目内事务；调用方迁移由已计划的 U-001-b 承接。\n\n## Actors\nA1：状态同步调用者，提交已有节点 patch。A2：依赖状态的后继执行者，仅消费准确结果。\n\n## Requirements\nR1：只有文件缺失可初始化；已有空/null/list/非法 YAML 或错误 nodes/node 形态、非法 extra 必须非零拒写并保留原字节。Situation：同步已有状态；Switching reason：不能用 parse error 代初始化；AI intervention：N/A；Type：constraint；Confidence：explicitly_confirmed；Source：PLAN U-001-a 与 E1 C1。\nR2：保留未知顶层及非目标节点字段；同目录独占临时文件序列化成功后 flush/fsync、原子 replace，失败清理本次临时文件；不支持 fcntl 的平台显式拒绝。同项目稳定 advisory lock 覆盖完整读取、patch、原子 state 提交和 topic 投影；组合调用只做一个读改写。不同节点保留双方；同节点按锁顺序更新提供字段；锁文件位于已验证项目 .luca 下，inode稳定，不随状态rename、不在持锁期间删除；等待有界，超时非零，进程退出释放锁。Situation：并发 CLI；Switching reason：防止覆盖旧快照；AI intervention：N/A；Type：functional；Confidence：explicitly_confirmed；Source：PLAN U-001-a 与 E1 C2。\nR3：state 是事实源；投影只在状态提交后、仍持同一锁时通过同目录独占临时文件 flush/fsync/原子 replace 更新。投影失败返回明确 state committed / projection stale 非零结果，保留提交，不冒称全成功；下一次合法 topic 事务可修复。Situation：第二次文件提交失败；Switching reason：避免错误回滚或虚报成功；AI intervention：N/A；Type：functional；Confidence：explicitly_confirmed；Source：PLAN U-001-a。\n\n## Key Flows\nF1：A1 验证 extra/根 → 获取稳定锁 → 读取并校验 → patch → 同目录临时文件 flush/fsync/replace → 适用时更新投影 → 释放锁 → 返回准确结果。\nF2：拒写保留原字节；投影失败保留已提交 state 并明确错误，A2 不把非零结果当成功。\n\n## Acceptance Examples\nAE1（R1）：node-only/topic-only/combined 三种入口均验证：missing初始化、valid保留已存在节点与未知字段；corrupt/empty/list/null/错误nodes或node形态、非法extra均非零且原state/topic字节相同。\nAE2（R2）：给定同一项目两个真实进程，控制先读后提交的顺序，两个不同节点最终均存在；同节点未提供字段保留，已提供字段按锁顺序生效；同样验证topic与node并发。\nAE3（R3）：给定 topic 目标无法原子替换，执行组合调用，state 保留新节点而退出非零且 stderr 明示投影过期；移除障碍后合法 topic 调用恢复一致。\n\nAE4（R2）：state写入或replace失败保留原字节、非零且清理本次临时文件；锁超时非零且不写，退出进程后新调用可获得稳定锁。\nAE5（R1/R2）：只在独占临时源码副本移除拒写保护与锁，原坏输入和并发断言必须转红；恢复真实保护后同一原始分母转绿，不改分母。\n\n## Premises\n用户已批准原计划的局部修复与独立验收。锁仅约束参与该入口的写入者；旁路迁移属于 U-001-b，不据此宣称全系统无竞争。\n\n## Socratic Interrogation Summary\n**Dimensions challenged**：来源已挑战故障是否真实、保证边界、最小可构建方案与handoff损失（E1、PLAN §1/U001a）。不是新补造的六YC访谈。\n**Total questions asked**：本fixture新增真人访谈0；此前会审的真人问题数未作为授权输入提供，不声称已运行访谈。\n**Key findings**：坏YAML是实测拒写需求；并发是受控进程条件下的保证要求，未推断生产频率；单独rename不能防旧快照。\n**Stance changes**：本fixture未发生新的用户立场变化；用户已批准既有局部计划；历史立场变化未提供、不补造。已知持定范围：按原计划解决、验证、发布；未知频率留给观测。\n**Impact on PRD**：继承批准的A方向及原要求全分母，拒绝扩大成服务；无新的产品取舍。\n\n## Approaches Considered\n### Approach A：复用中央 writer，稳定项目锁与原子 state replace（minimal）\nPros：保留已有接口，无第二服务；Cons：只保护参与入口的写入者；Risks：必须处理投影失败与锁超时；When best：本次已确认的本地 CLI 范围。\n### Approach B：去掉多写入 owner，把全部更新送入持久化单一队列（lateral：反转并发拥有权）\nPros：一个 owner 可排序；Cons：新增服务/队列和生命周期；Risks：需新的恢复、授权与调度约定；When best：明确批准常驻状态服务时。本次未选，不能借本方案创建新调度器。\n\n## Recommended Approach\nSelection：A。Label：Reuse。Reasoning：已批准局部修复，当前 CLI 不需要新常驻服务。What would flip：用户明确要求并批准持续状态服务。\n### Rejected Directions\n只串行建议：不能保护损坏状态。只加rename：不能防旧快照竞争。仅文档警告：不能替代状态完整性。持久化队列/第二套编排器：超出已批准最小范围。\n### Weakest Assumption\n全部需要事务保证的调用者会在 U-001-b 迁入中央入口。验证点：真实调用块与混合并发测试，不用存在性替代。\n\n## Success Criteria\nA1 完整正反例集合全部有真实当前 CLI 输出；坏输入原字节保留、并发双方更新保留、投影失败如实报错。\nHandoff quality：下游使用已明确接口与失败语义，无需发明事务或产品行为。\n### Anti-Metrics\n方向反证：若已批准源要求必须借新常驻服务或两文件原子事务才能兑现，则复用中央CLI方向不成立；PLAN明确选局部CLI且排除两文件原子性，本次未观察此反证，不扩加性能或生产指标。实现失败仍单列：成功返回伴随数据丢失、为凑绿删原分母。\n### Verification Window\n本单元完成前，AE1–AE5全部真实当前CLI场景与保护移除mutation逐项留存；原始集合包含所有PLAN U001a Test scenarios和Verification项，后续CI使用同一suite。\n\n## Scope Boundaries\nIn scope：R1坏输入保留（已实测历史丢失）；R2串行事务及失败/锁生命周期（已实测受控竞争）；R3准确投影失败（两文件不是原子事务）。保留现有_PROJECT_ROOT/节点接口与fcntl，原因是已批准最小方案，不增加依赖和常驻生命周期。\nOut of scope：两文件原子事务（源明确不承诺，需另设跨文件恢复）；业务冲突合并（源选择按锁顺序patch）；生产事故推断（无生产证据）；新调度器/持久化队列（生命周期超批准范围）；D-001（未获设计取舍授权）；旁路调用者（U001b独立迁移/验收，中央票不能覆盖其成本）。\n\n## Distribution Plan\n既有调用方在 U-001-b 迁入同一中央入口；独立终版验收后按用户发布授权提交、推送、合并与本地拉回。本夹具不执行这些效果。\n\n## Dependencies & Assumptions\n依赖已验证项目根及 macOS/Linux fcntl；不支持的平台显式拒绝。来源引用与 hash 仅绑定读取对象，不授予项目或外部效果权限。\n\n## Outstanding Questions\n### Resolve Before Planning\n无本单元未决产品取舍。\n### Deferred to Planning\n[Affects R2][observability] 真实生产竞争频率未知（E1/PLAN），不阻断已复现条件下的数据完整性保证，也不据此增加监控或扩大本范围。\n\n## The Assignment\n由维护者在隔离项目副本运行两次既有工作流：先输入坏 YAML，再同时更新两个节点；维护者核对历史节点仍在、错误结果可识别、下一次修复 topic 后显示与事实一致。保留实际前后文件与 CLI 输出作为可观察验证。仅本地夹具，不向真实用户或项目派发。\n\n## What I noticed about how you think\n来自同一已核验USER事件的两个原文回调，不声称是两次访谈：\n- “按照计划解决”——scope继承已批准计划。\n- “验证，发布”——完成包括证据与发布，不能只提交文档。\n",
+    "sha256": "0bef05fc4e43165a06892305697b294c0426bd2cce1e47e1049af13906df3862",
+    "encoding": "utf-8"
+  },
+  "source_refs": [
+    {
+      "id": "PLAN",
+      "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/PLAN.md",
+      "sha256": "6e2ed3c76fb939468088800f3d82bb0925157be282fd2f7b573855f913f63f3a",
+      "selection": "§1、U-001-a 完整原分母；U-001-b 仅为已声明旁路依赖，不扩本草稿范围",
+      "read_authority": "current user-approved NO_PIN audit scope"
+    },
+    {
+      "id": "E1",
+      "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/E1-review.md",
+      "sha256": "cef2094491f37ff3733d7bdb88a0922d048e8b03a92e807ed30e8cfbc07b3783",
+      "selection": "C1/C2/C3 实际故障与保证边界",
+      "read_authority": "current user-approved NO_PIN audit scope"
+    },
+    {
+      "id": "USER",
+      "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/user-approval-event.json",
+      "sha256": "49683ce1b1b3bb78737e79d97ca4f5aba75dc74fc76140687a4e8a626293aad2",
+      "selection": "实际用户授权原话",
+      "read_authority": "current user-approved NO_PIN audit scope"
+    },
+    {
+      "id": "PRIOR_REVIEW",
+      "path": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/B1-standard-v1-review.md",
+      "sha256": "f4b5a030f0e375e583e86ed77d30c73236d39fa4e01ad2a4150ab98b8e8cf728",
+      "selection": "原始独立F1.1–F1.4与判决，仅裁决证据，不含作者思考历史",
+      "read_authority": "user-authorized NO_PIN audit"
+    }
+  ],
+  "criteria": [
+    {
+      "id": "C1",
+      "dimension": "Coherence",
+      "level": "BLOCKING",
+      "requirement": "全部原 Dimension1 项：需求/术语/AE/Actor Flow一致",
+      "source_ref": [
+        "PLAN",
+        "E1"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/skills/office/brainstorm/references/adversarial-review.md"
+    },
+    {
+      "id": "C2",
+      "dimension": "Feasibility",
+      "level": "BLOCKING",
+      "requirement": "全部原 Dimension2：可构建、Dependencies、非功能要求、方案兑现",
+      "source_ref": [
+        "PLAN",
+        "E1"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/skills/office/brainstorm/references/adversarial-review.md"
+    },
+    {
+      "id": "C3",
+      "dimension": "Scope",
+      "level": "BLOCKING",
+      "requirement": "全部原 Dimension3：wedge、边界、隐含要求、条件Deepproduct",
+      "source_ref": [
+        "PLAN",
+        "E1"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/skills/office/brainstorm/references/adversarial-review.md"
+    },
+    {
+      "id": "C4",
+      "dimension": "Assumption",
+      "level": "BLOCKING",
+      "requirement": "全部原 Dimension4：已确认premises、问题、行为证据、durability适用性",
+      "source_ref": [
+        "PLAN",
+        "E1"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/skills/office/brainstorm/references/adversarial-review.md"
+    },
+    {
+      "id": "C5",
+      "dimension": "Handoff",
+      "level": "BLOCKING",
+      "requirement": "全部原 Dimension5：下游无需发明决策、可观察success、distribution、realworld Assignment",
+      "source_ref": [
+        "PLAN",
+        "E1"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/skills/office/brainstorm/references/adversarial-review.md"
+    },
+    {
+      "id": "C6",
+      "dimension": "Research_Loss",
+      "level": "BLOCKING",
+      "requirement": "全部原 Dimension6：独立源全分母、实际目标、已选/被否定方向、弱假设、REMOVED理由",
+      "source_ref": [
+        "PLAN",
+        "E1"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/skills/office/brainstorm/references/adversarial-review.md"
+    },
+    {
+      "id": "C7",
+      "dimension": "AI_Native",
+      "level": "BLOCKING",
+      "requirement": "全部原 Dimension7；非AI来源按not_suitable有据N/A，不要求未来Phase6文件；适用时审内存规范内容与生成承诺",
+      "source_ref": [
+        "PLAN",
+        "E1"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/skills/office/brainstorm/references/adversarial-review.md"
+    },
+    {
+      "id": "C8",
+      "dimension": "Scope_Matrix",
+      "level": "BLOCKING",
+      "requirement": "全部 Standard Section Matrix 与 Finalization Checklist；written approaches至少2个真实不同方向，pros/cons及rejected记录；owner实际稳定ID唯一，不能选缩分母",
+      "source_ref": [
+        "PLAN",
+        "E1"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/skills/office/brainstorm/SKILL.md + references/prd-template.md"
+    },
+    {
+      "id": "C9",
+      "dimension": "Admission",
+      "level": "BLOCKING",
+      "requirement": "独立实际收到的UTF8 draft hash及精确source refs权限/内容/ID；真实NO_PIN框架fixture，不用hash代读许可",
+      "source_ref": [
+        "USER",
+        "PLAN"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/agents/quality-gate.md DESIGN_DRAFT"
+    },
+    {
+      "id": "C10",
+      "dimension": "Human_Gate",
+      "level": "BLOCKING",
+      "requirement": "已批准来源；任何未决产品/UI/权限选择真实停止，不能专家替选",
+      "source_ref": [
+        "USER",
+        "PLAN"
+      ],
+      "applicability": "本次已授权 Standard NO_PIN fixture；AI_Native全部条件子项在非AI来源下有据N/A，其余完整适用",
+      "contract_owner": ".claude/agents/quality-gate.md DESIGN_DRAFT"
+    }
+  ],
+  "prior_decisions": [
+    {
+      "id": "F1.1",
+      "decision": "applied",
+      "evidence": "R2/R3补锁与投影条件；AE1–AE5保留完整源Testscenarios与mutation"
+    },
+    {
+      "id": "F1.2",
+      "decision": "applied",
+      "evidence": "C1–C16逐项claim/decision/confidence/目的映射"
+    },
+    {
+      "id": "F1.3",
+      "decision": "applied",
+      "evidence": "实际历史未提供明确说明；范围理由、anti方向反证、deferred追踪补齐"
+    },
+    {
+      "id": "F1.4",
+      "decision": "applied",
+      "evidence": "移除未核引语，仅保留同一USER实际消息两个精确子串"
+    }
+  ],
+  "topic": "design-workflow-fixture",
+  "scene": "unknown",
+  "fixture_notice": "authorized NO_PIN frozen input; no final PRD or handoff written; requirement slice is U001a only"
+}

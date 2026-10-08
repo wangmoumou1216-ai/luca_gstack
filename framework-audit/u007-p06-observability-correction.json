@@ -1,0 +1,12 @@
+{
+  "created_at": "2026-10-02T21:34:18.533702+00:00",
+  "corrects": "u007-p06-root-evidence.json",
+  "independent_review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r4.md",
+    "sha256": "88944193bf1e1fcea7c6ea45330e2a9cb6dedfdda9743435b61de156a9de931d"
+  },
+  "root_raw_recheck": "991f1c",
+  "fact": "RPC61-64 pre/post hooks for exec-7b6a3da4-df07-44c5-9fe3-b30d991ab9d4 differ from dynamic checkpoint call; no mapped item or result.",
+  "correction": "Replace categorical no command executed/attempted with no verifiable native command event/result. Preserve prior report bytes as history. Actual total actions UNKNOWN; visible dynamic actions 1.",
+  "effect": "Formal remains HOLD. Need one bounded local read-only dispatch diagnosis before any method decision."
+}

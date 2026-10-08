@@ -1,0 +1,59 @@
+diff --git a/.claude/skills/office/references/handoff-protocol.md b/.claude/skills/office/references/handoff-protocol.md
+--- a/.claude/skills/office/references/handoff-protocol.md
++++ b/.claude/skills/office/references/handoff-protocol.md
+@@ -120,14 +120,13 @@
+ 
+ skill 启动时，Orchestrator（或 skill 自身在 standalone 模式下）按以下顺序读取：
+ 
+-1. **workflow-state.yaml** → 确认上游哪些 skill 已 DONE
+-2. **最近一个上游 handoff summary** → 获取决策、约束、风险
+-3. **自己的 SKILL.md** → 执行指令
++1. **自己的 SKILL.md** → 完整读取当前输入合同，确认本次所需来源与权限
++2. **本次全部必需上游** → 在已验证项目根的 workflow-state 中取精确 handoff_path；不以最近 DONE 代替依赖集合，standalone 不补 workflow state
++3. **精确 handoff 及必需来源** → 在本次读权限内核版本、真实 gate/证据；缺失、失败或未知的必需依赖不作为成功消费
+ 4. 如需要 → 共享 references 中的特定文件（按 context-cost.shared-refs 声明加载）
+ 
+-**绝不读取上游 skill 的完整 SKILL.md 或完整产出文件。**
+-如果需要上游产出的具体细节，handoff summary 应该包含足够的摘要，或者
+-skill 在执行过程中按需读取特定段落。
++不以交接为由批量加载上游完整 SKILL.md 或全部产出。当前 owner 输入合同明确要求的来源或片段，
++仍须在本次真实读权限内完整读取并核验；摘要不能替代必要来源，也不授予额外读权。
+ 
+ ## 写入脚本
+ 
+diff --git a/.claude/skills/office/SKILL.md b/.claude/skills/office/SKILL.md
+--- a/.claude/skills/office/SKILL.md
++++ b/.claude/skills/office/SKILL.md
+@@ -133,7 +133,7 @@
+ `node scripts/check-quality-gates.mjs --handoff "<已验证项目内 handoff 的绝对路径>"`。路径从已绑定项目确认，
+ 不靠共享别名推断；NO_PIN 框架维护不执行项目 handoff。失败先修 handoff，不得继续报 DONE。
+ 
+-**下游 skill 启动时读取上游 handoff summary，不读取上游完整 SKILL.md 或完整产出。**
++**下游 skill 按 `references/handoff-protocol.md` 消费本次全部必需上游；当前输入合同明示的来源或片段，仍在本次真实读权限内核验，摘要不替代必要来源。**
+ 
+ ### Pre-Task Context Retrieval（所有 skill 继承）
+ 
+@@ -147,9 +147,10 @@
+ 
+ **Step 2：检索上游 handoff summary（workflow 模式下）**
+ ```bash
+-# 读取 <_PROJECT_ROOT>/.luca/workflow-state.yaml 中最新的 DONE 节点的 handoff_path
+-# 如果 handoff_path 非空 → 读取该文件
+-# 重点关注：## 约束 和 ## 风险 章节
++# 按本次已选 workflow 和当前输入合同定位全部必需上游，不取“最新 DONE”代替依赖集合。
++# 从已验证 <_PROJECT_ROOT>/.luca/workflow-state.yaml 取每项精确 handoff_path，
++# 在本次读权限内核版本、真实 gate/证据；缺失、失败或未知不作为成功消费，无适用上游则不造节点。
++# 来源读取按 references/handoff-protocol.md；standalone 不补 workflow state。
+ ```
+ 
+ **Step 3：任务相关 memory search（如有）**
+@@ -164,7 +165,8 @@
+ **规则：**
+ - Step 1 和 Step 2 是必须的。Step 3 是可选的（任务需要历史经验时运行；无命中跳过）
+ - 如果 Step 3 找到了高相关历史成功模式，告知用户并建议复用
+-- Step 3 最多读取 5 条检索结果，总加载量不超过 2K tokens；Pre-Task 总加载量不超过 5K tokens
++- Step 3 最多读取 5 条检索结果，总加载量不超过 2K tokens；5K tokens 是单批预加载建议，不覆盖当前输入合同的必需来源。
++- 必需来源在原读权限内分批完整核验；真实宿主/资源上限仍有效，无法完整消费时保留缺口并暂停受影响依赖，不删必需来源或降低 gate。
+ - 不读取完整 `observations.jsonl`、`semantic/candidates.jsonl`、
+   `semantic/reviews.jsonl` 或 `evals/eval-log.jsonl`
+ - `python3 memory/scripts/consolidate_memory.py --json` 只用于治理、复盘、记忆健康度检查或用户明确询问；

@@ -1,0 +1,61 @@
+{
+  "status": "LIMITED_RELEASE_ADOPTED_PUBLISHED_SYNCED_VERIFIED",
+  "at": "2026-10-03T08:53:52.338203+00:00",
+  "baseline": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "worktree": "/Users/luca/.codex/worktrees/tri-system-adoptable-fixes/luca_gstack",
+  "branch": "codex/tri-system-adoptable-fixes",
+  "files": [
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "sha256": "1da1fb9097d72415a300475b8514205bd597404313c9a64678397afb68f9ee7a"
+    },
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "sha256": "1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317"
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "sha256": "a7f695c06c1048ca44e411ad7b599b1a98f1a5516f88c24f77d88ae41c35c144"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "a6af6c73bdabf1005c895ec3f9a45fe5d59296926d153604855b24389129aa3d"
+    }
+  ],
+  "deferred": [
+    "orchestration minimal prose",
+    "context decision-state",
+    "context required-sources",
+    "original full17-file candidate"
+  ],
+  "behavior_scope": "28 explicit route entry invocations old/new; 8 wrong old references corrected; no model efficiency or automatic dispatch parity claim",
+  "gate_log": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-route-release-commit-gate.log",
+  "review": "J32 final pending actual gate/commit",
+  "publication": "Normal push to main and Desktop local fast-forward; exact accepted95d463c",
+  "commit": "95d463c17e1a39a2e5d26c4bc18c5e69f330546c",
+  "gate": {
+    "pass": 114,
+    "fail": 0,
+    "warn": 0,
+    "delegated": 1,
+    "exit": 0,
+    "normal_hooks": true,
+    "log_sha256": "c2a51a22d7d038e27233ce6e4a0bb4f726c79854896294a79b5a634f4b0add4d"
+  },
+  "first_published_route_commit": "164290856a20accf74118c4e5911d462b2b4eba3",
+  "gate_after_ci_repair": {
+    "pass": 114,
+    "fail": 0,
+    "warn": 0,
+    "delegated": 1,
+    "exit": 0,
+    "normal_hooks": true,
+    "log": "u014-ci-prerequisite-commit-gate.log",
+    "log_sha256": "e13175c71f15bcc78012d7b3e4205fe1f7a841dbed2df34895112c609c6d64ba"
+  },
+  "updated_at": "2026-10-03T09:18:09.928663+00:00",
+  "route_diff_sha256": "6827773cbd543e68371ca48e8b093c567c988a9c7296c747f9c78843d89e15fe",
+  "final_baseline_diff_sha256": "db27a21c7e814174944969a3f65a382da37054f09302383dbcdf77c20b12163f",
+  "ci": "u014-route-final-ci-success.json",
+  "final_independent_review": "u014-minimal-release-final-envelope.json"
+}

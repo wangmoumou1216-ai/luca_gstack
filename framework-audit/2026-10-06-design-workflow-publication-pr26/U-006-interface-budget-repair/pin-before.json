@@ -1,0 +1,7 @@
+{
+  "command": [
+    "node",
+    "scripts/check-agent-context.mjs"
+  ],
+  "exit": 1
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 3,
+  "kind": "luca-stable-cache-activation",
+  "controller_sha256": "707ac360542f6dc268b735a5fe2a220e27e1fb8183bfa2723265daede19f342d",
+  "target_commit": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+  "scope": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CACHE-FINAL-SCOPE-02.json",
+    "sha256": "1eff6622a143d5f94ccbe8babaf2211a457d6d332d4e28e6d98b973e0f8bdd97"
+  },
+  "install_review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-install-review-final3.json",
+    "sha256": "5e2b94932405678b79ea4f38a6b5ca588e94669a9f2e8f4547df694813b4dd02"
+  },
+  "code_install_review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-install-review-final2.json",
+    "sha256": "d42a7983e364cf07cda45f792428c149eb60f25cf4e2e54a0a8c40d0f6374181"
+  },
+  "deployment_snapshot_delta": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/deployment-snapshot-delta.json",
+    "sha256": "bca6721fd745f5f1774fdcac0c605bb64734a4ed410db840bd734ef81938f76e"
+  },
+  "installed_app": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-app-already-installed.json",
+    "sha256": "003bd6f3127f01479ed2f1746ecdfad976c3cec76b55706b042dbc875b180919"
+  },
+  "ci_environment": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CI-SHELL-DEPENDENCY-RESUME-01.json",
+    "sha256": "e93faaa4b19f3e5f3503adb57ebac24338cfe805f0c325892d7c165c01ecbf51"
+  },
+  "reviews": {
+    "standards": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/cache-final-standards-02.json",
+      "sha256": "df041744f6c2a0df1a1e33a35d67d60c6ae3a3a50386cb473685a02956a8f208",
+      "eval_run_id": "hook-cache-final-standards-20261001-02",
+      "invocation_id": "93eb73b8-f014-468d-b697-5f8ae51d2c88",
+      "agent_id": "01a0f4ed-50df-7f23-ae04-6e8429612006",
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T08-46-28-01a0f4ed-50df-7f23-ae04-6e8429612006.jsonl:01a0f4ed-514a-70b3-af91-8fcd326a9f9f"
+    },
+    "spec": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/cache-final-spec-02.json",
+      "sha256": "179eaa96dc66e241660fbafe5e77912ddbde07671b70c7b44c8df4fdf43133ba",
+      "eval_run_id": "hook-cache-final-spec-20261001-02",
+      "invocation_id": "f37230bf-4a77-47b6-9fb6-c346529e1590",
+      "agent_id": "01a0f4f2-9785-7ad1-a9cd-d3ac37580b60",
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T08-52-14-01a0f4f2-9785-7ad1-a9cd-d3ac37580b60.jsonl:01a0f4f2-97eb-77f3-b052-6d9b43637cd7"
+    }
+  },
+  "publication": {
+    "target_commit": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+    "branch": "main",
+    "remote_sha": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+    "run_id": 36812894375,
+    "ci_run": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-shell-official-ci-resume06.json",
+      "sha256": "867f61d024268a82db5f4aa451b0a7fbe84de1ddee851c5671e23becfaf8247c"
+    }
+  },
+  "app_publication": {
+    "target_commit": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+    "branch": "refactor/claude-code-kernel",
+    "remote_sha": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+    "local_head": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd"
+  },
+  "expected_manifest_sha256": "02419f4cdd555568b8e92af1c9a3336cb23513fb8ecdde1f63f87958e135be80",
+  "root_session_id": "01a0f0fe-e6fa-7660-beb5-181b1a9b6444",
+  "activation_id": "5810f7ad-5cc6-4da1-a4c3-a831ea43ffba",
+  "app_mode": "already-installed"
+}

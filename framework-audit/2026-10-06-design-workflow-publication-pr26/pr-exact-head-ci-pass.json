@@ -1,0 +1,70 @@
+{
+  "baseRefName": "main",
+  "headRefOid": "a7a0d535f25d82702083c78718d2c619ddfc778a",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "state": "OPEN",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-06T08:34:31Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181154275",
+      "name": "Validate YAML Files",
+      "startedAt": "2026-10-06T08:34:22Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-06T08:34:39Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181154132",
+      "name": "Validate Markdown",
+      "startedAt": "2026-10-06T08:34:23Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-06T08:34:30Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181154176",
+      "name": "Validate Skill Definitions",
+      "startedAt": "2026-10-06T08:34:23Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-06T08:51:25Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181153837",
+      "name": "Validate Framework Logic",
+      "startedAt": "2026-10-06T08:34:22Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-06T08:34:33Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112181154212",
+      "name": "Validate HTML Prototypes",
+      "startedAt": "2026-10-06T08:34:23Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-06T08:51:30Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/wangmoumou1216-ai/luca_gstack/actions/runs/37437000226/job/112187548645",
+      "name": "Required Checks",
+      "startedAt": "2026-10-06T08:51:27Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    }
+  ],
+  "url": "https://github.com/wangmoumou1216-ai/luca_gstack/pull/26"
+}

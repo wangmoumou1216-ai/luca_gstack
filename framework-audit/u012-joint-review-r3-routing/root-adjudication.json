@@ -1,0 +1,22 @@
+{
+  "review_id": "J17",
+  "eval_run_id": "tri-system-u012-routing-repair-20261003-r3",
+  "record_type": "root summary of actual independent final; exact original report/envelope in native agent transcript",
+  "status": "FAIL",
+  "passed": 2,
+  "total": 4,
+  "closed_prior_finding": "J15 F1 narrow action authority discovery",
+  "remaining_finding": "F4: actualHarness may return unknown, but STOP maps all non-codex values to CLAUDE.md; C3/C4 share one defect",
+  "evidence_dependency": {
+    "path": "readonly-dependency/harness.mjs",
+    "sha256": "2ac959d4a04af980863ddea4b2c4263ff52ec14fb91af7fd694530a34a25591a",
+    "scope": "returns unknown with no detection identifiers; baseline unchanged"
+  },
+  "repair_status": "sent to existing W42 active original owner",
+  "limits": [
+    "static review only",
+    "F3 Context outside scope",
+    "P08 INVALID remains",
+    "not behavior verification or adoption"
+  ]
+}

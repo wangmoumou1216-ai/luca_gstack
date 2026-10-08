@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "wf-20261006-B1-standard-v2",
+  "subject": {
+    "skill": "brainstorm:DESIGN_DRAFT",
+    "topic": "design-workflow-fixture",
+    "scene": "unknown",
+    "input_summary": "独立审查 Standard 第2轮 NO_PIN 冻结草稿；完整输入、草稿及四份授权来源哈希匹配。原 U-001-a 要求和验证分母已补齐，两种实质方案合规。推荐翻转条件缺 coverage row，延期问题分类不符合模板，C6/C8 未通过。",
+    "output_paths": [],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 8,
+    "total": 10,
+    "findings": [
+      "F2.1 medium：What would flip 已有正文但未进入覆盖矩阵，缺 SKILL Phase 1.5 要求的决策映射；C6/C8 FAIL。",
+      "F2.2 medium：Deferred 使用未定义的 observability 分类，上一轮 F1.3 的格式缺口未完全解决；C8 FAIL。",
+      "critical=0、high=0；必需 criteria 未全部通过，仍不得进入 Phase 6。默认两轮已用尽，追加审查须先说明升级理由。"
+    ]
+  }
+}

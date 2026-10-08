@@ -1,0 +1,253 @@
+PASS harness-synthesised prompts are never routed to a project switch
+PASS real hint surface routes self-evolution benchmark above deepresearch
+PASS no-keyword fallback is non-blocking on the real hint surface
+PASS PR-101 regression: meta_question soft-candidate renders without crashing
+PASS real route fixture queues a neutral event without project authority
+SKIP real route fixture is the prompt-bound read-grant issuer (read-grants quarantined: READ_GRANTS_ENABLED=false)
+PASS explicitly named new project declaration reaches operation:new
+PASS quoted new project name with spaces remains deterministic
+PASS unnamed new project remains a human gate even with an active project
+PASS ambiguous new project names remain a human gate
+PASS new declaration colliding with an existing identity requires a human choice
+PASS ambiguous demand asks project context before idea
+PASS new natural idea with active project keeps the project-scope gate
+PASS named current project does not reopen the ownership gate for a new feature
+PASS named current project does not reopen the generic demand gate
+PASS old project wording asks which existing project
+PASS last project wording asks which existing project
+PASS existing project variant asks which existing project
+PASS previous one wording asks which existing project
+PASS audit-verb naming an existing project switches, not C2-exempted
+PASS audit-verb without a named project stays C2-exempt
+PASS named existing project is handled before skill routing
+PASS complex current-project work enters plan mode
+PASS single weak complexity signal stays below plan-mode threshold
+PASS two w3 complexity signals sum to exactly the plan-mode threshold
+PASS page review routes to ux-audit
+PASS 2026-07-03: magicpath demoted to hidden (full-review P2-6, zero 30-day use) — direct interface wording has no route
+PASS html prototype routes explicitly
+PASS 2026-07-03: figma prototype wording — magicpath demoted, /html-prototype now wins alone (no more multi-candidate)
+PASS greeting stays quiet
+PASS G3: 现在进度如何 (6字check-in) → NONE，不再 PROJECT_STOP
+PASS G3: 第二人称进度问句无问号仍是当前任务 check-in
+PASS G3: 完成通知 + 后续 review + 进度问句的复合消息仍是当前任务 follow-up
+PASS G3: 不带业务对象的完成通知是当前任务 follow-up
+PASS G3: 啊结尾的续接语义显式命中而非靠短句偶然放行
+PASS G3: 并行 session 工作说明是上下文，不触发 handoff STOP
+PASS G3 反例: 业务对象的进度问句不是 agent check-in
+PASS G3 反例: 页面内文包含第二人称进度文案仍是实质工作
+PASS G3 反例: 并行 session 陈述后追加接手请求不再视为纯上下文
+PASS G3: 全部做完了吗 (6字check-in，无项目态) → NONE
+PASS G3: 现在怎么样了 → NONE
+PASS G3 反例: 继续做个原型 (含实义任务词) → 照常路由 /html-prototype
+PASS G3: route guard no longer requires a pin before skill routing
+PASS G3: generic continue-project wording stays neutral
+PASS G3: 长续接句不因长度被当成新项目任务
+PASS G3: 对上一轮判断的纠正保持静默
+PASS G3: 要求换成易懂说法保持静默
+PASS wait-what slash command explicitly invokes the Chinese repitch overlay without a project
+PASS wait-what Codex syntax explicitly invokes the same overlay
+PASS wait-what slashless command alias remains explicit
+PASS generic Chinese clarification does not implicitly invoke wait-what
+PASS casual mention of wait-what does not invoke the explicit-only skill
+PASS explicit Chinese wait-what invocation phrase reaches the registered route
+PASS writing-for-agents Codex syntax reaches the shared canonical skill
+PASS editing AGENTS.md routes to the agent-document writing lens
+PASS creating a lucagstack skill routes to writing-for-agents after complexity gate
+PASS current framework identity with observed typo stays NO_PIN
+PASS current framework identity consumes its adjacent generic project label
+PASS current framework correction remains a NO_PIN conversational follow-up
+PASS plain Chinese current-repository status question does not become a STOP
+PASS real downstream project entry remains a non-authorizing candidate
+PASS meta question about writing-for-agents does not execute it
+PASS interface microcopy remains owned by ux-writing
+PASS G3: 框架 hook 讨论不消费下游项目上下文
+PASS G3: 转述 route-guard 输出时不把输出里的项目词当成用户项目意图
+PASS G3: explicit no-pin product work is not converted into a route-guard project gate
+PASS G3 反担保: 描述页面现状不是项目修改请求
+PASS G3-C2: designer 不得诱发 design 系 soft candidate
+PASS G3-C2: 提到 claude 一词不得诱发 claude-api soft candidate
+PASS G3-C3: 用 claude 分析 api 文档 → 不再计多模块信号
+PASS 设计调研 routes ux_research, NOT deepresearch (调研⊂设计调研)
+PASS 访问网页: higher-weight web_access not shadowed by lower-weight agent_browser
+PASS 飞书多维表格 keeps lark_base candidate (equal-weight tie not shadowed)
+PASS ADR-0005 FIXED: research-proof no longer fires deepresearch (word boundary)
+PASS word-boundary fix keeps multi-word latin triggers (code review / codereview)
+PASS CJK 调研 keyword still fires deepresearch (true positive preserved)
+PASS 真实续接语句中的“深研”命中 deepresearch，已绑定同项目不要求重绑
+PASS 真实续接语句移除“深研”后不阻断，只保留语义 fallback
+PASS audit meta task escapes project gate (no current project)
+PASS meta why-question escapes project gate (no current project)
+PASS idea standalone allowed without project (会议纪要)
+PASS handoff slash command works without an active project
+PASS handoff Codex skill syntax works without an active project
+PASS handoff slashless command alias works without an active project
+PASS explicit Chinese session-transfer intent routes to handoff without a project
+PASS handoff-protocol mention does not trigger the session handoff skill
+PASS generic task delegation does not trigger the session handoff skill
+PASS workflow handoff artifact mention does not trigger the session handoff skill
+PASS compare hidden since 2026-07-03 — M2 exemption keeps it out of project gate, no deterministic route
+PASS explicit user plan request triggers PLAN_MODE
+PASS short complex new requirement triggers PLAN_MODE/planHint
+PASS 全流程做 with active project routes SINGLE_SKILL to /auto (internal Phase gate handles confirmation, not route-guard)
+PASS G4: 母版默认空 HEAVY set → /deepresearch 直呼是 SINGLE_SKILL，不叠外部 PLAN_CHECK
+PASS G4: env 注入 ROUTE_GUARD_HEAVY_SKILLS 后 /deepresearch → PLAN_CHECK（扩展点可达）
+PASS G4: env 成员不带前导斜杠也命中带斜杠直呼（双形态自动补全）
+PASS B: 已有项目多功能需求（caps>=4）触发 PLAN_MODE
+PASS B: 顿号枚举路径（enum>=2 + capHits>=1）触发 PLAN_MODE
+PASS B 下界负锚: 单功能编辑（加个登录按钮）不得进 PLAN_MODE
+PASS B 取舍: 裸枚举无动词（订单查询、库存管理、报表导出）无确定性路由（语义契约兜底）
+PASS B 反担保: 诊断句（为什么增加缓存后列表、详情、搜索变慢）不得进 PLAN_MODE
+PASS B 反担保: 事故报告（上线之后订单、库存、报表都延迟）不得进 PLAN_MODE
+PASS B-F1: 斜杠直呼+枚举不被 PLAN_MODE 劫持（直呼归还，planHint 附加）
+PASS B-F1: HEAVY 成员直呼+枚举 → PLAN_CHECK（fork 设计恢复，不被 PLAN_MODE 吞）
+PASS B-F2: 占位符枚举+连接词（红、黄、蓝然后保存）不得进 PLAN_MODE
+PASS B-F4: 会议纪要+功能枚举 → /idea 不被多功能需求劫持
+PASS B-F5: 可观测域构建需求（监控看板：异常统计、延迟分布…）→ PLAN_MODE 召回恢复
+PASS web_access 修复: 加个搜索功能 → 不再误命中 web-access（无确定性路由）
+PASS web_access 修复: 搜索一下（真检索意图）仍命中 web-access
+PASS web_access 复发修复: 审查一下/检查一下 不得误命中 web-access
+PASS web_access 复发修复: 帮我查一下（真查询意图）仍命中 web-access
+PASS 研究轴 2026-07-28: 认知类诉求（看框架/有何优势/可借鉴）拿到 score>0 以触发提示钉
+PASS 研究轴: 宾语插在中间的句式（怎么做X的 / 如何实现X）不得漏
+PASS 研究轴: 与规划意图叠加须 <6，不得误升 PLAN_MODE
+PASS 研究轴反担保: 本地文件对象即使谈"架构"也走平凡任务豁免
+PASS 研究轴反担保: 诊断语境（谈机制但在问为什么报错）不得命中
+PASS to-tickets: 显式同名调用命中发布 facade
+PASS to-tickets: Codex $skill 显式调用命中发布 facade
+PASS to-tickets: 元问句只是询问 skill，不执行
+PASS to-tickets: 泛拆任务语义仍归 task-plan
+PASS to-tickets: 泛 ticket/工单词不误触发
+PASS 评审轴: 对象绑定词命中 code-review（不被 ux-audit 抢）
+PASS 评审轴: preview 句不得命中 code-review（子串碰撞防回归）
+PASS 评审轴: 撤泛词后页面评审复合词仍直达 ux-audit
+PASS 评审轴: 零对象泛词不再误路由到 ux-audit
+PASS 评审轴: 点名已有项目不得由 route guard 生成切换
+PASS 评审轴: 无激活项目 + 框架路径的代码审查不被 Project Gate 截断
+PASS 评审轴: 英文 code review 分支请求命中专用入口
+PASS 模块设计轴: 深模块与 seam 对象命中 codebase-design
+PASS 元问句抑制: 找文件位置不得命中 /brainstorm
+PASS 元问句抑制: 口语变体「是啥」同样不得命中
+PASS 元问句抑制: 复合句第二分句是请求时不得抑制
+PASS 词边界: 前导标点触发词（.docx）也走边界判定，不落回旧子串路径
+PASS 元问句抑制: 请求词豁免——"深度研究一下 X 是什么" 仍走 deepresearch
+PASS 模块设计轴: 泛产品接口设计不得误触 codebase-design
+PASS 评审轴: 大写 Review 的框架自评审同样不被截断（豁免正则 /i）
+PASS 框架演进轴: luca_gstack 自我成长对标请求命中顶层 benchmark 流程，而非 /deepresearch
+PASS 框架演进轴极性: 显式否定下游范围不得反向制造 Project Gate
+PASS 框架演进轴极性: 禁止激活/确认/切换下游项目仍保持纯框架范围
+PASS 框架演进轴极性: mixed scope still cannot mint project authority
+PASS 框架演进轴: 用户纠正“应该是自我成长流程”时不再掉进 Project Gate
+PASS 框架演进轴: 显式 framework-evolution-scout 走 scout 模式且无需下游项目
+PASS 框架演进轴反担保: 句首显式 /deepresearch 仍尊重用户直呼
+PASS 框架演进轴反担保: Codex 句首显式 $deepresearch 同样尊重用户直呼
+PASS 框架演进轴反担保: 下游产品的“用户自我成长功能”不得误进框架流程
+PASS 项目名边界①: canonical name is evidence but not authority
+PASS 项目名边界①: 首处真粘连（museapp）、后文干净出现 → 仍须具名命中
+PASS 项目名边界②: 空格是边界——「muse app」唯一出现也须命中
+PASS 项目名边界②反向: 名字自带空格，连写形态不得因保留空白而失配
+PASS 项目名边界③: 前缀粘连（amuse）不得误绑 muse
+PASS 项目名边界③: 连字符前缀（luca-gstack-muse）不得误绑 muse
+PASS 项目名边界: 后缀粘连（muse-loop-orchestrate）仍不得误绑 muse
+PASS U-003 pure_meta: u003-01-pure
+PASS U-003 project: u003-01-project
+PASS U-003 mixed: u003-01-mixed
+PASS U-003 pure_meta: u003-02-pure
+PASS U-003 project: u003-02-project
+PASS U-003 mixed: u003-02-mixed
+PASS U-003 pure_meta: u003-03-pure
+PASS U-003 project: u003-03-project
+PASS U-003 mixed: u003-03-mixed
+PASS U-003 pure_meta: u003-04-pure
+PASS U-003 project: u003-04-project
+PASS U-003 mixed: u003-04-mixed
+PASS U-003 pure_meta: u003-05-pure
+PASS U-003 project: u003-05-project
+PASS U-003 mixed: u003-05-mixed
+PASS U-003 pure_meta: u003-06-pure
+PASS U-003 project: u003-06-project
+PASS U-003 mixed: u003-06-mixed
+PASS U-003 pure_meta: u003-07-pure
+PASS U-003 project: u003-07-project
+PASS U-003 mixed: u003-07-mixed
+PASS U-003 pure_meta: u003-08-pure
+PASS U-003 project: u003-08-project
+PASS U-003 mixed: u003-08-mixed
+PASS U-003 pure_meta: u003-09-pure
+PASS U-003 project: u003-09-project
+PASS U-003 mixed: u003-09-mixed
+PASS U-003 pure_meta: u003-10-pure
+PASS U-003 project: u003-10-project
+PASS U-003 mixed: u003-10-mixed
+PASS U-003 pure_meta: u003-11-pure
+PASS U-003 project: u003-11-project
+PASS U-003 mixed: u003-11-mixed
+PASS U-003 pure_meta: u003-12-pure
+PASS U-003 project: u003-12-project
+PASS U-003 mixed: u003-12-mixed
+PASS U-003 gate_satisfied: u003-reality-current-active
+PASS U-003 gate_satisfied: u003-reality-named-active
+PASS A-ALIAS frozen fixture "进入luca app项目"
+PASS A-ALIAS frozen fixture "进入「luca app」项目"
+PASS A-ALIAS frozen fixture "进入 luca app 项目页面看看"
+PASS A-ALIAS frozen fixture "切到 luca app 项目功能"
+PASS A-ALIAS frozen fixture "打开 luca app"
+PASS A-ALIAS frozen fixture "继续 luca app 的登录流程"
+PASS A-ALIAS frozen fixture "不进入 luca app 项目"
+PASS A-ALIAS frozen fixture "别切到 luca app 项目"
+PASS A-ALIAS frozen fixture "不想进入 luca app 项目"
+PASS A-ALIAS frozen fixture "更别说进入 luca app 项目"
+PASS A-ALIAS frozen fixture "免得又要进入 luca app 项目"
+PASS A-ALIAS frozen fixture "难道现在要进入 luca app 项目"
+PASS A-ALIAS frozen fixture "无论如何都要进入 luca app 项目"
+PASS A-ALIAS frozen fixture "不妨进入 luca app 项目"
+PASS A-ALIAS frozen fixture "进不进入 luca app 项目"
+PASS A-ALIAS 候选必须出现在真实 hint 面（非 dry-run），否则等于没接线
+PASS A-ALIAS 唯一候选与当前 binding 一致时明确无需 PROJECT_SWITCH
+PASS A-ALIAS 两个不同 canonical 目标全部记录、都不选
+PASS A-ALIAS alias_not_found：零候选时该对象缺席且命令为空
+PASS A-ALIAS 第 9 条触发 cap 拒绝（不截断、不择一）
+PASS A-ALIAS 保留词别名被拒，而其 canonical 名始终可用
+PASS A-ALIAS 别名等于某 canonical ID 被拒（不得改判归属）
+PASS A-ALIAS .luca 是符号链接时该项目只剩 canonical 名可用
+PASS A-ALIAS 携带模式穿过FRAMEWORK_FLOW 早返
+PASS A-ALIAS 携带模式穿过裸 return complexity（PLAN_MODE）
+PASS A-ALIAS 携带模式穿过mixed scope neutral return
+PASS A-ALIAS 携带模式穿过named project neutral return
+PASS A-SCOPE-NULL 作用域否定「不涉及项目」到不了会改绑定的分支
+PASS A-SCOPE-NULL 作用域否定「不属于项目」到不了会改绑定的分支
+PASS A-SCOPE-NULL 作用域否定「非项目相关」到不了会改绑定的分支
+PASS A-SCOPE-NULL 否定短语内嵌真实项目名仍不得改绑定（new project 前缀）
+PASS A-SCOPE-NULL 否定短语内嵌真实项目名仍不得改绑定（显式新建前缀）
+PASS A-SCOPE-NULL 具名下游项目也不由 route guard 绑定
+PASS A-SCOPE-NULL 显式新建文本仍保持非授权
+PASS A-SCOPE-NULL 对照组：显式新建两种极性均不授权
+PASS A-SIGNAL E2 原始复现串产信号且结构腿跨从句
+PASS A-SIGNAL negation_context 原样记录整条 prompt 字节
+PASS A-SIGNAL 冻结 fixture 产信号且不产生义务 "调整设置里的颜色但结构不变"
+PASS A-SIGNAL 冻结 fixture 产信号且不产生义务 "别调整设置结构"
+PASS A-SIGNAL 冻结 fixture 产信号且不产生义务 "我们优化了设置页面，结构没变"
+PASS A-SIGNAL 冻结 fixture 产信号且不产生义务 "帮我优化下设置页面，别动结构，其他随便你改"
+PASS A-SIGNAL 冻结 fixture 产信号且不产生义务 "颜色不改，重组设置分组"
+PASS A-SIGNAL 缺界面腿不得产信号（移出 fixture 集的两条）"结构别改"
+PASS A-SIGNAL 缺界面腿不得产信号（移出 fixture 集的两条）"没改结构，只动了配色"
+PASS A-SIGNAL 缺腿反例不产信号 "优化一下设置页面"
+PASS A-SIGNAL 缺腿反例不产信号 "这个页面的信息架构很乱"
+PASS A-SIGNAL 缺腿反例不产信号 "重构代码"
+PASS A-SIGNAL 缺腿反例不产信号 "把颜色改成蓝色"
+PASS A-SIGNAL 一段证据不得兼任两腿
+PASS A-SIGNAL 信号必须出现在真实 hint 面（故障发生的那一轮就可见）
+PASS A-SIGNAL 不计分、不派 skill/flow
+PASS A-OBLIG-VISIBLE 光有信号只落 SIGNAL_UNCONFIRMED，不注入（确认门）
+PASS A-OBLIG-VISIBLE PENDING 起同一 sid 连续 3 轮每轮都注入
+PASS A-OBLIG-VISIBLE 注入串锚定含 📌 的完整串，不与既有「未完成节点」提示混淆
+PASS A-OBLIG-LIFECYCLE 20 轮封顶后自动停止注入（变异体 15）
+PASS A-OBLIG-LIFECYCLE 切换回合不得退还注入预算（封顶对交替路径同样成立）
+PASS A-OBLIG-LIFECYCLE 项目措辞不再伪造切换或改变义务状态
+PASS A-OBLIG-LIFECYCLE 取消语义终结义务并停止注入
+PASS A-OBLIG-VISIBLE 损坏的状态文件不得让 route-guard 失败或吞掉路由提示（变异体 17）
+PASS A-OBLIG-VISIBLE 义务状态文件被 .gitignore 覆盖（变异体 18）
+PASS A-OBLIG-LIFECYCLE 义务不污染 decision 通道（只走 hints）
+PASS A-OBLIG-LIFECYCLE Stop 路径行为不因义务改变（session-sync stdout 恒定）
+
+=== test-route-guard summary: PASS=249 FAIL=0 ===

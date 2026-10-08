@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-health-activation-helper-20260930-01",
+  "subject": {
+    "skill": "hook-health-activation-helper",
+    "topic": "Reviewed activation helper",
+    "scene": "unknown",
+    "input_summary": "独立只读审查维护执行器；仅在OS-temp重定向审计目录后运行默认preflight，未运行apply，未修改生产或保护状态。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/activate-reviewed.py"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 4,
+    "total": 5,
+    "findings": [
+      "Default preflight is not read-only: run() creates two log files while reporting PREFLIGHT_PASS_NO_MUTATION. Restrict disk logging to apply mode and re-review."
+    ]
+  }
+}

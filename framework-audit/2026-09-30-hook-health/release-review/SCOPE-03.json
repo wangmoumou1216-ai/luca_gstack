@@ -1,0 +1,48 @@
+{
+  "review_root": "/Users/luca/Desktop/luca_gstack",
+  "production_root": "/Users/luca/Desktop/luca_gstack",
+  "scope_kind": "FILE_SET configuration-profile activation supplement only",
+  "project_session": "NO_PIN",
+  "revision3_package_sha256": "3d90329de723ab5720769576e66f9a2c92ec0568a7920f8658a8da7ce8504729",
+  "spec_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/PROFILE-REQUIREMENTS.md",
+  "spec_sha256": "01f14c1a98682c0b6994b5eba7125acb4fd0a2e6dc47f2765c5ed2e8f130e900",
+  "authority": "Read-only review and memory-only failure injection. No production source/config/installation or GUI/Git mutation. Do not read sibling reviewer reports.",
+  "files": [
+    {
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/activate-reviewed.py",
+      "sha256": "937b89698264a3027a080180c6d1f43596dee216b53fbea3f305db43ea4296ec"
+    },
+    {
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/test-activation-reviewed.py",
+      "sha256": "b2fd2bb47796585b9dd98778f6bc80a888847571bae16081a6ca9622ebf791d4"
+    },
+    {
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/profile-before-activate-reviewed.py",
+      "sha256": "b5305bffc7826970ae9d41782a90d7878c016396870548a70e20a06f21360912"
+    },
+    {
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/profile-before-test-activation-reviewed.py",
+      "sha256": "43a344a6a1c11cbf9c1adebc24c0140cffb468277aef8f96df1e562c4a56fdb3"
+    },
+    {
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/profile-supplement.diff",
+      "sha256": "1d9aacaab80496175af80f5e965cf4cbb8a5db4eed9bbfdda964cbb49c0443ee"
+    },
+    {
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ACTIVATION.md",
+      "sha256": "e5c80574f77bcbf73d799c96075384f2163680b3b51859da9fce0e603b47e5cd"
+    },
+    {
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/DIRECT-PROFILE-REVIEW.md",
+      "sha256": "e6793c367fec751d69c5b60088d5fe32efb3af686a9b983dacfa7b06e42edb5a"
+    },
+    {
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/direct-repair-proof.json",
+      "sha256": "bdd0fd37cfc4e1eab6fa501df34c2a76157e75ec5756394fa20bc3d75accffba"
+    },
+    {
+      "absolute_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/direct-profile-readback.json",
+      "sha256": "332468339e898f5c7915449180fb4b82cc0050f633afa1a83f7aae7d5f611358"
+    }
+  ]
+}

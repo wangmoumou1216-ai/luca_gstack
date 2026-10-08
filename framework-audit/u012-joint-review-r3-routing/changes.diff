@@ -1,0 +1,417 @@
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -19,17 +19,15 @@
+ <!-- K2:START -->
+ ## K2 — Routing order
+ 
+-For every non-mechanical request, classify in this exact order:
++For bounded tasks unrelated to framework, skill, project, memory or cross-session recovery,
++read any supplied owner; execute within scope. Before app/content references or tool actions,
++use K10 step 3 to discover and read matching owners by their `load_before`. Other startup reads
++are unnecessary. K3 Plan triggers and human/permission gates still apply. Otherwise route in order:
++**Project Gate**, **Plan**, **Framework Flow**, **Multi-Skill**, **Single-Skill**, **STOP**.
++Assess ambiguity/refusal; never treat STOP as permission. Unmatched work uses `NONE` + semantic fallback.
+ 
+-1. **Project Gate** — old/existing/continuing project before any scenario or skill.
+-2. **Plan** — test complexity before accepting a route-guard skill hit.
+-3. **Framework Flow** — framework evolution, self-growth, benchmark, or governance work.
+-4. **Multi-Skill** — several independent high-confidence skill matches.
+-5. **Single-Skill** — one high-confidence match and no Plan trigger.
+-6. **STOP** — ambiguity/refusal; assess and discover; never treat STOP as permission. `NONE` + semantic fallback covers unmatched work.
+-
+-The routing truth is `.claude/skill-os/skill-routing-map.yaml`. A user-chosen Workflow may add
+-handoff gates; otherwise skills remain standalone.
++Routing: `.claude/skill-os/skill-routing-map.yaml`. A user-selected Workflow adds handoff gates;
++otherwise skills remain standalone.
+ <!-- K2:END -->
+ 
+ <!-- K3:START -->
+@@ -45,11 +43,16 @@
+ <!-- K4:START -->
+ ## K4 — Skill discovery and STOP
+ 
++For an explicitly selected applicable method, read its authority through EOF; skip repeat
++catalog discovery. Plan and safety still apply.
++
++For genuine skill discovery or unresolved selection:
+ Before classifying as **Multi-Skill**, **Single-Skill**, or **STOP**, and before choosing or
+ invoking a skill, read `.claude/skill-os/generated/skill-catalog.md` through `FILE_END`. Route by
+-**semantic** intent, not keyword coincidence. Direct invocation still obeys Plan and safety. Exempt
+-only a truly **mechanical single-file** edit with no design, research, review, or product judgment.
+-Ambiguity needs user choice; no match needs catalog discovery. In discovery, **name the exact matching catalog skill** and authority; a generic catalog mention is incomplete.
++**semantic** intent, not keyword coincidence. A truly **mechanical single-file** edit with no
++design/research/review/product judgment, or a bounded task under K2, needs no discovery.
++Human ambiguity requires a real response. In discovery, **name the exact matching catalog skill**
++and authority.
+ <!-- K4:END -->
+ 
+ <!-- K5:START -->
+@@ -120,8 +123,8 @@
+ <!-- K10:START -->
+ ## K10 — Startup, conditional context, and harness truth
+ 
+-Minimal **startup** applies only to non-trivial work. A trivial mechanical question with no skill
+-or repository action answers directly and loads no conditional target. Otherwise:
++Minimal **startup** applies to framework, skill, project, memory or cross-session recovery work.
++Bounded unrelated tasks use K2's required owner discovery, without the other startup reads.
+ 
+ 1. Run `python3 memory/scripts/get_memory.py --summary`.
+ 2. Read this checkout's `CONTEXT.md` through its `FILE_END`.
+@@ -137,13 +140,12 @@
+    `.claude/skill-os/generated/input-modes/<key>.json` before input/override/handoff decisions;
+    honor fallback. Load active rules only when applicable.
+ 
+-A repository-contract question is non-trivial even when it only asks for classification or an
+-explanation. For name/route discovery, the catalog is sufficient. To decide a named skill's input,
++Repository-contract questions use startup even for classification or explanation.
++For name/route discovery, the catalog is sufficient. To decide a named skill's input,
+ authorization, handoff, or completion behavior, read that skill's `SKILL.md` and its explicitly
+-applicable one-hop contract owner even when execution is deferred. Do not run its preamble or load
++applicable one-hop contract owner even if deferred. Do not run its preamble or load
+ execution-only schemas, templates, scripts, Git history, sibling metadata, or implementation owners.
+-Finish the required owners first and stop loading when they answer the request; a referenced
+-implementation name is not permission for another read.
++Stop after required owners answer; implementation names do not authorize another read.
+ 
+ **Codex** invokes project skills as `$<skill-name>` or through the skill selector; its
+ `.agents/skills/` aliases point to the same authority bodies. It does not execute Claude slash
+--- a/.claude/skill-os/agent-context-manifest.json
++++ b/.claude/skill-os/agent-context-manifest.json
+@@ -10,8 +10,8 @@
+       "runtime": ["claude", "codex"],
+       "truth_owner": ".claude/skills/office/*/SKILL.md + .claude/skill-os/skill-routing-map.yaml + .claude/skill-os/skill-visibility.json",
+       "leading_words": ["skill", "workflow", "route", "STOP", "ambiguous"],
+-      "condition": "Before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.",
+-      "load_before": "skill selection or invocation",
++      "condition": "Codex: genuine skill discovery or unresolved selection, including STOP or semantic ambiguity with no matched skill; an explicitly selected applicable method reads its authority without repeat catalog discovery. Claude: before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.",
++      "load_before": "Codex: completing genuine discovery or unresolved skill selection. Claude: skill selection or invocation.",
+       "target": ".claude/skill-os/generated/skill-catalog.md",
+       "contains": "Every local skill's defining constraint and authority path, grouped by visibility.",
+       "loader": "root adapter",
+@@ -96,7 +96,7 @@
+     },
+     {
+       "id": "luca-app",
+-      "obligation_ids": ["K6", "K10"],
++      "obligation_ids": ["K2", "K6", "K10"],
+       "runtime": ["claude", "codex"],
+       "truth_owner": ".claude/skill-os/runtime/luca-app.md",
+       "leading_words": ["luca app", "侧栏", "当前页", "打开", "预览", "Figma"],
+--- a/.claude/skill-os/agent-root-kernel.json
++++ b/.claude/skill-os/agent-root-kernel.json
+@@ -12,7 +12,7 @@
+     },
+     {
+       "id": "K2",
+-      "statement": "Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order.",
++      "statement": "Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order. Codex bounded tasks unrelated to framework, skill, project, memory or cross-session recovery use the supplied owner within scope; before app/content references or tool actions, use the conditional index to discover and read matching owners by load_before. Other startup reads are unnecessary; real Plan, permission and human gates still apply.",
+       "required_terms": ["Project Gate", "Plan", "Framework Flow", "Multi", "Single", "STOP"],
+       "required_patterns": ["Project Gate[\\s\\S]*Plan[\\s\\S]*Framework Flow[\\s\\S]*Multi-Skill[\\s\\S]*Single-Skill[\\s\\S]*STOP", "never treat STOP as permission"],
+       "forbidden_patterns": ["STOP (?:is|grants|gives) (?:execution )?permission", "Single-Skill[\\s\\S]{0,80}before[\\s\\S]{0,80}Plan"]
+@@ -26,7 +26,7 @@
+     },
+     {
+       "id": "K4",
+-      "statement": "Load the skill catalog before Multi-Skill, Single-Skill, or STOP classification and before skill choice or invocation; treat STOP as a semantic-assessment state, not execution permission.",
++      "statement": "Load the skill catalog for genuine discovery or unresolved selection before Multi-Skill, Single-Skill, or STOP classification and skill choice or invocation. Codex explicitly selected applicable methods read their authority without repeat discovery; bounded unrelated tasks use K2. Claude retains its root catalog prerequisite. Treat STOP as semantic assessment, not execution permission.",
+       "required_terms": ["STOP", "semantic", "single-file", "mechanical", "skill-catalog"],
+       "required_patterns": ["Before classifying[\\s\\S]{0,100}Multi-Skill[\\s\\S]{0,40}Single-Skill[\\s\\S]{0,40}STOP[\\s\\S]{0,100}before choosing[\\s\\S]{0,40}invoking a skill", "Route by[\\s\\S]{0,20}semantic[\\s\\S]{0,100}not[\\s\\S]{0,30}keyword", "truly[\\s\\S]{0,20}mechanical single-file"],
+       "forbidden_patterns": ["Before answering or choosing a skill", "STOP (?:is|means) permission", "catalog (?:lookup|discovery) is optional"]
+@@ -68,7 +68,7 @@
+     },
+     {
+       "id": "K10",
+-      "statement": "Keep the minimal startup protocol, exact load_before boundaries, read-to-end rule, and truthful Claude/Codex invocation and capability differences inline.",
++      "statement": "Keep minimal startup, exact load_before boundaries, read-to-end rules, and truthful Claude/Codex invocation and capability differences inline. Codex startup applies to framework, skill, project, memory or cross-session recovery work; bounded unrelated tasks use K2 for required owner discovery without other startup reads. Claude retains its root startup scope.",
+       "required_terms": ["startup", "conditional", "FILE_END", "classification", "load_before", "Claude", "Codex"],
+       "required_patterns": ["Minimal[\\s\\S]{0,20}startup", "matching[\\s\\S]{0,40}conditional entry[\\s\\S]{0,40}target[\\s\\S]{0,80}EOF[\\s\\S]{0,100}load_before", "Only a boundary that precedes an answer blocks that answer", "do not[\\s\\S]{0,20}pre-read[\\s\\S]{0,80}boundary has not been reached", "name/route discovery[\\s\\S]{0,80}catalog is sufficient", "execution-only schemas[\\s\\S]{0,100}implementation owners", "Claude[\\s\\S]{0,220}Codex|Codex[\\s\\S]{0,220}Claude"],
+       "forbidden_patterns": ["for each matching[^\\n]{0,160}before answering", "framework/meta/`NO_PIN`[\\s\\S]{0,100}matches `project-session`", "Codex (?:uses|executes)[^\\n]{0,60}Claude slash", "Claude (?:uses|invokes)[^\\n]{0,40}\\$<skill-name>"]
+--- a/.claude/skill-os/generated/context-index.md
++++ b/.claude/skill-os/generated/context-index.md
+@@ -7,13 +7,13 @@
+ 
+ ```json
+ [
+-{"id":"skill-catalog","obligation_ids":["K4","K10"],"runtime":["claude","codex"],"leading_words":["skill","workflow","route","STOP","ambiguous"],"condition":"Before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.","load_before":"skill selection or invocation","target":".claude/skill-os/generated/skill-catalog.md","contains":"Every local skill's defining constraint and authority path, grouped by visibility.","loader":"root adapter","read_to_end":true,"fallback":"Inspect .claude/skills/office and the routing map directly; do not treat STOP as permission.","truth_owner":".claude/skills/office/*/SKILL.md + .claude/skill-os/skill-routing-map.yaml + .claude/skill-os/skill-visibility.json"},
++{"id":"skill-catalog","obligation_ids":["K4","K10"],"runtime":["claude","codex"],"leading_words":["skill","workflow","route","STOP","ambiguous"],"condition":"Codex: genuine skill discovery or unresolved selection, including STOP or semantic ambiguity with no matched skill; an explicitly selected applicable method reads its authority without repeat catalog discovery. Claude: before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.","load_before":"Codex: completing genuine discovery or unresolved skill selection. Claude: skill selection or invocation.","target":".claude/skill-os/generated/skill-catalog.md","contains":"Every local skill's defining constraint and authority path, grouped by visibility.","loader":"root adapter","read_to_end":true,"fallback":"Inspect .claude/skills/office and the routing map directly; do not treat STOP as permission.","truth_owner":".claude/skills/office/*/SKILL.md + .claude/skill-os/skill-routing-map.yaml + .claude/skill-os/skill-visibility.json"},
+ {"id":"plan-contract","obligation_ids":["K2","K3"],"runtime":["claude","codex"],"leading_words":["plan","complex","multi-phase","irreversible"],"condition":"Any of the five Plan conditions is true or the user explicitly requests planning.","load_before":"producing a phase plan, its assertions, or its approval scope","target":".claude/agents/plan-agent.md","contains":"Plan triggers, phase format, approval gates, assertions, and incremental replanning.","loader":"root adapter or route-guard plan decision","read_to_end":true,"fallback":"Keep K3 inline and stop before Supervisor/Hierarchical execution."},
+ {"id":"project-session","obligation_ids":["K1","K5","K6"],"runtime":["claude","codex"],"leading_words":["project","老项目","新项目","继续","NO_PIN","只读引用"],"condition":"The request names, implies, switches, creates, or cross-reads a project; project identity or authority must be decided; or a project-scoped action is imminent. A pure framework/meta NO_PIN explanation with none of these uses the inline floor.","load_before":"deciding project identity or authority, or the first project-scoped read, write, switch, creation, or cross-project reference","target":".claude/skill-os/runtime/project-session.md","contains":"Pin truth, NO_PIN, transaction-only switching, cross-project read grants, and shared-alias limits.","loader":"root adapter and project gate","read_to_end":true,"fallback":"Remain NO_PIN and do not touch shared project aliases until the project gate is resolved.","truth_owner":".claude/hooks/project-scope-guard.mjs"},
+ {"id":"memory-extraction","obligation_ids":["K8","K10"],"runtime":["claude","codex"],"leading_words":["remember","记住","纠正","memory","ingest","query","lint"],"condition":"The user corrects future behaviour, asks to remember, or requests memory ingest/query/lint/governance.","load_before":"deciding whether to store anything or writing memory","target":".claude/skill-os/extraction-bar.md","contains":"Extraction threshold and default-do-not-store rule.","loader":"root adapter or session-sync","read_to_end":true,"fallback":"Do not store; preserve the inline SC-20260523-003 fallback."},
+ {"id":"memory-attribution","obligation_ids":["K8","K10"],"runtime":["claude","codex"],"leading_words":["correction","复犯","绕行","归因"],"condition":"A correction or workaround passes the extraction threshold and needs ownership classification.","load_before":"choosing a person, framework, or project memory landing","target":".claude/skill-os/correction-attribution.md","contains":"L1-L5 attribution and source-fix-before-memory rules.","loader":"root adapter or session-sync","read_to_end":true,"fallback":"Do not write memory until attribution is resolved."},
+ {"id":"long-session","obligation_ids":["K6","K10"],"runtime":["claude","codex"],"leading_words":["checkpoint","handoff","multi-phase","compact","resume"],"condition":"A multi-phase task is about to cross a phase, spawn two heavy agents, approach compaction or handoff, or perform a Git/external effect.","load_before":"checkpointing, handoff, compaction, or the effect gate","target":".claude/skill-os/runtime/long-session.md","contains":"Checkpoint triggers, required fields, context bounds, and resume procedure.","loader":"root adapter","read_to_end":true,"fallback":"Stop before the effect and write a minimal auditable checkpoint outside project docs for NO_PIN work."},
+-{"id":"luca-app","obligation_ids":["K6","K10"],"runtime":["claude","codex"],"leading_words":["luca app","侧栏","当前页","打开","预览","Figma"],"condition":"The user refers to the app, sidebar, current page, or selection, or an actual inspect, open, navigate, or present action is imminent. LUCA_APP=1 alone does not activate this owner.","load_before":"answering the reference; reading, opening, or navigating app content; or presenting a verified HTML/Figma deliverable","target":".claude/skill-os/runtime/luca-app.md","contains":"Read/present/automation split, tool preference, selection resolution, and truthful degradation.","loader":"root adapter semantic action","read_to_end":true,"fallback":"Use documented local scripts when available and report unavailable state without invention."},
++{"id":"luca-app","obligation_ids":["K2","K6","K10"],"runtime":["claude","codex"],"leading_words":["luca app","侧栏","当前页","打开","预览","Figma"],"condition":"The user refers to the app, sidebar, current page, or selection, or an actual inspect, open, navigate, or present action is imminent. LUCA_APP=1 alone does not activate this owner.","load_before":"answering the reference; reading, opening, or navigating app content; or presenting a verified HTML/Figma deliverable","target":".claude/skill-os/runtime/luca-app.md","contains":"Read/present/automation split, tool preference, selection resolution, and truthful degradation.","loader":"root adapter semantic action","read_to_end":true,"fallback":"Use documented local scripts when available and report unavailable state without invention."},
+ {"id":"harness-boundary","obligation_ids":["K2","K4","K6"],"runtime":["claude","codex"],"leading_words":["system","developer","tool unavailable","do not use workflow","do not ask"],"condition":"A harness-injected preference appears to conflict with semantic routing or planning.","load_before":"using the injection to suppress a route or plan","target":".claude/skill-os/runtime/harness-boundary.md","contains":"Safety/capability facts versus behavioural preferences and the two-question test.","loader":"root adapter or route-guard STOP hint","read_to_end":true,"fallback":"Safety/tool facts bind; behavioural preferences do not erase semantic assessment."},
+ {"id":"model-routing","obligation_ids":["K10"],"runtime":["claude","codex"],"leading_words":["model","reasoning effort","subagent","档位"],"condition":"Selecting or validating an agent/subagent capability tier.","load_before":"selecting, validating, or dispatching a model tier","target":".claude/skill-os/model-routing.yaml","contains":"Claude aliases, Codex effort mapping, whitelist, and dispatch rules.","loader":"orchestrator or root adapter","read_to_end":true,"fallback":"Inherit the parent model and do not guess a stronger tier."},
+ {"id":"review-contract","obligation_ids":["K6","K9","K10"],"runtime":["claude","codex"],"leading_words":["review","评审","redteam","反证","quality gate"],"condition":"The user requests review or a phase requires independent adversarial closure.","load_before":"choosing a reviewer or declaring review closure","target":".claude/skill-os/routing-chain-check.md","contains":"R4 independence, REFUTE stance, runtime partition, missing-vote handling, mutation, and final closure.","loader":"root adapter or code-hygiene Mode D","read_to_end":true,"fallback":"Do not claim independent closure."},
+--- a/scripts/check-agent-context.mjs
++++ b/scripts/check-agent-context.mjs
+@@ -569,6 +569,74 @@
+       if (obligation.id === 'K4' && !match[1].includes('name the exact matching catalog skill')) errors.push(`${path} K4 missing exact skill discovery obligation`);
+     }
+ }
++if (projectedRoots.includes('AGENTS.md')) {
++  const block = id => (rootText['AGENTS.md'].match(
++    new RegExp(`<!-- ${id}:START -->([\\s\\S]*?)<!-- ${id}:END -->`))?.[1] || '')
++    .replaceAll('**', '');
++  const paragraphs = text => text.split(/\n\s*\n/).map(part => part.replace(/\s+/g, ' ').trim());
++  const runtimeClause = (text, runtime) => String(text || '').match(
++    new RegExp(`${runtime}:\\s*([\\s\\S]*?)(?=\\b(?:Codex|Claude):|$)`, 'i'))?.[1] || '';
++  const catalogEntry = entries.find(entry => entry.id === 'skill-catalog');
++  const discovery = paragraphs(block('K4')).find(part => part.includes('.claude/skill-os/generated/skill-catalog.md')) || '';
++  const selected = paragraphs(block('K4')).find(part => /^For an explicitly selected applicable method,/.test(part)) || '';
++  const codexCondition = runtimeClause(catalogEntry?.condition, 'Codex');
++  const claudeCondition = runtimeClause(catalogEntry?.condition, 'Claude');
++  // A coherent generated projection can still reverse the root's loading branch.
++  // Check the consuming paragraph and each harness clause, not a detached keyword.
++  if (!/^For genuine skill discovery or unresolved selection:/.test(discovery)
++      || !/authority through EOF; skip repeat catalog discovery/.test(selected)
++      || !/Plan and safety still apply/.test(selected)
++      || !/^genuine skill discovery or unresolved selection/.test(codexCondition)
++      || !/explicitly selected applicable method reads its authority without repeat catalog discovery/.test(codexCondition)
++      || !/^before choosing or invoking a skill/.test(claudeCondition)) {
++    errors.push('Codex catalog discovery scope disagrees across root and manifest or drops the Claude prerequisite');
++  }
++  if (!/^completing genuine discovery or unresolved skill selection\./.test(runtimeClause(catalogEntry?.load_before, 'Codex'))
++      || !/^skill selection or invocation\./.test(runtimeClause(catalogEntry?.load_before, 'Claude'))) {
++    errors.push('Codex catalog discovery deadline disagrees with the conditional root branch');
++  }
++  const startup = paragraphs(block('K10')).find(part => /^Minimal startup/.test(part)) || '';
++  const domains = /framework,\s*skill,\s*project,\s*memory or cross-session recovery/;
++  const bounded = paragraphs(block('K2')).find(part => /^For bounded tasks unrelated to/.test(part)) || '';
++  if (!domains.test(bounded) || !/read any supplied owner; execute within scope/.test(bounded)
++      || !/K3 Plan triggers and human\/permission gates still apply/.test(bounded)) {
++    errors.push('Codex bounded-task routing scope loses its owner, scope, or real gates');
++  }
++  if (!/Before app\/content references or tool actions, use K10 step 3 to discover and read matching owners by their `load_before`/.test(bounded)) {
++    errors.push('Codex bounded-task action owner discovery is unreachable before its reference or action');
++  }
++  const appEntry = entries.find(entry => entry.id === 'luca-app');
++  if (!appEntry?.runtime?.includes('codex') || !appEntry?.obligation_ids?.includes('K2')
++      || appEntry?.target !== '.claude/skill-os/runtime/luca-app.md'
++      || !/current page/.test(appEntry?.condition || '')
++      || !/^answering the reference;/.test(appEntry?.load_before || '')) {
++    errors.push('Codex app reference conditional owner loses its consumer, reachability, or before-answer deadline');
++  }
++  if (!domains.test(startup) || !/Bounded unrelated tasks use K2/.test(startup)) {
++    errors.push('Codex startup scope restores unconditional loading or loses the bounded-task route');
++  }
++  const catalogStatement = obligations.find(entry => entry.id === 'K4')?.statement || '';
++  if (!/Codex[^.]*explicitly selected[^.]*authority[^.]*without repeat discovery/.test(catalogStatement)
++      || !/Claude retains its root catalog prerequisite/.test(catalogStatement)) {
++    errors.push('Codex catalog kernel scope disagrees with the harness-specific loading branches');
++  }
++  const startupStatement = obligations.find(entry => entry.id === 'K10')?.statement || '';
++  if (!/Codex startup applies to/.test(startupStatement) || !domains.test(startupStatement)
++      || !/bounded unrelated tasks use K2/.test(startupStatement)
++      || !/Claude retains its root startup scope/.test(startupStatement)) {
++    errors.push('Codex startup kernel scope disagrees with the conditional root branch');
++  }
++  const routingStatement = obligations.find(entry => entry.id === 'K2')?.statement || '';
++  if (!/Codex bounded tasks unrelated to/.test(routingStatement) || !domains.test(routingStatement)
++      || !/supplied owner within scope/.test(routingStatement)
++      || !/real Plan, permission and human gates still apply/.test(routingStatement)) {
++    errors.push('Codex bounded-task routing kernel scope disagrees with the conditional root branch');
++  }
++  if (!/before app\/content references or tool actions, use the conditional index to discover and read matching owners by load_before/.test(routingStatement)
++      || !/use K2 for required owner discovery without other startup reads/.test(startupStatement)) {
++    errors.push('Codex bounded-task action owner kernel disagrees with the required narrow discovery branch');
++  }
++}
+ if (['roots-projected', 'projected'].includes(state.phase)) {
+   if (/mandatory startup context[\s\S]{0,800}read[^\n]*`?CLAUDE\.md`?/i.test(rootText['AGENTS.md'])) errors.push('AGENTS.md restored unconditional root cross-read');
+ }
+--- a/scripts/test-agent-context.mjs
++++ b/scripts/test-agent-context.mjs
+@@ -49,7 +49,7 @@
+   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
+ }
+ 
+-const EXPECTED_MUTATIONS = 107;
++const EXPECTED_MUTATIONS = 120;
+ let mutationCount = 0;
+ function mutate(name, edit, expected) {
+   const dir = fixture();
+@@ -84,8 +84,91 @@
+   const text = readFileSync(path, 'utf8');
+   const projected = JSON.parse(text.match(/```json\n([\s\S]*?)\n```/)[1]);
+   edit(projected);
+-  writeFileSync(path, text.replace(/```json\n[\s\S]*?\n```/, () => `\`\`\`json\n${JSON.stringify(projected)}\n\`\`\``));
+-}
++  const body = `[\n${projected.map(row => JSON.stringify(row)).join(',\n')}\n]`;
++  writeFileSync(path, text.replace(/```json\n[\s\S]*?\n```/, () => `\`\`\`json\n${body}\n\`\`\``));
++}
++function changeCatalogLoading(dir, field, value) {
++  const path = join(dir, '.claude/skill-os/agent-context-manifest.json');
++  const manifest = JSON.parse(readFileSync(path, 'utf8'));
++  manifest.entries.find(entry => entry.id === 'skill-catalog')[field] = value;
++  writeFileSync(path, JSON.stringify(manifest));
++  // Keep the projection coherent: failure must concern policy, not generated drift.
++  changeIndex(dir, rows => { rows.find(entry => entry.id === 'skill-catalog')[field] = value; });
++}
++mutate('bounded current-page reference loses conditional owner discovery', dir => {
++  const path = join(dir, 'AGENTS.md');
++  writeFileSync(path, readFileSync(path, 'utf8').replace(
++    /Before app\/content references or tool actions,[\s\S]*?Other startup reads\nare unnecessary\. /, ''));
++}, /Codex bounded-task action owner discovery/);
++mutate('kernel restores supplied-owner-only bounded execution', dir => {
++  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
++  const kernel = JSON.parse(readFileSync(path, 'utf8'));
++  kernel.obligations.find(entry => entry.id === 'K2').statement =
++    'Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order. Codex bounded tasks unrelated to framework, skill, project, memory or cross-session recovery use the supplied owner within scope; real Plan, permission and human gates still apply.';
++  writeFileSync(path, JSON.stringify(kernel));
++}, /Codex bounded-task action owner kernel/);
++for (const [field, value, name] of [
++  ['runtime', ['claude'], 'current-page owner drops the Codex consumer'],
++  ['load_before', 'opening or navigating app content', 'current-page owner loads only after answering its reference'],
++]) {
++  mutate(name, dir => {
++    const path = join(dir, '.claude/skill-os/agent-context-manifest.json');
++    const manifest = JSON.parse(readFileSync(path, 'utf8'));
++    manifest.entries.find(entry => entry.id === 'luca-app')[field] = value;
++    writeFileSync(path, JSON.stringify(manifest));
++    changeIndex(dir, rows => { rows.find(entry => entry.id === 'luca-app')[field] = value; });
++  }, /Codex app reference conditional owner/);
++}
++mutate('coherent catalog sources restore unconditional Codex discovery', dir => {
++  changeCatalogLoading(dir, 'condition', 'Before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.');
++}, /Codex catalog discovery scope/);
++mutate('coherent catalog sources move Codex discovery to every invocation', dir => {
++  changeCatalogLoading(dir, 'load_before', 'Skill selection or invocation.');
++}, /Codex catalog discovery deadline/);
++mutate('selected method loses its direct authority branch', dir => {
++  const path = join(dir, 'AGENTS.md');
++  writeFileSync(path, readFileSync(path, 'utf8').replace(
++    /For an explicitly selected applicable method,[\s\S]*?Plan and safety still apply\.\n\n/, ''));
++}, /Codex catalog discovery scope/);
++mutate('catalog condition becomes a detached reference after an unconditional loader', dir => {
++  const path = join(dir, 'AGENTS.md');
++  writeFileSync(path, readFileSync(path, 'utf8')
++    .replace('For genuine skill discovery or unresolved selection:\n', '')
++    .replace('<!-- K4:END -->', 'Reference: For genuine skill discovery or unresolved selection.\n<!-- K4:END -->'));
++}, /Codex catalog discovery scope/);
++mutate('bounded unrelated work restores full root startup', dir => {
++  const path = join(dir, 'AGENTS.md');
++  writeFileSync(path, readFileSync(path, 'utf8').replace(
++    /Minimal \*\*startup\*\* applies to framework,[^\n]*\nBounded unrelated tasks [^\n]*/,
++    'Minimal **startup** applies only to non-trivial work. Otherwise:'));
++}, /Codex startup scope/);
++mutate('startup keeps its exception but the routing root restores full discovery', dir => {
++  const path = join(dir, 'AGENTS.md');
++  writeFileSync(path, readFileSync(path, 'utf8').replace(
++    /For bounded tasks unrelated to framework,[\s\S]*?Otherwise route in order:/,
++    'For every non-mechanical request, route in order:'));
++}, /Codex bounded-task routing scope/);
++mutate('kernel drops bounded-task routing while the startup exception remains', dir => {
++  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
++  const kernel = JSON.parse(readFileSync(path, 'utf8'));
++  kernel.obligations.find(entry => entry.id === 'K2').statement =
++    'Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order.';
++  writeFileSync(path, JSON.stringify(kernel));
++}, /Codex bounded-task routing kernel scope/);
++mutate('kernel erases the Codex and Claude catalog distinction', dir => {
++  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
++  const kernel = JSON.parse(readFileSync(path, 'utf8'));
++  kernel.obligations.find(entry => entry.id === 'K4').statement =
++    'Before skill selection or invocation, read the full catalog. Treat STOP as semantic assessment, not execution permission.';
++  writeFileSync(path, JSON.stringify(kernel));
++}, /Codex catalog kernel scope/);
++mutate('kernel restores full startup for both harnesses', dir => {
++  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
++  const kernel = JSON.parse(readFileSync(path, 'utf8'));
++  kernel.obligations.find(entry => entry.id === 'K10').statement =
++    'Keep minimal startup, exact load_before boundaries, read-to-end rules, and truthful Claude/Codex invocation and capability differences inline.';
++  writeFileSync(path, JSON.stringify(kernel));
++}, /Codex startup kernel scope/);
+ mutate('explicit final prototype consumer pointer disappears', dir => {
+   const p = join(dir, '.claude/skills/office/tech-spec/SKILL.md');
+   writeFileSync(p, readFileSync(p, 'utf8').replaceAll('final_artifact_ref', 'unselected-artifact'));
+--- a/.claude/hooks/route-guard.mjs
++++ b/.claude/hooks/route-guard.mjs
+@@ -1300,16 +1300,17 @@
+       ];
+     case 'STOP': {
+       if (decision.reason === 'retired_skill') return [`[route-guard] ⛔ RETIRED — ${decision.message}`];
++      const routingOwner = `${actualHarness() === 'codex' ? 'AGENTS.md' : 'CLAUDE.md'} K2/K4`;
+       const softCandidates = decision.softCandidates || [];
+       const candidateHint = softCandidates.length
+         ? '\n基于语义推断，最可能的 skill：\n' +
+           softCandidates.map((c, i) =>
+             `  ${i + 1}. ${c.skill}（参考依据：${c.evidence.join('、')}）`
+           ).join('\n') +
+-          '\n语义映射清晰可按 CLAUDE.md「语义路由契约」直接路由；否则展示候选请用户确认或补充。'
+-        : '\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 CLAUDE.md「语义路由契约」路由（平凡任务豁免适用）。';
++          `\n语义映射清晰可按 ${routingOwner} 路由；否则展示候选请用户确认或补充。`
++        : `\n参考选项：/auto（自动识别全流程）、/office（查看所有 skill）、或请用户补充描述。\n无语义依据时禁止未询问自行执行；语义映射清晰 → 按 ${routingOwner} 路由（平凡任务豁免适用）。`;
+       // 2026-07-12：STOP 决策已带 complexityScore（buildDecision:485）。有激活项目 + 复杂度信号>0 时，
+-      // 确定性提醒走语义路由契约（别把 STOP 当"直接执行"）——把 CLAUDE.md 契约从纯靠模型记性变成有提示钉。
++      // 确定性提醒读当前宿主根的路由规则（别把 STOP 当"直接执行"）。
+       // 2026-07-28：研究轴与构建轴分文案。同一颗钉子，但"搞懂某事"和"做某事"该被提醒的
+       // 下一步不同——构建轴指向 Plan Agent，研究轴指向研究三档选档。
+       // 2026-07-31：评审轴走共享 helper reviewAxisHint（STOP 与 PROJECT GATE 两路复用，见其上注释）。
+@@ -1317,8 +1318,8 @@
+       const reviewReminder = reviewAxisHint(decision);
+       const complexReminder = (decision.complexityScore > 0 && decision.hasActiveProject)
+         ? (researchAxis
+-          ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 CLAUDE.md「语义路由契约」在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
+-          : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 CLAUDE.md「语义路由契约」评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
++          ? `\n[route-guard] 🔬 研究/认知信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 ${routingOwner} 在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。`
++          : `\n[route-guard] 🧠 复杂度信号 ${decision.complexityScore}（${(decision.signals || []).join('、')}）——像实质功能/代码需求，别按 STOP 直接执行：按 ${routingOwner} 评估该命中的 skill/流程，并过 Plan Agent 5 条件。`)
+         : '';
+       return [
+         '[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。' + candidateHint + reviewReminder + complexReminder,
+--- a/scripts/test-route-guard.mjs
++++ b/scripts/test-route-guard.mjs
+@@ -1531,6 +1531,42 @@
+ let passCount = 0;
+ let failCount = 0;
+ const failures = [];
++
++// The adapter declares the actual CLI while retaining Claude protocol fields.
++// Assert the real hint surface, not only the dry-run decision or source text.
++{
++  const sandbox = realpathSync(mkdtempSync(join(tmpdir(), 'route-root-owner-')));
++  mkdirSync(join(sandbox, '.claude', 'skill-os'), { recursive: true });
++  mkdirSync(join(sandbox, 'projects'));
++  writeFileSync(join(sandbox, '.claude', 'skill-os', 'skill-routing-map.yaml'),
++    readFileSync('.claude/skill-os/skill-routing-map.yaml'));
++  try {
++    for (const harness of ['codex', 'claude']) {
++      for (const prompt of ['PRD是啥', 'PRD是啥，规划一下', 'PRD是什么，了解其机制']) {
++        const result = spawnSync('node', ['.claude/hooks/route-guard.mjs'], {
++          cwd: process.cwd(), input: JSON.stringify({ prompt, prompt_id: 'protocol-field' }), encoding: 'utf8',
++          env: { ...baseEnv, CLAUDE_PROJECT_DIR: sandbox, LUCA_PROJECTS_ROOT: join(sandbox, 'projects'),
++            LUCA_ACTUAL_HARNESS: harness, ROUTE_GUARD_DRY_RUN: '0',
++            ROUTE_GUARD_PROJECTS: 'fixture', ROUTE_GUARD_CURRENT_PROJECT: 'fixture' },
++        });
++        assert.equal(result.status, 0, result.stderr);
++        assert.match(result.stdout, /❓ STOP/);
++        const expectedRoot = harness === 'codex' ? 'AGENTS.md' : 'CLAUDE.md';
++        const otherRoot = harness === 'codex' ? 'CLAUDE.md' : 'AGENTS.md';
++        assert.ok(result.stdout.includes(`${expectedRoot} K2/K4`), `${harness} hint points to the wrong root: ${result.stdout}`);
++        assert.ok(!result.stdout.includes(otherRoot), `${harness} hint requires a foreign root`);
++        assert.match(result.stdout, /确认或补充/, 'STOP must retain the unresolved-selection human gate');
++        assert.doesNotMatch(result.stdout, /project\.sh|--tx|PROJECT_SWITCH/, 'hint must not mint project authority');
++        if (prompt.includes('规划一下')) assert.match(result.stdout, /Plan Agent 5 条件/);
++        if (prompt.includes('了解其机制')) assert.match(result.stdout, /研究\/认知信号/);
++        console.log(`PASS ${harness} STOP hint uses its root owner: ${prompt}`);
++        passCount++;
++      }
++    }
++  } finally {
++    rmSync(sandbox, { recursive: true, force: true });
++  }
++}
+ 
+ // Real hint surface (not dry-run JSON): this is what Claude/Codex actually receive.
+ // No session_id is supplied, so the hook cannot open or mutate project state.
+--- a/scripts/test-agent-context-resolution.mjs
++++ b/scripts/test-agent-context-resolution.mjs
+@@ -27,6 +27,7 @@
+ }
+ 
+ for (const runtime of ['claude', 'codex']) {
++  includes(runtime, '当前页是什么', 'luca-app');
+   includes(runtime, '继续这个老项目', 'project-session');
+   includes(runtime, '请记住这次纠正', 'memory-extraction');
+   includes(runtime, 'multi-phase checkpoint before push', 'long-session');

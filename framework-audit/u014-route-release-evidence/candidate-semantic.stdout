@@ -1,0 +1,32 @@
+PASS real repository semantic parity
+PASS symlinked office root is rejected
+PASS symlinked agents root is rejected
+PASS intentional external delegation positive fixture
+PASS symlinked source skill without projection is rejected
+PASS dangling source directory symlink is rejected
+PASS symlinked source SKILL.md is rejected
+PASS dangling source SKILL.md symlink is rejected
+PASS authority path escape is rejected
+PASS swapped delegation target is rejected
+PASS source skill name mismatch is rejected
+PASS duplicate source name is rejected
+PASS duplicate source metadata is rejected
+PASS empty duplicate source name is rejected
+PASS quoted duplicate source name is rejected
+PASS invalid YAML frontmatter is rejected
+PASS actual delegation file symlink swap is rejected
+PASS deleted delegation target is rejected
+PASS dangling delegation target symlink is rejected
+PASS removed mandatory obligation is rejected
+PASS gate scope mutation is rejected
+PASS standalone override mutation is rejected
+PASS parallel-start mutation is rejected
+PASS missing order semantics is rejected
+PASS string order semantics is rejected
+PASS unordered authority permits obligation reordering
+PASS ordered authority positive fixture
+PASS ordered authority rejects obligation reordering
+PASS metadata-only receipt without runtime instruction is rejected
+PASS negated runtime receipt is rejected
+PASS orphan Codex projection without source authority is rejected
+PASS semantic parity proof-it-bites 31/31

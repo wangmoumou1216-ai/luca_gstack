@@ -1,0 +1,55 @@
+{
+  "argv": [
+    "/Users/luca/Desktop/luca_gstack/framework-audit/u014-codex-minimal-eval-entry.sh",
+    "mcp",
+    "list",
+    "--json"
+  ],
+  "exit_code": 0,
+  "mcp_servers": [
+    {
+      "name": "code-review",
+      "enabled": false
+    },
+    {
+      "name": "codex_app",
+      "enabled": false
+    },
+    {
+      "name": "computer-use",
+      "enabled": false
+    },
+    {
+      "name": "context7",
+      "enabled": false
+    },
+    {
+      "name": "cua_repl",
+      "enabled": false
+    },
+    {
+      "name": "figma",
+      "enabled": false
+    },
+    {
+      "name": "fxiaoke-crm",
+      "enabled": false
+    },
+    {
+      "name": "node_repl",
+      "enabled": false
+    },
+    {
+      "name": "pencil",
+      "enabled": false
+    },
+    {
+      "name": "shadcn",
+      "enabled": false
+    }
+  ],
+  "model_runs": 0,
+  "app_server_effective_adoption": "UNVERIFIED",
+  "scope": "Same isolated entry for all comparison conditions. Native shell and registered case tools retained; no claim for MCP integrations, UI, external data or full day-to-day feature coverage.",
+  "delta": "Disable unrelated inherited MCP definitions only within process; canonical Python shell environment; no new permission or resource grant."
+}

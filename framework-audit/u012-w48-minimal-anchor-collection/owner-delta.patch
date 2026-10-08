@@ -1,0 +1,13 @@
+diff --git a/.claude/skill-os/capability-parity.json b/.claude/skill-os/capability-parity.json
+index dbe02f1..471b2ba 100644
+--- a/.claude/skill-os/capability-parity.json
++++ b/.claude/skill-os/capability-parity.json
+@@ -100,7 +100,7 @@
+     ],
+     ".claude/hooks/route-guard.mjs": [
+       "多功能需求",
+-      "语义路由契约」路由",
++      "语义映射清晰可按 ${routingOwner} 路由",
+       "命名即切换",
+       "nameMatchesIn"
+     ],

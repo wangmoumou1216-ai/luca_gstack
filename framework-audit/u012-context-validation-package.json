@@ -1,0 +1,829 @@
+{
+  "schema_version": 1,
+  "kind": "u012-context-validation-package",
+  "status": "WAIT_ROOT_FINAL_BINDINGS",
+  "audience": "root/reviewer only; not candidate instructions or a new recovery protocol",
+  "original_goal": "统一框架的Context模块持续实现、真实恢复/失败/停止/继续验证、独立review回修及最终三模块集成；本包不是模块完成。",
+  "current_focus": "复用冻结公共D06及原driver fresh/checkpoint入口，准备精确字节和14用途观察绑定；当前turn不运行模型/probe。",
+  "shared_context": "# 三模块持续开发责任修订\n\n## 零、所有后续 Session 必须继承的背景\n\n**luca_gstack 是在 Codex 桌面、Codex CLI、Claude Code CLI 中通用使用的一个框架。评估按三体系及其协同作用组织，最终产出一份统一的评估执行计划。** 本文将用户口述的“Cloud Code”按 Claude Code 理解；该名称不改变通用框架这一评估对象。\n\n用户本次明确要求：“按照它们的通用价值，然后去考虑我的框架上面的这几大模块的问题以及计划的输出。”据此，以下约束适用于目的整理、研究、独立规划、设计、审计、比较、裁决和迁移：\n\n- **以共同用途定义价值。** 从理解任务、组织执行、保持信息连续性和必要的人类控制出发，研究框架在当前模型与实际运行环境能力之上增加了什么价值；这些价值是否值得其规则、协调和维护成本。\n- **保持一个框架的规划对象。** 不按三个使用端拆成三套方案、三组模块或平台专项 Session，不预设需要新增适配层、平台分支或配置体系。若证据表明统一目标存在无法消除的能力冲突，记录影响并回到共同用途裁决，不由执行者自行扩大架构。\n- **区分能力事实与架构选择。** 模型本身的能力、环境实际提供的执行能力、框架增加的机制，分别作为归因依据。环境名称不充当方案分组依据；必要的能力核实服务于同一方案的可行性判断。\n- **通用性不等于采用最弱能力。** 不要求实现方式完全相同，也不凭空假设各处都有同一能力。无法取得必要能力时，先检验现有能力能否以更简单方式达到同一结果；仍不能满足必要控制或用途时明确限制，不静默削弱目标。特有增强的收益不能冒充通用收益。\n- **以证据控制复杂度。** 每个保留或新增机制都要说明服务的共同用途、必要能力前提、最小替代及净价值。确需核实环境差异时，只检查可能改变结论的行为与控制点，复用同一任务和判据；不得以此自动扩成全端、全组合的独立评估工程。\n- **按模块职责限定范围。** 三体系评估负责通用的任务分流、Agent 协作、Context 提供及其交接；技能内部领域方法、动效或其他具体交付流程仍由技能 owner 负责。技能作为真实任务的消费方或案例时，只检查与三体系有关的输入、输出和控制衔接。发现技能内部问题，记录具体责任边界，不自动扩大为技能重构或新增评估模块。\n- **允许高价值交集优先进入。** 主协调者可将直接改善共同用途或评估可信度、且能保留最新提交有效行为的交集列为优先项。先复用现有 owner；确有额外收益才设计最小增补实验，并记录收益依据、责任边界和回归要求。优先项使用既有任务卡，不新增阶段或审批体系，也不扩大实施授权。\n\n本节是共同输入合同，必须随最小任务包和跨 Session 交接传递。执行者不能只读某一阶段而丢失本节约束。\n\n**最新用户侧重（2026-10-02）：Codex 桌面与 Codex CLI 是主要研究、开发校准和收益验证环境。** 先查这两者可用的原生能力及框架增量；Claude Code 仅做可能改变共同用途判断的兼容/必要控制检查。API 是单列的能力表面，区分本地 Codex SDK/app-server、托管 Agents API、应用内 Agents SDK 和 Responses；不自动新增平台工程。保持一个框架，不按三个宿主平分实验、不凭空编造用户使用比例。此优先级随全部派发传递。\n\n\n\n\n",
+  "latest_authority": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-continuous-module-ownership.md",
+    "sha256": "8f0a4212abf5ef5140bb37133676923523d7da693e7c45b00f3e63f33892e5d4",
+    "additional_direction": "W41 root delegation: only public current case sources / existing protocol, driver, integration / owned Context files and reports; 20 minutes/40 actions/50000 observed tokens; 0 models/probes/new agents; private/archives forbidden; root supplies final bindings and results",
+    "continuous_extension": {
+      "source": "latest root/user continuous-module instructions in this turn",
+      "added_owned_paths": [
+        ".claude/skills/office/references/handoff-protocol.md",
+        ".claude/skills/office/SKILL.md"
+      ],
+      "office_scope": "Step 2 handoff/resume consumption plus adjacent 5K budget and required over-limit consumer explanation; all other bytes remain unchanged",
+      "latest_correction": "ordinary development batch stop removed; prior consumption and failures retained; real platform/Human Gate/external dependency limits remain",
+      "other_owners_preserved": true,
+      "prior_read_only_consumer_conflict": "resolved within granted Step 2, including current-owner required complete-source exception and NO_PIN boundary"
+    }
+  },
+  "source_bindings": [
+    {
+      "role": "frozen-public-case-package",
+      "original_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/manifest.json",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/public-source/manifest.json",
+      "bytes": 6795,
+      "sha256": "231746d52c4fd4735d7fe2da73539f293481c2129ae14345feb97735c0b96ca2"
+    },
+    {
+      "role": "frozen-public-case-package",
+      "original_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/developer-cases.json",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/public-source/developer-cases.json",
+      "bytes": 360270,
+      "sha256": "8b0d8fd82591ce7f479c17f283a686af109452436c2e61e3a39c7e27d845953c"
+    },
+    {
+      "role": "frozen-public-case-package",
+      "original_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/README.md",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/public-source/README.md",
+      "bytes": 10540,
+      "sha256": "4e30421efdfc98fa824c2d7de9b2cf3e8ace3027998643ebbfbb3902ad4a4c36"
+    },
+    {
+      "role": "frozen-public-case-package",
+      "original_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/coverage.md",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/public-source/coverage.md",
+      "bytes": 4875,
+      "sha256": "1c28eb739ddccf02e2a59d2057c8812361a11c239f2c046eec8e81180390fbfc"
+    }
+  ],
+  "context_bindings": [
+    {
+      "relative_path": ".claude/skill-os/runtime/long-session.md",
+      "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skill-os/runtime/long-session.md",
+      "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skill-os/runtime/long-session.md",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skill-os/runtime/long-session.md",
+      "sha256": "43d88566e323994b532e9cfbe7fafc52c25eca55fd843a02216bf26e701ae312",
+      "bytes": 2628,
+      "previous_stable_sha256": "70e51b16461ab14ba55cb06af7db19c733c845cda6c50fb5342a0dc9120c4181",
+      "root_observed_sha256": "70e51b16461ab14ba55cb06af7db19c733c845cda6c50fb5342a0dc9120c4181",
+      "root_adoption_status": "PENDING_ROOT_ADOPTION"
+    },
+    {
+      "relative_path": ".claude/skills/office/handoff/SKILL.md",
+      "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/handoff/SKILL.md",
+      "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/handoff/SKILL.md",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/handoff/SKILL.md",
+      "sha256": "3ba25ed25cdbbbe9c87699b41d5fbed1bd180336e59f2b27b08b91805621e002",
+      "bytes": 6627,
+      "previous_stable_sha256": "c4ad4c5009e73b04625afbeb00a524df5be15341cfa8eba7fd91d2f4501e0a0d",
+      "root_observed_sha256": "c4ad4c5009e73b04625afbeb00a524df5be15341cfa8eba7fd91d2f4501e0a0d",
+      "root_adoption_status": "PENDING_ROOT_ADOPTION"
+    },
+    {
+      "relative_path": ".claude/skills/office/references/handoff-protocol.md",
+      "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+      "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/references/handoff-protocol.md",
+      "pre_sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6",
+      "sha256": "cf55886449a7206c3d766e5645c0959b2d2b2b629e6f6a70b34f727b93f896c1",
+      "pre_bytes": 8740,
+      "bytes": 11200,
+      "root_observed_sha256": "b4f169955b69afbea1c0b375a96e65e4698ca7190ead6a600846afd7c93041c1",
+      "root_adoption_status": "PENDING_ROOT_ADOPTION",
+      "previous_stable_sha256": "b4f169955b69afbea1c0b375a96e65e4698ca7190ead6a600846afd7c93041c1"
+    },
+    {
+      "relative_path": ".claude/skills/office/SKILL.md",
+      "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/SKILL.md",
+      "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/SKILL.md",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/SKILL.md",
+      "pre_sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377",
+      "sha256": "942ee2387434c895932511efaa55fd03cb0800323f265d12b17f876fda1bd88c",
+      "pre_bytes": 14954,
+      "bytes": 16524,
+      "root_observed_sha256": "72431cbfbc4e3c874165306eb6d8bb9ea9fd9c40f01b14d78cadff84a61d6ac9",
+      "root_adoption_status": "PENDING_ROOT_ADOPTION",
+      "previous_stable_sha256": "72431cbfbc4e3c874165306eb6d8bb9ea9fd9c40f01b14d78cadff84a61d6ac9",
+      "pre_j16_sha256": "7948febd24c470a4ed62cd79618e025d9e792dbf4f9cbfa2f526c191f0937da3"
+    }
+  ],
+  "code_bindings": [
+    {
+      "role": "driver",
+      "actual_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/code-reference/driver.mjs",
+      "sha256": "9a704cd1a8076d3b061668481b83a99a398f88880bd18b1f41b32c00efb1028a",
+      "bytes": 57957,
+      "snapshot_is_executable_package": false
+    },
+    {
+      "role": "case-protocol",
+      "actual_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/code-reference/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446,
+      "snapshot_is_executable_package": false
+    },
+    {
+      "role": "integration-reference",
+      "actual_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/code-reference/integration.test.mjs",
+      "sha256": "80bed880d8f71d14cd77b411f29d872e3d6bf091693d53983d2b3b37e435e658",
+      "bytes": 57743,
+      "snapshot_is_executable_package": false
+    }
+  ],
+  "case_binding": {
+    "case_id": "D06",
+    "selector": "cases[id == D06]",
+    "original_bundle_sha256": "8b0d8fd82591ce7f479c17f283a686af109452436c2e61e3a39c7e27d845953c",
+    "canonical_case_object_sha256": "3b671ebbfa5620a168697b5aef2bc657e21acf68f48b8d56940642bd0e7c5ac3",
+    "canonical_hash_definition": "UTF-8 JSON, sorted object keys, ensure_ascii=false, separators comma/colon; original full bundle bytes remain unchanged",
+    "mandatory_checkpoints": [
+      "request_delivered",
+      "inputs_delivered",
+      "work_ready",
+      "checkpoint_accepted",
+      "resume_start",
+      "decision_resolved",
+      "before_final_submission"
+    ],
+    "candidate_handoff_contract": {
+      "show": [
+        "request",
+        "authorized_actions",
+        "driver_protocol.mandatory_checkpoints",
+        "eligible initial_files",
+        "delivered events",
+        "input/field-semantics.json at inputs_delivered",
+        "driver_protocol.terminal_status_rule"
+      ],
+      "artifact_contract_source": "input/output-contract.json",
+      "never_show": [
+        "answers",
+        "deterministic_checks.expected",
+        "acceptance.required_terminal_status",
+        "blind_review_map",
+        "task_structure.terminal_branch",
+        "unreleased event payloads",
+        "future-stage file contents"
+      ],
+      "initial_material_rule": "At request delivery tell the candidate input files will arrive at inputs_delivered; deliver output-contract.json with that first material bundle."
+    },
+    "model_resume_payload": {
+      "include": [
+        "original request",
+        "authorized_actions",
+        "owner method",
+        "output/checkpoint.json",
+        "ordered events through resume_start",
+        "all material with stage <= resume_start"
+      ],
+      "exclude": [
+        "discarded internal chain of thought",
+        "unreleased judge answers",
+        "other cases or prior trial results"
+      ],
+      "write_ledger_continues": true
+    },
+    "original_events_unchanged": true
+  },
+  "entry": {
+    "executable": "node",
+    "actual_driver_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+    "driver_sha256": "9a704cd1a8076d3b061668481b83a99a398f88880bd18b1f41b32c00efb1028a",
+    "cli_arguments": [
+      {
+        "flag": "--manifest",
+        "value": null,
+        "status": "ROOT_FINAL_BINDING_REQUIRED"
+      },
+      {
+        "flag": "--cases",
+        "value": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/public-source/developer-cases.json",
+        "sha256": "8b0d8fd82591ce7f479c17f283a686af109452436c2e61e3a39c7e27d845953c"
+      },
+      {
+        "flag": "--case",
+        "value": "D06"
+      },
+      {
+        "flag": "--condition",
+        "value": null,
+        "allowed_values": [
+          "B",
+          "T",
+          "S",
+          "I"
+        ],
+        "status": "ROOT_FINAL_BINDING_REQUIRED"
+      },
+      {
+        "flag": "--trial",
+        "value": 1,
+        "status": "root must register this exact trial in the existing pool"
+      },
+      {
+        "flag": "--out",
+        "value": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/run-output",
+        "status": "real empty OS temporary directory; no run started"
+      }
+    ],
+    "runnable_now": false,
+    "launch_authorized_in_this_turn": false,
+    "missing_bindings": [
+      {
+        "binding": "final_framework_source_root_and_source_manifest",
+        "value": null,
+        "why": "root须合W39/W40与本W38，逐字冻结三模块最终snapshot；tracked_sources必须含两份精确W38哈希。 Also bind the authorized handoff-protocol and shared office Step 2 final bytes."
+      },
+      {
+        "binding": "final_condition_id_and_material_sha256",
+        "value": null,
+        "why": "只接受既有B/T/S/I之一，由root所选条件及全部condition files实际字节计算；本owner不读取或改conditions模块。"
+      },
+      {
+        "binding": "runtime_release_manifest_path_and_sha256",
+        "value": null,
+        "why": "root须给实际READY release，绑定run_id/stage/case/condition/trial、全部代码/源hash、原模型/effort与合法预算。"
+      },
+      {
+        "binding": "root_run_registration_and_pool_receipt",
+        "value": null,
+        "why": "probe须真实REGISTERED记录及hash；development须原登记与有效native权限证据，不新增run池/试次。"
+      },
+      {
+        "binding": "conditions_native_trace_and_effective_permission_bindings",
+        "value": null,
+        "why": "driver依赖现有conditions/native observer及有效读/写隔离/宿主证据；未提供不宣称可运行或全链可见。"
+      }
+    ]
+  },
+  "uses": [
+    {
+      "use_id": "USE-01",
+      "purpose": "任务和项目作用域",
+      "observable": "全链case_read/case_write与native实际访问日志均在当前投放/授权内；不要由模型自报替代边界证明。",
+      "existing_check_ids": [
+        "CTRL_SCOPE"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "真实项目 pin、跨项目隔离、宿主权限边界未运行；保留旧控制。"
+    },
+    {
+      "use_id": "USE-02",
+      "purpose": "显式选择及自然请求",
+      "observable": "initial_message与resume_message保留同一原request；模型交付原workflow所需全部合法产物，不把checkpoint当任务终点。",
+      "existing_check_ids": [
+        "PROTOCOL-FACTS",
+        "CHECKPOINT-PHASE"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "覆盖直接有界请求、显式技能和选定工作流；真实目录发现及全量措辞未覆盖。"
+    },
+    {
+      "use_id": "USE-03",
+      "purpose": "复杂度与授权边界",
+      "observable": "延续已授权本地工作；只等待题内必要事件，不因重任务或新上下文自造批准。",
+      "existing_check_ids": [
+        "CTRL_EVENTS",
+        "CTRL_SCOPE"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "有简单与重任务；未证明任意复杂度阈值、路由策略或成本倍数。"
+    },
+    {
+      "use_id": "USE-04",
+      "purpose": "单技能和用户选定流程",
+      "observable": "真实读取投放owner-method/output-contract，完成既定normalize→design→handoff关系；不替换领域方法。",
+      "existing_check_ids": [
+        "CHECKPOINT-PHASE",
+        "CHAIN-GUARDS"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "只消费题内合成 owner 合同；真实技能专业交付和宿主工作流后端未证实。"
+    },
+    {
+      "use_id": "USE-05",
+      "purpose": "依赖、分工、回收与合并",
+      "observable": "新设计仅消费当前已验收源及已送达人类选择；D06无dependency_result失败，失败传播仍缺实测。",
+      "existing_check_ids": [
+        "FLOW_AFTER_DECISION",
+        "CHECKPOINT-DERIVATION"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "有可独立分解和强依赖；真实并发、Agent 调度隔离、竞争写入未实测。"
+    },
+    {
+      "use_id": "USE-06",
+      "purpose": "真实完成与失败",
+      "observable": "原目标终态与实际产物、completed_artifacts、pending和工具结果一致；driver COMPLETED不是质量或必要控制PASS。",
+      "existing_check_ids": [
+        "CTRL_STATUS",
+        "PROTOCOL-FACTS",
+        "HANDOFF-STATE"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "包含失败、假完成和恢复；真实进程崩溃、超时与远程故障未证实。"
+    },
+    {
+      "use_id": "USE-07",
+      "purpose": "证据对象和复查",
+      "observable": "使用真实read/write receipt及其SHA/返回范围；输出中的引用不能证明实际读/验证，transport与semantic消费unknown仍保留。",
+      "existing_check_ids": [
+        "VALUE-1",
+        "VALUE-2",
+        "VALUE-3",
+        "CHECKPOINT-DERIVATION"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "fixture 字节摘要与可复查本地产物；真实外部证据身份和完整审计日志未证实。"
+    },
+    {
+      "use_id": "USE-08",
+      "purpose": "必要信息正确可消费",
+      "observable": "检查实际checkpoint/flow/handoff字段及跨产物关系，由原冻结schema与语义关系评分；不新增输出字段要求。",
+      "existing_check_ids": [
+        "CHECKPOINT-PHASE",
+        "HANDOFF-STATE",
+        "CHAIN-GUARDS"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "结构化交付可消费；真实下游系统导入和领域端到端验收未实测。"
+    },
+    {
+      "use_id": "USE-09",
+      "purpose": "最新更正与恢复",
+      "observable": "native确认旧turn中断、另起不同root/thread family；resume E1/E2先送达并确认，再以当前源更正后工作，历史checkpoint仍保留。",
+      "existing_check_ids": [
+        "CTRL_EVENTS",
+        "CHECKPOINT_BEFORE_INTERRUPT",
+        "CHECKPOINT-DERIVATION"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "固定节点中断、最新更正和授权变化；任意时间点中断及宿主原生恢复未证实。"
+    },
+    {
+      "use_id": "USE-10",
+      "purpose": "正确继续和正确停止",
+      "observable": "E3前不越过未决dependent action，E3后在原授权内完成合法产物；本D06没有撤销停止分支。",
+      "existing_check_ids": [
+        "FLOW_AFTER_DECISION",
+        "CTRL_STATUS",
+        "CTRL_EVENTS"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "预置用户事件、继续/停止对照；真实人类交互、全部撤销时序未证实。"
+    },
+    {
+      "use_id": "USE-11",
+      "purpose": "真实模型与能力",
+      "observable": "用实际app-server/thread/turn响应核模型/effort/宿主权限；没有证据不宣称CLI与桌面/Claude/API等价。",
+      "existing_check_ids": [
+        "CTRL_EXTRA",
+        "REP-scope-output-flow.json"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "已知可用/不可用能力与模型身份不可得时如实报告；真实模型绑定、API/SDK 和宿主能力未实测。"
+    },
+    {
+      "use_id": "USE-12",
+      "purpose": "临时事实不擅自永久化",
+      "observable": "E1 case-only更正不变成长期偏好；实际文件/native日志核无持久memory写入。",
+      "existing_check_ids": [
+        "CTRL_MEMORY"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "明确禁止把临时偏好永久化；真实 memory promotion/persistence 后端未实测。"
+    },
+    {
+      "use_id": "USE-13",
+      "purpose": "准确消费已验收产物与漂移",
+      "observable": "实际读取当前accepted文件并绑定SHA；拒绝把未验收copy版本标签当事实；历史与最终摘要分别保留。",
+      "existing_check_ids": [
+        "VALUE-1",
+        "VALUE-2",
+        "VALUE-3",
+        "CHECKPOINT-DERIVATION"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "已验收版本/字节漂移与本地正确源恢复；真实外部制品权限及并发漂移未证实。"
+    },
+    {
+      "use_id": "USE-14",
+      "purpose": "领域方法和既定设计",
+      "observable": "遵守投放owner与真实已送达用户选择，等价措辞可接受；不凭词汇表造额外审批或替换领域判据。",
+      "existing_check_ids": [
+        "CHAIN-GUARDS",
+        "PROTOCOL-FACTS"
+      ],
+      "coverage_status": "LOCAL_D06_ONLY; NOT_RUN",
+      "protected_unverified_range": "题内 owner 与固定设计决定边界；领域质量体系本身不在评估授权内。"
+    }
+  ],
+  "context_controls": [
+    {
+      "id": "CTX-GOAL",
+      "migration_requirement": "原目标/完成定义不能被当前focus或首个已完成阶段裁剪",
+      "existing_input": "request + owner-method + output-contract + CHECKPOINT-PHASE/CHECKPOINT-DERIVATION可见规则",
+      "observable": "模型checkpoint.pending保留未完依赖；fresh后实际交付仍覆盖原请求当前合法全部产物。",
+      "limit": "没有显式next-session-focus参数，也未调用会话handoff skill；只能局部验证目标保留。"
+    },
+    {
+      "id": "CTX-AUTH",
+      "migration_requirement": "最新真实授权和更正覆盖失效决定，不把证据/ACK当授权",
+      "existing_input": "resume_start的E1/E2 + decision_resolved的E3",
+      "observable": "有序delivery/ack先于dependent writes；最终源/策略与实际送达有效事件一致。",
+      "limit": "D06三个event均未撤销最终产物，不证明revoked分支。"
+    },
+    {
+      "id": "CTX-EFFECT",
+      "migration_requirement": "保留已完成效果、首个未完成点，恢复不重复",
+      "existing_input": "work_ready已提交output/checkpoint.json；checkpoint_accepted触发fresh",
+      "observable": "旧checkpoint SHA不变；fresh后无重写它的case_write请求/拒绝，完成剩余当前合法设计与交接。",
+      "limit": "sealed-checkpoint由runtime强制；须分开评模型是否尝试重复与工具是否阻止，不能将工具拒绝当模型遵守。"
+    },
+    {
+      "id": "CTX-FAIL",
+      "migration_requirement": "保留原始失败、阻断失败依赖，按现有权限恢复",
+      "existing_input": "D06没有dependency_result；公开D05有原冻结失败/一次retry/成功链",
+      "observable": "D06无法给出failed-dependency/failure-across-fresh证据。D05可由root在既有预算内复用作失败恢复补充，但不含fresh，仍不能填满跨fresh缺口。",
+      "limit": "不添加事件、不改题、不擅自取消控制；无原行为输入覆盖处保持未验证。"
+    },
+    {
+      "id": "CTX-EVIDENCE",
+      "migration_requirement": "来源、实际读、实际验证、未知各自有边界",
+      "existing_input": "accepted source / evidence-only drift copy + case_read receipts",
+      "observable": "真实读当前accepted bytes，保留历史checkpoint摘要；引用/版本标签/ACK不冒充已读或已验收。",
+      "limit": "file-returned不是semantic-consumed证明；须原语义评审与实际行动交叉核。"
+    }
+  ],
+  "minimum_gaps": [
+    {
+      "id": "G-FAIL-FRESH",
+      "original_control": "USE-05/06/09: failed prerequisite/history must remain distinguishable across interruption and recovery",
+      "gap": "D06 no dependency failure; D05 failure/retry exists without fresh; do not splice/new scenario",
+      "handling": "root coordinates existing approved material/evidence with original owner; retain insufficiency and control until actually covered"
+    },
+    {
+      "id": "G-REVOKE",
+      "original_control": "USE-09/10: latest real revocation stops only revoked dependent work while retaining original goal status",
+      "gap": "No public D01–D06 event revokes anything; D06 only positive E3",
+      "handling": "existing custodian/blind evaluation chain may establish already frozen lawful coverage; no private read or new public event here"
+    },
+    {
+      "id": "G-SKILL",
+      "original_control": "explicit session-handoff skill: focus crop, OS temp/redaction/no auto-message; distinguish pinned workflow handoff",
+      "gap": "D06 selected project-like/domain workflow emits JSON handoff, not explicit session-handoff invocation",
+      "handling": "keep W38 constraints; do not repurpose request or mark skill behavior validated from D06"
+    }
+  ],
+  "evaluation_order": [
+    "check delivery/runtime validity before candidate credit; missing event or fresh interruption confirmation makes INVALID_RUN",
+    "blind artifact quality scoring under unchanged frozen schema/semantic relations; no exemplar wording/phrase test",
+    "then independent necessary-control process review with actual ledgers; each pass/fail/insufficient_evidence separately",
+    "root returns real findings to Context owner for authorized targeted fixes; final acceptance only after final-byte integration/review/behavior verification"
+  ],
+  "candidate_boundary": {
+    "never_deliver": [
+      "this validation package/observer notes",
+      "answers or deterministic expected values",
+      "acceptance required terminal status",
+      "unreleased events/future material",
+      "whole developer bundle or sibling cases",
+      "private or archives"
+    ],
+    "deliver_only": "existing case runtime staged request/current authorization/eligible material/events; source condition instructions only via existing frozen condition mechanism",
+    "case_bundle_directory_requires_native_deny": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/public-source",
+    "no_new_prompt_helpers": true
+  },
+  "original_failure_history": {
+    "w35_report_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r9-integration-report.md",
+    "recorded_sha256": "7d02f63de28cfc61b44d9c8536b68ee9565f930f77c15d538adde4e8e1c7e71b",
+    "history": "original W35 5/6 with failure retained; root later reported synthetic enum fix and joint44/44",
+    "verification_status": "prior delivered evidence/root messages; joint run not independently reread or rerun by W41",
+    "do_not_inject_into_d06": "this is framework work history, not new case input"
+  },
+  "static_preparation_checks": {
+    "public_allowlisted_manifest_entries_match": "PASS",
+    "D06_selector_and_14_use_ids": "PASS",
+    "all_D06_material_digests": "PASS",
+    "Context_exact_hashes_and_root_adopted_equality": "PASS",
+    "root_and_owner_case_protocol_equality": "PASS",
+    "mapped_check_ids_exist": "PASS",
+    "case_protocol_replay": "NOT_RUN (already passed; no repeat)",
+    "candidate_behavior": "NOT_RUN",
+    "independent_review": "PENDING",
+    "authorized_consumer_extension": "6/6 exit0; static/isolated artifact checks and shell syntax only"
+  },
+  "resources": {
+    "started_utc": "2026-10-03T00:45:53Z",
+    "prepared_utc": "2026-10-03T00:55:24.549723+00:00",
+    "wall_seconds_so_far": 572,
+    "conservative_action_upper_bound": 80,
+    "model_runs": 0,
+    "probes": 0,
+    "new_agents": 0,
+    "usage_tokens": "unknown",
+    "cost": "unknown",
+    "original_action_budget": 40,
+    "initial_preparation_action_upper_bound": 32,
+    "ordinary_batch_stop_removed_by_latest_authority": true,
+    "updated_utc": "2026-10-03T01:23:04.666600+00:00",
+    "total_elapsed_seconds": 2232
+  },
+  "continuing_responsibility": "root returns actual model/control/review results; Context owner fixes owned-authority issues, preserves failures, and continues to final integration",
+  "consumer_extension": {
+    "scope": {
+      "source": "latest root/user continuous-module instructions in this turn",
+      "added_owned_paths": [
+        ".claude/skills/office/references/handoff-protocol.md",
+        ".claude/skills/office/SKILL.md"
+      ],
+      "office_scope": "Step 2 handoff locator/resume consumption only; every other byte including frontmatter remains unchanged",
+      "latest_correction": "ordinary development batch stop removed; prior consumption and failures retained; real platform/Human Gate/external dependency limits remain",
+      "other_owners_preserved": true,
+      "prior_read_only_consumer_conflict": "resolved within granted Step 2, including current-owner required complete-source exception and NO_PIN boundary"
+    },
+    "bindings": [
+      {
+        "relative_path": ".claude/skills/office/references/handoff-protocol.md",
+        "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+        "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+        "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/references/handoff-protocol.md",
+        "pre_sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6",
+        "sha256": "cf55886449a7206c3d766e5645c0959b2d2b2b629e6f6a70b34f727b93f896c1",
+        "pre_bytes": 8740,
+        "bytes": 11200,
+        "root_observed_sha256": "b4f169955b69afbea1c0b375a96e65e4698ca7190ead6a600846afd7c93041c1",
+        "root_adoption_status": "PENDING_ROOT_ADOPTION",
+        "previous_stable_sha256": "b4f169955b69afbea1c0b375a96e65e4698ca7190ead6a600846afd7c93041c1"
+      },
+      {
+        "relative_path": ".claude/skills/office/SKILL.md",
+        "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/SKILL.md",
+        "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/SKILL.md",
+        "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/SKILL.md",
+        "pre_sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377",
+        "sha256": "942ee2387434c895932511efaa55fd03cb0800323f265d12b17f876fda1bd88c",
+        "pre_bytes": 14954,
+        "bytes": 16524,
+        "root_observed_sha256": "72431cbfbc4e3c874165306eb6d8bb9ea9fd9c40f01b14d78cadff84a61d6ac9",
+        "root_adoption_status": "PENDING_ROOT_ADOPTION",
+        "previous_stable_sha256": "72431cbfbc4e3c874165306eb6d8bb9ea9fd9c40f01b14d78cadff84a61d6ac9",
+        "pre_j16_sha256": "7948febd24c470a4ed62cd79618e025d9e792dbf4f9cbfa2f526c191f0937da3"
+      }
+    ],
+    "checks": [
+      {
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exit": 0,
+        "log": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/extension-check-01.log",
+        "sha256": "0503d7c5a0b5a5d16cebc9a050c0f1d121e154d5e7e1a210ff396edb32063f38"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/test-handoff-validator.mjs"
+        ],
+        "exit": 0,
+        "log": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/extension-check-02.log",
+        "sha256": "b82fb32f181f0e305fde337b0bc050dd6adc601d3701c25815ec1a74dde92b3f"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/check-quality-gates.mjs"
+        ],
+        "exit": 0,
+        "log": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/extension-check-03.log",
+        "sha256": "c2afb12f487bc1750b1af772e80bcf16f658c5422327c0614a8d0b560047ea34"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/check-agent-context.mjs"
+        ],
+        "exit": 0,
+        "log": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/extension-check-04.log",
+        "sha256": "e68fa595b1dd5e84c7d759c1425da0e6a32cd60ce4541e4cfb048cff2793a994"
+      },
+      {
+        "command": [
+          "python3",
+          "scripts/build-agent-context.py",
+          "check"
+        ],
+        "exit": 0,
+        "log": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/extension-check-05.log",
+        "sha256": "0482ab0938aa8cb04ccfd7bb7404143315aeac481226604095544c53cee9efe2"
+      },
+      {
+        "command": [
+          "bash",
+          "-n",
+          "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/project-write-example.sh"
+        ],
+        "exit": 0,
+        "log": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/extension-check-06.log",
+        "sha256": "910c58a8f9b1079b885801ca785129169d438abd42bf158077c84d2ee6628bd8",
+        "example_executed": false
+      }
+    ],
+    "self_review": "no new headings/table/schema; domain method, handoff exemptions/criteria/checkpoint suffix and explicit session-handoff constraints preserved",
+    "generated_refresh_required": false,
+    "remaining_owned_consumption_conflicts": "none found in narrowed author audit; independent review pending",
+    "previous_check_bindings": [
+      {
+        "relative_path": ".claude/skill-os/runtime/long-session.md",
+        "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skill-os/runtime/long-session.md",
+        "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skill-os/runtime/long-session.md",
+        "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skill-os/runtime/long-session.md",
+        "sha256": "70e51b16461ab14ba55cb06af7db19c733c845cda6c50fb5342a0dc9120c4181",
+        "bytes": 2354
+      },
+      {
+        "relative_path": ".claude/skills/office/handoff/SKILL.md",
+        "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/handoff/SKILL.md",
+        "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/handoff/SKILL.md",
+        "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/handoff/SKILL.md",
+        "sha256": "c4ad4c5009e73b04625afbeb00a524df5be15341cfa8eba7fd91d2f4501e0a0d",
+        "bytes": 6432
+      },
+      {
+        "relative_path": ".claude/skills/office/references/handoff-protocol.md",
+        "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+        "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/references/handoff-protocol.md",
+        "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/references/handoff-protocol.md",
+        "pre_sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6",
+        "sha256": "b4f169955b69afbea1c0b375a96e65e4698ca7190ead6a600846afd7c93041c1",
+        "pre_bytes": 8740,
+        "bytes": 10809,
+        "root_observed_sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6",
+        "root_adoption_status": "PENDING_ROOT_ADOPTION"
+      },
+      {
+        "relative_path": ".claude/skills/office/SKILL.md",
+        "owner_path": "/Users/luca/.codex/worktrees/9a9a/luca_gstack/.claude/skills/office/SKILL.md",
+        "root_adopted_path": "/Users/luca/.codex/worktrees/f351/luca_gstack/.claude/skills/office/SKILL.md",
+        "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/context-source/.claude/skills/office/SKILL.md",
+        "pre_sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377",
+        "sha256": "72431cbfbc4e3c874165306eb6d8bb9ea9fd9c40f01b14d78cadff84a61d6ac9",
+        "pre_bytes": 14954,
+        "bytes": 15770,
+        "root_observed_sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377",
+        "root_adoption_status": "PENDING_ROOT_ADOPTION"
+      }
+    ],
+    "previous_checks_qualification": "6 prior checks passed on previous stable bytes; final alignment changes prose only, preserves tested template/script/frontmatter; unaffected checks not rerun per root instruction",
+    "final_alignment_check": {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0,
+      "log": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/final-diff-check.log",
+      "sha256": "0503d7c5a0b5a5d16cebc9a050c0f1d121e154d5e7e1a210ff396edb32063f38",
+      "scope_and_format_invariants": "PASS",
+      "semantic_readback": "seven original W40 requirements, author only"
+    },
+    "j16_fix": {
+      "reported_source": "root delegation reporting J16 independent review finding in this turn; full J16 ticket not read by author",
+      "original_blocker": "Step 2 requires all required sources, but a global 5K Pre-Task cap cannot fit three required handoffs of about 2K each",
+      "file": ".claude/skills/office/SKILL.md",
+      "pre_sha256": "7948febd24c470a4ed62cd79618e025d9e792dbf4f9cbfa2f526c191f0937da3",
+      "post_sha256": "942ee2387434c895932511efaa55fd03cb0800323f265d12b17f876fda1bd88c",
+      "authorized_scope": "adjacent 5K Pre-Task budget clause and required over-budget consumption, in addition to Step 2",
+      "change": "optional history retains 5 hits/2K hard bound; 5K is a single-batch loading recommendation, not a cap on all required source consumption; existing authorized batch reads retain version/read/verification state; actual host limits preserve gap and pause affected dependency",
+      "author_counterexample_readback": "three required 2K summaries may be consumed in existing batches; no dependency removed/latest fallback/source substitute; a genuine host capacity failure remains an explicit gap rather than candidate PASS",
+      "independent_recheck": "PENDING_ROOT",
+      "checks": {
+        "diff_check_exit": 0,
+        "log": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/j16-final-diff-check.log",
+        "sha256": "0503d7c5a0b5a5d16cebc9a050c0f1d121e154d5e7e1a210ff396edb32063f38",
+        "scope_and_heading_invariant": "PASS",
+        "unaffected_checks": "not rerun per root instruction; no script/template/frontmatter change"
+      }
+    }
+  },
+  "preparation_failures": [
+    {
+      "record": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/preparation-failure-01.json",
+      "sha256": "158e72b967b741c40cf59a91f8cd8cac53001f25d6a46500f7f7867156bc1b46"
+    },
+    {
+      "record": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/preparation-failure-02.json",
+      "sha256": "f87bf1773f53f4a313d10382ce2efbdb71a5290a373936687297e68cdb0e1bf4"
+    }
+  ],
+  "pending": [
+    "root adopts both new consumers and freezes final three-module source manifest",
+    "root supplies release/condition/registration/permission bindings and runs original D06 entry",
+    "original failure-across-fresh, revocation and explicit-session-handoff coverage gaps remain; no relaxed control/new case",
+    "independent review of all final consumer bytes and targeted author fixes",
+    "final integration/acceptance bound to final hashes"
+  ],
+  "module2_final_consumer_review": {
+    "source_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w40-evidence-hsxdr0ik/module3-consumer-requirements.json",
+    "source_sha256": "35c2b1f1cba99eac60478e6f776c1ea498d6a3ad52f8c5e23509c0951c82032c",
+    "snapshot_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/module3-consumer-requirements.json",
+    "requirements": [
+      {
+        "id": "EXACT_UPSTREAM",
+        "requirement": "当前执行路径实际选中的完整必需上游依赖集合，绑定准确产物路径/版本/门禁/eval记录；不得只取时间最近的摘要、glob存在或历史产物，也不得遗漏失败或required缺片。",
+        "author_readback": "SATISFIED_BY_RULES; NOT_MODEL_VERIFIED",
+        "locations": [
+          "handoff-protocol.md:136–137",
+          "office/SKILL.md:150–153"
+        ]
+      },
+      {
+        "id": "TASK_AUTHORITY",
+        "requirement": "每项任务携带原始长目标、当前focus、最新有效授权/更正的真实来源与范围、owner、尚待真人决定/外部效果批准；恢复核对当前授权，不把沉默或旧许可当作扩权。",
+        "author_readback": "SATISFIED_BY_RULES; NOT_MODEL_VERIFIED",
+        "locations": [
+          "long-session.md:9,12",
+          "handoff/SKILL.md:57,59,62",
+          "handoff-protocol.md:92–94"
+        ]
+      },
+      {
+        "id": "REAL_EFFECTS",
+        "requirement": "保留并核验已完成的真实效果和证据、原失败及未完依赖；先核效果再从首个真正未完点续，不能重新执行已验证效果。",
+        "author_readback": "SATISFIED_BY_RULES; NOT_MODEL_VERIFIED",
+        "locations": [
+          "long-session.md:10,23",
+          "handoff/SKILL.md:58,64",
+          "handoff-protocol.md:142"
+        ]
+      },
+      {
+        "id": "IN_FLIGHT",
+        "requirement": "保留实际返回的任务/Agent/进程句柄及其已知终态/未知状态；timeout、idle、ACK不等于完成或取消，也不授权第二次派发；失去可观察性明确报告缺口。",
+        "author_readback": "SATISFIED_BY_RULES; NOT_MODEL_VERIFIED",
+        "locations": [
+          "long-session.md:11,23",
+          "handoff/SKILL.md:60,64",
+          "handoff-protocol.md:143",
+          "office/SKILL.md:155"
+        ]
+      },
+      {
+        "id": "DEPENDENCY_CONTROL",
+        "requirement": "失败/未知/在途阻断对应依赖链，独立已授权任务仅在无冲突且不受implement/model关键门禁止时继续；原失败、取消、剩余在途必须进汇总，不成功合并缺片。",
+        "author_readback": "SATISFIED_BY_RULES; NOT_MODEL_VERIFIED",
+        "locations": [
+          "long-session.md:23",
+          "handoff/SKILL.md:64",
+          "handoff-protocol.md:137",
+          "office/SKILL.md:153,156"
+        ]
+      },
+      {
+        "id": "PATH_AUTHORITY",
+        "requirement": "正常已选项目Workflow节点仍遵照确切项目handoff/gate；显式会话handoff沿OS临时产物、不造第二份项目交接；NO_PIN只沿框架或临时checkpoint，不经docs等展示别名推身份。",
+        "author_readback": "SATISFIED_BY_RULES; NOT_MODEL_VERIFIED",
+        "locations": [
+          "long-session.md:15",
+          "handoff/SKILL.md:31–42,93–94",
+          "handoff-protocol.md:21–25",
+          "office/SKILL.md:158–159"
+        ]
+      },
+      {
+        "id": "READ_AND_CONSUME",
+        "requirement": "引用只在获授权的实际读取及版本验证后作为事实消费；摘要不能替代当前依赖、原句柄、授权来源与关键效果证据。",
+        "author_readback": "SATISFIED_BY_RULES; NOT_MODEL_VERIFIED",
+        "locations": [
+          "long-session.md:13,23",
+          "handoff/SKILL.md:63",
+          "handoff-protocol.md:95,137,140–141",
+          "office/SKILL.md:152,157"
+        ]
+      }
+    ],
+    "alignment": "explicit full-required-set/appropriate-eval; observed handles and unknowns/timeout no redispatch; current scope/owner/pending real Human Gates; existing fields only",
+    "limits": "not a phrase test, actual model proof or independent review"
+  },
+  "independent_review_findings": [
+    {
+      "reported_source": "root delegation reporting J16 independent review finding in this turn; full J16 ticket not read by author",
+      "original_blocker": "Step 2 requires all required sources, but a global 5K Pre-Task cap cannot fit three required handoffs of about 2K each",
+      "file": ".claude/skills/office/SKILL.md",
+      "pre_sha256": "7948febd24c470a4ed62cd79618e025d9e792dbf4f9cbfa2f526c191f0937da3",
+      "post_sha256": "942ee2387434c895932511efaa55fd03cb0800323f265d12b17f876fda1bd88c",
+      "authorized_scope": "adjacent 5K Pre-Task budget clause and required over-budget consumption, in addition to Step 2",
+      "change": "optional history retains 5 hits/2K hard bound; 5K is a single-batch loading recommendation, not a cap on all required source consumption; existing authorized batch reads retain version/read/verification state; actual host limits preserve gap and pause affected dependency",
+      "author_counterexample_readback": "three required 2K summaries may be consumed in existing batches; no dependency removed/latest fallback/source substitute; a genuine host capacity failure remains an explicit gap rather than candidate PASS",
+      "independent_recheck": "PENDING_ROOT",
+      "checks": {
+        "diff_check_exit": 0,
+        "log": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-w41-context-rgsc2g8l/j16-final-diff-check.log",
+        "sha256": "0503d7c5a0b5a5d16cebc9a050c0f1d121e154d5e7e1a210ff396edb32063f38",
+        "scope_and_heading_invariant": "PASS",
+        "unaffected_checks": "not rerun per root instruction; no script/template/frontmatter change"
+      }
+    }
+  ]
+}

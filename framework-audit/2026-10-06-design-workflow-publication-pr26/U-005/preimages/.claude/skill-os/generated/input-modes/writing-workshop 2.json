@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "source_sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+  "skill": "writing-workshop",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "entry_mode"
+        ],
+        "optional": [
+          "topic",
+          "conversation_material",
+          "material_path",
+          "output_path",
+          "reader_prerequisites",
+          "caller",
+          "resume_target"
+        ]
+      }
+    },
+    "entry_modes": {
+      "fragments": {
+        "required": [
+          "topic",
+          "output_path"
+        ],
+        "optional": [
+          "conversation_material"
+        ]
+      },
+      "shape": {
+        "required": [
+          "material_path",
+          "output_path"
+        ],
+        "optional": [
+          "reader_prerequisites"
+        ]
+      },
+      "beats": {
+        "required": [
+          "material_path",
+          "output_path"
+        ],
+        "optional": [
+          "reader_prerequisites"
+        ]
+      }
+    },
+    "quality_gates": [
+      "explicit_workshop_and_mode_selection",
+      "exact_authorized_paths",
+      "full_material_read_when_exploit",
+      "distinct_canonical_path_and_inode",
+      "real_prerequisite_and_unit_choice",
+      "disk_reread_before_each_write",
+      "single_increment_then_wait",
+      "author_edits_preserved",
+      "actual_context_cost_handoff"
+    ],
+    "notes": "仅显式 writing-workshop 与真实 mode 选择；三 entry_modes 共用本 key，不是 Workflow modes。fragments 用真实初始语料探索；shape/beats 原料只读且输出另文件；缺必要路径或权限不写。普通编辑/文章润色与 UX 微文案仍归原 owner。"
+  }
+}

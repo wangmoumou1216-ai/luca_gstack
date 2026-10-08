@@ -1,0 +1,33 @@
+{
+  "files": [
+    {
+      "case": "N-A",
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-review/n-a-native-tool-records.json",
+      "sha256": "0edc5ed67be01242565b7fad25b47981aa5c5638adc731b5406a90a6be8de67f",
+      "bytes": 142898,
+      "tool_records": 20
+    },
+    {
+      "case": "N-D",
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-review/n-d-native-tool-records.json",
+      "sha256": "d30484713cf80cac56588b0de0a6b74fc0dd68fafdbc43f0a4ed21fed2fcca55",
+      "bytes": 65401,
+      "tool_records": 8
+    },
+    {
+      "case": "N-B",
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-review/n-b-native-tool-records.json",
+      "sha256": "de1027464f99a0a5ac9a5cf4fe6b8ca8bb776dca7af69e61ca152ab7d29d13c6",
+      "bytes": 122814,
+      "tool_records": 16
+    },
+    {
+      "case": "N-C",
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-review/n-c-native-tool-records.json",
+      "sha256": "6d51a02326343b7b14185c5d86bcf6357f6d937e9c3bf04cc8809644c6a698af",
+      "bytes": 54841,
+      "tool_records": 8
+    }
+  ],
+  "scope": "These are already-executed tools, not reexecution or later remedial reads; source line hashes bind native selections."
+}

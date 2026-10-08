@@ -1,0 +1,7 @@
+{
+  "status": "NO_VERDICT",
+  "actual_agent": "/root/release_standards",
+  "reason": "native agent errored: usage limit",
+  "accepted_review_claimed": false,
+  "disposition": "fresh cold same-role retry after actual user continuation confirming quota restored"
+}

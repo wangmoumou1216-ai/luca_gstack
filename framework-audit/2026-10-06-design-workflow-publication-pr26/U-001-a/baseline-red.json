@@ -1,0 +1,10 @@
+{
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "scripts/test-workflow-state-guard.py"
+  ],
+  "exit_code": 1,
+  "writer_sha256": "2c1caf2c41cc6ad4a19ebbc818c51498d2dcfc84ef7f511f72d02c3f86ebf2ad",
+  "guard_sha256": "db9e6a85ee7f9bfd7231aa60bcfae104a84ff95655300cc99f951394280dd98e",
+  "output": "baseline-red.log"
+}

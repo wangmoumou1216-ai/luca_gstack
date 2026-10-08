@@ -1,0 +1,100 @@
+{
+  "prepared_at": "2026-10-02T20:22:11.802794+00:00",
+  "status": "BOUNDED_REPAIRS_COLLECTED_NOT_RUNTIME_RELEASE",
+  "files": {
+    "case-protocol.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    "case-protocol.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+      "bytes": 30229
+    },
+    "conditions.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "1406739d77c6025cac9b7efc1cd4621d0c1a3ed51a456273df26f7f3db1c88a3",
+      "bytes": 24464
+    },
+    "conditions.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "c9a95ac014676c7ea50121a5e59e446a845ce448474b45d2ebc6f0fcd48a8775",
+      "bytes": 19955
+    },
+    "driver.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "ce5372b72266a8c99edd2c1b0a91f555cf34e99e04033ff7918a9d022550659f",
+      "bytes": 44384
+    },
+    "driver.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "9f0a32d28fb937224ab6aed5a00a31eb53f4d7ba031969c92f509af359bb97f2",
+      "bytes": 50143
+    },
+    "integration.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "sha256": "fa583ca373a60d32e7172baec7690402e67e7e9d4ae3720a13a371dacabd3b57",
+      "bytes": 32357
+    }
+  },
+  "baseline_snapshot": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r3",
+  "collection_records": [
+    "u007-w22-root-collection.json",
+    "u007-w21-w23-root-collection.json"
+  ],
+  "root_tests": [
+    {
+      "command": "node --test --test-name-pattern=W22 scripts/tri-system-eval/driver.test.mjs",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "duration_ms": 8302.621542,
+      "evidence_chunks": [
+        "196f87",
+        "bf1057"
+      ],
+      "scope": "W22 driver current; before W21 declaration collection; injected fake transport and public CLI synthetic fixtures"
+    },
+    {
+      "command": "node --test --test-name-pattern='B/S copy the same required closure|an unmanifested MagicPath target' scripts/tri-system-eval/conditions.test.mjs",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "duration_ms": 155.180583,
+      "evidence_chunks": [
+        "44f12b"
+      ],
+      "scope": "final collected conditions"
+    },
+    {
+      "command": "U007_SOURCE_MANIFEST=/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest.json node --test scripts/tri-system-eval/integration.test.mjs",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "duration_ms": 23647.615417,
+      "evidence_chunks": [
+        "e66220",
+        "5f6694"
+      ],
+      "scope": "final three real modules with fake transport; real EACCES injection in disposable fixture"
+    }
+  ],
+  "limitations": [
+    "Offline tests are not native model execution, independent J pass, baseline qualification or net-value evidence.",
+    "J05 FAIL retained. B active-rule loader is still missing from frozen inputs; new line discloses it only.",
+    "P05 did not execute native command; MCP exclusion remains metadata only.",
+    "P06 not registered or run; behavior 5/144 and capability 5/6, formal dev/hidden 0."
+  ],
+  "all_original_chats": "idle/completed as verified by wait_threads",
+  "resource_counts": {
+    "work": 23,
+    "work_cap": 23,
+    "review": 7,
+    "review_cap": 29,
+    "behavior": 5
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "time": "2026-10-01T07:09:39.605663+00:00",
+  "scope_sha256": "166dc91ab74696d916e5eb5ed088d3ded4b83f8a54f0bb767d812bbf291f191d",
+  "status": "LOCAL_REVERSIBLE_COMMIT_PREPARATION_ONLY",
+  "native_review_root": "01a0f646-42e8-7d92-9db1-b30b44c873d7",
+  "publish_install_gate": "pending independent accepted verdicts + actual fresh precommit + exact CI/current CAS",
+  "user_authorization": "urgent ordinary repair publication/local installation; preserves disabled states and unrelated work",
+  "source_bytes_frozen": true,
+  "framework_files": [
+    ".claude/skill-os/runtime/project-session.md",
+    ".codex/codex-hook-adapter.mjs",
+    ".codex/hooks.json",
+    ".codex/host-launch-hook.mjs",
+    ".codex/model-route-hook.mjs",
+    "README.md",
+    "scripts/codex-hook-health.mjs",
+    "scripts/codex-trust-hooks.mjs",
+    "scripts/host-launch-broker.mjs",
+    "scripts/model-route-host.mjs",
+    "scripts/test-codex-hook-health.mjs",
+    "scripts/test-codex-model-route-hook.mjs",
+    "scripts/test-codex-trust-hooks.mjs",
+    "scripts/test-controlled-change.mjs",
+    "scripts/test-hook-source-digests.mjs",
+    "scripts/test-host-launch-control-plane.mjs",
+    "scripts/test-host-launch.mjs",
+    "scripts/verify-codex-wiring.mjs"
+  ],
+  "no_publication_or_installation_yet": true
+}

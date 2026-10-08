@@ -1,0 +1,427 @@
+diff --git a/app/host-hook-ready.js b/app/host-hook-ready.js
+index 7951c1eca665fa74062c5903c162177742b3cb78..b4d27d653cecdac64ca9f3f4df0eb668eebc7602 100644
+--- a/app/host-hook-ready.js
++++ b/app/host-hook-ready.js
+@@ -10,6 +10,8 @@ const TARGETS = Object.freeze({
+   preToolUse: 'project-scope-guard.mjs',
+ });
+ const DEFAULT_MEMORY_ROOT = '/Users/luca/Desktop/luca_gstack';
++const NATIVE_REGISTRATION_CONTRACT = '4045d37a195d19ab5a3f437f83cf500b24cd41868cf563b5f01790dc6945f476';
++const NATIVE_PREFIX = String.raw`luca_hook_root=$(git rev-parse --show-toplevel) && [ -n "$luca_hook_root" ] && cd "$luca_hook_root" && luca_hook_root=$(pwd -P) && [ -n "$luca_hook_root" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; `;
+ const GUARD_HEAD = String.raw`cd "$(git rev-parse --show-toplevel)" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z "$links" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \( -name "*.mjs" -o -name "*.js" -o -name "*.py" -o -name "*.sh" \) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\n' "$lines" | /usr/bin/shasum -a 256) || h=invalid; h=$` + '{h%% *}' + String.raw`; case "$h" in `;
+ const GUARD_TAIL = String.raw`) ;; *) echo "[luca_gstack] hook source integrity mismatch" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; export NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs"; `;
+ const STABLE_GUARD = String.raw`luca_hook_root=$(git rev-parse --show-toplevel) && [ -n "$luca_hook_root" ] && cd "$luca_hook_root" || exit 2; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; export NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs"; node "$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs" --verify || { echo "[luca_gstack] hook source integrity mismatch" >&2; exit 2; }; `;
+@@ -213,12 +215,32 @@ export function expectedHostHookCommand(gstackRoot, target, memoryRoot = DEFAULT
+   return `MEMORY_ROOT=${memoryRoot} node "${gstackRoot}/.codex/host-launch-hook.mjs" "${gstackRoot}/.claude/hooks/${target}" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ "$c" = "0" ] && exit 0 || exit 2`;
+ }
+ 
++function nativeHostCommands(source, memoryRoot) {
++  if (!exactKeys(source, ['description', 'hooks']) || typeof source.description !== 'string'
++      || hash(JSON.stringify(canonicalJson(source.hooks))) !== NATIVE_REGISTRATION_CONTRACT) return null;
++  const commands = {};
++  for (const [event, target] of Object.entries(TARGETS)) {
++    const key = event[0].toUpperCase() + event.slice(1);
++    const hooks = (source.hooks[key] || []).flatMap(group => (group.hooks || []).map(hook => ({ hook, group })));
++    const command = NATIVE_PREFIX + expectedHostHookCommand('$luca_hook_root', target, memoryRoot);
++    const matching = hooks.filter(({ hook }) => hook.type === 'command' && hook.command === command);
++    if (matching.length !== 1
++        || hooks.filter(({ hook }) => String(hook.command || '').includes(`.claude/hooks/${target}`)).length !== 1
++        || (event === 'preToolUse' && matching[0].group.matcher !== '.*')) return null;
++    commands[event] = command;
++  }
++  return commands;
++}
++
+ function registeredHostCommands(hooksPath, { gstackRoot, memoryRoot = DEFAULT_MEMORY_ROOT,
+   home = os.homedir() } = {}) {
+   let source;
+   let hooksBytes;
+   try { hooksBytes = fs.readFileSync(hooksPath); source = JSON.parse(hooksBytes); } catch { return null; }
+-  if (!gstackRoot || !source?.hooks || !installedBootstrapMatches(gstackRoot, home)) return null;
++  if (!gstackRoot || !source?.hooks) return null;
++  const native = nativeHostCommands(source, memoryRoot);
++  if (native) return native;
++  if (!installedBootstrapMatches(gstackRoot, home)) return null;
+   let digest;
+   let sourceFiles;
+   try { ({ digest, sourceFiles } = sourceIntegrityDigest(gstackRoot)); } catch { return null; }
+@@ -252,7 +274,7 @@ export function trustedHostHookList(listed, { expectedCommands } = {}) {
+   if (!expectedCommands) return false;
+   const hooks = (listed || []).flatMap((group) => group.hooks || []);
+   return Object.keys(TARGETS).every((event) => hooks.filter((hook) =>
+-    hook.eventName === event && hook.trustStatus === 'trusted'
++    hook.eventName === event && hook.enabled === true && hook.trustStatus === 'trusted'
+       && hook.command === expectedCommands[event]).length === 1);
+ }
+ 
+diff --git a/app/host-launch-client.js b/app/host-launch-client.js
+index f4bc78bcc4af1d906ad9b09a2d2d1fac6721003b..0149e01d9ba3c12be788c840f54df3819f2cfd7f 100644
+--- a/app/host-launch-client.js
++++ b/app/host-launch-client.js
+@@ -1,5 +1,4 @@
+ import { accessSync, constants, realpathSync } from 'node:fs';
+-import os from 'node:os';
+ import path from 'node:path';
+ import { fork } from 'node:child_process';
+ import { randomUUID } from 'node:crypto';
+@@ -7,7 +6,6 @@ import { isDeepStrictEqual } from 'node:util';
+ 
+ const fault = (code) => Object.assign(new Error(code), { code });
+ function brokerNodeBinary() {
+-  // Electron 33 embeds Node 20, which cannot run the source guard's registerHooks.
+   // Use the host's native Node executable; never inherit a renderer-supplied path.
+   if (!process.versions.electron) return process.execPath;
+   for (const directory of String(process.env.PATH || '').split(path.delimiter)) {
+@@ -111,8 +109,8 @@ export function createHostLaunchClient({
+       ready.promise.catch(() => {}); // the synchronous fork-failure path rejects before ensureReady awaits
+       try {
+         const brokerEnv = { ...process.env, ELECTRON_RUN_AS_NODE: '1' };
+-        brokerEnv.NODE_OPTIONS = '--import=' + path.join(os.homedir(), '.codex/luca-child-project/source-guard/bootstrap.mjs');
+-        brokerEnv.LUCA_CHILD_SOURCE_ROOT = gstackRoot;
++        delete brokerEnv.NODE_OPTIONS;
++        delete brokerEnv.LUCA_CHILD_SOURCE_ROOT;
+         delete brokerEnv.LUCA_PROTECTED_CODE_ROOT;
+         delete brokerEnv.LUCA_SOURCE_GUARD_TEST_ROOT;
+         for (const key of Object.keys(brokerEnv)) {
+diff --git a/app/test-host-hook-ready.mjs b/app/test-host-hook-ready.mjs
+index 63f4d760013615f1e750ed169b5993da2bed57ab..8d03dca0fd180d6e40d75d36be3d75d555b61be2 100644
+--- a/app/test-host-hook-ready.mjs
++++ b/app/test-host-hook-ready.mjs
+@@ -43,6 +43,142 @@ function fixture() {
+   return { dir, hooksPath, registrations, root, home };
+ }
+ 
++// Literal reviewed native-trust-v1 protocol; no live framework or protected-home dependency.
++const nativeRegistration = {
++  "description": "luca_gstack Codex native-trust-v1：默认 11 条 Hook 由 Codex 原生 trusted command 授信并执行，并以 LUCA_NATIVE_HOOK_STRICT=1 保留异常阻断；项目隔离、controlled-change、模型路由、Host Launch 和 Stop 恢复保持。默认命令不要求逐工作树 source-guard 安装或源码摘要；清除继承的 NODE_OPTIONS / LUCA_CHILD_SOURCE_ROOT / LUCA_PROTECTED_CODE_ROOT。source-guard 安装与诊断工具保留为可选能力；legacy-literal / stable-v3 仍可通过 doctor 检查。修改注册后通过 node scripts/codex-trust-hooks.mjs --host-launch 官方精确授信。SessionStart/UserPromptSubmit additionalContextLimit=0；SessionEnd timeoutSec=30。",
++  "hooks": {
++    "SessionStart": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "statusMessage": "luca_gstack: 恢复 session 上下文",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/host-launch-hook.mjs\" \"$luca_hook_root/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "additionalContextLimit": 0
++          }
++        ]
++      },
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "statusMessage": "luca_gstack: 固定根模型路由",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; node \"$luca_hook_root/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "additionalContextLimit": 0
++          }
++        ]
++      }
++    ],
++    "UserPromptSubmit": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "statusMessage": "luca_gstack: 路由检查",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/host-launch-hook.mjs\" \"$luca_hook_root/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "additionalContextLimit": 0
++          }
++        ]
++      }
++    ],
++    "PreToolUse": [
++      {
++        "matcher": ".*",
++        "hooks": [
++          {
++            "type": "command",
++            "statusMessage": "luca_gstack: 项目边界检查",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/host-launch-hook.mjs\" \"$luca_hook_root/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++          }
++        ]
++      },
++      {
++        "matcher": "^(Bash|Agent|spawn_agent|collaboration__spawn_agent|collaborationspawn_agent)$",
++        "hooks": [
++          {
++            "type": "command",
++            "statusMessage": "luca_gstack: 解析子任务模型",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; node \"$luca_hook_root/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++          }
++        ]
++      }
++    ],
++    "PostToolUse": [
++      {
++        "matcher": "^(Bash|apply_patch)$",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/codex-hook-adapter.mjs\" \"$luca_hook_root/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++          }
++        ]
++      }
++    ],
++    "Stop": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "luca_stop_payload=$(cat); luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || { printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Review hook configuration before continuing.\"}'; exit 0; }; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; luca_stop_output=$(printf '%s' \"$luca_stop_payload\" | MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/codex-hook-adapter.mjs\" \"$luca_hook_root/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log); c=$?; if [ \"$c\" = \"0\" ]; then printf '%s' \"$luca_stop_output\"; exit 0; fi; luca_stop_recovery=$(printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$luca_hook_root\" node \"$luca_hook_root/.codex/stop-integrity-failure.mjs\"); c=$?; if [ \"$c\" = \"0\" ]; then printf '%s' \"$luca_stop_recovery\"; else printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Review hook configuration before continuing.\"}'; fi; exit 0"
++          }
++        ]
++      }
++    ],
++    "SubagentStart": [
++      {
++        "matcher": ".*",
++        "hooks": [
++          {
++            "type": "command",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; node \"$luca_hook_root/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++          }
++        ]
++      }
++    ],
++    "SubagentStop": [
++      {
++        "matcher": ".*",
++        "hooks": [
++          {
++            "type": "command",
++            "statusMessage": "luca_gstack: 核验子任务模型证据",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; node \"$luca_hook_root/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++          }
++        ]
++      }
++    ],
++    "SessionEnd": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$luca_hook_root/.codex/codex-hook-adapter.mjs\" \"$luca_hook_root/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "timeoutSec": 30
++          }
++        ]
++      },
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" && luca_hook_root=$(pwd -P) && [ -n \"$luca_hook_root\" ] || exit 2; unset NODE_OPTIONS LUCA_CHILD_SOURCE_ROOT LUCA_PROTECTED_CODE_ROOT; export LUCA_NATIVE_HOOK_STRICT=1; node \"$luca_hook_root/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "timeoutSec": 30
++          }
++        ]
++      }
++    ]
++  }
++};
++function nativeFixture() {
++  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'muse-native-hook-ready-')));
++  const root = join(dir, 'repo'), home = join(dir, 'home');
++  mkdirSync(join(root, '.codex'), { recursive: true }); mkdirSync(home);
++  const registrations = structuredClone(nativeRegistration);
++  const hooksPath = join(root, '.codex/hooks.json');
++  writeFileSync(hooksPath, JSON.stringify(registrations));
++  return { dir, root, home, hooksPath, registrations };
++}
++
+ const stablePrefix = String.raw`luca_hook_root=$(git rev-parse --show-toplevel) && [ -n "$luca_hook_root" ] && cd "$luca_hook_root" || exit 2; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; export NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs"; node "$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs" --verify || { echo "[luca_gstack] hook source integrity mismatch" >&2; exit 2; }; `;
+ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+ function stableFixture() {
+@@ -120,7 +256,7 @@ function expectedCommands(registrations) {
+ 
+ function listed(registrations, status = 'trusted') {
+   return [{ hooks: events.map(([name, eventName, target]) => ({
+-    eventName, trustStatus: status,
++    eventName, enabled: true, trustStatus: status,
+     command: commandOf(registrations, name, target),
+   })) }];
+ }
+@@ -152,6 +288,45 @@ test('host hook gate requires exact registration and rejects legacy duplicate',
+   } finally { rmSync(f.dir, { recursive: true }); }
+ });
+ 
++test('native trusted host commands need no source guard installation or full source inventory', async () => {
++  const f = nativeFixture();
++  try {
++    assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), true);
++    writeFileSync(join(f.root, 'unrelated-new-module.mjs'), 'export const changed = true;\n');
++    assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), true);
++    const observed = [];
++    assert.equal(await verifyHostHooks({ hooksPath: f.hooksPath, binary: '/fixture/codex',
++      codexHome: '/fixture/system', gstackRoot: f.root, home: f.home,
++      spawnProcess: fakeSpawn(listed(f.registrations), observed) }), true);
++    assert.equal(observed.length, 1);
++    assert.equal(observed[0].opts.cwd, f.root);
++    await assert.rejects(verifyHostHooks({ hooksPath: f.hooksPath, binary: '/fixture/codex',
++      codexHome: '/fixture/system', gstackRoot: f.root, home: f.home,
++      spawnProcess: fakeSpawn(listed(f.registrations, 'untrusted'), []) }), /not trusted/);
++  } finally { rmSync(f.dir, { recursive: true }); }
++});
++
++test('native host commands reject changed grammar, disabled strict mode, mixed legacy, duplicate and matcher', () => {
++  for (const kind of ['prefix', 'strict', 'suffix', 'target', 'legacy', 'duplicate', 'matcher', 'context-limit', 'stop', 'extra']) {
++    const f = nativeFixture();
++    try {
++      const hook = f.registrations.hooks.UserPromptSubmit[0].hooks[0];
++      if (kind === 'prefix') hook.command = hook.command.replace('$(pwd -P)', '$(pwd)');
++      if (kind === 'strict') hook.command = hook.command.replace('LUCA_NATIVE_HOOK_STRICT=1', 'LUCA_NATIVE_HOOK_STRICT=0');
++      if (kind === 'suffix') hook.command += '; true';
++      if (kind === 'target') hook.command = hook.command.replace('route-guard.mjs', 'other.mjs');
++      if (kind === 'legacy') hook.command = stablePrefix + expectedHostHookCommand(f.root, 'route-guard.mjs');
++      if (kind === 'duplicate') f.registrations.hooks.UserPromptSubmit[0].hooks.push({ ...hook });
++      if (kind === 'matcher') f.registrations.hooks.PreToolUse[0].matcher = '^Read$';
++      if (kind === 'context-limit') f.registrations.hooks.SessionStart[0].hooks[0].additionalContextLimit = 1;
++      if (kind === 'stop') f.registrations.hooks.Stop[0].hooks[0].command += '; true';
++      if (kind === 'extra') f.registrations.hooks.PostToolUse[0].hooks.push({ type: 'command', command: 'true' });
++      writeFileSync(f.hooksPath, JSON.stringify(f.registrations));
++      assert.equal(registeredHostHooks(f.hooksPath, { gstackRoot: f.root, home: f.home }), false, kind);
++    } finally { rmSync(f.dir, { recursive: true }); }
++  }
++});
++
+ test('stable host commands survive a reviewed source update without changing official trust identity', async () => {
+   const f = stableFixture();
+   try {
+@@ -313,6 +488,35 @@ test('host hook gate requires official trust of exact commands', () => {
+   rmSync(f.dir, { recursive: true });
+ });
+ 
++test('host hook gate rejects disabled or unknown enabled state for each required target', () => {
++  const f = nativeFixture();
++  try {
++    const commands = expectedCommands(f.registrations);
++    for (const [, eventName] of events) for (const enabled of [false, undefined, null, 'true', 1]) {
++      const data = listed(f.registrations);
++      const hook = data[0].hooks.find(row => row.eventName === eventName);
++      if (enabled === undefined) delete hook.enabled;
++      else hook.enabled = enabled;
++      assert.equal(trustedHostHookList(data, { expectedCommands: commands }), false,
++        `${eventName} must reject enabled=${String(enabled)} even when officially trusted`);
++    }
++  } finally { rmSync(f.dir, { recursive: true }); }
++});
++
++test('verified host hooks reject an officially trusted but disabled System preToolUse hook', async () => {
++  const f = nativeFixture();
++  const observed = [];
++  try {
++    const data = listed(f.registrations);
++    data[0].hooks.find(row => row.eventName === 'preToolUse').enabled = false;
++    await assert.rejects(verifyHostHooks({ hooksPath: f.hooksPath, binary: '/fixture/codex',
++      codexHome: '/fixture/system', gstackRoot: f.root, home: f.home,
++      spawnProcess: fakeSpawn(data, observed) }), /not trusted/);
++    assert.equal(observed.length, 1);
++    assert.equal(observed[0].opts.env.CODEX_HOME, '/fixture/system');
++  } finally { rmSync(f.dir, { recursive: true }); }
++});
++
+ test('verified host hook list runs against selected CODEX_HOME only', async () => {
+   const f = fixture();
+   const observed = [];
+@@ -331,11 +535,14 @@ test('verified host hook list runs against selected CODEX_HOME only', async () =
+ });
+ 
+ test('missing registration fails before a trust subprocess', async () => {
++  const f = fixture();
+   let spawned = false;
+-  await assert.rejects(verifyHostHooks({ hooksPath: '/tmp/absent-muse-hooks.json',
+-    binary: '/tmp/codex', codexHome: '/tmp/codex-home', gstackRoot: projectGstack,
+-    spawnProcess: () => { spawned = true; throw new Error('should not spawn'); } }), /not registered/);
+-  assert.equal(spawned, false);
++  try {
++    await assert.rejects(verifyHostHooks({ hooksPath: join(f.dir, 'missing-hooks.json'),
++      binary: '/fixture/codex', codexHome: '/fixture/system', gstackRoot: f.root, home: f.home,
++      spawnProcess: () => { spawned = true; throw new Error('should not spawn'); } }), /not registered/);
++    assert.equal(spawned, false);
++  } finally { rmSync(f.dir, { recursive: true }); }
+ });
+ 
+  test('published repository-relative hooks require the same full guard and official trust', () => {
+diff --git a/app/test-host-launch-client.mjs b/app/test-host-launch-client.mjs
+index 26f36ce532d48e34b770de7660fbf1322d1be453..0941c6ad0073d6e5fe0e3b36fce9ed382945f2eb 100644
+--- a/app/test-host-launch-client.mjs
++++ b/app/test-host-launch-client.mjs
+@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
+ import os from 'node:os';
+ import path from 'node:path';
+ import { EventEmitter } from 'node:events';
++import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
++import { fork } from 'node:child_process';
+ import { createHostLaunchClient } from './host-launch-client.js';
+ 
+ const profile = Object.freeze({ provider: 'codex', profileId: 'codex:sidecar', configRevision: '1',
+@@ -35,8 +37,8 @@ test('private broker IPC correlates replies and does not expose a prepare CLI or
+   assert.deepEqual(h.calls[0][2].stdio, ['ignore', 'ignore', 'ignore', 'ipc']);
+   assert.equal(h.calls[0][2].shell, false);
+   assert.equal(h.calls[0][2].env.ELECTRON_RUN_AS_NODE, '1');
+-  assert.equal(h.calls[0][2].env.NODE_OPTIONS, '--import=' + path.join(os.homedir(), '.codex/luca-child-project/source-guard/bootstrap.mjs'));
+-  assert.equal(h.calls[0][2].env.LUCA_CHILD_SOURCE_ROOT, '/trusted/gstack');
++  assert.equal(h.calls[0][2].env.NODE_OPTIONS, undefined);
++  assert.equal(h.calls[0][2].env.LUCA_CHILD_SOURCE_ROOT, undefined);
+   assert.equal(h.calls[0][2].env.LUCA_PROTECTED_CODE_ROOT, undefined);
+   assert.ok(path.isAbsolute(h.calls[0][2].execPath));
+   assert.equal(h.sent[0].method, 'prepare');
+@@ -50,6 +52,60 @@ test('private broker IPC correlates replies and does not expose a prepare CLI or
+   assert.equal((await dispatching).status, 'DISPATCHED');
+ });
+ 
++test('broker isolation removes inherited guard and launch authority without changing parent environment', async () => {
++  const inherited = {
++    NODE_OPTIONS: '--import=/absent/old-source-guard/bootstrap.mjs',
++    LUCA_CHILD_SOURCE_ROOT: '/old/gstack', LUCA_PROTECTED_CODE_ROOT: '/old/snapshot',
++    LUCA_SOURCE_GUARD_TEST_ROOT: '/old/test', MUSE_HOST_LAUNCH_NONCE: 'old-nonce',
++    MUSE_OPEN_REQUEST_ID: 'old-request',
++  };
++  const before = Object.fromEntries(Object.keys(inherited).map(key => [key, process.env[key]]));
++  try {
++    Object.assign(process.env, inherited);
++    const h = harness();
++    const reading = h.client.readReceipt({ launchId: 'launch' });
++    await new Promise(resolve => setImmediate(resolve));
++    for (const key of Object.keys(inherited)) {
++      assert.equal(h.calls[0][2].env[key], undefined, key);
++      assert.equal(process.env[key], inherited[key], `${key} parent value must stay intact`);
++    }
++    h.answer(0, null);
++    assert.equal(await reading, null);
++  } finally {
++    for (const [key, value] of Object.entries(before)) {
++      if (value === undefined) delete process.env[key]; else process.env[key] = value;
++    }
++  }
++});
++
++test('native broker fork starts with no installed source guard and keeps the public client API', async () => {
++  const root = mkdtempSync(path.join(os.tmpdir(), 'muse-host-client-'));
++  const brokerPath = path.join(root, 'broker.mjs');
++  let child;
++  try {
++    writeFileSync(brokerPath, `
++      import assert from 'node:assert/strict';
++      for (const key of ['NODE_OPTIONS', 'LUCA_CHILD_SOURCE_ROOT', 'LUCA_PROTECTED_CODE_ROOT', 'LUCA_SOURCE_GUARD_TEST_ROOT']) {
++        assert.equal(process.env[key], undefined, key);
++      }
++      assert.deepEqual(process.argv.slice(2), ${JSON.stringify([root, root])});
++      process.send({ type: 'ready', claimEndpoint: ${JSON.stringify(path.join(root, 'private.sock'))} });
++      process.on('message', message => process.send({ id: message.id, result: null }));
++    `);
++    const client = createHostLaunchClient({ brokerPath, gstackRoot: root, projectsRoot: root,
++      snapshotCurrentProfile: async () => structuredClone(profile), timeoutMs: 3000,
++      forkProcess: (...args) => { child = fork(...args); return child; } });
++    assert.deepEqual(Object.keys(client), ['prepare', 'dispatch', 'cancel', 'readReceipt', 'getLaunch']);
++    assert.equal(await client.readReceipt({ launchId: 'absent' }), null);
++  } finally {
++    if (child && child.exitCode === null) {
++      const exited = new Promise(resolve => child.once('exit', resolve));
++      child.kill(); await exited;
++    }
++    rmSync(root, { recursive: true });
++  }
++});
++
+ test('profile challenge fails closed for stale launch and changed current profile', async () => {
+   let current = structuredClone(profile);
+   const h = harness({ snapshotCurrentProfile: async () => current });

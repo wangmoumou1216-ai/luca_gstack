@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e",
+  "skill": "magicpath",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "ui_requirement"
+        ],
+        "optional": [
+          "design_brief_artifact",
+          "external_design_system"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "design_brief_artifact"
+        ],
+        "optional": [
+          "ux_brainstorm_artifact"
+        ]
+      }
+    },
+    "quality_gates": [
+      "design_generation_packet",
+      "tool_consumption_contract",
+      "page_interaction_mapping",
+      "state_coverage",
+      "no_packet_fact_drift",
+      "component_rendered",
+      "react_canvas_valid"
+    ]
+  }
+}

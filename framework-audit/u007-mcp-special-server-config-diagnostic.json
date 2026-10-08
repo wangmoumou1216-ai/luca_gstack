@@ -1,0 +1,89 @@
+{
+  "at": "2026-10-02T20:41:03.473251+00:00",
+  "scope": "read-only CLI configuration diagnostics, no model/server/tool/probe; no global mutation",
+  "prior_attempt": {
+    "servers": [
+      "context7",
+      "pencil",
+      "shadcn",
+      "node_repl",
+      "cua_repl"
+    ],
+    "override_exit": 1,
+    "stderr": "not returned by first wrapper; no metadata artifact saved",
+    "tool_chunks": [
+      "08407c",
+      "46201b"
+    ]
+  },
+  "isolated_diagnostics": [
+    {
+      "server": "node_repl",
+      "argv": [
+        "/Users/luca/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin/codex",
+        "mcp",
+        "list",
+        "--json",
+        "-c",
+        "mcp_servers.node_repl.enabled=false"
+      ],
+      "exit_code": 0,
+      "servers": [
+        {
+          "name": "code-review",
+          "enabled": false
+        },
+        {
+          "name": "codex_app",
+          "enabled": false
+        },
+        {
+          "name": "computer-use",
+          "enabled": false
+        },
+        {
+          "name": "context7",
+          "enabled": true
+        },
+        {
+          "name": "cua_repl",
+          "enabled": true
+        },
+        {
+          "name": "figma",
+          "enabled": false
+        },
+        {
+          "name": "fxiaoke-crm",
+          "enabled": false
+        },
+        {
+          "name": "node_repl",
+          "enabled": false
+        },
+        {
+          "name": "pencil",
+          "enabled": true
+        },
+        {
+          "name": "shadcn",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "server": "cua_repl",
+      "argv": [
+        "/Users/luca/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin/codex",
+        "mcp",
+        "list",
+        "--json",
+        "-c",
+        "mcp_servers.cua_repl.enabled=false"
+      ],
+      "exit_code": 1,
+      "stderr": "Error: failed to load bootstrap configuration\n\nCaused by:\n    invalid transport\n    in `mcp_servers.cua_repl`\n    \n"
+    }
+  ],
+  "conclusion": "Use actual exit/error below; no claim that disabling all MCPs is supported or authorized."
+}

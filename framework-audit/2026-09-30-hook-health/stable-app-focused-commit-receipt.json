@@ -1,0 +1,12 @@
+{
+  "kind": "focused-app-hook-commit-receipt",
+  "root": "/Users/luca/Desktop/项目/muse",
+  "base": "0f63d4edb2c3df7096e12c6ccd6f1e7114975f8e",
+  "head": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+  "files": [
+    "app/host-hook-ready.js",
+    "app/test-host-hook-ready.mjs"
+  ],
+  "status_before": " M .luca/memory/muse-gstack-fork-isolation.md\n M CHECKPOINT.md\n M CONTEXT.md\n M app/host-hook-ready.js\n M app/main.js\n M app/preload.cjs\n M app/renderer/app.js\n M app/session-open.js\n M app/test-default-provider-wiring.mjs\n M app/test-host-hook-ready.mjs\n M app/test-session-open-e2e.mjs\n M app/test-session-spool.mjs\n M app/test-theme-follow-e2e.mjs\n?? app/test-framework-mount.mjs\n?? docs/evaluation/2026-09-30-master-framework-mount.md\n?? docs/handoff/2026-09-30-luca-cross-cli-messaging-handoff.md\n?? docs/plans/2026-09-30-luca-cross-cli-messaging-execution-plan.md\n?? docs/research/2026-09-30-luca-cross-cli-communication-feasibility.md\n?? docs/research/evidence/\n",
+  "status_after": " M .luca/memory/muse-gstack-fork-isolation.md\n M CHECKPOINT.md\n M CONTEXT.md\n M app/main.js\n M app/preload.cjs\n M app/renderer/app.js\n M app/session-open.js\n M app/test-default-provider-wiring.mjs\n M app/test-session-open-e2e.mjs\n M app/test-session-spool.mjs\n M app/test-theme-follow-e2e.mjs\n?? app/test-framework-mount.mjs\n?? docs/evaluation/2026-09-30-master-framework-mount.md\n?? docs/handoff/2026-09-30-luca-cross-cli-messaging-handoff.md\n?? docs/plans/2026-09-30-luca-cross-cli-messaging-execution-plan.md\n?? docs/research/2026-09-30-luca-cross-cli-communication-feasibility.md\n?? docs/research/evidence/\n"
+}

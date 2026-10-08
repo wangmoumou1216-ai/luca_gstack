@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "status": "ROUND4_FROZEN_NOT_ACTIVATED",
+  "base_commit": "eddae51c01a07794227954b7ca87492ffe5f8c0a",
+  "candidate_root": "/private/tmp/luca-model-routing-20260930-k_8tl5cj",
+  "patch_sha256": "8fbd65304dc4a1bab125f40e3bdee753cc75ff25f9560e14dda7e3b1d68638e6",
+  "files": [
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "before_sha256": "d80f5e1d873b2429d7020998cbad7a028664a14c70e0850e66526634282f3b39",
+      "after_sha256": "c94eb6d128b60196243a67b54bb0d2fc32619d31f3fd18335c701a93d7168d27"
+    },
+    {
+      "path": ".claude/agents/plan-agent.md",
+      "before_sha256": "f9cdd5cd168aad354f976f85d2dc59d5e9783a15b910b3c256f67863902c9ebe",
+      "after_sha256": "30f7959d062bfe28e774e7771a1b6e5dd19270b78a107bcc68c4553d375723cb"
+    },
+    {
+      "path": ".claude/hooks/lib/codex-child-project.mjs",
+      "before_sha256": "8b26e163f12a478951ebbb138ed5e694f24306fd635bf128f4d435ec02138db7",
+      "after_sha256": "02139c51c4815e6766ff58d874f75c10da61b82b4776f7042f8a721d18f9f492"
+    },
+    {
+      "path": ".claude/skill-os/model-routing.yaml",
+      "before_sha256": "6831eb44d2ce79e0556e42e71f10c853589a592ce6ab5a9d9eab7c6a34b2942b",
+      "after_sha256": "07265b4ca0fd4a217f8f5094d34a47c4937f4ea918be8be06d5f904f07b493c8"
+    },
+    {
+      "path": ".codex/hooks.json",
+      "before_sha256": "0035f0fda4208b968c2981686036a1bf53211e8cb62ce24e1fb988811ad2acf8",
+      "after_sha256": "5e15e8a0e91cd1400d0a929567ede643ab7fafd66517e3b16eb830af1446cd9f"
+    },
+    {
+      "path": ".codex/model-route-hook.mjs",
+      "before_sha256": "6599c5084942c1099729b55080105df0519673a9261b6e22acafd4b1051daaa5",
+      "after_sha256": "ba82105867819b0361878b013c46d0231803448454a356c21806efa441a011ab"
+    },
+    {
+      "path": ".codex/workflow-runner.mjs",
+      "before_sha256": "0729d602e2774fc17a6cf2580a408bf6552c28e314df3d43c4873db466f70abf",
+      "after_sha256": "c59464b6f404aae16247b2f02ba5d8f31f577b8d5c42b56be0d8135c30683b96"
+    },
+    {
+      "path": "scripts/model-route-host.mjs",
+      "before_sha256": "8074fe186bf5e2755b68577237d908de187448f06e344088e1ae9df6c19e2d03",
+      "after_sha256": "a5085c2c21eb9d4dcc233adf763590dd951298fdb05548b1d5afcd2fc014ca2f"
+    },
+    {
+      "path": "scripts/test-codex-child-project.mjs",
+      "before_sha256": "84b6156fa031bc006062f0e18aa2bc420497535796d6fccc3cb1a0fcd81fbf58",
+      "after_sha256": "c8309b1f1e0338993b85bd17f9665f838d91e5b4cc05486f82bc6f98a33489c8"
+    },
+    {
+      "path": "scripts/test-codex-model-route-hook.mjs",
+      "before_sha256": "0701b07150fcd9aae68395abfcf06143cd40d4bfed29aed9f2d1042b9a76469e",
+      "after_sha256": "4d6b583b6685438b80c8fc8153b0b56a633a8ac0b5dbb720cd0e35048d53852b"
+    },
+    {
+      "path": "scripts/test-model-route-host.mjs",
+      "before_sha256": "c5a76a1c19d2985c40333b189cad5049a823c48cc547e7d0b5ca6f6240d83acf",
+      "after_sha256": "547b9d35e6880bae638a831979d061e9ec53f9178cef721ce7c21e0a32ad28eb"
+    },
+    {
+      "path": "scripts/test-model-route.mjs",
+      "before_sha256": "8faa8ad910f9b42ec2b0e21d4ace7841015f1fc75927fb28891aba355ebbc922",
+      "after_sha256": "678a1e20f552ce628ed94da4381d3f6622c23ebcc1b020ae2b03cf81b85497f3"
+    },
+    {
+      "path": "scripts/test-workflow-runner-runtime.mjs",
+      "before_sha256": "02edcbd30a850b7e020eebfda6d49bb9a668d7ca8d0cec314deacc0498741421",
+      "after_sha256": "f5df3600d746625e6592806e19936d5720d25230028256076d93cd42df19365e"
+    }
+  ]
+}

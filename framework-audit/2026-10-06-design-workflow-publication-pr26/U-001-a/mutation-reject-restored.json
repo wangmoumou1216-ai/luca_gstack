@@ -1,0 +1,179 @@
+{
+  "writer": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py",
+  "writer_sha256": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+  "guard_sha256": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3",
+  "source_integrity": {
+    "before": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3"
+    },
+    "after": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3"
+    },
+    "drift": false
+  },
+  "started_at": "2026-10-06T05:52:34.900563+00:00",
+  "completed_at": "2026-10-06T05:52:35.062121+00:00",
+  "passed": 3,
+  "total": 3,
+  "exit_code": 0,
+  "outcomes": [
+    {
+      "case": "reject-corrupt-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-corrupt-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-corrupt-combined",
+      "status": "PASS"
+    }
+  ],
+  "actual_runs": [
+    {
+      "case": "reject-corrupt-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ewhgwjq9",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+          ],
+          "pid": 85108,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ewhgwjq9",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ewhgwjq9",
+          "started_at": "2026-10-06T05:52:34.902112+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: while parsing a flow sequence\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ewhgwjq9/.luca/workflow-state.yaml\", line 12, column 8\nexpected ',' or ']', but got '<stream end>'\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ewhgwjq9/.luca/workflow-state.yaml\", line 13, column 1\n",
+          "completed_at": "2026-10-06T05:52:34.953010+00:00",
+          "actual_identity": {
+            "pid": 85108,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ewhgwjq9",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ewhgwjq9",
+            "started_at": "2026-10-06T05:52:34.929994+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:34.954399+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-corrupt-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-g47122r4",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+          ],
+          "pid": 85109,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-g47122r4",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-g47122r4",
+          "started_at": "2026-10-06T05:52:34.955202+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: while parsing a flow sequence\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-g47122r4/.luca/workflow-state.yaml\", line 12, column 8\nexpected ',' or ']', but got '<stream end>'\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-g47122r4/.luca/workflow-state.yaml\", line 13, column 1\n",
+          "completed_at": "2026-10-06T05:52:35.007352+00:00",
+          "actual_identity": {
+            "pid": 85109,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-g47122r4",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-g47122r4",
+            "started_at": "2026-10-06T05:52:34.983697+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:35.008531+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-corrupt-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w41847ri",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+          ],
+          "pid": 85110,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w41847ri",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w41847ri",
+          "started_at": "2026-10-06T05:52:35.009310+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: while parsing a flow sequence\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w41847ri/.luca/workflow-state.yaml\", line 12, column 8\nexpected ',' or ']', but got '<stream end>'\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w41847ri/.luca/workflow-state.yaml\", line 13, column 1\n",
+          "completed_at": "2026-10-06T05:52:35.060844+00:00",
+          "actual_identity": {
+            "pid": 85110,
+            "argv": [
+              "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/mutation-reject-8on3pz0o/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w41847ri",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w41847ri",
+            "started_at": "2026-10-06T05:52:35.037123+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:52:35.061952+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "status": "PARTIAL_CANDIDATE_NOT_ADOPTED",
+  "W37": [
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "before": "3eed1c58e4c6cbdd5b3a8ad0fa3c0841723012de0cf789fb7f369980905dc29e",
+      "after": "68c83777974edbf8e9416c18b512192bc68a7a8e437f30498046bb4af6a31c8b"
+    },
+    {
+      "path": ".claude/agents/work-agent-template.md",
+      "before": "2d4fb9acbdaff28f82c207b4f085fb8cc6b3c5f695d1baa0f7a781f57ca67bf2",
+      "after": "a156e2340a8ec212ba7174635a7ca444582c1de3202a8f99057be7590b2ad7dc"
+    }
+  ],
+  "W36": [
+    {
+      "path": "AGENTS.md",
+      "before": "db5ea430452a32cf5d98fac04917ae2ef2da5ae46ca2ea775423fb434336d8d8",
+      "after": "6f603c20c0350045eb1c29ba6e0bdf9b29281e15d09479b19f8191fee46e9526"
+    }
+  ],
+  "W38": [
+    {
+      "path": ".claude/skill-os/runtime/long-session.md",
+      "before": "641aa996c6257570c9829ff668e7c59226a820b21ce1a8e6842aed9b173c2117",
+      "after": "70e51b16461ab14ba55cb06af7db19c733c845cda6c50fb5342a0dc9120c4181"
+    },
+    {
+      "path": ".claude/skills/office/handoff/SKILL.md",
+      "before": "4141ff03f96a0140631f41852d06f4a955e96f7272a1452421a65a1aa99cfa66",
+      "after": "c4ad4c5009e73b04625afbeb00a524df5be15341cfa8eba7fd91d2f4501e0a0d"
+    }
+  ]
+}

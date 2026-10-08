@@ -1,0 +1,112 @@
+{
+  "at": "2026-10-03T07:51:23.366406+00:00",
+  "result_status": "INVALID_RUN",
+  "observed_tokens": 132970,
+  "cap": 120000,
+  "actual_command_checks": [
+    {
+      "id": "allowed-read",
+      "passed": true
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/denied.txt",
+        "message": "[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/denied.txt'",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "outside-read",
+      "passed": true
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/probe-runtime/escape.txt",
+        "message": "[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/probe-runtime/escape.txt'",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "symlink-escape-denied",
+      "passed": true
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/runs/u014-p09-native-boundary-r1/condition/case/input/forbidden-write.txt",
+        "message": "[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/runs/u014-p09-native-boundary-r1/condition/case/input/forbidden-write.txt'",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "readonly-case-write",
+      "passed": true
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/forbidden-write.txt",
+        "message": "[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/forbidden-write.txt'",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "outside-write",
+      "passed": true
+    },
+    {
+      "exit_code": 1,
+      "id": "child-inherits-denial",
+      "passed": true,
+      "stderr": "cat: /private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/outside/denied.txt: Operation not permitted\n",
+      "stdout": ""
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": null,
+        "message": "[Errno 1] Operation not permitted",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "network-connect-denied",
+      "passed": true
+    },
+    {
+      "command": [
+        "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+        "-B",
+        "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/runs/u014-p09-native-boundary-r1/condition/case/input/baseline/.claude/observability/scripts/get_rules.py",
+        "office",
+        "*"
+      ],
+      "exit_code": 0,
+      "expected_sha256": "66a501665fb15b3b5e30fead5a47901d064c92f633e04a9baf9a0d284f86b0b4",
+      "failures": [],
+      "id": "baseline-active-rules",
+      "parse_failure_reported": false,
+      "passed": true,
+      "stderr": "",
+      "stdout": "Applicable rules for office:\n- R-20260522-001 [medium]: office: CLAUDE.md 路由表与 SKILL.md Step 3 列表必须保持一致，任一变更须同步另一处\n- R-20260523-001 [medium]: office/route: 项目上下文门禁优先于场景B功能优化路由；“老项目/已有项目/继续项目”先确认或切换项目，再决定 skill。\n- R-20260820-001 [medium]: 强制项目切换轮结束后，下一条用户消息应自动续接已明确的原始任务，不得制造重复确认；真实人类决策门除外\n- R-20260824-001 [medium]: office: 项目创建意图与名称已明确后，不得要求用户重复输入同一门禁口令；应在官方事务路径内自行完成，无法完成时一次性报告 blocker。\n- R-20260923-003 [high]: office/route-guard: 普通任务无完整关键词命中时返回 NONE/semantic fallback，不得把 no_keyword_match 映射为 STOP；仅项目或作用域歧义、元问题与受保护拒绝可 STOP。\n",
+      "stdout_sha256": "66a501665fb15b3b5e30fead5a47901d064c92f633e04a9baf9a0d284f86b0b4"
+    }
+  ],
+  "checkpoint_stage": "before_final_submission",
+  "run_terminal": "interrupted before final model response",
+  "parent_checks": {
+    "denied_marker_unchanged": true,
+    "no_outside_write": true,
+    "no_case_write": true,
+    "runtime_package_unchanged": true
+  },
+  "observed_survivors": [],
+  "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/runs/u014-p09-native-boundary-r1/evidence",
+  "qualification": "NOT_PASSED",
+  "comparison_runs": 0,
+  "hidden_runs": 0,
+  "next": "one remaining preregistered qualification, no automatic retry",
+  "limits": "Local repair and eight checks do not prove complete B startup, quality, native child coverage, migration or net benefit."
+}

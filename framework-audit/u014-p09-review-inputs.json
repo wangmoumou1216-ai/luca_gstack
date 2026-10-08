@@ -1,0 +1,99 @@
+{
+  "frozen_at": "2026-10-03T07:29:12.212373+00:00",
+  "scope": "P09 single exact native qualification, not comparison or adoption",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-case-draft.json",
+      "sha256": "039ecdda70e18f4b369bc48d229684dc6c7f6ddebc295ffcbfaf668cd6c1b24c",
+      "bytes": 22579
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-registration-draft.json",
+      "sha256": "dea911f71b92066d92d02ec41e1199eed28fdee06fe1c30c2845c6e91909a65e",
+      "bytes": 6868
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-manifest-draft.json",
+      "sha256": "7df6067bac315505c9255eaec9fdcbaa42de5c2f40ceea68eff56369cc118585",
+      "bytes": 11014
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-preparation.json",
+      "sha256": "f8a7580be6af1b53eb6fcfebaf174f52c8330f4a9139add74804d07e6661a341",
+      "bytes": 11861
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-launch.py",
+      "sha256": "38a69e149ab425eb891f20dce26674ad55ef9f2709c040cde1b57438f74c4410",
+      "bytes": 10936
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-offline-sandbox.json",
+      "sha256": "1ecd87bb5ccce6dac34f1785f56d848b133765b8a64f363a4dd194c6dc366664",
+      "bytes": 5135
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-offline-sandbox-inner-env.json",
+      "sha256": "bc92ae4eb15515e53e5ecfddcf96fbeeb5300e74f04872c38708647ac0460046",
+      "bytes": 6972
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-frozen-orchestration-ready.json",
+      "sha256": "c898f8576c5fc3fc289826209486c246c823a17fab8b00206425ae282e37e752",
+      "bytes": 5924
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-routing-ready.json",
+      "sha256": "406ab496f5c839366e01ea8f2fd65b27f743be3b19b092ee5da2389d02b008b9",
+      "bytes": 3151
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-root-collection-driver.json",
+      "sha256": "b17b918eb23a6945d73a0f6acb3dd0d12eda168811eb7d95324f96b30017eb05",
+      "bytes": 953
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-root-collection-conditions.json",
+      "sha256": "9a5483b5fa351a62cee6a028e07796c30767f9f0989d13fd58a58dfd0ff27ed7",
+      "bytes": 882
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "b514cb98eacc3bf689931c3236a72e8da55f766124828839ba0cb20dafabb7a6",
+      "bytes": 58107
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "06b3b6c28d422734b70d27c4d6beff8c491deaac75e1b6850b3a22b13c1c20c7",
+      "bytes": 80878
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "81b3cde5a44e6fb3d60145be7c14578098534a8444adc4d6d20c2b7d1b1edd4c",
+      "bytes": 25184
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "cea5b35c866bd8c157685d9f7425d11365f894b817c6f382f24c5c43f27f718f",
+      "bytes": 25121
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/native-trace.mjs",
+      "sha256": "afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce",
+      "bytes": 21081
+    }
+  ],
+  "tests": "Owner tests plus root integration42/44 and exact skipped B/S followup2/2 all passed; actual exits0, receipts available",
+  "assertions": [
+    "exact candidate C support preserves B/T/S/I; no evaluator source leaks",
+    "eight fixed checks and original permissions preserved; inner env fixes observed alias cause without widening",
+    "registered probe9 within10 cap and total144, exact bindings, one attempt/outer cleanup",
+    "no claim local sandbox pass proves app-server/model value, production unchanged"
+  ],
+  "revision": "Owner finalized handover metadata while review active; code byte identities unchanged. Snapshot final owner receipt here; historical input list preserved."
+}

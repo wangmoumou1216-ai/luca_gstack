@@ -1,0 +1,20 @@
+{
+  "status": "PUBLISHED_EXACT_COMMIT_REMOTE_READBACK_PRESERVATION_PASS",
+  "at": "2026-10-01T03:57:42.161961+00:00",
+  "target_commit": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+  "remote_sha": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+  "push_result": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-publication-push-result-resume06.json",
+    "sha256": "40b819cd8781b18260846ce3ae64f124774a277d1ae61187e81e56eaddcaa5a4"
+  },
+  "review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-publication-review-resume06.json",
+    "sha256": "cbe180034f24eb4285131cfc02e239460e6dc1d2c2aebe125ef0f8a85fe5d523"
+  },
+  "native_proof": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-publication-review-native-resume06.json",
+    "sha256": "a748b9aa901b2193ca75fd833caaf6538a211cba16c6d882152832f676f52c58"
+  },
+  "preservation_after": "PASS preservation baseline 02; M/C/P HEAD, branch, index, status, dirty tuples match; public controlled-change inactive; only exact audit directory excluded\n",
+  "local_activation_performed": false
+}

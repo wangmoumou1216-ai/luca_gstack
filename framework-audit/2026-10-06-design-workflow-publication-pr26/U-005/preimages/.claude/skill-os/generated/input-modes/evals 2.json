@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "source_sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+  "skill": "evals",
+  "group": "governance_tools",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "target_artifacts"
+        ],
+        "optional": [
+          "workflow_state"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "workflow_state",
+          "observability_recent"
+        ]
+      }
+    }
+  }
+}

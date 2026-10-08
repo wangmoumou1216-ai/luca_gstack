@@ -1,0 +1,16 @@
+[
+  {
+    "slice_id": "P0-S1",
+    "source_locator": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-neutral-purpose.md",
+    "source_sha256_or_version": "02bb3f7e16dfbc228660bd5af58b91f6ced3c7d7350ff6c7bd2821df30212421",
+    "read_or_measure_range": "L1–64/EOF",
+    "required_method": "UTF-8 全文读取，实际输出未截断；计算全文件 SHA-256；对照 P0-C1 至 C4 并披露自动注入污染",
+    "required_for_assertions": [
+      "P0-C1",
+      "P0-C2",
+      "P0-C3",
+      "P0-C4"
+    ],
+    "authority_ref": "本会话用户指令：按照交接文档执行；本次异步问题直接回复"
+  }
+]

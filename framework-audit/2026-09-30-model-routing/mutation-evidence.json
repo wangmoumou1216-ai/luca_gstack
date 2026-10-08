@@ -1,0 +1,65 @@
+[
+  {
+    "mutation": "no-pin-shortcut-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "NO_PIN framework review"
+  },
+  {
+    "mutation": "no-pin-validation-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "NO_PIN carrying a project identity is refused"
+  },
+  {
+    "mutation": "cold-review-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "critical review never inherits producer history"
+  },
+  {
+    "mutation": "native-preparation-persistence-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "critical native preparation failure persists the host activation latch"
+  },
+  {
+    "mutation": "pending-critical-workflow-guard-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "unresolved critical workflow evidence blocks later native dispatch"
+  },
+  {
+    "mutation": "native-reservation-before-bindings-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "reservation failure stops before reading model relations"
+  },
+  {
+    "mutation": "native-pending-preparation-entry-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "pending preparation blocks later runner entry after contention clears"
+  },
+  {
+    "mutation": "bound-critical-native-evidence-guard-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "bound critical native work blocks further dispatch until evidence closes",
+    "fixture": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-native-pending-mutation-cof2rlh0/release"
+  },
+  {
+    "mutation": "native-locked-reservation-guard-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "waiting for existing evidence is not a failed critical route",
+    "fixture": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-atomic-guard-mutation-42ua1rfe/release"
+  },
+  {
+    "mutation": "native-locked-build-guard-removed",
+    "killed": true,
+    "exit": 1,
+    "assertion": "locked admission rejects a stale default snapshot",
+    "fixture": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-atomic-guard-mutation-r7x6oma7/release"
+  }
+]

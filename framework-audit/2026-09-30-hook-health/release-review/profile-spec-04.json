@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-release-profile-spec-20260930-04",
+  "subject": {
+    "skill": "code-review-spec",
+    "topic": "hook-health configuration-profile spec supplement",
+    "scene": "unknown",
+    "input_summary": "NO_PIN；配置目录补充独立只读审查，冻结范围及内存失败注入。真实启用与会话验收不包含在本票。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/SCOPE-04.json"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 4,
+    "total": 4,
+    "findings": []
+  }
+}

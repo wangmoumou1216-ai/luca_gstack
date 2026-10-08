@@ -1,0 +1,4132 @@
+{
+  "writer": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py",
+  "writer_sha256": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+  "guard_sha256": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3",
+  "source_integrity": {
+    "before": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3"
+    },
+    "after": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "006ad2b2906a767fb72871dd26ecdffd66b43fdd8f684f995cda4d10081599c3"
+    },
+    "drift": false
+  },
+  "started_at": "2026-10-06T05:54:27.489082+00:00",
+  "completed_at": "2026-10-06T05:54:33.914608+00:00",
+  "passed": 74,
+  "total": 74,
+  "exit_code": 0,
+  "outcomes": [
+    {
+      "case": "valid-node",
+      "status": "PASS"
+    },
+    {
+      "case": "missing-node",
+      "status": "PASS"
+    },
+    {
+      "case": "valid-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "missing-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "valid-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "missing-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-corrupt-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-corrupt-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-corrupt-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-empty-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-empty-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-empty-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-null-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-null-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-null-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-list-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-list-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-list-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-scalar-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-scalar-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-scalar-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-nodes-null-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-nodes-null-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-nodes-null-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-nodes-list-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-nodes-list-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-nodes-list-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-node-null-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-node-null-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-node-null-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-node-list-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-node-list-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-node-list-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-other-node-scalar-node",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-other-node-scalar-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "reject-other-node-scalar-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'{broken'-node",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'{broken'-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'{broken'-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'[]'-node",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'[]'-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'[]'-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'null'-node",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'null'-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'null'-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'\"string\"'-node",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'\"string\"'-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-'\"string\"'-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-''-node",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-''-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-invalid-''-combined",
+      "status": "PASS"
+    },
+    {
+      "case": "extra-preservation",
+      "status": "PASS"
+    },
+    {
+      "case": "yaml-alias-preservation",
+      "status": "PASS"
+    },
+    {
+      "case": "same-node-supplied-fields",
+      "status": "PASS"
+    },
+    {
+      "case": "new-node-defaults",
+      "status": "PASS"
+    },
+    {
+      "case": "lock-stable-inode",
+      "status": "PASS"
+    },
+    {
+      "case": "combined-single-transaction",
+      "status": "PASS"
+    },
+    {
+      "case": "state-write-failure",
+      "status": "PASS"
+    },
+    {
+      "case": "state-replace-failure",
+      "status": "PASS"
+    },
+    {
+      "case": "projection-failure-repair",
+      "status": "PASS"
+    },
+    {
+      "case": "lock-timeout",
+      "status": "PASS"
+    },
+    {
+      "case": "lock-process-exit",
+      "status": "PASS"
+    },
+    {
+      "case": "concurrency-different-node",
+      "status": "PASS"
+    },
+    {
+      "case": "concurrency-topic-node",
+      "status": "PASS"
+    },
+    {
+      "case": "concurrency-same-node",
+      "status": "PASS"
+    },
+    {
+      "case": "concurrency-topic-topic",
+      "status": "PASS"
+    },
+    {
+      "case": "lock-invalid-timeout--1",
+      "status": "PASS"
+    },
+    {
+      "case": "lock-invalid-timeout-0",
+      "status": "PASS"
+    },
+    {
+      "case": "lock-invalid-timeout-nan",
+      "status": "PASS"
+    },
+    {
+      "case": "lock-invalid-timeout-inf",
+      "status": "PASS"
+    },
+    {
+      "case": "lock-invalid-timeout-invalid",
+      "status": "PASS"
+    },
+    {
+      "case": "lock-invalid-timeout-61",
+      "status": "PASS"
+    },
+    {
+      "case": "legacy-ux-audit-reject",
+      "status": "PASS"
+    },
+    {
+      "case": "legacy-ux-audit-valid",
+      "status": "PASS"
+    }
+  ],
+  "actual_runs": [
+    {
+      "case": "valid-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-3mgtyoic",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:27Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:27Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86246,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-3mgtyoic",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-3mgtyoic",
+          "started_at": "2026-10-06T05:54:27.490476+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:27.542583+00:00",
+          "actual_identity": {
+            "pid": 86246,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-3mgtyoic",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-3mgtyoic",
+            "started_at": "2026-10-06T05:54:27.518648+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:27.545034+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "missing-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-on3ct7vx",
+      "state_before": null,
+      "state_after": "last_updated: '2026-10-06T05:54:27Z'\nnodes:\n  idea:\n    completed_at: '2026-10-06T05:54:27Z'\n    output: docs/idea/new.md\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86248,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-on3ct7vx",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-on3ct7vx",
+          "started_at": "2026-10-06T05:54:27.545707+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:27.598627+00:00",
+          "actual_identity": {
+            "pid": 86248,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-on3ct7vx",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-on3ct7vx",
+            "started_at": "2026-10-06T05:54:27.574726+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:27.600247+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "valid-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ee83ic3z",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:27Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86249,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ee83ic3z",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ee83ic3z",
+          "started_at": "2026-10-06T05:54:27.601038+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:27.653688+00:00",
+          "actual_identity": {
+            "pid": 86249,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ee83ic3z",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ee83ic3z",
+            "started_at": "2026-10-06T05:54:27.628506+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:27.655421+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "missing-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eh1pefzx",
+      "state_before": null,
+      "state_after": "last_updated: '2026-10-06T05:54:27Z'\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86250,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eh1pefzx",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eh1pefzx",
+          "started_at": "2026-10-06T05:54:27.656027+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:27.708534+00:00",
+          "actual_identity": {
+            "pid": 86250,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eh1pefzx",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eh1pefzx",
+            "started_at": "2026-10-06T05:54:27.684018+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:27.710106+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "valid-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nb0cklfd",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:27Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:27Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86251,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nb0cklfd",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nb0cklfd",
+          "started_at": "2026-10-06T05:54:27.710932+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\nworkflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:27.764565+00:00",
+          "actual_identity": {
+            "pid": 86251,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nb0cklfd",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nb0cklfd",
+            "started_at": "2026-10-06T05:54:27.739537+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:27.766442+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "missing-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-07btcgf0",
+      "state_before": null,
+      "state_after": "last_updated: '2026-10-06T05:54:27Z'\nnodes:\n  idea:\n    completed_at: '2026-10-06T05:54:27Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86252,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-07btcgf0",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-07btcgf0",
+          "started_at": "2026-10-06T05:54:27.767013+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\nworkflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:27.818923+00:00",
+          "actual_identity": {
+            "pid": 86252,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-07btcgf0",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-07btcgf0",
+            "started_at": "2026-10-06T05:54:27.794606+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:27.820636+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-corrupt-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4b6ua2n7",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86253,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4b6ua2n7",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4b6ua2n7",
+          "started_at": "2026-10-06T05:54:27.821435+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: while parsing a flow sequence\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4b6ua2n7/.luca/workflow-state.yaml\", line 12, column 8\nexpected ',' or ']', but got '<stream end>'\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4b6ua2n7/.luca/workflow-state.yaml\", line 13, column 1\n",
+          "completed_at": "2026-10-06T05:54:27.873068+00:00",
+          "actual_identity": {
+            "pid": 86253,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4b6ua2n7",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4b6ua2n7",
+            "started_at": "2026-10-06T05:54:27.849606+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:27.874217+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-corrupt-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-41iegtbd",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86254,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-41iegtbd",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-41iegtbd",
+          "started_at": "2026-10-06T05:54:27.875007+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: while parsing a flow sequence\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-41iegtbd/.luca/workflow-state.yaml\", line 12, column 8\nexpected ',' or ']', but got '<stream end>'\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-41iegtbd/.luca/workflow-state.yaml\", line 13, column 1\n",
+          "completed_at": "2026-10-06T05:54:27.926353+00:00",
+          "actual_identity": {
+            "pid": 86254,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-41iegtbd",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-41iegtbd",
+            "started_at": "2026-10-06T05:54:27.902608+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:27.927486+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-corrupt-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-elexrndt",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86257,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-elexrndt",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-elexrndt",
+          "started_at": "2026-10-06T05:54:27.928260+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: while parsing a flow sequence\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-elexrndt/.luca/workflow-state.yaml\", line 12, column 8\nexpected ',' or ']', but got '<stream end>'\n  in \"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-elexrndt/.luca/workflow-state.yaml\", line 13, column 1\n",
+          "completed_at": "2026-10-06T05:54:27.982297+00:00",
+          "actual_identity": {
+            "pid": 86257,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-elexrndt",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-elexrndt",
+            "started_at": "2026-10-06T05:54:27.956845+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:27.983625+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-empty-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bo2t7pok",
+      "state_before": "",
+      "state_after": "",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86264,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bo2t7pok",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bo2t7pok",
+          "started_at": "2026-10-06T05:54:27.984494+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.036063+00:00",
+          "actual_identity": {
+            "pid": 86264,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bo2t7pok",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bo2t7pok",
+            "started_at": "2026-10-06T05:54:28.012693+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.037272+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-empty-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gizwt_15",
+      "state_before": "",
+      "state_after": "",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86265,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gizwt_15",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gizwt_15",
+          "started_at": "2026-10-06T05:54:28.038031+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.088230+00:00",
+          "actual_identity": {
+            "pid": 86265,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gizwt_15",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gizwt_15",
+            "started_at": "2026-10-06T05:54:28.065366+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.089417+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-empty-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x4x7hvx0",
+      "state_before": "",
+      "state_after": "",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86266,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x4x7hvx0",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x4x7hvx0",
+          "started_at": "2026-10-06T05:54:28.090158+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.141947+00:00",
+          "actual_identity": {
+            "pid": 86266,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x4x7hvx0",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x4x7hvx0",
+            "started_at": "2026-10-06T05:54:28.117693+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.143163+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-null-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n1hyffkj",
+      "state_before": "null\n",
+      "state_after": "null\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86267,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n1hyffkj",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n1hyffkj",
+          "started_at": "2026-10-06T05:54:28.143946+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.195559+00:00",
+          "actual_identity": {
+            "pid": 86267,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n1hyffkj",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n1hyffkj",
+            "started_at": "2026-10-06T05:54:28.172163+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.196931+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-null-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ho9xe1l3",
+      "state_before": "null\n",
+      "state_after": "null\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86268,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ho9xe1l3",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ho9xe1l3",
+          "started_at": "2026-10-06T05:54:28.197749+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.252545+00:00",
+          "actual_identity": {
+            "pid": 86268,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ho9xe1l3",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ho9xe1l3",
+            "started_at": "2026-10-06T05:54:28.229250+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.253738+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-null-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eifgdgss",
+      "state_before": "null\n",
+      "state_after": "null\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86269,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eifgdgss",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eifgdgss",
+          "started_at": "2026-10-06T05:54:28.254594+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.305884+00:00",
+          "actual_identity": {
+            "pid": 86269,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eifgdgss",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-eifgdgss",
+            "started_at": "2026-10-06T05:54:28.282268+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.307064+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-list-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gldl9utt",
+      "state_before": "[]\n",
+      "state_after": "[]\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86270,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gldl9utt",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gldl9utt",
+          "started_at": "2026-10-06T05:54:28.307819+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.358122+00:00",
+          "actual_identity": {
+            "pid": 86270,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gldl9utt",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gldl9utt",
+            "started_at": "2026-10-06T05:54:28.335271+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.359322+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-list-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-163ojj8z",
+      "state_before": "[]\n",
+      "state_after": "[]\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86271,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-163ojj8z",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-163ojj8z",
+          "started_at": "2026-10-06T05:54:28.360073+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.411811+00:00",
+          "actual_identity": {
+            "pid": 86271,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-163ojj8z",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-163ojj8z",
+            "started_at": "2026-10-06T05:54:28.388684+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.413125+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-list-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_vuja6hn",
+      "state_before": "[]\n",
+      "state_after": "[]\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86272,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_vuja6hn",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_vuja6hn",
+          "started_at": "2026-10-06T05:54:28.413953+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.464362+00:00",
+          "actual_identity": {
+            "pid": 86272,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_vuja6hn",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_vuja6hn",
+            "started_at": "2026-10-06T05:54:28.441249+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.465476+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-scalar-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-keocejag",
+      "state_before": "value\n",
+      "state_after": "value\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86273,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-keocejag",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-keocejag",
+          "started_at": "2026-10-06T05:54:28.466176+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.517473+00:00",
+          "actual_identity": {
+            "pid": 86273,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-keocejag",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-keocejag",
+            "started_at": "2026-10-06T05:54:28.494176+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.518741+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-scalar-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-09g6frxg",
+      "state_before": "value\n",
+      "state_after": "value\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86274,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-09g6frxg",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-09g6frxg",
+          "started_at": "2026-10-06T05:54:28.519565+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.573162+00:00",
+          "actual_identity": {
+            "pid": 86274,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-09g6frxg",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-09g6frxg",
+            "started_at": "2026-10-06T05:54:28.547479+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.574462+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-scalar-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1jq47g2o",
+      "state_before": "value\n",
+      "state_after": "value\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86275,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1jq47g2o",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1jq47g2o",
+          "started_at": "2026-10-06T05:54:28.575263+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state must be a mapping (empty/null is invalid)\n",
+          "completed_at": "2026-10-06T05:54:28.626496+00:00",
+          "actual_identity": {
+            "pid": 86275,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1jq47g2o",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1jq47g2o",
+            "started_at": "2026-10-06T05:54:28.602953+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.627687+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-nodes-null-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ayx5sv3o",
+      "state_before": "nodes: null\n",
+      "state_after": "nodes: null\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86276,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ayx5sv3o",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ayx5sv3o",
+          "started_at": "2026-10-06T05:54:28.628441+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state.nodes must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:28.679588+00:00",
+          "actual_identity": {
+            "pid": 86276,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ayx5sv3o",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ayx5sv3o",
+            "started_at": "2026-10-06T05:54:28.656392+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.680802+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-nodes-null-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x5226gak",
+      "state_before": "nodes: null\n",
+      "state_after": "nodes: null\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86277,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x5226gak",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x5226gak",
+          "started_at": "2026-10-06T05:54:28.681554+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state.nodes must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:28.732867+00:00",
+          "actual_identity": {
+            "pid": 86277,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x5226gak",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-x5226gak",
+            "started_at": "2026-10-06T05:54:28.709777+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.733996+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-nodes-null-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7l2szntn",
+      "state_before": "nodes: null\n",
+      "state_after": "nodes: null\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86278,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7l2szntn",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7l2szntn",
+          "started_at": "2026-10-06T05:54:28.734707+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state.nodes must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:28.785746+00:00",
+          "actual_identity": {
+            "pid": 86278,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7l2szntn",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7l2szntn",
+            "started_at": "2026-10-06T05:54:28.762192+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.787077+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-nodes-list-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7_qp6n_l",
+      "state_before": "nodes: []\n",
+      "state_after": "nodes: []\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86279,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7_qp6n_l",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7_qp6n_l",
+          "started_at": "2026-10-06T05:54:28.787927+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state.nodes must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:28.838608+00:00",
+          "actual_identity": {
+            "pid": 86279,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7_qp6n_l",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-7_qp6n_l",
+            "started_at": "2026-10-06T05:54:28.815347+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.839764+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-nodes-list-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mtckq3a",
+      "state_before": "nodes: []\n",
+      "state_after": "nodes: []\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86280,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mtckq3a",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mtckq3a",
+          "started_at": "2026-10-06T05:54:28.840509+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state.nodes must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:28.891707+00:00",
+          "actual_identity": {
+            "pid": 86280,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mtckq3a",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mtckq3a",
+            "started_at": "2026-10-06T05:54:28.868641+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.892824+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-nodes-list-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jtyzp35d",
+      "state_before": "nodes: []\n",
+      "state_after": "nodes: []\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86281,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jtyzp35d",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jtyzp35d",
+          "started_at": "2026-10-06T05:54:28.893536+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: existing workflow-state.nodes must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:28.944428+00:00",
+          "actual_identity": {
+            "pid": 86281,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jtyzp35d",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jtyzp35d",
+            "started_at": "2026-10-06T05:54:28.921472+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.945628+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-node-null-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9zj00z4x",
+      "state_before": "nodes:\n  idea: null\n",
+      "state_after": "nodes:\n  idea: null\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86282,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9zj00z4x",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9zj00z4x",
+          "started_at": "2026-10-06T05:54:28.946420+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: every existing workflow-state node must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:28.998658+00:00",
+          "actual_identity": {
+            "pid": 86282,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9zj00z4x",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9zj00z4x",
+            "started_at": "2026-10-06T05:54:28.975361+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:28.999957+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-node-null-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-m5zud2gu",
+      "state_before": "nodes:\n  idea: null\n",
+      "state_after": "nodes:\n  idea: null\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86283,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-m5zud2gu",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-m5zud2gu",
+          "started_at": "2026-10-06T05:54:29.000706+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: every existing workflow-state node must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:29.051766+00:00",
+          "actual_identity": {
+            "pid": 86283,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-m5zud2gu",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-m5zud2gu",
+            "started_at": "2026-10-06T05:54:29.028505+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.053028+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-node-null-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1k1gul0i",
+      "state_before": "nodes:\n  idea: null\n",
+      "state_after": "nodes:\n  idea: null\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86284,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1k1gul0i",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1k1gul0i",
+          "started_at": "2026-10-06T05:54:29.053791+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: every existing workflow-state node must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:29.105382+00:00",
+          "actual_identity": {
+            "pid": 86284,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1k1gul0i",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1k1gul0i",
+            "started_at": "2026-10-06T05:54:29.082046+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.106607+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-node-list-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nge5vav3",
+      "state_before": "nodes:\n  idea: []\n",
+      "state_after": "nodes:\n  idea: []\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86285,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nge5vav3",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nge5vav3",
+          "started_at": "2026-10-06T05:54:29.107379+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: every existing workflow-state node must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:29.158670+00:00",
+          "actual_identity": {
+            "pid": 86285,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nge5vav3",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-nge5vav3",
+            "started_at": "2026-10-06T05:54:29.135729+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.159857+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-node-list-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-tbe8tv7d",
+      "state_before": "nodes:\n  idea: []\n",
+      "state_after": "nodes:\n  idea: []\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86286,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-tbe8tv7d",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-tbe8tv7d",
+          "started_at": "2026-10-06T05:54:29.160606+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: every existing workflow-state node must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:29.211100+00:00",
+          "actual_identity": {
+            "pid": 86286,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-tbe8tv7d",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-tbe8tv7d",
+            "started_at": "2026-10-06T05:54:29.187903+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.212341+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-node-list-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-si1mtxwi",
+      "state_before": "nodes:\n  idea: []\n",
+      "state_after": "nodes:\n  idea: []\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86287,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-si1mtxwi",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-si1mtxwi",
+          "started_at": "2026-10-06T05:54:29.213096+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: every existing workflow-state node must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:29.265828+00:00",
+          "actual_identity": {
+            "pid": 86287,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-si1mtxwi",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-si1mtxwi",
+            "started_at": "2026-10-06T05:54:29.242272+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.267046+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-other-node-scalar-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1px8hegv",
+      "state_before": "nodes:\n  unrelated: invalid\n",
+      "state_after": "nodes:\n  unrelated: invalid\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86288,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1px8hegv",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1px8hegv",
+          "started_at": "2026-10-06T05:54:29.267796+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: every existing workflow-state node must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:29.321562+00:00",
+          "actual_identity": {
+            "pid": 86288,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1px8hegv",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1px8hegv",
+            "started_at": "2026-10-06T05:54:29.296340+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.322750+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-other-node-scalar-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynqijmoj",
+      "state_before": "nodes:\n  unrelated: invalid\n",
+      "state_after": "nodes:\n  unrelated: invalid\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86289,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynqijmoj",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynqijmoj",
+          "started_at": "2026-10-06T05:54:29.323495+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: every existing workflow-state node must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:29.374792+00:00",
+          "actual_identity": {
+            "pid": 86289,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynqijmoj",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynqijmoj",
+            "started_at": "2026-10-06T05:54:29.351063+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.376055+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "reject-other-node-scalar-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qacezxjm",
+      "state_before": "nodes:\n  unrelated: invalid\n",
+      "state_after": "nodes:\n  unrelated: invalid\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86290,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qacezxjm",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qacezxjm",
+          "started_at": "2026-10-06T05:54:29.376854+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: every existing workflow-state node must be a mapping\n",
+          "completed_at": "2026-10-06T05:54:29.428920+00:00",
+          "actual_identity": {
+            "pid": 86290,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qacezxjm",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qacezxjm",
+            "started_at": "2026-10-06T05:54:29.405567+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.430111+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'{broken'-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-237dt98t",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86291,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-237dt98t",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-237dt98t",
+          "started_at": "2026-10-06T05:54:29.430844+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": "{broken"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)\n",
+          "completed_at": "2026-10-06T05:54:29.482490+00:00",
+          "actual_identity": {
+            "pid": 86291,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-237dt98t",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-237dt98t",
+            "started_at": "2026-10-06T05:54:29.459623+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.483585+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'{broken'-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ta3b4ov_",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86292,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ta3b4ov_",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ta3b4ov_",
+          "started_at": "2026-10-06T05:54:29.484336+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": "{broken"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)\n",
+          "completed_at": "2026-10-06T05:54:29.535819+00:00",
+          "actual_identity": {
+            "pid": 86292,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ta3b4ov_",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ta3b4ov_",
+            "started_at": "2026-10-06T05:54:29.512749+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.537004+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'{broken'-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9avix6mq",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86293,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9avix6mq",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9avix6mq",
+          "started_at": "2026-10-06T05:54:29.537804+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": "{broken"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)\n",
+          "completed_at": "2026-10-06T05:54:29.589124+00:00",
+          "actual_identity": {
+            "pid": 86293,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9avix6mq",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-9avix6mq",
+            "started_at": "2026-10-06T05:54:29.565964+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.590285+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'[]'-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_ws05239",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86294,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_ws05239",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_ws05239",
+          "started_at": "2026-10-06T05:54:29.591040+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": "[]"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _EXTRA_JSON must be a JSON object\n",
+          "completed_at": "2026-10-06T05:54:29.642995+00:00",
+          "actual_identity": {
+            "pid": 86294,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_ws05239",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-_ws05239",
+            "started_at": "2026-10-06T05:54:29.619571+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.644117+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'[]'-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ogt26jzo",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86295,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ogt26jzo",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ogt26jzo",
+          "started_at": "2026-10-06T05:54:29.644879+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": "[]"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _EXTRA_JSON must be a JSON object\n",
+          "completed_at": "2026-10-06T05:54:29.695754+00:00",
+          "actual_identity": {
+            "pid": 86295,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ogt26jzo",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ogt26jzo",
+            "started_at": "2026-10-06T05:54:29.672622+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.696888+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'[]'-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e63_ytfg",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86296,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e63_ytfg",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e63_ytfg",
+          "started_at": "2026-10-06T05:54:29.697665+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": "[]"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _EXTRA_JSON must be a JSON object\n",
+          "completed_at": "2026-10-06T05:54:29.749541+00:00",
+          "actual_identity": {
+            "pid": 86296,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e63_ytfg",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e63_ytfg",
+            "started_at": "2026-10-06T05:54:29.726032+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.750754+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'null'-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4tecis0x",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86297,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4tecis0x",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4tecis0x",
+          "started_at": "2026-10-06T05:54:29.751570+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": "null"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _EXTRA_JSON must be a JSON object\n",
+          "completed_at": "2026-10-06T05:54:29.803282+00:00",
+          "actual_identity": {
+            "pid": 86297,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4tecis0x",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4tecis0x",
+            "started_at": "2026-10-06T05:54:29.780302+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.804435+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'null'-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bhnho5ln",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86298,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bhnho5ln",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bhnho5ln",
+          "started_at": "2026-10-06T05:54:29.805209+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": "null"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _EXTRA_JSON must be a JSON object\n",
+          "completed_at": "2026-10-06T05:54:29.855622+00:00",
+          "actual_identity": {
+            "pid": 86298,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bhnho5ln",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-bhnho5ln",
+            "started_at": "2026-10-06T05:54:29.832611+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.856748+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'null'-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n_v6gfit",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86299,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n_v6gfit",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n_v6gfit",
+          "started_at": "2026-10-06T05:54:29.857515+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": "null"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _EXTRA_JSON must be a JSON object\n",
+          "completed_at": "2026-10-06T05:54:29.908272+00:00",
+          "actual_identity": {
+            "pid": 86299,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n_v6gfit",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-n_v6gfit",
+            "started_at": "2026-10-06T05:54:29.885347+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.909579+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'\"string\"'-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ymopmdfp",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86300,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ymopmdfp",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ymopmdfp",
+          "started_at": "2026-10-06T05:54:29.910482+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": "\"string\""
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _EXTRA_JSON must be a JSON object\n",
+          "completed_at": "2026-10-06T05:54:29.963495+00:00",
+          "actual_identity": {
+            "pid": 86300,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ymopmdfp",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ymopmdfp",
+            "started_at": "2026-10-06T05:54:29.940015+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:29.964632+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'\"string\"'-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-uxlsfh7w",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86301,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-uxlsfh7w",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-uxlsfh7w",
+          "started_at": "2026-10-06T05:54:29.965417+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": "\"string\""
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _EXTRA_JSON must be a JSON object\n",
+          "completed_at": "2026-10-06T05:54:30.015319+00:00",
+          "actual_identity": {
+            "pid": 86301,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-uxlsfh7w",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-uxlsfh7w",
+            "started_at": "2026-10-06T05:54:29.992876+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.016409+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-'\"string\"'-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-14ijv6j4",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86302,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-14ijv6j4",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-14ijv6j4",
+          "started_at": "2026-10-06T05:54:30.017175+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": "\"string\""
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _EXTRA_JSON must be a JSON object\n",
+          "completed_at": "2026-10-06T05:54:30.067313+00:00",
+          "actual_identity": {
+            "pid": 86302,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-14ijv6j4",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-14ijv6j4",
+            "started_at": "2026-10-06T05:54:30.044509+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.068458+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-''-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mjdfk8i",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86303,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mjdfk8i",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mjdfk8i",
+          "started_at": "2026-10-06T05:54:30.069249+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": ""
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: Expecting value: line 1 column 1 (char 0)\n",
+          "completed_at": "2026-10-06T05:54:30.119989+00:00",
+          "actual_identity": {
+            "pid": 86303,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mjdfk8i",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-4mjdfk8i",
+            "started_at": "2026-10-06T05:54:30.097163+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.121411+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-''-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zpzuaemo",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86304,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zpzuaemo",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zpzuaemo",
+          "started_at": "2026-10-06T05:54:30.122232+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": ""
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: Expecting value: line 1 column 1 (char 0)\n",
+          "completed_at": "2026-10-06T05:54:30.173127+00:00",
+          "actual_identity": {
+            "pid": 86304,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zpzuaemo",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zpzuaemo",
+            "started_at": "2026-10-06T05:54:30.150520+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.174193+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-invalid-''-combined",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1luqq4yh",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86305,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1luqq4yh",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1luqq4yh",
+          "started_at": "2026-10-06T05:54:30.174923+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_EXTRA_JSON": ""
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: Expecting value: line 1 column 1 (char 0)\n",
+          "completed_at": "2026-10-06T05:54:30.224943+00:00",
+          "actual_identity": {
+            "pid": 86305,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1luqq4yh",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-1luqq4yh",
+            "started_at": "2026-10-06T05:54:30.202145+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.226012+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "extra-preservation",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qyukixi6",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:30Z'\nnodes:\n  brainstorm:\n    baseline_score: 85\n    completed_at: '2026-10-06T05:54:30Z'\n    custom_node:\n      kept: true\n    handoff_path: docs/handoff/kept.md\n    output: docs/idea/new.md\n    status: DONE\n  design-brief:\n    status: DONE\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86306,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qyukixi6",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qyukixi6",
+          "started_at": "2026-10-06T05:54:30.226771+00:00",
+          "input": {
+            "_NODE": "brainstorm",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": "{\"baseline_score\": 85, \"custom_node\": {\"kept\": true}}"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: brainstorm → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.279538+00:00",
+          "actual_identity": {
+            "pid": 86306,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qyukixi6",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qyukixi6",
+            "started_at": "2026-10-06T05:54:30.254945+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.281420+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "yaml-alias-preservation",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-z_0xrkop",
+      "state_before": "custom: &shared\n  brainstorm: &node\n    status: DONE\n    handoff_path: kept.md\n  unrelated: *node\nnodes: *shared\n",
+      "state_after": "custom:\n  brainstorm: &id001\n    handoff_path: kept.md\n    status: DONE\n  unrelated: *id001\nlast_updated: '2026-10-06T05:54:30Z'\nnodes:\n  brainstorm:\n    completed_at: '2026-10-06T05:54:30Z'\n    handoff_path: kept.md\n    output: docs/idea/new.md\n    status: DONE\n  unrelated: *id001\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86307,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-z_0xrkop",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-z_0xrkop",
+          "started_at": "2026-10-06T05:54:30.282157+00:00",
+          "input": {
+            "_NODE": "brainstorm",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: brainstorm → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.334427+00:00",
+          "actual_identity": {
+            "pid": 86307,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-z_0xrkop",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-z_0xrkop",
+            "started_at": "2026-10-06T05:54:30.309672+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.336334+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "same-node-supplied-fields",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:30Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:30Z'\n    output: ''\n    second: true\n    status: BLOCKED\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86308,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+          "started_at": "2026-10-06T05:54:30.337267+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "BLOCKED",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → BLOCKED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.390544+00:00",
+          "actual_identity": {
+            "pid": 86308,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+            "started_at": "2026-10-06T05:54:30.366154+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86309,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+          "started_at": "2026-10-06T05:54:30.390639+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_EXTRA_JSON": "{\"second\": true}"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-2"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → BLOCKED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.442633+00:00",
+          "actual_identity": {
+            "pid": 86309,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+            "started_at": "2026-10-06T05:54:30.416980+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86310,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+          "started_at": "2026-10-06T05:54:30.443510+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_OUTPUT": ""
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-3"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → BLOCKED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.493403+00:00",
+          "actual_identity": {
+            "pid": 86310,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-fc3hlmf6",
+            "started_at": "2026-10-06T05:54:30.469309+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.495760+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "new-node-defaults",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-rrfp5bl7",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:30Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:30Z'\n    output: ''\n    status: DONE\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86311,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-rrfp5bl7",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-rrfp5bl7",
+          "started_at": "2026-10-06T05:54:30.496571+00:00",
+          "input": {
+            "_NODE": "idea"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.549237+00:00",
+          "actual_identity": {
+            "pid": 86311,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-rrfp5bl7",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-rrfp5bl7",
+            "started_at": "2026-10-06T05:54:30.524608+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.551034+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "lock-stable-inode",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e2qtojzu",
+      "state_before": "{}\n",
+      "state_after": "last_updated: '2026-10-06T05:54:30Z'\nnodes:\n  idea:\n    completed_at: '2026-10-06T05:54:30Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86312,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e2qtojzu",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e2qtojzu",
+          "started_at": "2026-10-06T05:54:30.551746+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.603580+00:00",
+          "actual_identity": {
+            "pid": 86312,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e2qtojzu",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e2qtojzu",
+            "started_at": "2026-10-06T05:54:30.579215+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86314,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e2qtojzu",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e2qtojzu",
+          "started_at": "2026-10-06T05:54:30.603778+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-2"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\nworkflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.653683+00:00",
+          "actual_identity": {
+            "pid": 86314,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e2qtojzu",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-e2qtojzu",
+            "started_at": "2026-10-06T05:54:30.629366+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.655046+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "combined-single-transaction",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aq5fs50u",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:30Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:30Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86315,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aq5fs50u",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aq5fs50u",
+          "started_at": "2026-10-06T05:54:30.655806+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "combined"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\nworkflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.707974+00:00",
+          "actual_identity": {
+            "pid": 86315,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aq5fs50u",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aq5fs50u",
+            "started_at": "2026-10-06T05:54:30.682974+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.709232+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "state-write-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zis9gkcf",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86316,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zis9gkcf",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zis9gkcf",
+          "started_at": "2026-10-06T05:54:30.709977+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "write",
+            "WF_PROBE_WRITE_FAIL": "1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: [Errno 27] File too large\n",
+          "completed_at": "2026-10-06T05:54:30.763234+00:00",
+          "actual_identity": {
+            "pid": 86316,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zis9gkcf",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zis9gkcf",
+            "started_at": "2026-10-06T05:54:30.737911+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.764400+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "state-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-sp40_yc1",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86317,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-sp40_yc1",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-sp40_yc1",
+          "started_at": "2026-10-06T05:54:30.765158+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "replace",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: injected state replace failure\n",
+          "completed_at": "2026-10-06T05:54:30.818272+00:00",
+          "actual_identity": {
+            "pid": 86317,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-sp40_yc1",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-sp40_yc1",
+            "started_at": "2026-10-06T05:54:30.793322+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.819577+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "projection-failure-repair",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:30Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:30Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86318,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g",
+          "started_at": "2026-10-06T05:54:30.820421+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "state committed / projection stale: [Errno 21] Is a directory: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g/.luca/.current-topic.txt.1lshf8lx.tmp' -> '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g/.luca/current-topic.txt'\n",
+          "completed_at": "2026-10-06T05:54:30.873529+00:00",
+          "actual_identity": {
+            "pid": 86318,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g",
+            "started_at": "2026-10-06T05:54:30.848529+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86319,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g",
+          "started_at": "2026-10-06T05:54:30.874541+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-2"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:30.925162+00:00",
+          "actual_identity": {
+            "pid": 86319,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ceq0pt7g",
+            "started_at": "2026-10-06T05:54:30.900055+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:30.927333+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "lock-timeout",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-vr2jpu8y",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:31Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:31Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86320,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-vr2jpu8y",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-vr2jpu8y",
+          "started_at": "2026-10-06T05:54:30.928234+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_STATE_LOCK_TIMEOUT_SECONDS": "0.15"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: workflow-state lock timeout after 0.15s\n",
+          "completed_at": "2026-10-06T05:54:31.137049+00:00",
+          "actual_identity": {
+            "pid": 86320,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-vr2jpu8y",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-vr2jpu8y",
+            "started_at": "2026-10-06T05:54:30.957178+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86321,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-vr2jpu8y",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-vr2jpu8y",
+          "started_at": "2026-10-06T05:54:31.137408+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-2"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\nworkflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:31.187835+00:00",
+          "actual_identity": {
+            "pid": 86321,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-vr2jpu8y",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-vr2jpu8y",
+            "started_at": "2026-10-06T05:54:31.163017+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:31.189241+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "lock-process-exit",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynh60r28",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:31Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:31Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86322,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynh60r28",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynh60r28",
+          "started_at": "2026-10-06T05:54:31.190044+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "killed",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": -9,
+          "stdout": "",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:31.242525+00:00",
+          "actual_identity": {
+            "pid": 86322,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynh60r28",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynh60r28",
+            "started_at": "2026-10-06T05:54:31.217859+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86323,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynh60r28",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynh60r28",
+          "started_at": "2026-10-06T05:54:31.242646+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-2"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\nworkflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:31.293438+00:00",
+          "actual_identity": {
+            "pid": 86323,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynh60r28",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ynh60r28",
+            "started_at": "2026-10-06T05:54:31.268282+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:31.295587+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "concurrency-different-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-2xb_45el",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:31Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:31Z'\n    first: true\n    output: docs/idea/new.md\n    status: DONE\n  redteam:\n    completed_at: '2026-10-06T05:54:31Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86324,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-2xb_45el",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-2xb_45el",
+          "started_at": "2026-10-06T05:54:31.296346+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": "{\"first\": true}"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "a",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:31.808066+00:00",
+          "actual_identity": {
+            "pid": 86324,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-2xb_45el",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-2xb_45el",
+            "started_at": "2026-10-06T05:54:31.326168+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86325,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-2xb_45el",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-2xb_45el",
+          "started_at": "2026-10-06T05:54:31.348112+00:00",
+          "input": {
+            "_NODE": "redteam",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "b",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: redteam → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:31.851591+00:00",
+          "actual_identity": {
+            "pid": 86325,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-2xb_45el",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-2xb_45el",
+            "started_at": "2026-10-06T05:54:31.374457+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:31.854204+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "concurrency-topic-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-h_ivmxhh",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:32Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  redteam:\n    completed_at: '2026-10-06T05:54:32Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: A\ntopic: new-topic\n",
+      "topic_after": "new-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86328,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-h_ivmxhh",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-h_ivmxhh",
+          "started_at": "2026-10-06T05:54:31.855031+00:00",
+          "input": {
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "a",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:32.366683+00:00",
+          "actual_identity": {
+            "pid": 86328,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-h_ivmxhh",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-h_ivmxhh",
+            "started_at": "2026-10-06T05:54:31.883171+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86329,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-h_ivmxhh",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-h_ivmxhh",
+          "started_at": "2026-10-06T05:54:31.906785+00:00",
+          "input": {
+            "_NODE": "redteam",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "b",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: redteam → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:32.406377+00:00",
+          "actual_identity": {
+            "pid": 86329,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-h_ivmxhh",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-h_ivmxhh",
+            "started_at": "2026-10-06T05:54:31.933013+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:32.408766+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "concurrency-same-node",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-45yswo5l",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:32Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:32Z'\n    first: true\n    output: second.md\n    second: true\n    status: BLOCKED\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86330,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-45yswo5l",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-45yswo5l",
+          "started_at": "2026-10-06T05:54:32.409565+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_EXTRA_JSON": "{\"first\": true}"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "a",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:32.928917+00:00",
+          "actual_identity": {
+            "pid": 86330,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-45yswo5l",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-45yswo5l",
+            "started_at": "2026-10-06T05:54:32.437883+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86331,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-45yswo5l",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-45yswo5l",
+          "started_at": "2026-10-06T05:54:32.461322+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "BLOCKED",
+            "_OUTPUT": "second.md",
+            "_EXTRA_JSON": "{\"second\": true}"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "b",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state updated: idea → BLOCKED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:32.959511+00:00",
+          "actual_identity": {
+            "pid": 86331,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-45yswo5l",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-45yswo5l",
+            "started_at": "2026-10-06T05:54:32.487989+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:32.962269+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "concurrency-topic-topic",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-f5nj3nd6",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:33Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  idea:\n    completed_at: '2026-10-06T05:54:33Z'\n    output: docs/idea/new.md\n    status: DONE\nscene: C\ntopic: second-topic\n",
+      "topic_after": "second-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86333,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-f5nj3nd6",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-f5nj3nd6",
+          "started_at": "2026-10-06T05:54:32.963155+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "a",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: new-topic, scene: A\nworkflow-state updated: idea → DONE\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:33.479981+00:00",
+          "actual_identity": {
+            "pid": 86333,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-f5nj3nd6",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-f5nj3nd6",
+            "started_at": "2026-10-06T05:54:32.991150+00:00"
+          }
+        },
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86334,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-f5nj3nd6",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-f5nj3nd6",
+          "started_at": "2026-10-06T05:54:33.015017+00:00",
+          "input": {
+            "_TOPIC": "second-topic",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "b",
+            "WF_PROBE_SCHEDULE": "1"
+          },
+          "exit_code": 0,
+          "stdout": "topic set: second-topic, scene: C\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T05:54:33.516716+00:00",
+          "actual_identity": {
+            "pid": 86334,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-f5nj3nd6",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-f5nj3nd6",
+            "started_at": "2026-10-06T05:54:33.040138+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:33.519977+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "lock-invalid-timeout--1",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyrwua8_",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86335,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyrwua8_",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyrwua8_",
+          "started_at": "2026-10-06T05:54:33.521021+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_STATE_LOCK_TIMEOUT_SECONDS": "-1"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _STATE_LOCK_TIMEOUT_SECONDS must be finite and within (0, 60]\n",
+          "completed_at": "2026-10-06T05:54:33.574476+00:00",
+          "actual_identity": {
+            "pid": 86335,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyrwua8_",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyrwua8_",
+            "started_at": "2026-10-06T05:54:33.551088+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:33.575734+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "lock-invalid-timeout-0",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v7cqdmdq",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86342,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v7cqdmdq",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v7cqdmdq",
+          "started_at": "2026-10-06T05:54:33.576553+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_STATE_LOCK_TIMEOUT_SECONDS": "0"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _STATE_LOCK_TIMEOUT_SECONDS must be finite and within (0, 60]\n",
+          "completed_at": "2026-10-06T05:54:33.628309+00:00",
+          "actual_identity": {
+            "pid": 86342,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v7cqdmdq",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v7cqdmdq",
+            "started_at": "2026-10-06T05:54:33.605345+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:33.629416+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "lock-invalid-timeout-nan",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-5btu62dw",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86343,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-5btu62dw",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-5btu62dw",
+          "started_at": "2026-10-06T05:54:33.630226+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_STATE_LOCK_TIMEOUT_SECONDS": "nan"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _STATE_LOCK_TIMEOUT_SECONDS must be finite and within (0, 60]\n",
+          "completed_at": "2026-10-06T05:54:33.681808+00:00",
+          "actual_identity": {
+            "pid": 86343,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-5btu62dw",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-5btu62dw",
+            "started_at": "2026-10-06T05:54:33.658581+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:33.682874+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "lock-invalid-timeout-inf",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ch26h3t9",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86344,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ch26h3t9",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ch26h3t9",
+          "started_at": "2026-10-06T05:54:33.683667+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_STATE_LOCK_TIMEOUT_SECONDS": "inf"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _STATE_LOCK_TIMEOUT_SECONDS must be finite and within (0, 60]\n",
+          "completed_at": "2026-10-06T05:54:33.734295+00:00",
+          "actual_identity": {
+            "pid": 86344,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ch26h3t9",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-ch26h3t9",
+            "started_at": "2026-10-06T05:54:33.711890+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:33.735391+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "lock-invalid-timeout-invalid",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jx5tkml_",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86345,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jx5tkml_",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jx5tkml_",
+          "started_at": "2026-10-06T05:54:33.736175+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_STATE_LOCK_TIMEOUT_SECONDS": "invalid"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: could not convert string to float: 'invalid'\n",
+          "completed_at": "2026-10-06T05:54:33.785922+00:00",
+          "actual_identity": {
+            "pid": 86345,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jx5tkml_",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-jx5tkml_",
+            "started_at": "2026-10-06T05:54:33.763643+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:33.786969+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "lock-invalid-timeout-61",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w6cjy04q",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+          ],
+          "pid": 86346,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w6cjy04q",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w6cjy04q",
+          "started_at": "2026-10-06T05:54:33.787888+00:00",
+          "input": {
+            "_NODE": "idea",
+            "_STATUS": "DONE",
+            "_OUTPUT": "docs/idea/new.md",
+            "_TOPIC": "new-topic",
+            "_SCENE": "A",
+            "_STATE_LOCK_TIMEOUT_SECONDS": "61"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1"
+          },
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "workflow-state not committed: _STATE_LOCK_TIMEOUT_SECONDS must be finite and within (0, 60]\n",
+          "completed_at": "2026-10-06T05:54:33.838581+00:00",
+          "actual_identity": {
+            "pid": 86346,
+            "argv": [
+              "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w6cjy04q",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-w6cjy04q",
+            "started_at": "2026-10-06T05:54:33.815533+00:00"
+          }
+        }
+      ],
+      "cleanup": {
+        "checked_at": "2026-10-06T05:54:33.839663+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "legacy-ux-audit-reject",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-c",
+        "<extracted block>"
+      ],
+      "source": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/ux-audit/SKILL.md",
+      "source_sha256": "b511d773b0b9ff866e466e9e8311036c1a5444261cd635301e6de7dfc6c928e5",
+      "input": {
+        "_TOPIC": "t",
+        "_OUTPUT": "o",
+        "_EXTRA_BASELINE": "85"
+      },
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "ERROR: workflow-state.yaml 解析失败，已放弃写入以免擦除既有状态: while parsing a flow sequence\n  in \".claude/workflow-state.yaml\", line 12, column 8\nexpected ',' or ']', but got '<stream end>'\n  in \".claude/workflow-state.yaml\", line 13, column 1\n",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n",
+      "state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n  bad: [unclosed\n"
+    },
+    {
+      "case": "legacy-ux-audit-valid",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-c",
+        "<extracted block>"
+      ],
+      "source": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/ux-audit/SKILL.md",
+      "source_sha256": "b511d773b0b9ff866e466e9e8311036c1a5444261cd635301e6de7dfc6c928e5",
+      "input": {
+        "_TOPIC": "t",
+        "_OUTPUT": "o",
+        "_EXTRA_BASELINE": "85"
+      },
+      "exit_code": 0,
+      "stdout": "workflow-state updated: ux-audit, baseline_score=85\n",
+      "stderr": "<string>:17: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n<string>:20: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n",
+      "state_before": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nlast_updated: '2026-10-06T05:54:33Z'\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    baseline_score: 85\n    completed_at: '2026-10-06T05:54:33Z'\n    output: o\n    status: DONE\nscene: B\ntopic: 速记\n"
+    }
+  ]
+}

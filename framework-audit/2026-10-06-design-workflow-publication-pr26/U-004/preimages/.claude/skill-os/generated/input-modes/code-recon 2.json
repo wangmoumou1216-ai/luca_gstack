@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e",
+  "skill": "code-recon",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "target_codebase_path"
+        ],
+        "optional": [
+          "design_intent",
+          "scope_paths",
+          "entry_mode",
+          "direction",
+          "report_path"
+        ]
+      },
+      "workflow": {
+        "required": [],
+        "optional": [
+          "design_intent",
+          "scope_paths",
+          "entry_mode",
+          "direction",
+          "report_path"
+        ]
+      }
+    },
+    "entry_modes": {
+      "brief": {
+        "required": [
+          "target_codebase_path"
+        ],
+        "optional": [
+          "design_intent",
+          "scope_paths"
+        ]
+      },
+      "architecture-opportunities": {
+        "required": [
+          "target_codebase_path"
+        ],
+        "optional": [
+          "direction",
+          "scope_paths",
+          "report_path"
+        ],
+        "write_requirements": [
+          "canonical_report_path",
+          "real_report_preimage",
+          "exact_report_write_authority"
+        ]
+      }
+    },
+    "quality_gates": [
+      "size_probe_decision",
+      "serial_cold_native_recon",
+      "same_invocation_completed_accepted",
+      "verified_vs_inferred_audit",
+      "architecture_brief_written_when_brief",
+      "offline_html_report_when_architecture_opportunities",
+      "correct_deletion_and_real_friction_evidence",
+      "real_choice_before_grilling_design",
+      "native_first_no_forced_mcp"
+    ],
+    "notes": "Brownfield 同 key：默认 brief 的固定五维队列和原 architecture_brief 下游保持；architecture-opportunities 只显式选择，有方向沿方向、无方向用真实 churn，不猜 hotspot。全部 recon 峰值1，前票真实 completed/accepted 再派；report_path 可选但写前必须批准精确 canonical 落点（默认仅建议 OS temp），离线 HTML 不套产品 UI 门。entry_mode 不是 Workflow mode；输出权限不授予代码、词汇、ADR或memory写权。"
+  }
+}

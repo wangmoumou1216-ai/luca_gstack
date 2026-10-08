@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-cache-local-release-20261001-resume06",
+  "subject": {
+    "skill": "STABLE-CACHE-RELEASE-FINAL-RESUME-06",
+    "topic": "Stable cache local release and Sidecar preparation review",
+    "scene": "unknown",
+    "input_summary": "Preparation review of final release SHA256 561d386794cbece4ab5e2c7a1acfd2d041991b0cdb51f1e911c55c8ca9cac611. Sidecar pre-reviewed; source activation, C07, normal shutdown, fresh CAS and P03 remain pending.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/STABLE-CACHE-RELEASE-FINAL-RESUME-06.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-install-review-final3.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/SIDECAR-PUBLIC-SETTINGS-RESUME-02.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 9,
+    "total": 9,
+    "findings": [
+      "WARN: Preparation verdict only. Genuine public state shows root 01a0f592-1c01-7681-9a1c-791758f66556 active, activation 9909267a-d8d5-4674-af6d-4a5043e737d2, generation 0, invocation e5e44229-eece-4462-b023-c220ec2c5904 pending, critical peak codex-native, external agent_id 01a0f5a7-692e-7553-ba35-6e6706b7ec50. Coordinator must capture genuine acceptance and task_complete after normal completion; no accepted proof is asserted here.",
+      "WARN: Process listing was denied by the sandbox. Absence of another installer must be established by the controller's mandatory fresh preflight before effects.",
+      "WARN: Existing 107/22/9 evidence was inspected, not rerun. Source activation, exact trust/health/consumer readback, C07, normal Luca shutdown, fresh settings/App/runtime CAS, Sidecar apply and P03 remain separate pending gates."
+    ]
+  }
+}

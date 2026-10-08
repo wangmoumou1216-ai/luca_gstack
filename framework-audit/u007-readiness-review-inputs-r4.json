@@ -1,0 +1,51 @@
+{
+  "created_at": "2026-10-02T21:25:40.622577+00:00",
+  "scope": "P06 actual evidence delta review; no new runtime",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-task-r4.md",
+      "bytes": 5801,
+      "sha256": "229e84c8b7614f04d15731e70f7f2d87fd8d1bf68694953ec4d6c7f293b7ebc3"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-root-evidence.json",
+      "bytes": 4244,
+      "sha256": "ef0d8e461591252b4ea25d3e369b21f444855e33b901771d061626f9ea080e99"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-launch.json",
+      "bytes": 1763,
+      "sha256": "81a22e6fcd996535edfba469602d8005a40180a85985e333d61d5577f2104a65"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-registration.json",
+      "bytes": 5827,
+      "sha256": "dd236e2f20fd843dd88f22282b9f7598c11efa02005b1eb811a6000afc88d45e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-manifest.json",
+      "bytes": 7126,
+      "sha256": "9f8820c7e4a5ae61cdbb8047bf50b1fc1cff3092a0cda0dfb89dce08ad22d30b"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-case.json",
+      "bytes": 20460,
+      "sha256": "2be95e93736de424293e00aa9bed6647dfa565075c673fc5e2dd996c5032f516"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p06-vjfi0jng/runs/u007-p06-native-appserver-r1/evidence/result.json",
+      "bytes": 24179,
+      "sha256": "7717e3ff8d22d420794af116a7e596906e58830471d5a798c3efffc4162f7216"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p06-vjfi0jng/runs/u007-p06-native-appserver-r1/evidence/rpc.jsonl",
+      "bytes": 56052,
+      "sha256": "bb34fb7c1dcaa1077d6444da9c0215d1ac448d5acd4a35a2c7b7059d7b496be2"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p06-vjfi0jng/runs/u007-p06-native-appserver-r1/evidence/case-engine/journal.ndjson",
+      "bytes": 8826,
+      "sha256": "5cda30dccdbf4b25b0f33c7bfc6efcadbbd363b84111c17c9045bbecce11ca2b"
+    }
+  ]
+}

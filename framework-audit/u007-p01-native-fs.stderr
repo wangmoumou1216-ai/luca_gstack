@@ -1,0 +1,3 @@
+dyld[45422]: Library not loaded: /opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python
+  Referenced from: <D2AB3F71-45B3-319F-AA0A-9305018B023F> /opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14
+  Reason: tried: '/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python' (blocked by sandbox)

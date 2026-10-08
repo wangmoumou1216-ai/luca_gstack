@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-01T04:39:56.622528+00:00",
+  "kind": "native-coordinator-normal-process-end-readback",
+  "process_exit_code": 0,
+  "actual_final_message": "NEEDS_CONTEXT — review PASS (9/9) and accepted native proof were emitted, but the native guard blocked marker polling and further waiting: `hook source integrity mismatch`.\n\nParent completion was not verified. Missing marker is not approval.",
+  "parent_completion_marker_exists": true,
+  "approval_consumed_before_source_update": true,
+  "actual_local_receipt": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-cache-activation-result.json",
+  "warning": "Coordinator started before source update. Cached source integrity guard blocked its later marker polling. Do not fabricate lifecycle state or reuse this ended process as a live approval root. Actual accepted review was verified and consumed before source mutation. Desktop C07 reload remains required."
+}

@@ -1,0 +1,1691 @@
+diff --git a/.claude/skill-os/runtime/project-session.md b/.claude/skill-os/runtime/project-session.md
+index 9f63975..8ecde31 100644
+--- a/.claude/skill-os/runtime/project-session.md
++++ b/.claude/skill-os/runtime/project-session.md
+@@ -27,18 +27,25 @@ Missing or inconsistent lineage denies scoped paths. Claude sidechains need thei
+ identity check and do not gain a Codex association by sharing a session ID.
+ This release verifies child lineage only from the owner-protected native `~/.codex`
+ rollout source; writable provider homes such as `~/.luca/codex` are not association sources.
+-The Codex hook runtime requires the reviewed source guard installed under
+-`~/.codex/luca-child-project/source-guard/` via `node scripts/install-codex-source-guard.mjs`.
+-Every registered hook checks the approved source digest before launch; Node then executes
+-only verified source bytes. Missing or changed source fails closed. Updating hook code
+-requires a new reviewed manifest and Codex hook trust for the changed command.
+-
+-For a single-root update in an existing multi-root installation, use
+-`node scripts/install-codex-source-guard.mjs --root <reviewed-root> --preserve-other-roots`.
+-This validates the private installed manifest/runtime/snapshots, replaces only the named
+-root's entry in its original slot, and preserves other approved entries and snapshots
+-without scanning their current source. It refuses changed bootstrap/loader bytes;
+-a runtime-wide update requires separate review of every affected root.
++Codex hooks require the private reviewed guard at
++`~/.codex/luca-child-project/source-guard/`. Each hook checks approved source before
++launch; Node executes only verified bytes. Missing/changed source fails closed.
++Stable commands retain exact trust hashes; legacy requires reload and trust.
++
++`scripts/install-codex-source-guard.mjs` contract (usage: `README.md`):
++Freeze `--print-review --root <source>`; review approves the original artifact SHA.
++`--as-root <canonical-deployment-root>` remaps only one review root.
++Install requires `--root`, `--reviewed-file`, `--reviewed-sha` and exact
++`--expected-manifest-sha` (`ABSENT` only for initial install). Full source/JS/config/snapshot
++maps must match before/after copy and at commit; no automatic approval.
++`--preserve-other-roots` keeps other rows/snapshots without rescanning their source;
++bootstrap/loader bytes must remain identical. A private exclusive lock covers exact CAS,
++manifest-last atomic commit, fsync and readback; `--dry-run` writes nothing.
++Interruption retains old or complete new manifest. Post-commit errors report authoritative
++outcome; retry needs fresh CAS. Never steal locks by age: `--recover-lock-sha` plus exact
++manifest CAS removes only the same private inode/nonce lock with an ESRCH dead owner;
++live/EPERM/invalid refuse. Rollback: exact reviewed source, current CAS, other roots
++preserved; stale CAS refuses.
+ 
+ ## App-owned Host Launch
+ 
+@@ -61,7 +68,8 @@ Before dispatch, the App must verify the three exact Host Launch hook commands,
+ digest, the installed source guard, and Codex trust. The App must also fork the broker under that
+ protected source loader; an unprotected broker refuses to load framework authority.
+ `node scripts/codex-trust-hooks.mjs --host-launch` reviews and trusts this checkout's 11 exact
+-registered commands, including the three Host Launch entries after a source digest change.
++registered commands, including the three Host Launch entries. Full approved installation health
++is required; `--source-only` cannot authorize trust.
+ 
+ ## Project Gate
+ 
+diff --git a/.codex/hooks.json b/.codex/hooks.json
+index 150f768..94abd87 100644
+--- a/.codex/hooks.json
++++ b/.codex/hooks.json
+@@ -1,5 +1,5 @@
+ {
+-  "description": "luca_gstack 的 Codex hook 注册（仓库级，随版本控制走）。⚠️ 顶层**只接受 `description` 与 `hooks` 两个键**——用 `_comment` 之类的自定义键会让整份文件被拒：`unknown field _comment, expected description or hooks`，且该警告只在会话启动时一闪而过，极易误判成「Codex 不支持仓库级 hooks」（2026-08-06 深审实证：正是这一个键导致上一轮\"穷尽矩阵\"每格都失败）。matcher 用实测 tool_name：shell 执行=Bash、文件编辑=apply_patch（两者 tool_input 均为 command）。Claude 兼容 hook 经 .codex/codex-hook-adapter.mjs 调用；Codex 原生模型路由事件由 .codex/model-route-hook.mjs 直接消费。SessionStart/UserPromptSubmit 设 additionalContextLimit=0（完整直传、不 spill）。新增/改动条目后需授信一次：node scripts/codex-trust-hooks.mjs SessionEnd 显式设 timeoutSec=30：Codex 对该事件的默认值是 **1 秒**（其余事件 600 秒），而本链要串起 adapter node + 子 hook node 两次进程启动，机器负载高时会超时，后果是 marker/计数文件静默泄漏。 原生 hook 的非零退出都映射为阻断码 2：源码完整性保护、受保护状态写入或守卫本体失败时不得放行。",
++  "description": "luca_gstack 的 Codex hook 注册（仓库级，随版本控制走）。⚠️ 顶层**只接受 `description` 与 `hooks` 两个键**——用 `_comment` 之类的自定义键会让整份文件被拒：`unknown field _comment, expected description or hooks`，且该警告只在会话启动时一闪而过，极易误判成「Codex 不支持仓库级 hooks」（2026-08-06 深审实证：正是这一个键导致上一轮\"穷尽矩阵\"每格都失败）。matcher 用实测 tool_name：shell 执行=Bash、文件编辑=apply_patch（两者 tool_input 均为 command）。Claude 兼容 hook 经 .codex/codex-hook-adapter.mjs 调用；Codex 原生模型路由事件由 .codex/model-route-hook.mjs 直接消费。SessionStart/UserPromptSubmit 设 additionalContextLimit=0（完整直传、不 spill）。新增/改动条目后需授信一次：node scripts/codex-trust-hooks.mjs --host-launch SessionEnd 显式设 timeoutSec=30：Codex 对该事件的默认值是 **1 秒**（其余事件 600 秒），而本链要串起 adapter node + 子 hook node 两次进程启动，机器负载高时会超时，后果是 marker/计数文件静默泄漏。 原生 hook 的非零退出都映射为阻断码 2：源码完整性保护、受保护状态写入或守卫本体失败时不得放行。",
+   "hooks": {
+     "SessionStart": [
+       {
+@@ -7,7 +7,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 恢复 session 上下文",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-restore.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "additionalContextLimit": 0
+           }
+         ]
+@@ -17,7 +17,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 固定根模型路由",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "additionalContextLimit": 0
+           }
+         ]
+@@ -29,7 +29,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 路由检查",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/route-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "additionalContextLimit": 0
+           }
+         ]
+@@ -42,7 +42,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 项目边界检查",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/host-launch-hook.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/project-scope-guard.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       },
+@@ -52,7 +52,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 解析子任务模型",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       }
+@@ -63,7 +63,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/post-edit.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       }
+@@ -73,7 +73,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; luca_stop_payload=$(cat); printf '%s' \"$luca_stop_payload\" | MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0; printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0"
++            "command": "luca_stop_payload=$(cat); luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || { printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0; }; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0; }; printf '%s' \"$luca_stop_payload\" | MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-sync.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0; printf '%s' \"$luca_stop_payload\" | LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\" NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + \"/.codex/stop-integrity-failure.mjs\")' || printf '%s\\n' '{\"continue\":false,\"stopReason\":\"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing.\"}'; exit 0"
+           }
+         ]
+       }
+@@ -84,7 +84,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       }
+@@ -96,7 +96,7 @@
+           {
+             "type": "command",
+             "statusMessage": "luca_gstack: 核验子任务模型证据",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2"
+           }
+         ]
+       }
+@@ -106,7 +106,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; MEMORY_ROOT=/Users/luca/Desktop/luca_gstack node \"$(git rev-parse --show-toplevel)/.codex/codex-hook-adapter.mjs\" \"$(git rev-parse --show-toplevel)/.claude/hooks/session-end.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "timeoutSec": 30
+           }
+         ]
+@@ -115,7 +115,7 @@
+         "hooks": [
+           {
+             "type": "command",
+-            "command": "cd \"$(git rev-parse --show-toplevel)\" || exit 2; links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z \"$links\" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \\( -name \"*.mjs\" -o -name \"*.js\" -o -name \"*.py\" -o -name \"*.sh\" \\) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\\n' \"$lines\" | /usr/bin/shasum -a 256) || h=invalid; h=${h%% *}; case \"$h\" in 1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469) ;; *) echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2;; esac; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
++            "command": "luca_hook_root=$(git rev-parse --show-toplevel) && [ -n \"$luca_hook_root\" ] && cd \"$luca_hook_root\" || exit 2; export LUCA_CHILD_SOURCE_ROOT=\"$(pwd -P)\"; export NODE_OPTIONS=\"--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs\"; node \"$(git rev-parse --show-toplevel)/.codex/hook-source-integrity.mjs\" --verify || { echo \"[luca_gstack] hook source integrity mismatch\" >&2; exit 2; }; node \"$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs\" 2>> /tmp/luca-gstack-hooks.log; c=$?; [ \"$c\" = \"0\" ] && exit 0 || exit 2",
+             "timeoutSec": 30
+           }
+         ]
+diff --git a/README.md b/README.md
+index 4f12173..dcb9d63 100644
+--- a/README.md
++++ b/README.md
+@@ -230,9 +230,16 @@ Python/规则快照和 Stop 恢复副本（含四个依赖）；
+ 启用前先协调所有共享此物理根的在途会话和子审查：保存检查点，等它们完成或明确暂停，
+ 维护期间不启动新的审查。只检查 Git HEAD 不够，工作树、注册和安装版本也必须冻结；
+ 旧会话即使已开始审查，也会在后续调用遇到新的源码摘要而阻断。
+-体检不探测会话是否空闲，也不提供并发写锁；不能把体检通过当成可以随时热更新的许可。
+-启用必须包含一致的注册摘要、
+-`install-codex-source-guard.mjs --root <已审根> --preserve-other-roots` 安装和 11 条精确 Hook 授信。
++体检不探测会话是否空闲；安装事务的锁只串行化合作安装器，不能把体检通过当成可以随时热更新的许可。
++先用 `node scripts/install-codex-source-guard.mjs --print-review --root <候选根>` 冻结完整受审 artifact
++及其原字节 SHA；单 root 的候选→正式根审查可加 `--as-root <canonical正式根>`，内容映射必须一致。
++启用调用 `node scripts/install-codex-source-guard.mjs --root <已审根> --preserve-other-roots --reviewed-file <artifact文件> --reviewed-sha <原字节SHA256> --expected-manifest-sha <当前manifest原字节SHA256>`。
++初装改用 `--expected-manifest-sha ABSENT`；缺少审阅文件或精确 CAS 会拒绝，生产不会现场捕获后自动批准。
++事务校验完整源、JS、配置和复制快照，持有私有独占锁直到 manifest 最后原子发布、fsync 和读回。
++`--dry-run` 不写保护安装；发布后异常回执明确是否已经提交，再次安装需要新的精确 CAS。
++真实进程中断遗留的锁只可用 `--recover-lock-sha <精确锁原字节SHA256> --expected-manifest-sha <当前SHA256或ABSENT>`
++回收；仅 ESRCH 死进程和完整私有锁可通过，不按时间夺锁。回退同样恢复受审源并使用当前 CAS 安装。
++稳定注册的源码更新保留原命令与 trust hash；首次 legacy→stable 迁移需要重载和 11 条精确 Hook 授信。
+ 这些是已有真人授信门约束下的维护动作；体检不会自动执行它们，也不能通过关闭门禁恢复。
+ 若当前会话已经被旧命令阻断，应从人工维护终端执行已审启用步骤，不在被拒会话内换入口绕行。
+ 全部检查通过后重新加载受影响会话，并用一次真实工具调用/审查验证；新进程的检查不能证明旧会话已刷新。
+diff --git a/scripts/codex-hook-health.mjs b/scripts/codex-hook-health.mjs
+index dc2af6e..aab4b2e 100644
+--- a/scripts/codex-hook-health.mjs
++++ b/scripts/codex-hook-health.mjs
+@@ -1,24 +1,26 @@
+ #!/usr/bin/env node
+ // Read-only preflight. Never installs source, edits registrations, or grants trust.
+ import { createHash } from 'node:crypto';
+-import { spawnSync } from 'node:child_process';
+ import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
+ import { homedir } from 'node:os';
+ import nodeModule from 'node:module';
+ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+ import { fileURLToPath } from 'node:url';
++import { SOURCE_SCAN, sourceDigest, readSourceApproval } from '../.codex/hook-source-integrity.mjs';
++import { approvedJavaScript, snapshotSourceInventory, sourceInventory, snapshotInventory, equalArtifact } from './source-guard-review.mjs';
++export { SOURCE_SCAN, sourceDigest } from '../.codex/hook-source-integrity.mjs';
+ 
+ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+ const DIGEST = /^[a-f0-9]{64}$/;
+ // Keep the registered shell's byte ordering, filename escaping and pipefail semantics.
+ // This is a fixed program: never execute command text read from hooks.json.
+-export const SOURCE_SCAN = String.raw`links=$(find .codex .claude/hooks scripts memory/scripts -type l -print -quit) && [ -z "$links" ] && lines=$(bash -o pipefail -c 'find .codex .claude/hooks scripts memory/scripts -type f \( -name "*.mjs" -o -name "*.js" -o -name "*.py" -o -name "*.sh" \) -print0 | LC_ALL=C sort -z | xargs -0 /usr/bin/shasum -a 256') && h=$(printf '%s\n' "$lines" | /usr/bin/shasum -a 256) || h=invalid` + '; h=${h%% *}';
+ const GATE_START = `cd "$(git rev-parse --show-toplevel)" || exit 2; ${SOURCE_SCAN}; case "$h" in `;
+ // Pin the reviewed registration protocol independently of hooks.json. Only the
+ // source digest varies; event/group order, matchers, full launch/recovery text,
+ // timeouts and context limits must remain reviewed. Description is presentation.
+ // Intentional protocol changes require reviewing and updating this pin together.
+-const REGISTRATION_CONTRACT = '0d3e966d491751a1e45ce6a29fc62fd850981ba972393b81fdf51be989cbd50a';
++const LEGACY_REGISTRATION_CONTRACT = '0d3e966d491751a1e45ce6a29fc62fd850981ba972393b81fdf51be989cbd50a';
++const STABLE_REGISTRATION_CONTRACT = '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189';
+ function canonical(value) {
+   if (Array.isArray(value)) return value.map(canonical);
+   if (value && typeof value === 'object') return Object.fromEntries(
+@@ -87,19 +89,12 @@ function javaScriptFiles(root) {
+   scan(root);
+   return files.sort();
+ }
+-export function sourceDigest(root) {
+-  const result = spawnSync('/bin/bash', ['-o', 'pipefail', '-c', `${SOURCE_SCAN}; printf '%s' "$h"`],
+-    { cwd: root, encoding: 'utf8', timeout: 30_000, maxBuffer: 4 * 1024 * 1024 });
+-  if (result.error || result.status !== 0 || !DIGEST.test(result.stdout)) {
+-    throw new Error('source scan failed (missing/unreadable source, symlink, or failed hashing command)');
+-  }
+-  return result.stdout;
+-}
+ export function inspectHookHealth(root, { sourceOnly = false,
+   guardRoot = join(homedir(), '.codex', 'luca-child-project', 'source-guard') } = {}) {
+   root = resolve(root);
+   const report = { schema_version: 1, root, scope: sourceOnly ? 'registration-source' : 'registration-source-installation',
+     ok: false, registration: { status: 'FAIL', problems: [] },
++    approval: { status: 'NOT_CHECKED', problems: [], reason: 'source-only scan cannot establish approved installation or grant trust' },
+     installation: { status: 'NOT_CHECKED', problems: [], changed_files: [] },
+     live_session: 'UNVERIFIED: a fresh process cannot attest the commands cached by an existing session' };
+   try {
+@@ -109,32 +104,41 @@ export function inspectHookHealth(root, { sourceOnly = false,
+     const config = JSON.parse(bytes);
+     if (!keys(config, ['description', 'hooks']) || typeof config.description !== 'string') throw new Error('invalid registration config keys');
+     if (!config.hooks || typeof config.hooks !== 'object' || Array.isArray(config.hooks)) throw new Error('invalid hooks object');
+-    const digests = [], normalized = structuredClone(config.hooks);
+-    for (const [event, groups] of Object.entries(config.hooks)) {
+-      if (!Array.isArray(groups)) throw new Error(`invalid groups: ${event}`);
+-      for (const group of groups) {
+-        if (!Array.isArray(group.hooks) || !group.hooks.length) throw new Error(`empty hook group: ${event}`);
+-        for (const hook of group.hooks) {
+-          const command = hook.command;
+-          if (hook.type !== 'command' || typeof command !== 'string' || !command.startsWith(GATE_START)) {
+-            throw new Error(`unrecognized source gate: ${event}`);
+-          }
+-          const match = command.slice(GATE_START.length).match(/^([a-f0-9]{64})\) ;; \*\) echo "\[luca_gstack\] hook source integrity mismatch" >&2;/);
+-          if (!match || !command.includes('; export LUCA_CHILD_SOURCE_ROOT=')) throw new Error(`invalid digest gate: ${event}`);
+-          digests.push(match[1]);
+-        }
++    const commands = Object.values(config.hooks).flatMap(groups => {
++      if (!Array.isArray(groups)) throw new Error('invalid groups');
++      return groups.flatMap(group => {
++        if (!Array.isArray(group.hooks) || !group.hooks.length) throw new Error('empty hook group');
++        return group.hooks.map(hook => {
++          if (hook.type !== 'command' || typeof hook.command !== 'string') throw new Error('unrecognized source gate');
++          return hook.command;
++        });
++      });
++    });
++    if (commands.length !== 11) throw new Error(`expected 11 registrations, found ${commands.length}`);
++    const fullContract = sha(JSON.stringify(canonical(config.hooks)));
++    const digests = [];
++    if (fullContract === STABLE_REGISTRATION_CONTRACT) {
++      report.registration.protocol = 'stable-v3';
++      report.registration.contract_sha256 = fullContract;
++    } else {
++      const normalized = structuredClone(config.hooks);
++      for (const command of commands) {
++        if (!command.startsWith(GATE_START)) throw new Error('REGISTRATION_CONTRACT_MISMATCH: unrecognized source gate');
++        const match = command.slice(GATE_START.length).match(/^([a-f0-9]{64})\) ;; \*\) echo "\[luca_gstack\] hook source integrity mismatch" >&2;/);
++        if (!match) throw new Error('invalid digest gate');
++        digests.push(match[1]);
+       }
++      for (const groups of Object.values(normalized)) for (const group of groups) for (const hook of group.hooks) {
++        hook.command = hook.command.replace(/case "\$h" in [a-f0-9]{64}/, 'case "$h" in SOURCE_DIGEST');
++      }
++      report.registration.contract_sha256 = sha(JSON.stringify(canonical(normalized)));
++      if (report.registration.contract_sha256 !== LEGACY_REGISTRATION_CONTRACT) {
++        throw new Error('REGISTRATION_CONTRACT_MISMATCH: event, matcher or complete command differs from the reviewed protocol');
++      }
++      report.registration.protocol = 'legacy-literal';
++      report.registration.expected_digests = [...new Set(digests)];
+     }
+-    if (digests.length !== 11) throw new Error(`expected 11 registrations, found ${digests.length}`);
+-    for (const groups of Object.values(normalized)) for (const group of groups) for (const hook of group.hooks) {
+-      hook.command = hook.command.replace(/case "\$h" in [a-f0-9]{64}/, 'case "$h" in SOURCE_DIGEST');
+-    }
+-    report.registration.contract_sha256 = sha(JSON.stringify(canonical(normalized)));
+-    if (report.registration.contract_sha256 !== REGISTRATION_CONTRACT) {
+-      throw new Error('REGISTRATION_CONTRACT_MISMATCH: event, matcher or complete command differs from the reviewed protocol');
+-    }
+-    report.registration.hook_count = digests.length;
+-    report.registration.expected_digests = [...new Set(digests)];
++    report.registration.hook_count = commands.length;
+     report.registration.current_digest = sourceDigest(root);
+     if (digests.some(digest => digest !== report.registration.current_digest)) {
+       throw new Error('SOURCE_DIGEST_MISMATCH: registered commands do not match current source; restarting alone cannot repair this');
+@@ -149,6 +153,36 @@ export function inspectHookHealth(root, { sourceOnly = false,
+       installation.runtime = { node_version: process.version,
+         synchronous_loader_supported: typeof nodeModule.registerHooks === 'function' };
+       if (!installation.runtime.synchronous_loader_supported) throw new Error('RUNTIME_CAPABILITY_MISSING: Node cannot run the protected synchronous source loader');
++      if (report.registration.protocol === 'stable-v3') {
++        report.approval.status = 'FAIL';
++        delete report.approval.reason;
++        const approved = readSourceApproval(root, { guardRoot });
++        report.approval.sha256 = approved.approval.sha256;
++        report.approval.artifact_sha256 = approved.approval.artifact_sha256;
++        installation.manifest_sha256 = approved.manifestSha256;
++        const current = report.registration.current_digest ?? sourceDigest(root);
++        if (current !== approved.approval.sha256) {
++          report.registration.status = 'FAIL';
++          report.registration.problems.push('SOURCE_DIGEST_MISMATCH: current source differs from protected approval');
++        }
++        const js = approvedJavaScript(root);
++        installation.changed_files = Object.keys(approved.entry.files).filter(name => js[name]?.sha256 !== approved.entry.files[name].sha256);
++        installation.unapproved_files = Object.keys(js).filter(name => !Object.hasOwn(approved.entry.files, name));
++        installation.format_changed_files = Object.keys(approved.entry.files).filter(name => js[name] && js[name].format !== approved.entry.files[name].format);
++        const expectedSnapshot = approved.row.snapshot_files, actualSnapshot = snapshotInventory(approved.snapshotRoot, { excludeMetadata: true });
++        const liveSnapshot = snapshotSourceInventory(root);
++        installation.snapshot_changed_files = [...new Set([...Object.keys(expectedSnapshot), ...Object.keys(liveSnapshot), ...Object.keys(actualSnapshot)])]
++          .filter(name => expectedSnapshot[name] !== liveSnapshot[name] || expectedSnapshot[name] !== actualSnapshot[name]);
++        const inventory = sourceInventory(root);
++        if (sha(fileBytes(join(root, '.codex/hooks.json'))) !== approved.row.hooks_sha256) throw new Error('INSTALLED_REGISTRATION_MISMATCH: hooks.json differs from reviewed artifact');
++        if (installation.changed_files.length || installation.unapproved_files.length) throw new Error('INSTALLED_SOURCE_MISMATCH: reviewed manifest differs from workspace JavaScript');
++        if (installation.format_changed_files.length) throw new Error('INSTALLED_FORMAT_MISMATCH: reviewed formats differ from package rules');
++        if (installation.snapshot_changed_files.length) throw new Error('INSTALLED_SNAPSHOT_MISMATCH: source or protected snapshot differs from reviewed artifact');
++        if (current !== approved.approval.sha256 || !equalArtifact(inventory, approved.row.source_files)) throw new Error('SOURCE_DIGEST_MISMATCH: source inventory differs from reviewed artifact');
++        report.approval.status = 'PASS';
++      } else {
++        report.approval.status = 'NOT_APPLICABLE';
++        report.approval.reason = 'legacy literal digest uses the existing protected installation contract';
+       // Validate the protected path and schema without launching workspace hooks.
+       if (guardRoot === join(homedir(), '.codex', 'luca-child-project', 'source-guard')) {
+         const home = lstatSync(homedir());
+@@ -216,8 +250,9 @@ export function inspectHookHealth(root, { sourceOnly = false,
+         }
+       }
+       if (installation.recovery_changed_files.length) throw new Error('INSTALLED_RECOVERY_MISMATCH: protected Stop recovery source is missing or changed');
++      }
+       installation.status = 'PASS';
+-    } catch (error) { installation.problems.push(error.message); }
++    } catch (error) { installation.problems.push(error.message); if (report.approval.status === 'FAIL') report.approval.problems.push(error.message); }
+   }
+   report.ok = report.registration.status === 'PASS' && (sourceOnly || report.installation.status === 'PASS');
+   return report;
+diff --git a/scripts/install-codex-source-guard.mjs b/scripts/install-codex-source-guard.mjs
+index 88de964..b569e47 100644
+--- a/scripts/install-codex-source-guard.mjs
++++ b/scripts/install-codex-source-guard.mjs
+@@ -1,271 +1,245 @@
+ #!/usr/bin/env node
+-// Install a reviewed source snapshot outside ordinary agent tool write access.
+-// Usage: node scripts/install-codex-source-guard.mjs --root /absolute/repo [--root /second/repo]
+-import { createHash, randomUUID } from 'node:crypto';
+-import {
+-  closeSync, constants, existsSync, fstatSync, fsyncSync, lstatSync, mkdirSync,
+-  openSync, readFileSync, readdirSync, realpathSync, renameSync, writeFileSync,
+-} from 'node:fs';
++// Publish only a frozen review, under a private lock and exact manifest CAS.
++import { randomUUID } from 'node:crypto';
++import { closeSync, constants, existsSync, fsyncSync, lstatSync,
++  openSync, readdirSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+ import { homedir, tmpdir } from 'node:os';
+-import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
++import { dirname, isAbsolute, join, resolve } from 'node:path';
+ import { fileURLToPath } from 'node:url';
++import { canonical, createReviewArtifact, equalArtifact, exactKeys, inside,
++  parseReviewArtifact, privateDir, protectedBytes, safeRelative, sha256,
++  snapshotInventory, sourceBytes } from './source-guard-review.mjs';
+ 
+-const scriptRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+-const MAX_FILE = 64 * 1024 * 1024;
+-const SKIP_DIRS = new Set(['.git', 'node_modules', '__pycache__']);
+-const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+-const fail = message => { throw new Error(`[luca source guard install] ${message}`); };
+-function inside(path, root) {
+-  const rel = relative(root, path);
+-  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+-}
+-function canonical(path, label) {
+-  if (!isAbsolute(path)) fail(`${label} must be absolute`);
+-  const requested = resolve(path);
+-  const actual = realpathSync(requested);
+-  if (requested !== actual) fail(`${label} must be a physical canonical path`);
+-  return actual;
+-}
+-function privateDir(path, create = false) {
+-  if (create) {
+-    try { mkdirSync(path, { mode: 0o700 }); }
+-    catch (error) { if (error?.code !== 'EEXIST') throw error; }
+-  }
+-  const stat = lstatSync(path);
+-  if (!stat.isDirectory() || stat.isSymbolicLink() || realpathSync(path) !== path
+-      || stat.uid !== process.getuid() || (stat.mode & 0o077) !== 0) {
+-    fail(`untrusted protected directory: ${path}`);
+-  }
+-  return path;
+-}
+-function sourceBytes(path) {
+-  const before = lstatSync(path);
+-  if (!before.isFile() || before.isSymbolicLink() || before.size > MAX_FILE
+-      || realpathSync(path) !== path) fail(`unsafe source file: ${path}`);
+-  const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW || 0));
+-  try {
+-    const opened = fstatSync(fd);
+-    if (!opened.isFile() || opened.dev !== before.dev || opened.ino !== before.ino) {
+-      fail(`source changed while opening: ${path}`);
+-    }
+-    const bytes = readFileSync(fd);
+-    if (bytes.length > MAX_FILE) fail(`source file exceeds limit: ${path}`);
+-    return bytes;
+-  } finally { closeSync(fd); }
+-}
+-function writeNew(path, bytes) {
+-  const fd = openSync(path, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL
+-    | (constants.O_NOFOLLOW || 0), 0o600);
+-  try { writeFileSync(fd, bytes); fsyncSync(fd); } finally { closeSync(fd); }
+-}
+-function replaceProtected(path, bytes) {
+-  const temp = `${path}.${randomUUID()}.tmp`;
+-  writeNew(temp, bytes);
+-  renameSync(temp, path);
+-  const fd = openSync(dirname(path), constants.O_RDONLY);
+-  try { fsyncSync(fd); } finally { closeSync(fd); }
+-}
+-function packageFormat(path, root) {
+-  for (let folder = dirname(path); inside(folder, root); folder = dirname(folder)) {
+-    const packagePath = join(folder, 'package.json');
+-    if (existsSync(packagePath)) {
+-      let value;
+-      try { value = JSON.parse(sourceBytes(packagePath).toString('utf8')); }
+-      catch { fail(`invalid package.json controlling ${path}`); }
+-      return value.type === 'module' ? 'module' : 'commonjs';
++const scriptRoot=resolve(dirname(fileURLToPath(import.meta.url)),'..');
++const fail=(code,message)=>{const error=new Error(message);error.code=code;throw error;};
++const hex=value=>typeof value==='string' && /^[a-f0-9]{64}$/.test(value);
++function fsyncDir(path) { const fd=openSync(path,constants.O_RDONLY);try {fsyncSync(fd);}finally{closeSync(fd);} }
++function writeNew(path,bytes) {
++  const fd=openSync(path,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|(constants.O_NOFOLLOW||0),0o600);
++  try {writeFileSync(fd,bytes);fsyncSync(fd);}finally{closeSync(fd);}
++}
++function manifestBytes(destination) {
++  try {return protectedBytes(join(destination,'manifest.json'));}
++  catch(error){if(error.code==='ENOENT')return null;throw error;}
++}
++const manifestSha=bytes=>bytes===null?'ABSENT':sha256(bytes);
++function checkCas(destination,expected) {
++  const bytes=manifestBytes(destination);
++  if(manifestSha(bytes)!==expected)fail('MANIFEST_CHANGED','manifest does not match --expected-manifest-sha');
++  return bytes;
++}
++function validateManifest(bytes,destination,bootstrap,loader) {
++  privateDir(join(destination,'roots'));
++  if(!protectedBytes(join(destination,'bootstrap.mjs')).equals(bootstrap)
++      || !protectedBytes(join(destination,'loader.mjs')).equals(loader))fail('RUNTIME_CHANGED','installed bootstrap or loader differs');
++  let value;try{value=JSON.parse(bytes);}catch{fail('MANIFEST_INVALID','invalid installed manifest JSON');}
++  if(!exactKeys(value,['schema_version','loader_sha256','roots']) || value.schema_version!==1
++      || value.loader_sha256!==sha256(loader) || !Array.isArray(value.roots) || !value.roots.length)fail('MANIFEST_INVALID','invalid installed manifest');
++  const seen=new Set();
++  for(const row of value.roots){
++    if(!exactKeys(row,['root','snapshot','files']) || typeof row.root!=='string' || !isAbsolute(row.root)
++        || resolve(row.root)!==row.root || seen.has(row.root) || typeof row.snapshot!=='string'
++        || !/^[a-f0-9]{64}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(row.snapshot) || row.snapshot.slice(0,64)!==sha256(Buffer.from(row.root))
++        || !row.files || typeof row.files!=='object' || Array.isArray(row.files))fail('MANIFEST_INVALID','invalid installed root');
++    seen.add(row.root);
++    for(const [file,approval] of Object.entries(row.files))if(!safeRelative(file) || !/\.(?:mjs|js)$/.test(file)
++        || !exactKeys(approval,['sha256','format']) || !hex(approval.sha256)
++        || !['module','commonjs'].includes(approval.format))fail('MANIFEST_INVALID','invalid installed file approval');
++    const snapshot=join(destination,'roots',row.snapshot);
++    const inventory=snapshotInventory(snapshot);
++    // Legacy snapshots can be preserved; reviewed snapshots must retain their byte binding.
++    const reviewFile=join(snapshot,'.codex/reviewed-install.json');
++    const approvalFile=join(snapshot,'.codex/hook-source-approval.json');
++    if(existsSync(reviewFile) || existsSync(approvalFile)){
++      const artifactBytes=protectedBytes(reviewFile),artifact=parseReviewArtifact(artifactBytes);
++      const reviewed=artifact.roots.find(item=>item.root===row.root);
++      if(!reviewed || artifact.bootstrap_sha256!==sha256(bootstrap) || artifact.loader_sha256!==sha256(loader)
++          || !equalArtifact(row.files,reviewed.files)
++          || !equalArtifact(snapshotInventory(snapshot,{excludeMetadata:true}),reviewed.snapshot_files))fail('SNAPSHOT_CHANGED','preserved snapshot differs from its review');
++      if(reviewed.source_sha256!==null){
++        const approval=JSON.parse(protectedBytes(approvalFile));
++        if(!exactKeys(approval,['schema_version','kind','root','algorithm','sha256','artifact_sha256'])
++            || approval.schema_version!==1 || approval.kind!=='luca-hook-source-approval'
++            || approval.root!==row.root || approval.algorithm!=='shell-source-scan-v2'
++            || approval.sha256!==reviewed.source_sha256 || approval.artifact_sha256!==sha256(artifactBytes))fail('APPROVAL_INVALID','preserved approval differs from review');
++      }else if(existsSync(approvalFile))fail('APPROVAL_INVALID','generic root cannot have hook approval');
+     }
+-    if (folder === root) break;
++    if(!Object.keys(inventory).length)fail('SNAPSHOT_INVALID','empty protected snapshot');
+   }
+-  return 'commonjs';
+-}
+-function approvedJavaScript(root) {
+-  const files = Object.create(null);
+-  let visited = 0;
+-  function scan(folder) {
+-    if (++visited > 20000) fail(`too many source directories under ${root}`);
+-    for (const entry of readdirSync(folder, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+-      if (entry.isSymbolicLink()) continue;
+-      const path = join(folder, entry.name);
+-      if (entry.isDirectory()) {
+-        if (!SKIP_DIRS.has(entry.name)) scan(path);
+-        continue;
+-      }
+-      if (!entry.isFile()) continue;
+-      const ext = extname(entry.name);
+-      if (ext !== '.mjs' && ext !== '.js') continue;
+-      const rel = relative(root, path).split('\\').join('/');
+-      files[rel] = { sha256: sha(sourceBytes(path)),
+-        format: ext === '.mjs' ? 'module' : packageFormat(path, root) };
+-      if (Object.keys(files).length > 10000) fail(`too many JavaScript sources under ${root}`);
+-    }
++  return value;
++}
++function validateLock(path) {
++  const bytes=protectedBytes(path,{limit:64*1024});let value;
++  try{value=JSON.parse(bytes);}catch{fail('LOCK_INVALID','invalid installation lock JSON');}
++  if(!exactKeys(value,['schema_version','kind','pid','nonce','roots','expected_manifest_sha'])
++      || value.schema_version!==1 || value.kind!=='luca-source-guard-install-lock'
++      || !Number.isSafeInteger(value.pid) || value.pid<=0 || typeof value.nonce!=='string'
++      || !/^[a-f0-9-]{36}$/.test(value.nonce) || !Array.isArray(value.roots) || !value.roots.length
++      || new Set(value.roots).size!==value.roots.length
++      || value.roots.some(root=>typeof root!=='string'||!isAbsolute(root)||resolve(root)!==root)
++      || !(value.expected_manifest_sha==='ABSENT'||hex(value.expected_manifest_sha)))fail('LOCK_INVALID','invalid installation lock schema');
++  return {bytes,value,stat:lstatSync(path)};
++}
++function removeSameLock(path,owned) {
++  const current=validateLock(path);
++  if(current.stat.dev!==owned.stat.dev || current.stat.ino!==owned.stat.ino
++      || current.value.nonce!==owned.value.nonce || !current.bytes.equals(owned.bytes))fail('LOCK_CHANGED','installation lock changed');
++  unlinkSync(path);fsyncDir(dirname(path));
++}
++function runtimeState(destination,bootstrap,loader) {
++  const state={};
++  for(const [name,bytes] of [['bootstrap.mjs',bootstrap],['loader.mjs',loader]]){
++    const path=join(destination,name);
++    if(existsSync(path)) {if(!protectedBytes(path).equals(bytes))fail('RUNTIME_CHANGED',`existing ${name} differs`);state[name]=true;}
++    else state[name]=false;
+   }
+-  scan(root);
+-  return files;
++  return state;
+ }
+-function copyTree(source, destination) {
+-  const stat = lstatSync(source);
+-  if (stat.isSymbolicLink() || !stat.isDirectory()) fail(`unsafe snapshot source: ${source}`);
+-  privateDir(destination, true);
+-  for (const entry of readdirSync(source, { withFileTypes: true })) {
+-    if (entry.name === '__pycache__' || entry.name.endsWith('.pyc')) continue;
+-    const from = join(source, entry.name);
+-    const to = join(destination, entry.name);
+-    if (entry.isSymbolicLink()) fail(`snapshot source has a symlink: ${from}`);
+-    if (entry.isDirectory()) copyTree(from, to);
+-    else if (entry.isFile()) writeNew(to, sourceBytes(from));
+-    else fail(`snapshot source has a special file: ${from}`);
++function runtimeCas(destination,state,bootstrap,loader) {
++  for(const [name,bytes] of [['bootstrap.mjs',bootstrap],['loader.mjs',loader]]){
++    const path=join(destination,name);
++    if(state[name] ? !protectedBytes(path).equals(bytes) : existsSync(path))fail('RUNTIME_CHANGED',`protected ${name} changed during installation`);
+   }
+ }
+-function copySnapshot(root, destination, approved) {
+-  privateDir(join(destination, 'memory'), true);
+-  copyTree(join(root, 'memory', 'scripts'), join(destination, 'memory', 'scripts'));
+-  privateDir(join(destination, '.claude'), true);
+-  copyTree(join(root, '.claude', 'skill-os'), join(destination, '.claude', 'skill-os'));
+-  privateDir(join(destination, '.claude', 'skills'), true);
+-  copyTree(join(root, '.claude', 'skills', 'office'),
+-    join(destination, '.claude', 'skills', 'office'));
+-  copyTree(join(root, '.claude', 'agents'), join(destination, '.claude', 'agents'));
+-  writeNew(join(destination, 'CLAUDE.md'), sourceBytes(join(root, 'CLAUDE.md')));
+-  if (existsSync(join(root, '.codex', 'stop-integrity-failure.mjs'))) {
+-    privateDir(join(destination, '.codex'), true);
+-    privateDir(join(destination, '.claude', 'hooks'), true);
+-    privateDir(join(destination, '.claude', 'hooks', 'lib'), true);
+-    for (const file of ['.codex/stop-integrity-failure.mjs',
+-      '.claude/hooks/lib/project-substrate.mjs', '.claude/hooks/lib/event-attestation.mjs',
+-      '.claude/hooks/lib/project-selection.mjs', '.claude/hooks/lib/project-event-closure.mjs']) {
+-      const bytes = sourceBytes(join(root, file));
+-      if (sha(bytes) !== approved[file]?.sha256) fail(`Stop recovery source changed during installation: ${file}`);
+-      writeNew(join(destination, file), bytes);
+-    }
++function makeSnapshot(root,destination,row,artifactBytes,artifactSha) {
++  privateDir(destination,true);
++  for(const rel of ['memory','memory/scripts','.claude','.claude/skill-os','.claude/skills','.claude/skills/office','.claude/agents'])privateDir(join(destination,rel),true);
++  for(const [file,expected] of Object.entries(row.snapshot_files)){
++    const target=join(destination,file),parts=file.split('/');let folder=destination;
++    for(const part of parts.slice(0,-1)){folder=join(folder,part);privateDir(folder,true);}
++    const bytes=sourceBytes(join(root,file));
++    if(sha256(bytes)!==expected)fail('SOURCE_CHANGED',`snapshot source changed: ${file}`);
++    writeNew(target,bytes);
+   }
+-}
+-
+-function protectedBytes(path) {
+-  const stat = lstatSync(path);
+-  if (stat.uid !== process.getuid() || (stat.mode & 0o077) !== 0) fail(`untrusted protected file: ${path}`);
+-  return sourceBytes(path);
+-}
+-function validateSnapshotTree(path) {
+-  privateDir(path);
+-  for (const entry of readdirSync(path, { withFileTypes: true })) {
+-    const child = join(path, entry.name);
+-    if (entry.isDirectory()) validateSnapshotTree(child);
+-    else if (entry.isFile()) protectedBytes(child);
+-    else fail(`unsafe protected snapshot: ${child}`);
++  privateDir(join(destination,'.codex'),true);
++  writeNew(join(destination,'.codex/reviewed-install.json'),artifactBytes);
++  if(row.source_sha256!==null)writeNew(join(destination,'.codex/hook-source-approval.json'),Buffer.from(`${JSON.stringify({
++    schema_version:1,kind:'luca-hook-source-approval',root:row.root,algorithm:'shell-source-scan-v2',
++    sha256:row.source_sha256,artifact_sha256:artifactSha,
++  })}\n`));
++  if(!equalArtifact(snapshotInventory(destination,{excludeMetadata:true}),row.snapshot_files))fail('SNAPSHOT_CHANGED','copied snapshot differs from reviewed inventory');
++  if(!protectedBytes(join(destination,'.codex/reviewed-install.json')).equals(artifactBytes))fail('SNAPSHOT_CHANGED','reviewed artifact changed after copy');
++  if(row.source_sha256!==null){
++    const approval=JSON.parse(protectedBytes(join(destination,'.codex/hook-source-approval.json')));
++    if(!exactKeys(approval,['schema_version','kind','root','algorithm','sha256','artifact_sha256']) || approval.schema_version!==1
++        || approval.kind!=='luca-hook-source-approval' || approval.root!==row.root || approval.algorithm!=='shell-source-scan-v2'
++        || approval.sha256!==row.source_sha256 || approval.artifact_sha256!==artifactSha)fail('SNAPSHOT_CHANGED','copied approval differs');
+   }
++  function syncTree(folder){for(const entry of readdirSync(folder,{withFileTypes:true}))if(entry.isDirectory())syncTree(join(folder,entry.name));fsyncDir(folder);}
++  syncTree(destination);
+ }
+-function preservedManifest(destination, bootstrap, loader) {
+-  privateDir(destination); privateDir(join(destination, 'roots'));
+-  if (!protectedBytes(join(destination, 'bootstrap.mjs')).equals(bootstrap)
+-      || !protectedBytes(join(destination, 'loader.mjs')).equals(loader)) {
+-    fail('preserving roots requires identical installed bootstrap and loader');
++
++async function main(){
++  const args=process.argv.slice(2),requestedRoots=[];
++  let printReview=false,asRoot='',dryRun=false,preserve=false,testDest='',reviewedFile='',reviewedSha='',expected='',recover='';
++  for(let index=0;index<args.length;index++){
++    const arg=args[index];
++    if(['--root','--as-root','--test-dest','--reviewed-file','--reviewed-sha','--expected-manifest-sha','--recover-lock-sha'].includes(arg)){
++      if(!args[index+1])fail('ARGUMENT_INVALID',`incomplete argument: ${arg}`);const value=args[++index];
++      if(arg==='--root')requestedRoots.push(value);
++      else if(arg==='--as-root')asRoot=value;
++      else if(arg==='--test-dest')testDest=value;
++      else if(arg==='--reviewed-file')reviewedFile=value;
++      else if(arg==='--reviewed-sha')reviewedSha=value;
++      else if(arg==='--expected-manifest-sha')expected=value;
++      else recover=value;
++    }else if(arg==='--print-review')printReview=true;
++    else if(arg==='--dry-run')dryRun=true;
++    else if(arg==='--preserve-other-roots')preserve=true;
++    else fail('ARGUMENT_INVALID',`unknown argument: ${arg}`);
+   }
+-  const bytes = protectedBytes(join(destination, 'manifest.json'));
+-  let value;
+-  try { value = JSON.parse(bytes); } catch { fail('invalid installed manifest JSON'); }
+-  const keys = (object, expected) => object && typeof object === 'object' && !Array.isArray(object)
+-    && Object.keys(object).sort().join(',') === [...expected].sort().join(',');
+-  if (!keys(value, ['schema_version','loader_sha256','roots']) || value.schema_version !== 1
+-      || value.loader_sha256 !== sha(loader) || !Array.isArray(value.roots) || !value.roots.length) {
+-    fail('invalid installed manifest');
++  if(asRoot && (!printReview || requestedRoots.length!==1))fail('ARGUMENT_INVALID','--as-root is only allowed with single-root --print-review');
++  if(printReview && (dryRun||preserve||recover||reviewedFile||reviewedSha||expected))fail('ARGUMENT_INVALID','--print-review cannot be combined with installation options');
++  if(recover && (requestedRoots.length||asRoot||dryRun||preserve||printReview||reviewedFile||reviewedSha))fail('ARGUMENT_INVALID','lock recovery does not install or approve roots');
++  if(preserve && !requestedRoots.length)fail('ARGUMENT_INVALID','--preserve-other-roots requires explicit --root');
++  if(!printReview && !(expected==='ABSENT'||hex(expected)))fail('ARGUMENT_INVALID','explicit --expected-manifest-sha is required');
++  if(recover && !hex(recover))fail('ARGUMENT_INVALID','invalid --recover-lock-sha');
++  if(!recover&&!printReview&&(!reviewedFile||!hex(reviewedSha)))fail('ARGUMENT_INVALID','explicit --reviewed-file and --reviewed-sha are required');
++  const roots=recover?[]:(requestedRoots.length?requestedRoots:[scriptRoot]).map(path=>canonical(path));
++  if(new Set(roots).size!==roots.length)fail('ARGUMENT_INVALID','duplicate source root');
++  const bootstrap=sourceBytes(join(scriptRoot,'.codex/codex-source-guard-bootstrap.mjs')),
++    loader=sourceBytes(join(scriptRoot,'.codex/codex-source-guard-loader.mjs'));
++  if(printReview){process.stdout.write(`${JSON.stringify(await createReviewArtifact(roots,{bootstrap,loader,asRoot}),null,2)}\n`);return;}
++  let destination=join(realpathSync(homedir()),'.codex/luca-child-project/source-guard');
++  if(testDest){
++    if(process.env.NODE_ENV!=='test'||!isAbsolute(testDest)||![realpathSync(tmpdir()),realpathSync('/tmp')].some(temp=>inside(resolve(testDest),temp))
++        || [realpathSync(tmpdir()),realpathSync('/tmp')].includes(resolve(testDest)))fail('ARGUMENT_INVALID','--test-dest requires NODE_ENV=test and a child of OS temp');
++    destination=resolve(testDest);privateDir(dirname(destination));
++  }else{
++    const home=canonical(homedir(),'user home'),stat=lstatSync(home);
++    if(stat.uid!==process.getuid()||(stat.mode&0o022)!==0)fail('DIRECTORY_INVALID','user home writable by others');
++    privateDir(join(home,'.codex'));privateDir(join(home,'.codex/luca-child-project'));
+   }
+-  const seen = new Set();
+-  for (const row of value.roots) {
+-    if (!keys(row, ['root','snapshot','files']) || typeof row.root !== 'string'
+-        || !isAbsolute(row.root) || resolve(row.root) !== row.root || seen.has(row.root)
+-        || typeof row.snapshot !== 'string'
+-        || !/^[a-f0-9]{64}-[a-f0-9-]{36}$/.test(row.snapshot)
+-        || row.snapshot.slice(0,64) !== sha(Buffer.from(row.root))
+-        || !row.files || typeof row.files !== 'object' || Array.isArray(row.files)) fail('invalid installed root');
+-    seen.add(row.root);
+-    for (const [file, approval] of Object.entries(row.files)) {
+-      if (!file || file.includes('\\') || isAbsolute(file) || file.split('/').some(part => !part || part === '.' || part === '..')
+-          || !/\.(?:mjs|js)$/.test(file) || !keys(approval, ['sha256','format'])
+-          || !/^[a-f0-9]{64}$/.test(approval.sha256) || !['module','commonjs'].includes(approval.format)) {
+-        fail('invalid installed file approval');
+-      }
+-    }
+-    // Inspect the protected snapshot only, never the preserved source checkout.
+-    validateSnapshotTree(join(destination, 'roots', row.snapshot));
++  const lockPath=join(destination,'.install.lock');
++  if(recover){
++    privateDir(destination);const lock=validateLock(lockPath);
++    if(sha256(lock.bytes)!==recover)fail('LOCK_CHANGED','lock does not match --recover-lock-sha');
++    try{process.kill(lock.value.pid,0);fail('LOCK_LIVE','installation lock owner is live');}
++    catch(error){if(error.code!=='ESRCH')throw error;}
++    checkCas(destination,expected);removeSameLock(lockPath,lock);
++    process.stdout.write(`${JSON.stringify({recovered_lock:true,destination,manifest_sha256:expected})}\n`);return;
+   }
+-  return { value, bytes };
+-}
+-
+-const args = process.argv.slice(2);
+-const requestedRoots = [];
+-let dryRun = false;
+-let preserveOtherRoots = false;
+-let testDest = '';
+-for (let index = 0; index < args.length; index += 1) {
+-  const arg = args[index];
+-  if (arg === '--root' && args[index + 1]) requestedRoots.push(args[++index]);
+-  else if (arg === '--preserve-other-roots') preserveOtherRoots = true;
+-  else if (arg === '--dry-run') dryRun = true;
+-  else if (arg === '--test-dest' && args[index + 1]) testDest = args[++index];
+-  else fail(`unknown or incomplete argument: ${arg}`);
+-}
+-if (preserveOtherRoots && !requestedRoots.length) fail('--preserve-other-roots requires explicit --root');
+-const roots = [...new Set((requestedRoots.length ? requestedRoots : [scriptRoot])
+-  .map(path => canonical(path, 'source root')))];
+-const expectedDest = join(realpathSync(homedir()), '.codex', 'luca-child-project', 'source-guard');
+-let destination = expectedDest;
+-if (testDest) {
+-  if (process.env.NODE_ENV !== 'test' || !isAbsolute(testDest)
+-      || ![realpathSync(tmpdir()), realpathSync('/tmp')]
+-        .some(temp => inside(resolve(testDest), temp))) {
+-    fail('--test-dest requires NODE_ENV=test and a path below the system temp root');
++  const artifactBytes=sourceBytes(resolve(reviewedFile),{limit:64*1024*1024});
++  if(sha256(artifactBytes)!==reviewedSha)fail('REVIEW_SHA_MISMATCH','reviewed artifact bytes do not match --reviewed-sha');
++  const artifact=parseReviewArtifact(artifactBytes);
++  if(!equalArtifact(await createReviewArtifact(roots,{bootstrap,loader}),artifact))fail('REVIEW_MISMATCH','actual source/runtime inventory differs from reviewed artifact');
++  if(dryRun){
++    if(existsSync(destination))privateDir(destination);
++    const previousBytes=checkCas(destination,expected);
++    if(previousBytes)validateManifest(previousBytes,destination,bootstrap,loader);
++    else if(existsSync(destination))runtimeState(destination,bootstrap,loader);
++    process.stdout.write(`${JSON.stringify({dry_run:true,destination,preserve_other_roots:preserve,artifact_sha256:reviewedSha,roots:artifact.roots.map(row=>({root:row.root,approved_js:Object.keys(row.files).length}))},null,2)}\n`);return;
+   }
+-  destination = resolve(testDest);
+-}
+-const bootstrap = sourceBytes(join(scriptRoot, '.codex', 'codex-source-guard-bootstrap.mjs'));
+-const loader = sourceBytes(join(scriptRoot, '.codex', 'codex-source-guard-loader.mjs'));
+-// Validate preservation before creating any destination or snapshot.
+-if (preserveOtherRoots) {
+-  if (testDest) privateDir(dirname(destination));
+-  else {
+-    const home = canonical(homedir(), 'user home'), stat = lstatSync(home);
+-    if (stat.uid !== process.getuid() || (stat.mode & 0o022) !== 0) fail('user home is writable by others');
+-    privateDir(join(home, '.codex')); privateDir(join(home, '.codex', 'luca-child-project'));
++  privateDir(destination,true);
++  let owned=null,prepared=null,phase='lock',committed=false,durable=false;
++  const createdRuntime=[];
++  try{
++    const lockBytes=Buffer.from(`${JSON.stringify({schema_version:1,kind:'luca-source-guard-install-lock',pid:process.pid,nonce:randomUUID(),roots,expected_manifest_sha:expected})}\n`);
++    try{writeNew(lockPath,lockBytes);}catch(error){if(error.code==='EEXIST'){
++      validateLock(lockPath);fail('LOCK_BUSY','installation lock exists; exact dead-owner recovery is required');
++    }
++    // A completed write with a failed fsync is still our exact lock and can be released.
++    try{const candidate=validateLock(lockPath);if(candidate.bytes.equals(lockBytes))owned=candidate;}catch{}
++    throw error;}
++    owned=validateLock(lockPath);fsyncDir(destination);
++    phase='validate';const previousBytes=checkCas(destination,expected);
++    const previous=previousBytes?validateManifest(previousBytes,destination,bootstrap,loader):null;
++    const runtime=runtimeState(destination,bootstrap,loader);
++    privateDir(join(destination,'roots'),true);
++    const updated=artifact.roots.map(row=>({root:row.root,snapshot:`${sha256(Buffer.from(row.root))}-${randomUUID()}`,files:row.files}));
++    phase='snapshot';
++    for(let index=0;index<updated.length;index++)makeSnapshot(roots[index],join(destination,'roots',updated[index].snapshot),artifact.roots[index],artifactBytes,reviewedSha);
++    fsyncDir(join(destination,'roots'));
++    if(!equalArtifact(await createReviewArtifact(roots,{bootstrap,loader}),artifact))fail('SOURCE_CHANGED','source inventory changed before manifest publication');
++    const replacements=new Map(updated.map(row=>[row.root,row]));
++    const entries=preserve&&previous?previous.roots.map(row=>{const next=replacements.get(row.root);replacements.delete(row.root);return next||row;}).concat([...replacements.values()]):updated;
++    prepared=Buffer.from(`${JSON.stringify({schema_version:1,loader_sha256:sha256(loader),roots:entries})}\n`);
++    const temp=join(destination,`manifest.json.${randomUUID()}.tmp`);writeNew(temp,prepared);
++    phase='commit';checkCas(destination,expected);runtimeCas(destination,runtime,bootstrap,loader);
++    // Initialize identical runtime only; upgrading shared runtime needs separate review.
++    for(const [name,bytes] of [['bootstrap.mjs',bootstrap],['loader.mjs',loader]])if(!runtime[name]){writeNew(join(destination,name),bytes);createdRuntime.push({path:join(destination,name),bytes,stat:lstatSync(join(destination,name))});}
++    fsyncDir(destination);
++    // Last check follows runtime creation and immediately precedes the only manifest publication.
++    checkCas(destination,expected);
++    for(const [name,bytes] of [['bootstrap.mjs',bootstrap],['loader.mjs',loader]])if(!protectedBytes(join(destination,name)).equals(bytes))fail('RUNTIME_CHANGED','runtime changed at commit');
++    if(!equalArtifact(await createReviewArtifact(roots,{bootstrap,loader}),artifact))fail('SOURCE_CHANGED','source inventory changed at commit');
++    validateManifest(prepared,destination,bootstrap,loader);
++    renameSync(temp,join(destination,'manifest.json'));committed=true;
++    fsyncDir(destination);durable=true;phase='readback';
++    const authoritative=manifestBytes(destination);
++    if(!authoritative?.equals(prepared))fail('READBACK_CHANGED','published manifest differs on readback');
++    validateManifest(authoritative,destination,bootstrap,loader);
++    removeSameLock(lockPath,owned);owned=null;
++    process.stdout.write(`${JSON.stringify({installed:true,committed:true,durability_verified:true,destination,preserve_other_roots:preserve,artifact_sha256:reviewedSha,manifest_sha256:sha256(authoritative),roots:entries.map(row=>({root:row.root,approved_js:Object.keys(row.files).length,snapshot:row.snapshot}))},null,2)}\n`);
++  }catch(error){
++    let authoritativeSha=null;
++    try{const authoritative=manifestBytes(destination);authoritativeSha=manifestSha(authoritative);
++      if(prepared)committed=authoritative?.equals(prepared)===true;}catch{if(prepared)committed=null;}
++    if(committed===false)for(const item of createdRuntime){try{const stat=lstatSync(item.path);if(stat.dev===item.stat.dev&&stat.ino===item.stat.ino&&protectedBytes(item.path).equals(item.bytes))unlinkSync(item.path);}catch{}}
++    let cleanupError=null;
++    if(owned){try{removeSameLock(lockPath,owned);}catch(cleanup){cleanupError=cleanup.message;}}
++    process.stderr.write(`${JSON.stringify({installed:false,committed,durability_verified:durable,authoritative_manifest_sha256:authoritativeSha,phase,code:error.code||'INSTALL_FAILED',error:error.message,...(cleanupError?{lock_cleanup_error:cleanupError}:{})})}\n`);
++    process.exitCode=1;
+   }
+ }
+-const previous = preserveOtherRoots ? preservedManifest(destination, bootstrap, loader) : null;
+-const updated = roots.map(root => ({ root,
+-  snapshot: `${sha(Buffer.from(root))}-${randomUUID()}`,
+-  files: approvedJavaScript(root) }));
+-const replacements = new Map(updated.map(row => [row.root, row]));
+-const entries = previous ? previous.value.roots.map(row => {
+-  const replacement = replacements.get(row.root); replacements.delete(row.root); return replacement || row;
+-}).concat([...replacements.values()]) : updated;
+-const summary = { destination, preserve_other_roots: preserveOtherRoots, roots: entries.map(row => ({ root: row.root,
+-  approved_js: Object.keys(row.files).length, snapshot: row.snapshot })) };
+-if (dryRun) {
+-  process.stdout.write(`${JSON.stringify({ dry_run: true, ...summary }, null, 2)}\n`);
+-  process.exit(0);
+-}
+-if (testDest) {
+-  privateDir(dirname(destination));
+-} else {
+-  const home = canonical(homedir(), 'user home');
+-  const homeStat = lstatSync(home);
+-  if (homeStat.uid !== process.getuid() || (homeStat.mode & 0o022) !== 0) fail('user home is writable by others');
+-  privateDir(join(home, '.codex'));
+-  privateDir(join(home, '.codex', 'luca-child-project'));
+-}
+-privateDir(destination, true);
+-const snapshots = privateDir(join(destination, 'roots'), true);
+-for (const row of updated) {
+-  const snapshotRoot = privateDir(join(snapshots, row.snapshot), true);
+-  copySnapshot(row.root, snapshotRoot, row.files);
+-}
+-if (previous) {
+-  if (!protectedBytes(join(destination, 'manifest.json')).equals(previous.bytes)
+-      || !protectedBytes(join(destination, 'bootstrap.mjs')).equals(bootstrap)
+-      || !protectedBytes(join(destination, 'loader.mjs')).equals(loader)) fail('protected installation changed during update');
+-} else {
+-  replaceProtected(join(destination, 'bootstrap.mjs'), bootstrap);
+-  replaceProtected(join(destination, 'loader.mjs'), loader);
+-}
+-replaceProtected(join(destination, 'manifest.json'), Buffer.from(`${JSON.stringify({
+-  schema_version: 1, loader_sha256: sha(loader), roots: entries,
+-})}\n`));
+-process.stdout.write(`${JSON.stringify({ installed: true, ...summary }, null, 2)}\n`);
++try{await main();}catch(error){process.stderr.write(`${JSON.stringify({installed:false,committed:false,code:error.code||'INSTALL_FAILED',error:error.message})}\n`);process.exitCode=1;}
+diff --git a/scripts/test-codex-child-hook-integrity.mjs b/scripts/test-codex-child-hook-integrity.mjs
+index b7be740..2ebd7f5 100644
+--- a/scripts/test-codex-child-hook-integrity.mjs
++++ b/scripts/test-codex-child-hook-integrity.mjs
+@@ -1,75 +1,111 @@
+ #!/usr/bin/env node
+ import assert from 'node:assert/strict';
+ import { spawnSync } from 'node:child_process';
+-import { appendFileSync, cpSync, mkdtempSync, mkdirSync, realpathSync, readFileSync, rmSync } from 'node:fs';
++import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync,
++  symlinkSync, writeFileSync } from 'node:fs';
+ import { tmpdir } from 'node:os';
+ import { dirname, join, resolve } from 'node:path';
+ import { fileURLToPath } from 'node:url';
++import { installTestSourceGuard } from './source-guard-test-fixture.mjs';
+ 
+ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+-const config = JSON.parse(readFileSync(join(root, '.codex/hooks.json'), 'utf8'));
+-const commands = Object.values(config.hooks).flatMap(groups => groups.flatMap(group => group.hooks || []))
+-  .map(hook => hook.command);
+-const modelCommands = commands.filter(command => command.includes('model-route-hook.mjs'));
+-assert.equal(modelCommands.length, 5, 'all native model-route hook entries must be present');
+-assert.equal(new Set(modelCommands).size, 1, 'all native model-route entries must share one integrity gate');
+-assert.ok(commands.every(command => command.startsWith('cd "$(git rev-parse --show-toplevel)" || exit 2; links=$(find ')),
+-  'every privileged native hook entry must verify source integrity before executing workspace code');
+-const command = modelCommands[0];
+-// Test the actual guarded command against an isolated approved installation.
+-// A development worktree must not require changing the user's live approvals.
+-const testHome = realpathSync(mkdtempSync(join(tmpdir(), 'codex-child-hook-home-')));
+-const guardRoot = join(testHome, '.codex', 'luca-child-project', 'source-guard');
++const config = JSON.parse(readFileSync(join(root, '.codex/hooks.json')));
++const entries = Object.entries(config.hooks).flatMap(([event, groups]) => groups.flatMap(group => group.hooks.map(hook => ({event, command: hook.command}))));
++const native = entries.filter(entry => entry.command.includes('model-route-hook.mjs'));
++assert.equal(native.length, 5); assert.equal(new Set(native.map(entry => entry.command)).size, 1);
++const base = realpathSync(mkdtempSync(join(tmpdir(), 'codex-child-hook-')));
++const fixture = join(base, 'repo'), home = join(base, 'home');
++mkdirSync(fixture); mkdirSync(home, { mode: 0o700 });
++const guardRoot = join(home, '.codex/luca-child-project/source-guard');
+ mkdirSync(dirname(guardRoot), { recursive: true, mode: 0o700 });
+-const testEnv = { ...process.env, HOME: testHome, NODE_ENV: 'test', NODE_OPTIONS: '',
+-  LUCA_SOURCE_GUARD_TEST_ROOT: guardRoot };
+-const installed = spawnSync(process.execPath, [join(root, 'scripts/install-codex-source-guard.mjs'),
+-  '--root', root, '--test-dest', guardRoot], { env: testEnv, encoding: 'utf8' });
+-assert.equal(installed.status, 0, installed.stderr);
++const env = { ...process.env, HOME: home, NODE_ENV: 'test', NODE_OPTIONS: '', LUCA_SOURCE_GUARD_TEST_ROOT: guardRoot };
+ try {
+-const run = cwd => spawnSync('/bin/sh', ['-c', command], {
+-  cwd, encoding: 'utf8', input: '{}', timeout: 5000, env: testEnv,
+-});
+-const valid = run(root);
+-assert.equal(valid.status, 0, valid.stderr);
+-assert.equal(valid.stdout.trim(), '{}');
+-console.log('PASS approved native hook source executes');
+-
+-const missingBootstrapHome = mkdtempSync(join(tmpdir(), 'codex-child-missing-bootstrap-'));
+-try {
+-  const visibleStderrCommand = command.replace('2>> /tmp/luca-gstack-hooks.log', '2>&2');
+-  assert.notEqual(visibleStderrCommand, command);
+-  const missingBootstrap = spawnSync('/bin/sh', ['-c', visibleStderrCommand], {
+-    cwd: root, encoding: 'utf8', input: '{}', timeout: 5000,
+-    env: {...testEnv, HOME: missingBootstrapHome},
+-  });
+-  assert.equal(missingBootstrap.status, 2,
+-    `missing protected bootstrap must block: ${missingBootstrap.stderr}`);
+-  assert.match(missingBootstrap.stderr, /ERR_MODULE_NOT_FOUND/);
+-  console.log('PASS missing protected bootstrap blocks the native hook');
+-} finally {
+-  rmSync(missingBootstrapHome, {recursive: true, force: true});
+-}
+-
+-const fixture = mkdtempSync(join(tmpdir(), 'codex-child-hook-integrity-'));
+-try {
+-  const init = spawnSync('git', ['init', '-q', fixture], { encoding: 'utf8' });
+-  assert.equal(init.status, 0, init.stderr);
+-  for (const folder of ['.codex', '.claude/hooks', 'scripts', 'memory/scripts']) {
+-    cpSync(join(root, folder), join(fixture, folder), { recursive: true });
++  assert.equal(spawnSync('git', ['init', '-q', fixture]).status, 0);
++  for (const folder of ['.codex', '.claude/hooks', 'scripts', 'memory/scripts', '.claude/skill-os', '.claude/skills/office', '.claude/agents']) cpSync(join(root, folder), join(fixture, folder), { recursive: true });
++  cpSync(join(root, 'CLAUDE.md'), join(fixture, 'CLAUDE.md'));
++  const installed = installTestSourceGuard({ roots: [fixture], destination: guardRoot, directory: base });
++  assert.equal(installed.status, 0, installed.stderr);
++  const payload = JSON.stringify({ hook_event_name: 'Stop', cwd: fixture, session_id: 'integrity-probe' });
++  const run = (entry, extra = {}) => spawnSync('/bin/sh', ['-c', entry.command], { cwd: fixture, encoding: 'utf8', input: payload,
++    timeout: 15000, env: { ...env, ...extra } });
++  const valid = run(native[0]); assert.equal(valid.status, 0, valid.stderr);
++  const stop = entries.find(entry => entry.event === 'Stop');
++  const deny = (label, all = false, extra = {}) => {
++    for (const entry of all ? entries : [native[0], stop]) {
++      const result = run(entry, extra);
++      assert.equal(result.error, undefined, `${label}: ${result.error}`);
++      assert.equal(result.status, entry.event === 'Stop' ? 0 : 2, `${label}/${entry.event}: ${result.stderr}`);
++      if (entry.event === 'Stop') assert.equal(JSON.parse(result.stdout).continue, false, label);
++    }
++  };
++  const manifestPath = join(guardRoot, 'manifest.json'), manifestBytes = readFileSync(manifestPath);
++  const manifest = JSON.parse(manifestBytes), snapshot = join(guardRoot, 'roots', manifest.roots[0].snapshot);
++  const approvalPath = join(snapshot, '.codex/hook-source-approval.json'), approvalBytes = readFileSync(approvalPath);
++  const approval = JSON.parse(approvalBytes), artifactPath = join(snapshot, '.codex/reviewed-install.json'), artifactBytes = readFileSync(artifactPath);
++  for (const mutation of ['missing', 'json', 'mode', 'symlink', 'unknown', 'root', 'algorithm', 'sha', 'artifact-sha', 'array-hash']) {
++    if (mutation === 'missing') rmSync(approvalPath);
++    else if (mutation === 'json') writeFileSync(approvalPath, '{bad');
++    else if (mutation === 'mode') chmodSync(approvalPath, 0o644);
++    else if (mutation === 'symlink') { rmSync(approvalPath); const fake = join(base, 'fake-approval.json'); writeFileSync(fake, approvalBytes, {mode:0o600}); symlinkSync(fake, approvalPath); }
++    else {
++      const changed = {...approval};
++      if (mutation === 'unknown') changed.unreviewed = true;
++      if (mutation === 'root') changed.root = base;
++      if (mutation === 'algorithm') changed.algorithm = 'environment-says-approved';
++      if (mutation === 'sha') changed.sha256 = 'invalid';
++      if (mutation === 'artifact-sha') changed.artifact_sha256 = 'a'.repeat(64);
++      if (mutation === 'array-hash') changed.sha256 = [approval.sha256];
++      writeFileSync(approvalPath, JSON.stringify(changed));
++    }
++    deny(`approval ${mutation}`);
++    rmSync(approvalPath, {force:true}); writeFileSync(approvalPath, approvalBytes, {mode:0o600});
+   }
+-  const gateOnly = command.slice(0, command.indexOf('node "$(git rev-parse --show-toplevel)/.codex/model-route-hook.mjs"')) + 'true';
+-  const baseline = spawnSync('/bin/sh', ['-c', gateOnly], { cwd: fixture, encoding: 'utf8' });
+-  assert.equal(baseline.status, 0, baseline.stderr);
+-  for (const target of ['.claude/hooks/lib/codex-child-project.mjs', '.codex/codex-hook-adapter.mjs']) {
+-    appendFileSync(join(fixture, target), '\n// unapproved mutation\n');
+-    const tampered = run(fixture);
+-    assert.equal(tampered.status, 2, `tampered hook source must block: ${tampered.stderr}`);
+-    assert.match(tampered.stderr, /source integrity mismatch/);
++  for (const mutation of ['missing', 'json', 'bytes', 'mode', 'unknown-artifact', 'wrong-row-files', 'wrong-source-files', 'array-digest']) {
++    if (mutation === 'missing') rmSync(artifactPath);
++    else if (mutation === 'json') writeFileSync(artifactPath, '{bad');
++    else if (mutation === 'bytes') writeFileSync(artifactPath, '{}');
++    else if (mutation === 'mode') chmodSync(artifactPath, 0o644);
++    else {
++      // A forged associated SHA still cannot make malformed content a valid review.
++      const changed = JSON.parse(artifactBytes);
++      if (mutation === 'unknown-artifact') changed.extra = true;
++      if (mutation === 'wrong-row-files') changed.roots[0].files['.codex/hook-source-integrity.mjs'].sha256 = 'a'.repeat(64);
++      if (mutation === 'wrong-source-files') changed.roots[0].source_files['../outside.sh'] = 'a'.repeat(64);
++      if (mutation === 'array-digest') changed.roots[0].hooks_sha256 = [changed.roots[0].hooks_sha256];
++      const bytes = Buffer.from(JSON.stringify(changed)); writeFileSync(artifactPath, bytes);
++      const {createHash} = await import('node:crypto');
++      writeFileSync(approvalPath, JSON.stringify({...approval,artifact_sha256:createHash('sha256').update(bytes).digest('hex')}));
++    }
++    deny(`artifact ${mutation}`);
++    rmSync(artifactPath, {force:true}); writeFileSync(artifactPath, artifactBytes, {mode:0o600}); writeFileSync(approvalPath, approvalBytes, {mode:0o600});
+   }
+-  console.log('PASS modified receipt writer and adapter fail before native hook import');
+-} finally {
+-  rmSync(fixture, { recursive: true, force: true });
+-}
+-
+-} finally { rmSync(testHome, { recursive: true, force: true }); }
++  for (const mutation of ['duplicate', 'unknown', 'root-hash', 'traversal', 'files']) {
++    const changed = structuredClone(manifest);
++    if (mutation === 'duplicate') changed.roots.push(changed.roots[0]);
++    if (mutation === 'unknown') changed.extra = true;
++    if (mutation === 'root-hash') changed.roots[0].snapshot = `a${changed.roots[0].snapshot.slice(1)}`;
++    if (mutation === 'traversal') changed.roots[0].snapshot = '../snapshot';
++    if (mutation === 'files') changed.roots[0].files['.codex/model-route-hook.mjs'].format = 'commonjs';
++    writeFileSync(manifestPath, JSON.stringify(changed)); deny(`manifest ${mutation}`); writeFileSync(manifestPath, manifestBytes);
++  }
++  for (const name of ['bootstrap.mjs', 'loader.mjs']) {
++    const path = join(guardRoot, name), bytes = readFileSync(path);
++    writeFileSync(path, 'throw new Error("broken protected runtime");\n'); deny(name, true); writeFileSync(path, bytes);
++  }
++  chmodSync(join(snapshot, '.codex'), 0o755); deny('wide snapshot metadata directory'); chmodSync(join(snapshot, '.codex'), 0o700);
++  for (const target of ['.codex/hook-source-integrity.mjs', '.codex/codex-hook-adapter.mjs', '.claude/hooks/lib/codex-child-project.mjs']) {
++    const path = join(fixture, target), bytes = readFileSync(path); writeFileSync(path, Buffer.concat([bytes, Buffer.from('\n// unapproved\n')])); deny(`modified ${target}`); writeFileSync(path, bytes);
++  }
++  const helper = join(fixture, '.codex/hook-source-integrity.mjs');
++  const helperEnv = { ...env, LUCA_CHILD_SOURCE_ROOT: fixture, NODE_OPTIONS: `--import=${guardRoot}/bootstrap.mjs` };
++  const stdin = 'unchanged stdin\nquoted " payload';
++  const untouched = spawnSync('/bin/sh', ['-c', `node '${helper}' --verify && cat`], {cwd:fixture,encoding:'utf8',input:stdin,env:helperEnv});
++  assert.equal(untouched.status, 0, untouched.stderr); assert.equal(untouched.stdout, stdin);
++  for (const args of [[], ['--verify','--verify'], ['--verify','unknown']]) {
++    const result = spawnSync(process.execPath, [helper,...args], {cwd:fixture,encoding:'utf8',input:stdin,env:helperEnv}); assert.equal(result.status,2);
++  }
++  const fake = spawnSync(process.execPath, [helper,'--verify'], {cwd:fixture,encoding:'utf8',env:{...helperEnv,NODE_OPTIONS:'',LUCA_PROTECTED_CODE_ROOT:fixture}});
++  assert.equal(fake.status,2,'workspace metadata or environment must not establish approval');
++  deny('fake source root', false, {LUCA_SOURCE_GUARD_TEST_ROOT: join(base,'fake')});
++  console.log('PASS protected helper: private approval/artifact/manifest schema, bootstrap/loader/helper tampering, fake environment, strict CLI, unread stdin, Stop failure closure');
++} finally { rmSync(base, {recursive:true,force:true}); }
+diff --git a/scripts/test-codex-hook-health.mjs b/scripts/test-codex-hook-health.mjs
+index 9367bf1..1c4cf16 100644
+--- a/scripts/test-codex-hook-health.mjs
++++ b/scripts/test-codex-hook-health.mjs
+@@ -6,7 +6,8 @@ import { join } from 'node:path';
+ import { tmpdir } from 'node:os';
+ import { spawnSync } from 'node:child_process';
+ import nodeModule from 'node:module';
+-import { inspectHookHealth, sourceDigest } from './codex-hook-health.mjs';
++import { inspectHookHealth, sourceDigest, SOURCE_SCAN } from './codex-hook-health.mjs';
++import { installTestSourceGuard } from './source-guard-test-fixture.mjs';
+ const recoveryFiles = ['.codex/stop-integrity-failure.mjs', '.claude/hooks/lib/project-substrate.mjs',
+   '.claude/hooks/lib/event-attestation.mjs', '.claude/hooks/lib/project-selection.mjs',
+   '.claude/hooks/lib/project-event-closure.mjs'];
+@@ -25,6 +26,7 @@ function fixture(t, seed = () => {}) {
+   cpSync(new URL('../.codex/hooks.json', import.meta.url), join(root, '.codex/hooks.json'));
+   mkdirSync(join(root, '.claude/hooks/lib'), { recursive: true });
+   for (const name of recoveryFiles) cpSync(new URL(`../${name}`, import.meta.url), join(root, name));
++  cpSync(new URL('../.codex/hook-source-integrity.mjs', import.meta.url), join(root, '.codex/hook-source-integrity.mjs'));
+   const hooksPath = join(root, '.codex/hooks.json');
+   const refresh = () => {
+     const config = JSON.parse(readFileSync(hooksPath)), digest = sourceDigest(root);
+@@ -35,10 +37,9 @@ function fixture(t, seed = () => {}) {
+   };
+   seed(root);
+   refresh();
+-  const install = spawnSync(process.execPath, [new URL('./install-codex-source-guard.mjs', import.meta.url).pathname,
+-    '--root', root, '--test-dest', guardRoot], { env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' });
++  const install = installTestSourceGuard({ roots: [root], destination: guardRoot, directory: base });
+   assert.equal(install.status, 0, install.stderr);
+-  return { base, root, guardRoot, hooksPath, refresh, inspect: () => inspectHookHealth(root, { guardRoot }) };
++  return { base, root, guardRoot, hooksPath, refresh, inspect: () => { const original=process.env.NODE_ENV; process.env.NODE_ENV='test'; try { return inspectHookHealth(root, { guardRoot }); } finally { if(original===undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV=original; } } };
+ }
+ function tree(path) {
+   return Object.fromEntries(readdirSync(path, { withFileTypes: true }).sort((a,b) => a.name.localeCompare(b.name)).map(entry =>
+@@ -60,6 +61,8 @@ test('source-only inspection does not require or initialize a protected installa
+   assert.equal(report.ok, true);
+   assert.equal(report.scope, 'registration-source');
+   assert.equal(report.installation.status, 'NOT_CHECKED');
++  assert.equal(report.approval.status, 'NOT_CHECKED');
++  assert.match(report.approval.reason, /cannot.*grant trust/);
+   assert.deepEqual(tree(f.base), before);
+   assert.equal(f.inspect().ok, false);
+ });
+@@ -71,7 +74,7 @@ test('source drift and stale installed bytes are reported as separate failures',
+   assert.deepEqual(drift.installation.changed_files, ['scripts/probe.mjs']);
+   f.refresh();
+   const refreshed = f.inspect();
+-  assert.equal(refreshed.registration.status, 'PASS');
++  assert.equal(refreshed.registration.status, 'FAIL');
+   assert.equal(refreshed.ok, false);
+   assert.match(refreshed.installation.problems.join(), /INSTALLED_SOURCE_MISMATCH/);
+ });
+@@ -79,7 +82,7 @@ test('refreshing registration does not approve new JavaScript in the installed m
+   const f = fixture(t);
+   writeFileSync(join(f.root, 'scripts/new.mjs'), 'export {};\n'); f.refresh();
+   const report = f.inspect();
+-  assert.equal(report.registration.status, 'PASS');
++  assert.equal(report.registration.status, 'FAIL');
+   assert.equal(report.ok, false);
+   assert.deepEqual(report.installation.unapproved_files, ['scripts/new.mjs']);
+ });
+@@ -113,7 +116,8 @@ test('Python and policy snapshot drift cannot masquerade as healthy JavaScript a
+     const f = fixture(t);
+     writeFileSync(join(f.root, name), '# reviewed source changed\n'); f.refresh();
+     const report = f.inspect();
+-    assert.equal(report.registration.status, 'PASS');
++    if(name.startsWith('memory/')) assert.equal(report.registration.status, 'FAIL');
++    else assert.equal(report.registration.status, 'PASS');
+     assert.equal(report.ok, false);
+     assert.match(report.installation.problems.join(), /INSTALLED_SNAPSHOT_MISMATCH/);
+     assert.deepEqual(report.installation.snapshot_changed_files, [name]);
+@@ -143,7 +147,7 @@ test('complete registration contract rejects broken, disabled or misplaced hooks
+       config.hooks.PreToolUse[0].hooks[0].command.split('; export LUCA_CHILD_SOURCE_ROOT=')[0]
+       + '; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; true'; },
+     'fail-open digest': config => { config.hooks.PreToolUse[0].hooks[0].command =
+-      config.hooks.PreToolUse[0].hooks[0].command.replace('exit 2;; esac', 'exit 0;; esac'); },
++      config.hooks.PreToolUse[0].hooks[0].command.replace('exit 2; };', 'exit 0; };'); },
+     'missing event': config => { config.hooks = { SessionStart: Object.values(config.hooks).flat() }; },
+     'inactive matcher': config => { config.hooks.PreToolUse[0].matcher = '^NEVER$'; },
+     'short end timeout': config => { config.hooks.SessionEnd[0].hooks[0].timeoutSec = 1; },
+@@ -173,7 +177,7 @@ test('approved module formats must match the source extension and nearest packag
+     writeFileSync(path, JSON.stringify(manifest));
+     const report = f.inspect();
+     assert.equal(report.ok, false, `${name}: wrong format passed health`);
+-    assert.deepEqual(report.installation.format_changed_files, [name]);
++    assert.match(report.installation.problems.join(), /approval and reviewed artifact root mismatch/);
+   }
+ });
+ test('private runtime drift and invalid manifest metadata are rejected', t => {
+@@ -201,14 +205,58 @@ test('a Node runtime without the protected loader capability cannot pass install
+     assert.match(report.installation.problems.join(), /RUNTIME_CAPABILITY_MISSING/);
+   } finally { nodeModule.registerHooks = original; }
+ });
+-test('digest matches the real shell gate for spaces, backslashes and newlines in source filenames', t => {
++test('digest preserves the original shasum serialization for special filenames', t => {
+   const f = fixture(t);
+-  for (const name of ['with space.mjs', 'with\\backslash.mjs', 'with\nnewline.mjs']) writeFileSync(join(f.root, 'scripts', name), 'export {};\n');
+-  f.refresh();
+-  assert.equal(inspectHookHealth(f.root, { sourceOnly: true }).ok, true);
+-  assert.equal(spawnSync('git', ['init', '-q', f.root]).status, 0);
+-  const command = JSON.parse(readFileSync(f.hooksPath)).hooks.PreToolUse[0].hooks[0].command;
+-  const gate = command.split('; export LUCA_CHILD_SOURCE_ROOT=')[0];
+-  const result = spawnSync('/bin/sh', ['-c', gate], { cwd: f.root, encoding: 'utf8' });
++  for (const name of ['with space.mjs', 'with\\backslash.mjs', 'with\nnewline.mjs', 'with\rcarriage.mjs']) writeFileSync(join(f.root, 'scripts', name), 'export {};\n');
++  const result = spawnSync('/bin/bash', ['-o', 'pipefail', '-c', `${SOURCE_SCAN}; printf '%s' "$h"`], { cwd: f.root, encoding: 'utf8' });
+   assert.equal(result.status, 0, result.stderr);
++  assert.equal(sourceDigest(f.root), result.stdout);
++});
++test('legacy literal registration is still identified against the independently pinned complete protocol', t => {
++  const f = fixture(t);
++  // Reconstruct the fixed legacy fixture from fixed launch suffixes; do not require Git history in shallow CI.
++  const config = JSON.parse(readFileSync(f.hooksPath)), digest = sourceDigest(f.root);
++  const exported = String.raw`; export LUCA_CHILD_SOURCE_ROOT="$(pwd -P)"; export NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs"; `;
++  const recover = String.raw`LUCA_CHILD_SOURCE_ROOT="$(pwd -P)" NODE_OPTIONS="--import=$HOME/.codex/luca-child-project/source-guard/bootstrap.mjs" node --input-type=module -e 'await import(process.env.LUCA_PROTECTED_CODE_ROOT + "/.codex/stop-integrity-failure.mjs")' || printf '%s\n' '{"continue":false,"stopReason":"Hook recovery unavailable; turn stopped. Restore the protected installation before continuing."}'`;
++  const start = `cd "$(git rev-parse --show-toplevel)" || exit 2; ${SOURCE_SCAN}; case "$h" in ${digest}) ;; *) echo "[luca_gstack] hook source integrity mismatch" >&2; `;
++  for (const [event, groups] of Object.entries(config.hooks)) for (const group of groups) for (const hook of group.hooks) {
++    if (event === 'Stop') {
++      const marker = String.raw`}; printf '%s' "$luca_stop_payload" | MEMORY_ROOT=`;
++      const index = hook.command.indexOf(marker); assert.ok(index >= 0);
++      hook.command = start + recover + '; exit 0;; esac' + exported + 'luca_stop_payload=$(cat); ' + hook.command.slice(index+3);
++    } else {
++      const marker = 'exit 2; }; ', index = hook.command.indexOf(marker); assert.ok(index >= 0);
++      hook.command = start + 'exit 2;; esac' + exported + hook.command.slice(index+marker.length);
++    }
++  }
++  writeFileSync(f.hooksPath, JSON.stringify(config));
++  const report = inspectHookHealth(f.root, { sourceOnly: true });
++  assert.equal(report.ok, true, JSON.stringify(report));
++  assert.equal(report.registration.protocol, 'legacy-literal');
++});
++test('stable health binds config bytes and the complete associated reviewed artifact', t => {
++  const f = fixture(t), original=readFileSync(f.hooksPath);
++  const config=JSON.parse(original); config.description += ' changed presentation'; writeFileSync(f.hooksPath,JSON.stringify(config));
++  assert.equal(inspectHookHealth(f.root,{sourceOnly:true}).ok,true);
++  const report=f.inspect(); assert.equal(report.ok,false); assert.match(report.installation.problems.join(),/INSTALLED_REGISTRATION_MISMATCH/);
++});
++
++test('a stable target passes with a preserved legacy root whose valid JS map uses locale order', t => {
++  const f = fixture(t), legacyRoot=join(f.base,'legacy');
++  for (const folder of ['scripts','memory/scripts','.claude/skill-os','.claude/skills/office','.claude/agents']) mkdirSync(join(legacyRoot,folder),{recursive:true});
++  writeFileSync(join(legacyRoot,'CLAUDE.md'),'legacy fixture');
++  for (const name of ['A.mjs','a.mjs','Z.mjs','z.mjs']) writeFileSync(join(legacyRoot,'scripts',name),'export {};\n');
++  const initial=installTestSourceGuard({roots:[legacyRoot],destination:f.guardRoot,directory:f.base,preserveOtherRoots:true});
++  assert.equal(initial.status,0,initial.stderr);
++  const path=join(f.guardRoot,'manifest.json'), manifest=JSON.parse(readFileSync(path)), row=manifest.roots.find(row=>row.root===legacyRoot);
++  row.files=Object.fromEntries(Object.entries(row.files).sort(([a],[b])=>a.localeCompare(b)));
++  const legacyRow=JSON.stringify(row);
++  // Legacy snapshots have no approval/review metadata; preservation never upgrades them implicitly.
++  rmSync(join(f.guardRoot,'roots',row.snapshot,'.codex/reviewed-install.json'));
++  writeFileSync(path,JSON.stringify(manifest));
++  writeFileSync(join(f.root,'scripts/probe.mjs'),'export const value=2;\n');
++  const updated=installTestSourceGuard({roots:[f.root],destination:f.guardRoot,directory:f.base,preserveOtherRoots:true});
++  assert.equal(updated.status,0,updated.stderr);
++  assert.equal(JSON.stringify(JSON.parse(readFileSync(path)).roots.find(row=>row.root===legacyRoot)),legacyRow);
++  assert.equal(f.inspect().ok,true,JSON.stringify(f.inspect()));
+ });
+diff --git a/scripts/test-codex-trust-hooks.mjs b/scripts/test-codex-trust-hooks.mjs
+index 791c983..72216c5 100644
+--- a/scripts/test-codex-trust-hooks.mjs
++++ b/scripts/test-codex-trust-hooks.mjs
+@@ -5,6 +5,7 @@ import { join } from 'node:path';
+ import { tmpdir } from 'node:os';
+ import { spawnSync } from 'node:child_process';
+ import { sourceDigest } from './codex-hook-health.mjs';
++import { installTestSourceGuard } from './source-guard-test-fixture.mjs';
+ 
+ function fixture(t, mode = 'ok') {
+   const root = realpathSync(mkdtempSync(join(tmpdir(), 'hook-trust-')));
+@@ -18,6 +19,8 @@ function fixture(t, mode = 'ok') {
+   writeFileSync(join(root, 'CLAUDE.md'), 'isolated trust fixture');
+   cpSync(new URL('./codex-trust-hooks.mjs', import.meta.url), join(root, 'scripts/codex-trust-hooks.mjs'));
+   cpSync(new URL('./codex-hook-health.mjs', import.meta.url), join(root, 'scripts/codex-hook-health.mjs'));
++  cpSync(new URL('./source-guard-review.mjs', import.meta.url), join(root, 'scripts/source-guard-review.mjs'));
++  cpSync(new URL('../.codex/hook-source-integrity.mjs', import.meta.url), join(root, '.codex/hook-source-integrity.mjs'));
+   for (const name of ['bootstrap', 'loader']) cpSync(new URL(`../.codex/codex-source-guard-${name}.mjs`, import.meta.url),
+     join(root, '.codex', `codex-source-guard-${name}.mjs`));
+   cpSync(new URL('../.codex/hooks.json', import.meta.url), join(root, '.codex/hooks.json'));
+@@ -99,8 +102,7 @@ require('node:readline').createInterface({input: process.stdin}).on('line', line
+   syncRegistration();
+   mkdirSync(join(guardHome, '.codex/luca-child-project'), { recursive: true, mode: 0o700 });
+   const guardRoot = join(guardHome, '.codex/luca-child-project/source-guard');
+-  const installed = spawnSync(process.execPath, [new URL('./install-codex-source-guard.mjs', import.meta.url).pathname,
+-    '--root', root, '--test-dest', guardRoot], { env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' });
++  const installed = installTestSourceGuard({roots:[root],destination:guardRoot,directory:guardHome});
+   assert.equal(installed.status, 0, installed.stderr);
+   const run = args => spawnSync(process.execPath, [join(root, 'scripts/codex-trust-hooks.mjs'), '--host-launch', ...args], {
+     env: { ...process.env, HOME: guardHome, CODEX_HOME: join(root, 'home'), NODE_OPTIONS: '', MOCK_ROOT: root,
+@@ -170,7 +172,7 @@ test('already trusted still refuses changed source or stale installation', t =>
+     if (kind === 'manifest') f.syncRegistration();
+     const result = f.run(['--dry-run']);
+     assert.notEqual(result.status, 0);
+-    assert.match(result.stderr, kind === 'source' ? /SOURCE_DIGEST_MISMATCH/ : /INSTALLED_SOURCE_MISMATCH/);
++    assert.match(result.stderr, /SOURCE_DIGEST_MISMATCH|INSTALLED_SOURCE_MISMATCH/);
+     assert.ok(!result.stdout.includes('全部已授信'));
+     assert.equal(readdirSync(f.root).includes('rpc-state.json'), false);
+   }
+diff --git a/scripts/test-controlled-change.mjs b/scripts/test-controlled-change.mjs
+index d92e1e4..2027a8c 100644
+--- a/scripts/test-controlled-change.mjs
++++ b/scripts/test-controlled-change.mjs
+@@ -205,6 +205,8 @@ function installAdapterFixture(f) {
+   const hooksBytes = readFileSync(CODEX_HOOKS);
+   const registered = JSON.parse(hooksBytes).hooks.PreToolUse[0].hooks[0].command;
+   assert.match(registered, /hook source integrity mismatch/, 'registered hook must reject source drift');
++  assert.match(registered, /hook-source-integrity\.mjs" --verify/, 'stable registered hook must check protected approval before launch');
++  assert.doesNotMatch(registered, /case "\$h" in [a-f0-9]{64}/, 'source updates must not change the trusted registration bytes');
+   assert.match(registered, /source-guard\/bootstrap\.mjs/, 'registered hook must load protected source guard');
+   assert.match(registered, /c=\$\?; \[ "\$c" = "0" \] && exit 0 \|\| exit 2$/,
+     'registered hook must map every abnormal exit to blocking code 2');
+diff --git a/scripts/test-hook-source-digests.mjs b/scripts/test-hook-source-digests.mjs
+index ffe61e7..7241533 100644
+--- a/scripts/test-hook-source-digests.mjs
++++ b/scripts/test-hook-source-digests.mjs
+@@ -1,96 +1,105 @@
+ #!/usr/bin/env node
+-// Exercise the registered shell gates without loading any privileged hook.
++// Execute the same frozen command bytes before and after explicit reviewed installs.
+ import assert from 'node:assert/strict';
++import { createHash } from 'node:crypto';
+ import { spawnSync } from 'node:child_process';
+-import { appendFileSync, chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
+-  symlinkSync, writeFileSync } from 'node:fs';
++import { appendFileSync, chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync,
++  rmSync, symlinkSync, writeFileSync } from 'node:fs';
+ import { tmpdir } from 'node:os';
+-import { dirname, join } from 'node:path';
++import { dirname, join, resolve } from 'node:path';
+ import { fileURLToPath } from 'node:url';
++import { SOURCE_SCAN, sourceDigest } from '../.codex/hook-source-integrity.mjs';
++import { installTestSourceGuard } from './source-guard-test-fixture.mjs';
+ 
+-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+-const config = JSON.parse(readFileSync(join(root, '.codex/hooks.json'), 'utf8'));
+-const gates = Object.entries(config.hooks).flatMap(([event, groups]) =>
+-  groups.flatMap(group => (group.hooks || []).map(hook => {
+-    const marker = '; export LUCA_CHILD_SOURCE_ROOT=';
+-    const index = hook.command.indexOf(marker);
+-    assert.ok(index > 0, `${event}: missing source gate boundary`);
+-    const gate = hook.command.slice(0, index);
+-    assert.ok(gate.startsWith('cd "$(git rev-parse --show-toplevel)" || exit 2; links=$(find '),
+-      `${event}: missing source integrity check`);
+-    return { event, gate };
+-  })));
+-assert.equal(gates.length, 11, 'all registered privileged entries must be checked');
+-function check(cwd, rejected = false, env = process.env) {
+-  for (const { event, gate } of gates) {
+-    const result = spawnSync('/bin/sh', ['-c', gate], {
+-      cwd, encoding: 'utf8', timeout: 15000, env,
+-    });
+-    assert.equal(result.error, undefined, `${event}: ${result.error}`);
+-    assert.equal(result.status, rejected && event !== 'Stop' ? 2 : 0, `${event}: ${result.stderr}`);
+-    if (rejected) assert.match(result.stderr, /hook source integrity mismatch/);
+-    if (rejected && event === 'Stop') {
+-      assert.equal(JSON.parse(result.stdout).continue, false, 'Stop integrity failure must terminate, not request continuation');
+-    }
+-  }
+-}
+-check(root);
+-const fixture = mkdtempSync(join(tmpdir(), 'hook-source-digests-'));
++const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
++const config = JSON.parse(readFileSync(join(root, '.codex/hooks.json')));
++const entries = Object.entries(config.hooks).flatMap(([event, groups]) => groups.flatMap(group => group.hooks.map(hook => ({ event, command: hook.command }))));
++assert.equal(entries.length, 11);
++const normalize = value => value && typeof value === 'object' ? Array.isArray(value) ? value.map(normalize)
++  : Object.fromEntries(Object.keys(value).sort().map(key => [key, normalize(value[key])])) : value;
++const sha = bytes => createHash('sha256').update(bytes).digest('hex');
++assert.equal(sha(JSON.stringify(normalize(config.hooks))), '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189');
++const base = realpathSync(mkdtempSync(join(tmpdir(), 'hook-source-digests-')));
++const fixture = join(base, 'repo'), home = join(base, 'home');
++mkdirSync(home, { mode: 0o700 });
++const guardRoot = join(home, '.codex/luca-child-project/source-guard');
++mkdirSync(dirname(guardRoot), { recursive: true, mode: 0o700 });
++const env = { ...process.env, HOME: home, NODE_ENV: 'test', NODE_OPTIONS: '', LUCA_SOURCE_GUARD_TEST_ROOT: guardRoot };
+ try {
+   assert.equal(spawnSync('git', ['init', '-q', fixture]).status, 0);
+-  for (const folder of ['.codex', '.claude/hooks', 'scripts', 'memory/scripts']) {
+-    cpSync(join(root, folder), join(fixture, folder), { recursive: true });
++  for (const folder of ['.codex', '.claude/hooks/lib', 'scripts', 'memory/scripts', '.claude/skill-os', '.claude/skills/office', '.claude/agents']) mkdirSync(join(fixture, folder), { recursive: true });
++  for (const name of ['hook-source-integrity.mjs', 'codex-source-guard-bootstrap.mjs', 'codex-source-guard-loader.mjs', 'hooks.json']) cpSync(join(root, '.codex', name), join(fixture, '.codex', name));
++  const launch = `import {readFileSync,writeFileSync} from 'node:fs';\nconst p=readFileSync(0,'utf8'); if(process.env.PROBE_PAYLOAD) writeFileSync(process.env.PROBE_PAYLOAD,p); if(process.env.PROBE_ADAPTER_FAIL) process.exit(7); process.stdout.write(p);\n`;
++  for (const name of ['model-route-hook.mjs', 'host-launch-hook.mjs', 'codex-hook-adapter.mjs']) writeFileSync(join(fixture, '.codex', name), launch);
++  writeFileSync(join(fixture, '.codex/stop-integrity-failure.mjs'), `import {readFileSync} from 'node:fs'; if(process.env.PROBE_RECOVERY_FAIL) process.exit(9); const payload=readFileSync(0,'utf8'); process.stdout.write(JSON.stringify({continue:false,payload}));\n`);
++  for (const name of ['project-substrate', 'event-attestation', 'project-selection', 'project-event-closure']) writeFileSync(join(fixture, `.claude/hooks/lib/${name}.mjs`), 'export {};\n');
++  writeFileSync(join(fixture, 'CLAUDE.md'), 'isolated fixture');
++  for (const name of ['probe.mjs', 'probe.js', 'probe.py', 'probe.sh', 'test-probe.mjs']) writeFileSync(join(fixture, 'scripts', name), '// fixture\n');
++  const approve = () => {
++    const installed = installTestSourceGuard({ roots: [fixture], destination: guardRoot, directory: base, preserveOtherRoots: true });
++    assert.equal(installed.status, 0, installed.stderr);
++  };
++  const payload = JSON.stringify({ hook_event_name: 'Stop', cwd: fixture, session_id: 'payload-replay', text: 'quoted " text\nsecond line' });
++  const run = (entry, extra = {}) => spawnSync('/bin/sh', ['-c', entry.command], { cwd: fixture, encoding: 'utf8', input: payload,
++    timeout: 15000, env: { ...env, ...extra } });
++  const check = (rejected = false, all = false, extra = {}) => {
++    for (const entry of all ? entries : [entries[1], entries.find(entry => entry.event === 'Stop')]) {
++      const result = run(entry, extra);
++      assert.equal(result.error, undefined, `${entry.event}: ${result.error}`);
++      assert.equal(result.status, rejected && entry.event !== 'Stop' ? 2 : 0, `${entry.event}: ${result.stderr}`);
++      if (rejected && entry.event === 'Stop') {
++        const stopped = JSON.parse(result.stdout);
++        assert.equal(stopped.continue, false);
++        if (stopped.payload !== undefined) assert.equal(stopped.payload, payload, 'failed helper must not consume Stop payload');
++      } else if (!rejected) assert.equal(result.stdout, payload, `${entry.event}: helper consumed stdin`);
++    }
++  };
++  approve(); check(false, true);
++  const cached = entries.map(entry => ({ command: entry.command, hash: sha(entry.command) }));
++  for (const name of ['probe.mjs', 'probe.js', 'probe.py', 'probe.sh', 'test-probe.mjs']) {
++    const path = join(fixture, 'scripts', name), original = readFileSync(path);
++    appendFileSync(path, '\n// changed\n'); check(true); writeFileSync(path, original);
++    rmSync(path); check(true); writeFileSync(path, original);
++    const added = join(fixture, 'scripts', `new-${name}`); writeFileSync(added, original); check(true);
++    approve(); check(); rmSync(added); check(true); approve(); check();
+   }
+-  // A failed adapter consumes stdin. Recovery must receive the same payload again.
+-  const bin = join(fixture, 'probe-bin');
+-  mkdirSync(bin);
+-  writeFileSync(join(bin, 'node'), '#!/bin/sh\ncase "$1" in --input-type=module) cat ;; *) cat > /dev/null; exit 2 ;; esac\n', { mode: 0o700 });
+-  const stopCommand = config.hooks.Stop[0].hooks[0].command;
+-  const tail = stopCommand.slice(stopCommand.indexOf('; export LUCA_CHILD_SOURCE_ROOT=') + 2);
+-  const payload = JSON.stringify({ hook_event_name: 'Stop', session_id: 'payload-replay', last_assistant_message: 'quoted " text\nsecond line' });
+-  const recovery = spawnSync('/bin/sh', ['-c', tail], { cwd: fixture, encoding: 'utf8', input: payload,
+-    env: { ...process.env, PATH: `${bin}:${process.env.PATH}` } });
+-  assert.equal(recovery.status, 0, recovery.stderr);
+-  assert.equal(recovery.stdout, payload, 'recovery must retain stdin after adapter failure');
+-  check(fixture);
+-  // A shell word-splitting digest silently omitted filenames containing spaces.
+-  const spacedSource = join(fixture, 'scripts', 'hook source fixture.mjs');
+-  writeFileSync(spacedSource, 'export {};\n');
+-  check(fixture, true);
+-  rmSync(spacedSource);
+-  check(fixture);
+-  const linkedSource = join(fixture, 'scripts', 'linked source.mjs');
+-  symlinkSync(join(fixture, 'scripts', 'test-host-launch.mjs'), linkedSource);
+-  check(fixture, true);
+-  rmSync(linkedSource);
+-  check(fixture);
+-  const unreadableSource = join(fixture, 'scripts', 'unreadable-source.mjs');
+-  writeFileSync(unreadableSource, 'export {};\n');
+-  chmodSync(unreadableSource, 0o000);
+-  // A privileged test runner may still read mode-000 files; only assert the
+-  // command-failure path when shasum itself confirms it cannot read this file.
+-  const unreadableProbe = spawnSync('/usr/bin/shasum', ['-a', '256', unreadableSource]);
+-  if (unreadableProbe.status !== 0) check(fixture, true);
+-  chmodSync(unreadableSource, 0o600);
+-  rmSync(unreadableSource);
+-  check(fixture);
+-  const faultySortDir = join(fixture, 'faulty-sort-bin');
+-  mkdirSync(faultySortDir);
+-  writeFileSync(join(faultySortDir, 'sort'),
+-    '#!/bin/sh\n/usr/bin/sort "$@"\nexit 1\n', { mode: 0o700 });
+-  // Even if an upstream stage emits the approved bytes, its failure must fail closed.
+-  check(fixture, true, { ...process.env, PATH: `${faultySortDir}:${process.env.PATH}` });
+-  rmSync(faultySortDir, { recursive: true });
+-  check(fixture);
+-  // Include a test file: changing it without updating the digest caused the release regression.
+-  for (const name of ['.claude/hooks/lib/codex-child-project.mjs', 'scripts/test-host-launch.mjs']) {
+-    const path = join(fixture, name), original = readFileSync(path);
+-    appendFileSync(path, '\n// source integrity regression fixture\n');
+-    check(fixture, true);
+-    writeFileSync(path, original);
+-    check(fixture);
++  assert.deepEqual(entries.map(entry => ({ command: entry.command, hash: sha(entry.command) })), cached, 'reviewed update must preserve cached command/hash');
++  const linked = join(fixture, 'scripts/link.mjs'); symlinkSync(join(fixture, 'scripts/probe.mjs'), linked); check(true); rmSync(linked);
++  const fifo = join(fixture, 'scripts/special.mjs'); assert.equal(spawnSync('mkfifo', [fifo]).status, 0); check(true); rmSync(fifo);
++  const unreadable = join(fixture, 'scripts/probe.py'); chmodSync(unreadable, 0); check(true); chmodSync(unreadable, 0o600);
++  const missing = join(fixture, 'memory/scripts'); rmSync(missing, { recursive: true }); check(true); mkdirSync(missing); check();
++  chmodSync(missing, 0); check(true); chmodSync(missing, 0o700);
++  const faulty = join(base, 'faulty-bin'); mkdirSync(faulty); writeFileSync(join(faulty, 'sort'), '#!/bin/sh\n/usr/bin/sort "$@"\nexit 1\n', { mode: 0o700 });
++  check(true, false, { PATH: `${faulty}:${process.env.PATH}` });
++  // shasum escaping is part of the source algorithm, including shell substitution trimming.
++  for (const name of ['with space.mjs', 'with\\backslash.mjs', 'with\nnewline.mjs']) writeFileSync(join(fixture, 'scripts', name), 'export {};\n');
++  const shell = spawnSync('/bin/bash', ['-o', 'pipefail', '-c', `${SOURCE_SCAN}; printf '%s' "$h"`], { cwd: fixture, encoding: 'utf8' });
++  assert.equal(sourceDigest(fixture), shell.stdout);
++  for (const name of ['with space.mjs', 'with\\backslash.mjs', 'with\nnewline.mjs']) rmSync(join(fixture, 'scripts', name));
++  check();
++  // A failing adapter consumes stdin; protected recovery must receive its original bytes.
++  const stop = entries.find(entry => entry.event === 'Stop');
++  const capture = join(base, 'adapter-payload');
++  const failedAdapter = run(stop, { PROBE_ADAPTER_FAIL: '1', PROBE_PAYLOAD: capture });
++  assert.equal(failedAdapter.status, 0); assert.equal(readFileSync(capture, 'utf8'), payload);
++  assert.equal(JSON.parse(failedAdapter.stdout).payload, payload);
++  const failedRecovery = run(stop, { PROBE_ADAPTER_FAIL: '1', PROBE_RECOVERY_FAIL: '1' });
++  assert.equal(failedRecovery.status, 0); assert.equal(JSON.parse(failedRecovery.stdout).continue, false);
++  const failedOrdinary = run(entries[1], { PROBE_ADAPTER_FAIL: '1' }); assert.equal(failedOrdinary.status, 2);
++  // Full frozen commands close the empty/nonexistent root branches before node/helper/recovery.
++  const bin = join(base, 'root-probe-bin'); mkdirSync(bin);
++  writeFileSync(join(bin, 'node'), '#!/bin/sh\nprintf x >> "$ROOT_PROBE_CALLS"\nexit 0\n', { mode: 0o700 });
++  for (const shellName of ['/bin/sh', '/bin/bash', '/bin/zsh']) for (const mode of ['git-error', 'git-empty', 'git-invalid']) {
++    const git = mode === 'git-error' ? 'exit 1' : mode === 'git-empty' ? 'exit 0' : `printf '%s\\n' '${join(base, 'absent')}'`;
++    writeFileSync(join(bin, 'git'), `#!/bin/sh\n${git}\n`, { mode: 0o700 });
++    const calls = join(base, 'node-calls'); writeFileSync(calls, '');
++    for (const entry of entries) {
++      const result = spawnSync(shellName, ['-c', entry.command], { cwd: fixture, encoding: 'utf8', input: payload,
++        env: { ...env, PATH: `${bin}:${process.env.PATH}`, ROOT_PROBE_CALLS: calls }, timeout: 5000 });
++      assert.equal(result.status, entry.event === 'Stop' ? 0 : 2, `${shellName}/${mode}/${entry.event}`);
++      if (entry.event === 'Stop') assert.equal(JSON.parse(result.stdout).continue, false);
++    }
++    assert.equal(readFileSync(calls, 'utf8'), '', `${shellName}/${mode}: node/helper/recovery executed without root`);
+   }
+-  console.log(`PASS ${gates.length} hook gates: clean, changed security/test source rejected, restored`);
+-} finally {
+-  rmSync(fixture, { recursive: true, force: true });
+-}
++  console.log('PASS frozen 11 commands: cached approval add/delete/change matrix, special files, upstream failure, stdin/recovery, three-shell root resolution');
++} finally { rmSync(base, { recursive: true, force: true }); }
+diff --git a/scripts/test-prompt-attestation.mjs b/scripts/test-prompt-attestation.mjs
+index 337fabd..2048009 100644
+--- a/scripts/test-prompt-attestation.mjs
++++ b/scripts/test-prompt-attestation.mjs
+@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
+ import { dirname, join } from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ import { attestNativeUserEvent, captureNativeEventFence } from '../.claude/hooks/lib/event-attestation.mjs';
++import { installTestSourceGuard } from './source-guard-test-fixture.mjs';
+ import {
+   attestPendingProjectEvent,
+   atomicProjectStateCas,
+@@ -1091,9 +1092,8 @@ lifecycleCheck('trusted Stop snapshot quarantines failure without importing modi
+     }
+     writeFileSync(join(fx.gstack, 'CLAUDE.md'), '# isolated fixture\n');
+     const guard = join(fx.root, 'protected');
+-    const installed = spawnSync(process.execPath, [join(repoRoot, 'scripts/install-codex-source-guard.mjs'),
+-      '--root', fx.gstack, '--test-dest', guard], {
+-      env: { ...fx.env, NODE_ENV: 'test' }, encoding: 'utf8' });
++    const installed = installTestSourceGuard({ roots: [fx.gstack], destination: guard,
++      directory: fx.root, env: fx.env });
+     assert.equal(installed.status, 0, installed.stderr);
+     for (const file of ['.codex/stop-integrity-failure.mjs', '.claude/hooks/lib/project-substrate.mjs']) {
+       writeFileSync(join(fx.gstack, file), 'throw new Error("UNREVIEWED_CODE_EXECUTED");\n');
+diff --git a/scripts/test-source-guard-preserve.mjs b/scripts/test-source-guard-preserve.mjs
+index 55d17a3..d7e5d0a 100644
+--- a/scripts/test-source-guard-preserve.mjs
++++ b/scripts/test-source-guard-preserve.mjs
+@@ -1,55 +1,184 @@
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, renameSync, chmodSync, symlinkSync, rmSync } from 'node:fs';
++import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, renameSync, chmodSync,
++  symlinkSync, rmSync, existsSync, realpathSync, readdirSync } from 'node:fs';
+ import { join } from 'node:path';
+ import { tmpdir } from 'node:os';
+-import { realpathSync } from 'node:fs';
+-import { spawnSync } from 'node:child_process';
++import { spawn, spawnSync } from 'node:child_process';
+ import { fileURLToPath } from 'node:url';
++import { freezeSourceGuardReview, installFrozenSourceGuard, installTestSourceGuard,
++  frozenManifestSha } from './source-guard-test-fixture.mjs';
++import { sha256 } from './source-guard-review.mjs';
+ const installer=fileURLToPath(new URL('./install-codex-source-guard.mjs',import.meta.url));
+-function fixture(t) {
+- const base=mkdtempSync(join(realpathSync(tmpdir()), 'source-preserve-'));t.after(()=>rmSync(base,{recursive:true,force:true}));
++function fixture(t,{hook=false}={}) {
++ const base=mkdtempSync(join(realpathSync(tmpdir()),'source-preserve-'));t.after(()=>rmSync(base,{recursive:true,force:true}));
+  const roots=['a','b'].map(name=>join(base,name)),dest=join(base,'guard');
+- for(const root of roots){for(const dir of ['memory/scripts','.claude/skill-os','.claude/skills/office','.claude/agents'])mkdirSync(join(root,dir),{recursive:true});writeFileSync(join(root,'CLAUDE.md'),'rules');writeFileSync(join(root,'main.mjs'),'export const version=1;');}
+- const run=(args=[])=>spawnSync(process.execPath,[installer,'--test-dest',dest,...args],{env:{...process.env,NODE_ENV:'test'},encoding:'utf8'});
+- assert.equal(run(roots.flatMap(root=>['--root',root])).status,0);
++ for(const root of roots){
++  for(const dir of ['memory/scripts','.claude/skill-os','.claude/skills/office','.claude/agents','.claude/hooks','scripts','.codex'])mkdirSync(join(root,dir),{recursive:true});
++  writeFileSync(join(root,'CLAUDE.md'),'rules');writeFileSync(join(root,'main.mjs'),'export const version=1;');
++  writeFileSync(join(root,'.claude/skill-os/rules.json'),'{"rule":1}');
++  if(hook){writeFileSync(join(root,'.codex/hooks.json'),'{}');writeFileSync(join(root,'scripts/source.py'),'print(1)\n');}
++ }
++ const freeze=(targets=roots)=>freezeSourceGuardReview({roots:targets,destination:dest,directory:base});
++ const install=(review,targets=roots,options={})=>installFrozenSourceGuard({roots:targets,destination:dest,review,...options});
++ const initial=freeze();const result=install(initial);assert.equal(result.status,0,result.stderr);
+  const manifest=()=>JSON.parse(readFileSync(join(dest,'manifest.json'),'utf8'));
+- return {base,roots,dest,run,manifest};
++ const run=args=>spawnSync(process.execPath,[installer,'--test-dest',dest,...args],{env:{...process.env,NODE_ENV:'test'},encoding:'utf8'});
++ return {base,roots,dest,freeze,install,initial,manifest,run};
+ }
+-test('preserve mode updates one root without reading or approving another changed source',t=>{
+- const f=fixture(t),old=f.manifest(),other=old.roots[1];
+- writeFileSync(join(f.roots[0],'main.mjs'),'export const version=2;');
+- writeFileSync(join(f.roots[1],'main.mjs'),'export const unreviewed=true;');
+- // A missing original source proves preserved roots are not scanned at all.
+- renameSync(f.roots[1],`${f.roots[1]}-moved`);
+- const result=f.run(['--root',f.roots[0],'--preserve-other-roots']);
+- assert.equal(result.status,0,result.stderr);
+- const next=f.manifest();assert.deepEqual(next.roots.map(r=>r.root),old.roots.map(r=>r.root));assert.equal(next.roots.length,2);assert.deepEqual(next.roots[1],other);
++function unchanged(f,before) {assert.deepEqual(readFileSync(join(f.dest,'manifest.json')),before);}
++function denied(result,pattern) {assert.notEqual(result.status,0,result.stdout);if(pattern)assert.match(result.stderr,pattern);}
++function freezeMutatedArtifact(f,mutate){const review=f.freeze();const artifact=JSON.parse(review.bytes);mutate(artifact);const bytes=Buffer.from(`${JSON.stringify(artifact,null,2)}\n`);writeFileSync(review.file,bytes);return {...review,bytes,artifact,sha256:sha256(bytes)};}
++
++test('preserve updates one root without reading or approving another changed/missing source',t=>{
++ const f=fixture(t),old=f.manifest(),other=old.roots[1],runtime=['bootstrap.mjs','loader.mjs'].map(name=>readFileSync(join(f.dest,name)));
++ writeFileSync(join(f.roots[0],'main.mjs'),'export const version=2;');writeFileSync(join(f.roots[1],'main.mjs'),'export const unreviewed=true;');renameSync(f.roots[1],`${f.roots[1]}-moved`);
++ const review=f.freeze([f.roots[0]]),result=f.install(review,[f.roots[0]],{preserveOtherRoots:true});assert.equal(result.status,0,result.stderr);
++ const next=f.manifest();assert.deepEqual(next.roots.map(r=>r.root),old.roots.map(r=>r.root));assert.deepEqual(next.roots[1],other);
+  assert.notEqual(next.roots[0].files['main.mjs'].sha256,old.roots[0].files['main.mjs'].sha256);
+  assert.equal(readFileSync(join(f.dest,'roots',other.snapshot,'CLAUDE.md'),'utf8'),'rules');
++ for(const [i,name]of ['bootstrap.mjs','loader.mjs'].entries())assert.deepEqual(readFileSync(join(f.dest,name)),runtime[i]);
++ assert.deepEqual(readFileSync(join(f.dest,'roots',next.roots[0].snapshot,'.codex/reviewed-install.json')),review.bytes);
++});
++test('review is deterministic, byte-bound, exact-schema, all content maps and root-order bound',t=>{
++ const f=fixture(t,{hook:true}),a=f.freeze(),b=f.freeze();assert.deepEqual(a.bytes,b.bytes);
++ const before=readFileSync(join(f.dest,'manifest.json'));
++ const mutations=[
++  ['schema',x=>x.extra=true],['bootstrap',x=>x.bootstrap_sha256='0'.repeat(64)],['loader',x=>x.loader_sha256='0'.repeat(64)],
++  ['JS',x=>x.roots[0].files['main.mjs'].sha256='0'.repeat(64)],['format',x=>x.roots[0].files['main.mjs'].format='commonjs'],
++  ['snapshot',x=>x.roots[0].snapshot_files['CLAUDE.md']='0'.repeat(64)],['source',x=>x.roots[0].source_files['scripts/source.py']='0'.repeat(64)],
++  ['source SHA',x=>x.roots[0].source_sha256='0'.repeat(64)],['hooks',x=>x.roots[0].hooks_sha256='0'.repeat(64)],
++  ['root-order',x=>x.roots.reverse()],['traversal',x=>x.roots[0].snapshot_files['../outside']='0'.repeat(64)],
++ ];
++ for(const [name,mutate]of mutations){const review=freezeMutatedArtifact(f,mutate);denied(f.install(review),/review|artifact/i);unchanged(f,before);assert.equal(existsSync(join(f.dest,'.install.lock')),false,name);}
++ const original=f.freeze();writeFileSync(original.file,`${original.bytes} `);denied(f.install(original),/REVIEW_SHA_MISMATCH/);unchanged(f,before);
++ const missing=f.run(f.roots.flatMap(root=>['--root',root]));denied(missing,/ARGUMENT_INVALID/);
++});
++test('source, snapshot, config drift after freeze refuses without publishing',t=>{
++ for(const file of ['main.mjs','.claude/skill-os/rules.json','scripts/source.py','.codex/hooks.json']){
++  const f=fixture(t,{hook:true}),review=f.freeze(),before=readFileSync(join(f.dest,'manifest.json'));
++  writeFileSync(join(f.roots[0],file),'changed');denied(f.install(review),/REVIEW_MISMATCH/);unchanged(f,before);
++ }
+ });
+-test('preserve mode fails closed on invalid manifest, private paths, or changed runtime',t=>{
+- for(const kind of ['schema','unknown','duplicate','traversal','manifest-mode','file-traversal','snapshot-symlink','loader','bootstrap']){
+-  const f=fixture(t),m=f.manifest();
+-  if(kind==='schema')m.schema_version=99;
+-  if(kind==='unknown')m.extra=true;
+-  if(kind==='duplicate')m.roots.push(m.roots[0]);
+-  if(kind==='traversal')m.roots[1].snapshot='../elsewhere';
+-  if(['schema','unknown','duplicate','traversal'].includes(kind))writeFileSync(join(f.dest,'manifest.json'),JSON.stringify(m));
+-  if(kind==='file-traversal'){m.roots[1].files['../evil.mjs']={sha256:'0'.repeat(64),format:'module'};writeFileSync(join(f.dest,'manifest.json'),JSON.stringify(m));}
++test('single-root candidate mapping changes only canonical deployment identity',t=>{
++ const f=fixture(t),result=f.run(['--print-review','--root',f.roots[0],'--as-root',f.roots[1]]);assert.equal(result.status,0,result.stderr);
++ const actual=JSON.parse(result.stdout),original=f.freeze([f.roots[0]]).artifact;
++ assert.equal(actual.roots[0].root,f.roots[1]);actual.roots[0].root=f.roots[0];assert.deepEqual(actual,original);
++ denied(f.run(['--root',f.roots[0],'--as-root',f.roots[1]]),/ARGUMENT_INVALID/);
++ denied(f.run(['--print-review',...f.roots.flatMap(root=>['--root',root]),'--as-root',f.roots[0]]),/ARGUMENT_INVALID/);
++});
++test('preserve refuses invalid manifest/private paths/runtime and corrupt prior reviewed snapshots',t=>{
++ for(const kind of ['schema','unknown','duplicate','traversal','manifest-mode','file-traversal','snapshot-symlink','loader','bootstrap','snapshot-bytes','reviewed-bytes']){
++  const f=fixture(t),review=f.freeze([f.roots[0]]),m=f.manifest();
++  if(kind==='schema')m.schema_version=99;if(kind==='unknown')m.extra=true;if(kind==='duplicate')m.roots.push(m.roots[0]);if(kind==='traversal')m.roots[1].snapshot='../elsewhere';
++  if(kind==='file-traversal')m.roots[1].files['../evil.mjs']={sha256:'0'.repeat(64),format:'module'};
++  if(['schema','unknown','duplicate','traversal','file-traversal'].includes(kind))writeFileSync(join(f.dest,'manifest.json'),JSON.stringify(m));
+   if(kind==='manifest-mode')chmodSync(join(f.dest,'manifest.json'),0o666);
+   if(kind==='snapshot-symlink'){const p=join(f.dest,'roots',m.roots[1].snapshot);renameSync(p,`${p}-old`);symlinkSync(`${p}-old`,p);}
+   if(['loader','bootstrap'].includes(kind))writeFileSync(join(f.dest,`${kind}.mjs`),'// changed');
+-  const before=readFileSync(join(f.dest,'manifest.json'));
+-  const r=f.run(['--root',f.roots[0],'--preserve-other-roots']);assert.notEqual(r.status,0,kind);
+-  assert.deepEqual(readFileSync(join(f.dest,'manifest.json')),before,kind);
++  if(kind==='snapshot-bytes')writeFileSync(join(f.dest,'roots',m.roots[1].snapshot,'CLAUDE.md'),'changed');
++  if(kind==='reviewed-bytes')writeFileSync(join(f.dest,'roots',m.roots[1].snapshot,'.codex/reviewed-install.json'),'{}');
++  const before=readFileSync(join(f.dest,'manifest.json'));review.expectedManifestSha=sha256(before);
++  denied(f.install(review,[f.roots[0]],{preserveOtherRoots:true}));unchanged(f,before);
+  }
+ });
++test('dry run makes no snapshots or locks and stale manifest CAS is rejected',t=>{
++ const f=fixture(t),before=readFileSync(join(f.dest,'manifest.json')),snapshots=readdirSync(join(f.dest,'roots'));
++ const review=f.freeze([f.roots[0]]);const r=f.install(review,[f.roots[0]],{preserveOtherRoots:true,dryRun:true});assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).dry_run,true);
++ unchanged(f,before);assert.deepEqual(readdirSync(join(f.dest,'roots')),snapshots);assert.equal(existsSync(join(f.dest,'.install.lock')),false);
++ denied(f.run(['--preserve-other-roots']),/ARGUMENT_INVALID/);
++ review.expectedManifestSha='ABSENT';denied(f.install(review,[f.roots[0]],{preserveOtherRoots:true}),/MANIFEST_CHANGED/);unchanged(f,before);assert.deepEqual(readdirSync(join(f.dest,'roots')),snapshots);
++});
++
++// This preload changes real fs builtins before ESM captures them. It never adds a production fault API.
++function preload(f) {
++ const path=join(f.base,'barrier.mjs');writeFileSync(path,`
++ import fs from 'node:fs';import {syncBuiltinESMExports} from 'node:module';
++ const original={renameSync:fs.renameSync,openSync:fs.openSync,readFileSync:fs.readFileSync,writeFileSync:fs.writeFileSync,fsyncSync:fs.fsyncSync};
++ const wait=()=>{original.writeFileSync(process.env.BARRIER_READY,'ready');const stop=Date.now()+20000;while(!fs.existsSync(process.env.BARRIER_GO)){if(Date.now()>stop)throw new Error('barrier timeout');Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,10);}};
++ let used=false,committed=false,lockFd=-1;const mode=process.env.BARRIER_MODE;
++ fs.renameSync=(from,to)=>{if(to===process.env.BARRIER_MANIFEST && !used && ['before','after','throw-after','throw-fsync-after'].includes(mode)){used=true;if(mode==='before')wait();const result=original.renameSync(from,to);committed=true;if(mode==='after')wait();if(mode==='throw-after')throw new Error('post-rename failure');return result;}return original.renameSync(from,to);};
++ fs.openSync=(path,...args)=>{if(!used && typeof path==='string' && ((mode==='before-temp' && path.startsWith(process.env.BARRIER_MANIFEST+'.')) || (mode==='copy-target' && path.includes('/roots/') && path.endsWith('/.claude/skill-os/rules.json') && ((args[0]&fs.constants.O_WRONLY)!==0)))){used=true;wait();}const fd=original.openSync(path,...args);if(typeof path==='string'&&path.endsWith('/.install.lock')&&((args[0]&fs.constants.O_WRONLY)!==0))lockFd=fd;return fd;};
++ fs.readFileSync=(fd,...args)=>{if(!used && mode==='copy-source' && typeof fd==='number'){try{const stat=fs.fstatSync(fd),target=fs.statSync(process.env.BARRIER_SOURCE);if(stat.dev===target.dev&&stat.ino===target.ino){used=true;wait();}}catch{}}return original.readFileSync(fd,...args);};
++ fs.fsyncSync=(fd)=>{if(mode==='throw-fsync-after'&&committed)throw new Error('post-commit fsync failure');if(mode==='throw-lock-fsync'&&fd===lockFd&&!used){used=true;throw new Error('lock fsync failure');}return original.fsyncSync(fd);};
++ syncBuiltinESMExports();
++ `);return path;
++}
++function argsFor(f,review,roots){return [installer,...roots.flatMap(root=>['--root',root]),'--test-dest',f.dest,'--reviewed-file',review.file,'--reviewed-sha',review.sha256,'--expected-manifest-sha',review.expectedManifestSha,'--preserve-other-roots'];}
++function startBarrier(f,review,mode,{source}={}) {
++ const ready=join(f.base,`${mode}-ready`),go=join(f.base,`${mode}-go`),nodeArgs=['--import',preload(f)];
++ const env={...process.env,NODE_ENV:'test',BARRIER_MODE:mode,BARRIER_READY:ready,BARRIER_GO:go,BARRIER_MANIFEST:join(f.dest,'manifest.json'),...(source?{BARRIER_SOURCE:source}:{})};
++ const child=spawn(process.execPath,[...nodeArgs,...argsFor(f,review,[f.roots[0]])],{env,stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',x=>stdout+=x);child.stderr.on('data',x=>stderr+=x);
++ const done=new Promise(resolve=>child.on('close',(status,signal)=>resolve({status,signal,stdout,stderr})));
++ return {child,ready,go,done};
++}
++async function readyAt(barrier){const end=Date.now()+20000;while(!existsSync(barrier.ready)){if(Date.now()>end)throw new Error(`child barrier did not arrive: ${JSON.stringify(await Promise.race([barrier.done,Promise.resolve(null)]))}`);await new Promise(resolve=>setTimeout(resolve,10));}}
++function recover(f,expected=frozenManifestSha(f.dest),lockSha=sha256(readFileSync(join(f.dest,'.install.lock')))){return f.run(['--recover-lock-sha',lockSha,'--expected-manifest-sha',expected]);}
+ 
+-test('preserve dry run validates without writing and requires an explicit target',t=>{
+- const f=fixture(t),before=readFileSync(join(f.dest,'manifest.json'));
+- assert.notEqual(f.run(['--preserve-other-roots']).status,0);
+- const r=f.run(['--root',f.roots[0],'--preserve-other-roots','--dry-run']);assert.equal(r.status,0,r.stderr);
+- assert.deepEqual(readFileSync(join(f.dest,'manifest.json')),before);
+- assert.equal(JSON.parse(r.stdout).preserve_other_roots,true);
++test('real concurrent installer refuses live lock, then stale CAS after first commit',async t=>{
++ const f=fixture(t),before=readFileSync(join(f.dest,'manifest.json'));writeFileSync(join(f.roots[0],'main.mjs'),'export const version=2;');
++ const a=f.freeze([f.roots[0]]),b=f.freeze([f.roots[0]]),barrier=startBarrier(f,a,'before');await readyAt(barrier);
++ const snapshots=readdirSync(join(f.dest,'roots'));denied(f.install(b,[f.roots[0]],{preserveOtherRoots:true}),/LOCK_BUSY/);unchanged(f,before);assert.deepEqual(readdirSync(join(f.dest,'roots')),snapshots);
++ denied(recover(f),/LOCK_LIVE/);writeFileSync(barrier.go,'go');const result=await barrier.done;assert.equal(result.status,0,result.stderr);
++ const after=readFileSync(join(f.dest,'manifest.json'));denied(f.install(b,[f.roots[0]],{preserveOtherRoots:true}),/MANIFEST_CHANGED/);unchanged(f,after);
++});
++test('real SIGKILL before/after manifest commit preserves authoritative old/full-new and exact dead-lock recovery',async t=>{
++ for(const mode of ['before','after']){
++  const f=fixture(t),before=readFileSync(join(f.dest,'manifest.json'));writeFileSync(join(f.roots[0],'main.mjs'),'export const version=2;');const review=f.freeze([f.roots[0]]);
++  const barrier=startBarrier(f,review,mode);await readyAt(barrier);barrier.child.kill('SIGKILL');const crash=await barrier.done;assert.equal(crash.signal,'SIGKILL');
++  const after=readFileSync(join(f.dest,'manifest.json'));if(mode==='before')assert.deepEqual(after,before);else{assert.notDeepEqual(after,before);const row=f.manifest().roots[0];assert.deepEqual(readFileSync(join(f.dest,'roots',row.snapshot,'.codex/reviewed-install.json')),review.bytes);}
++  denied(recover(f,frozenManifestSha(f.dest),'0'.repeat(64)),/LOCK_CHANGED/);
++  denied(recover(f,'0'.repeat(64)),/MANIFEST_CHANGED/);assert.equal(existsSync(join(f.dest,'.install.lock')),true);
++  const success=recover(f);assert.equal(success.status,0,success.stderr);unchanged(f,after);assert.equal(existsSync(join(f.dest,'.install.lock')),false);
++  const retried={...review,expectedManifestSha:frozenManifestSha(f.dest)};assert.equal(f.install(retried,[f.roots[0]],{preserveOtherRoots:true}).status,0);
++ }
++});
++test('malformed, symlink, broad-permission, live/EPERM locks cannot be recovered',t=>{
++ for(const kind of ['malformed','symlink','mode','live','EPERM']){
++  const f=fixture(t),before=readFileSync(join(f.dest,'manifest.json')),lock=join(f.dest,'.install.lock');
++  writeFileSync(lock,JSON.stringify({schema_version:1,kind:'luca-source-guard-install-lock',pid:process.pid,nonce:'12345678-1234-1234-1234-123456789012',roots:[f.roots[0]],expected_manifest_sha:frozenManifestSha(f.dest)}),{mode:0o600});
++  if(kind==='malformed')writeFileSync(lock,'{}');if(kind==='mode')chmodSync(lock,0o666);
++  if(kind==='symlink'){renameSync(lock,`${lock}-real`);symlinkSync(`${lock}-real`,lock);}
++  if(kind==='EPERM'){
++   const patch=join(f.base,'eperm.mjs');writeFileSync(patch,"process.kill=()=>{const e=new Error('denied');e.code='EPERM';throw e;};");
++   const result=spawnSync(process.execPath,['--import',patch,installer,'--test-dest',f.dest,'--recover-lock-sha',sha256(readFileSync(lock)),'--expected-manifest-sha',frozenManifestSha(f.dest)],{env:{...process.env,NODE_ENV:'test'},encoding:'utf8'});denied(result,/EPERM/);
++  }else denied(recover(f));
++  unchanged(f,before);assert.equal(existsSync(lock),true);
++ }
++});
++test('pre-commit source, copied snapshot and manifest/runtime drift refuse publication under real preload fences',async t=>{
++ for(const kind of ['snapshot','copied-snapshot','source','manifest','runtime']){
++  const f=fixture(t,{hook:true}),before=readFileSync(join(f.dest,'manifest.json'));const review=f.freeze([f.roots[0]]),barrier=startBarrier(f,review,'before-temp');await readyAt(barrier);
++  let expected=before;
++  if(kind==='snapshot')writeFileSync(join(f.roots[0],'.claude/skill-os/rules.json'),'{"rule":2}');
++  if(kind==='copied-snapshot'){const old=new Set(f.manifest().roots.map(row=>row.snapshot)),staged=readdirSync(join(f.dest,'roots')).find(name=>!old.has(name));writeFileSync(join(f.dest,'roots',staged,'CLAUDE.md'),'copied drift');}
++  if(kind==='source')writeFileSync(join(f.roots[0],'scripts/source.py'),'print(2)');
++  if(kind==='manifest'){expected=Buffer.from(`${before} `);writeFileSync(join(f.dest,'manifest.json'),expected);}
++  if(kind==='runtime')writeFileSync(join(f.dest,'loader.mjs'),'changed');
++  writeFileSync(barrier.go,'go');const result=await barrier.done;denied(result,/SOURCE_CHANGED|SNAPSHOT_CHANGED|MANIFEST_CHANGED|RUNTIME_CHANGED/);unchanged(f,expected);assert.equal(existsSync(join(f.dest,'.install.lock')),false);
++ }
++});
++test('drift during a real snapshot copy refuses before commit',async t=>{
++ const f=fixture(t),before=readFileSync(join(f.dest,'manifest.json')),review=f.freeze([f.roots[0]]),barrier=startBarrier(f,review,'copy-target');
++ await readyAt(barrier);writeFileSync(join(f.roots[0],'CLAUDE.md'),'changed during copy');writeFileSync(barrier.go,'go');
++ const result=await barrier.done;denied(result,/SOURCE_CHANGED/);unchanged(f,before);assert.equal(existsSync(join(f.dest,'.install.lock')),false);
++});
++test('post-rename exception reports committed authoritative outcome and rollback needs fresh CAS',t=>{
++ const f=fixture(t),oldReview=f.freeze([f.roots[0]]),oldSource=readFileSync(join(f.roots[0],'main.mjs')),other=f.manifest().roots[1];
++ writeFileSync(join(f.roots[0],'main.mjs'),'export const version=2;');const review=f.freeze([f.roots[0]]);
++ const result=f.install(review,[f.roots[0]],{preserveOtherRoots:true,nodeArgs:['--import',preload(f)],env:{BARRIER_MODE:'throw-after',BARRIER_MANIFEST:join(f.dest,'manifest.json')}});
++ denied(result,/post-rename failure/);const receipt=JSON.parse(result.stderr.trim());assert.equal(receipt.committed,true);assert.equal(receipt.durability_verified,false);
++ const current=readFileSync(join(f.dest,'manifest.json'));assert.notEqual(sha256(current),oldReview.expectedManifestSha);assert.equal(existsSync(join(f.dest,'.install.lock')),false);
++ writeFileSync(join(f.roots[0],'main.mjs'),oldSource);denied(f.install(oldReview,[f.roots[0]],{preserveOtherRoots:true}),/MANIFEST_CHANGED/);unchanged(f,current);
++ const rollback={...oldReview,expectedManifestSha:frozenManifestSha(f.dest)};const restored=f.install(rollback,[f.roots[0]],{preserveOtherRoots:true});assert.equal(restored.status,0,restored.stderr);assert.deepEqual(f.manifest().roots[1],other);
++});
++test('post-commit directory fsync failure reports committed but unverified durability',t=>{
++ const f=fixture(t),review=f.freeze([f.roots[0]]);
++ const result=f.install(review,[f.roots[0]],{preserveOtherRoots:true,nodeArgs:['--import',preload(f)],env:{BARRIER_MODE:'throw-fsync-after',BARRIER_MANIFEST:join(f.dest,'manifest.json')}});
++ denied(result,/post-commit fsync failure/);const receipt=JSON.parse(result.stderr.trim());assert.equal(receipt.committed,true);assert.equal(receipt.durability_verified,false);assert.equal(receipt.authoritative_manifest_sha256,frozenManifestSha(f.dest));assert.equal(existsSync(join(f.dest,'.install.lock')),false);
++});
++test('a normal lock fsync exception removes only this exact lock and changes no installed state',t=>{
++ const f=fixture(t),before=readFileSync(join(f.dest,'manifest.json')),snapshots=readdirSync(join(f.dest,'roots')),review=f.freeze([f.roots[0]]);
++ const result=f.install(review,[f.roots[0]],{preserveOtherRoots:true,nodeArgs:['--import',preload(f)],env:{BARRIER_MODE:'throw-lock-fsync',BARRIER_MANIFEST:join(f.dest,'manifest.json')}});
++ denied(result,/lock fsync failure/);const receipt=JSON.parse(result.stderr.trim());assert.equal(receipt.committed,false);unchanged(f,before);assert.deepEqual(readdirSync(join(f.dest,'roots')),snapshots);assert.equal(existsSync(join(f.dest,'.install.lock')),false);
+ });

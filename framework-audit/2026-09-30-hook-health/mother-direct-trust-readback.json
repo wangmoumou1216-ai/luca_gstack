@@ -1,0 +1,29 @@
+[
+  {
+    "name": "mother-direct",
+    "root": "/Users/luca/Desktop/luca_gstack",
+    "codexHome": "/Users/luca/.luca/codex/aihub-direct",
+    "exactHooks": 11,
+    "pendingTrust": 0,
+    "allTrusted": true,
+    "at": "2026-09-30T10:19:18.708Z"
+  },
+  {
+    "name": "mother-system",
+    "root": "/Users/luca/Desktop/luca_gstack",
+    "codexHome": "/Users/luca/.codex",
+    "exactHooks": 11,
+    "pendingTrust": 0,
+    "allTrusted": true,
+    "at": "2026-09-30T10:19:18.769Z"
+  },
+  {
+    "name": "muse-copy-direct",
+    "root": "/Users/luca/Desktop/项目/muse/lucagstack",
+    "codexHome": "/Users/luca/.luca/codex/aihub-direct",
+    "exactHooks": 11,
+    "pendingTrust": 0,
+    "allTrusted": true,
+    "at": "2026-09-30T10:19:18.412Z"
+  }
+]

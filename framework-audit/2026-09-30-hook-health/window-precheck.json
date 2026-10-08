@@ -1,0 +1,42 @@
+{
+  "observed_at": "2026-09-30T07:16:11.073Z",
+  "rows": [
+    {
+      "root_session_id": "01a0f0fe-e6fa-7660-beb5-181b1a9b6444",
+      "activation_id": "74177d5b-6835-439b-84f4-492f8ff49196",
+      "critical_failure": false,
+      "pending_preparations": [],
+      "pending_invocations": []
+    },
+    {
+      "root_session_id": "01a0f062-3813-7c52-9ad6-61aacf054d1c",
+      "activation_id": "b9ce3c04-21a7-4778-bde0-fc0b3e9999cc",
+      "critical_failure": false,
+      "pending_preparations": [],
+      "pending_invocations": [
+        {
+          "invocation_id": "6a787d12-7d15-4253-b33d-1356baa8c7b5",
+          "external_identity": {
+            "tool_use_id": "call_7Qh379JhKsaeRx0k0m1rOmaj",
+            "agent_type": "quality-gate",
+            "agent_id": "01a0f128-1567-7622-acd2-9fbabefed8e1"
+          }
+        }
+      ]
+    },
+    {
+      "root_session_id": "01a0ec5b-44d2-7042-a523-f634e1406260",
+      "activation_id": "82419be3-3622-4db8-83f0-7cd1f68d3ec0",
+      "critical_failure": false,
+      "pending_preparations": [],
+      "pending_invocations": []
+    },
+    {
+      "root_session_id": "01a0f05f-e05c-7693-b844-326c9eb66b75",
+      "activation_id": "1b2de485-6d8c-404d-af18-296b721b858f",
+      "critical_failure": false,
+      "pending_preparations": [],
+      "pending_invocations": []
+    }
+  ]
+}

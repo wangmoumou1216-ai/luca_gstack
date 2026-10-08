@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-refutation-20260930-02",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing round2 independent refutation",
+    "scene": "unknown",
+    "input_summary": "第二轮12文件冻结候选独立复审：只读及内存反例，检查持久CAS失败锁、native/runner入口、NO_PIN、冷启动及生产采用证据。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/REPORT.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 6,
+    "total": 7,
+    "findings": [
+      "FAIL BLOCKING: Critical preparation failure before envelope creation combined with busy failure-state persistence leaves critical_failure=false and no pending ticket. After lock availability returns, the same activation permits default native dispatch and the workflow runner entry. Independently reproduced using candidate runCodex/latch/prepare functions, then candidate Hook handler with the actual common resolver in memory.",
+      "PASS evidence: Ordinary writable-state critical failure blocks subsequent native and runner entry; pending CLI entry mutation is detected; CAS, noncritical, absent-state, monotonicity and pending invalidation checks passed.",
+      "PASS evidence: Patch SHA and 12 candidate postimages match; six cold-review hook combinations preserve effort and force fork_turns=none.",
+      "PASS evidence: Three supplied native logs independently confirm gpt-6-astra/high and matching completed turn IDs; this does not establish candidate deployment or exhaustive internal reroute observation."
+    ]
+  }
+}

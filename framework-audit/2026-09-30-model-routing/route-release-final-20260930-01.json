@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-release-final-20260930-01",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing frozen patch final acceptance",
+    "scene": "unknown",
+    "input_summary": "独立只读验收冻结13文件模型路由补丁；核对包一致性与7项criteria，独立复跑runtime，核验原生模型及同turn完成证据。结论不包含部署许可或全仓verify通过。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/REPORT.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 7,
+    "total": 7,
+    "findings": []
+  }
+}

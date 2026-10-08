@@ -1,0 +1,24 @@
+{
+  "files": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-review/nd-inputs/inputs.json",
+      "sha256": "4cc2f146931efb07cc8e8caaf45e1c0b0b9bd1c4eb8d331d47110efd072d23d2",
+      "bytes": 946
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-review/nd-inputs/required-1.csv",
+      "sha256": "6747c291961f7813ff31424777822d85bdc1b9d996f8d147a686f38577440251",
+      "bytes": 11388
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-review/nd-inputs/required-2.csv",
+      "sha256": "1d3f38d91fb7bde5ce15ca25dadc09a05b94fa530651d785c524b5b426f1d954",
+      "bytes": 11388
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-behavior-review/nd-inputs/required-3.csv",
+      "sha256": "41bc371411c1e0409d6cd0a5625baf71c767353310893f7f7e78ed9a6691d67d",
+      "bytes": 11386
+    }
+  ]
+}

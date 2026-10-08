@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "kind": "luca-sidecar-settings-repair-resume02",
+  "runtime": {
+    "path": "/Users/luca/.hermes/node/bin/node",
+    "version": "v22.23.1",
+    "sha256": "2e3f1286a7eb3736346ed1803e458a0ff909e2b2d5bc746144dcb76970e9b99d"
+  },
+  "systemCli": {
+    "path": "/Users/luca/.local/bin/codex",
+    "realPath": "/Users/luca/.codex/packages/standalone/releases/0.159.3-aarch64-apple-darwin/bin/codex",
+    "bytes": 240351424,
+    "mode": 493,
+    "sha256": "4d210f7c5a18fd0386434df23b5bdbb8c0e7257d3e8a2b30b0769c8bbe99a878"
+  },
+  "installedApp": {
+    "path": "/Applications/luca.app",
+    "asarSha256": "c37006952486488286c1c8d70fc25d4aeafcee0b79d72c6c20305de3a3e0cda6",
+    "headerSha256": "7f6711289e6c4c484c240d1d199c168375c75ae70f8db7cef9fced80101bf718",
+    "infoSha256": "fd80301f927a000a338e64fe603acc376c56b9e7028d00e127ef51d8fc70f3a6"
+  },
+  "modules": {
+    "package.json": {
+      "bytes": 365,
+      "sha256": "feb1eadc48e25ab61ef335bbf2a9e1d734be73d1f20bf72d6295101adce08bb6"
+    },
+    "settings-store.js": {
+      "bytes": 26726,
+      "sha256": "1f108ca2622174f7d24a5c01595103ecc92b4c402c7660fd596cb66b72aeb099"
+    },
+    "state-writer.js": {
+      "bytes": 15931,
+      "sha256": "77f2f85d8fbf4ba26fec80e80c602d1207b41a1a85c5b6a55da609caecf9a5c4"
+    },
+    "codex-connections.js": {
+      "bytes": 13057,
+      "sha256": "1e838adbeea579ed1fbb48011d68170cc46043f4fcb72c21848967ebe33da56f"
+    }
+  },
+  "settingsPath": "/Users/luca/Library/Application Support/luca/state-v2/settings.json",
+  "settingsSha256": "eb34592a91ba05f8c007c89ede84e51bf08e8a6c50015f22fd4a5ed515f42f55",
+  "appId": "com.luca.muse.session-v2",
+  "profileId": "codex:active",
+  "storeRevision": 20,
+  "connectionRevision": 6,
+  "credentialRevision": 3,
+  "connection": {
+    "profileId": "codex:active",
+    "revision": 6,
+    "config": {
+      "mode": "system",
+      "direct": {
+        "baseUrl": "https://aihub.firstshare.cn/v1",
+        "model": "gpt-6.1-sol",
+        "wireApi": "responses",
+        "serviceTier": "priority",
+        "credentialRef": "luca:codex.aihub_direct",
+        "inheritProxy": false,
+        "proxyUrl": "",
+        "codexHome": "/Users/luca/.luca/codex/aihub-direct"
+      },
+      "sidecar": {
+        "binary": "/tmp/selE2E-G8btIK/.local/bin/codex-luca-aihub",
+        "codexHome": "/tmp/selE2E-G8btIK/.codex-aihub-test"
+      }
+    },
+    "savedAt": "2026-10-01T01:53:26.486Z",
+    "source": "explicit"
+  },
+  "activation": {
+    "configRevision": 6,
+    "credentialRevision": null,
+    "activatedAt": "2026-10-01T01:53:26.486Z",
+    "readiness": "external"
+  },
+  "credentialTargets": {
+    "codex-direct": {
+      "status": "confirmed",
+      "revision": 3,
+      "operationId": null,
+      "hasSecret": true,
+      "error": null
+    }
+  },
+  "afterSidecar": {
+    "binary": "/Users/luca/.local/bin/codex-luca-aihub",
+    "codexHome": "/Users/luca/.codex-aihub-test"
+  },
+  "receiptPath": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/sidecar-settings-repair-resume02-result.json"
+}

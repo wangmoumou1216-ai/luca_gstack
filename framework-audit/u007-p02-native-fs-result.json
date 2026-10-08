@@ -1,0 +1,80 @@
+{
+  "probe_id": "P02",
+  "run_id": "u007-p02-native-fs-r1",
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 0.09,
+  "cleanup": [
+    "group-already-gone"
+  ],
+  "child_result": {
+    "checks": [
+      {
+        "id": "allowed-read",
+        "passed": true,
+        "detail": "exact marker matched"
+      },
+      {
+        "id": "outside-read",
+        "passed": true,
+        "detail": {
+          "errno": 1
+        }
+      },
+      {
+        "id": "symlink-escape-read",
+        "passed": true,
+        "detail": {
+          "errno": 1
+        }
+      },
+      {
+        "id": "allowed-scratch-write",
+        "passed": true,
+        "detail": "created"
+      },
+      {
+        "id": "readonly-workspace-write",
+        "passed": true,
+        "detail": {
+          "errno": 1
+        }
+      },
+      {
+        "id": "outside-write",
+        "passed": true,
+        "detail": {
+          "errno": 1
+        }
+      },
+      {
+        "id": "child-inherits-read-denial",
+        "passed": true,
+        "detail": {
+          "exit_code": 1,
+          "stderr": "cat: /private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p02-mo92629q/outside/denied.txt: Operation not permitted\n"
+        }
+      }
+    ],
+    "pass": true
+  },
+  "parent_checks": {
+    "allowed_marker_unchanged": true,
+    "denied_marker_unchanged": true,
+    "no_workspace_forbidden_write": true,
+    "no_outside_forbidden_write": true,
+    "approved_write_exists": true
+  },
+  "status": "PASS_NATIVE_SANDBOX_COMMAND_ONLY",
+  "stderr": "",
+  "registered_input_sha256": "30c806ab597c887fcb7be19c6a02dbfb6d0fbcbc3c12abe44ee70fa0dd280b4f",
+  "model_calls": 0,
+  "limits_of_claim": [
+    "No model or native hook invocation",
+    "No app-server effective profile proof",
+    "No MCP/Apps isolation proof",
+    "No actual read-range adoption proof",
+    "No network attempt performed"
+  ],
+  "recorded_at": "2026-10-02T18:26:30.210309+00:00"
+}

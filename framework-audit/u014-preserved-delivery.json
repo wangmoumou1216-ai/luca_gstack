@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-03T07:54:53.466807+00:00",
+  "branch": "codex/tri-system-evaluation",
+  "head": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "patch": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-evaluation-tool-fixes.patch",
+  "patch_sha256": "cec029269b37010214b7d9b91abda5576e6b121af9b6d18db42f705891b817b0",
+  "files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "81b3cde5a44e6fb3d60145be7c14578098534a8444adc4d6d20c2b7d1b1edd4c"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "cea5b35c866bd8c157685d9f7425d11365f894b817c6f382f24c5c43f27f718f"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "b514cb98eacc3bf689931c3236a72e8da55f766124828839ba0cb20dafabb7a6"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "06b3b6c28d422734b70d27c4d6beff8c491deaac75e1b6850b3a22b13c1c20c7"
+    }
+  ],
+  "framework_17_delta": "unchanged from cd0cff15; this patch only evaluation tool fixes",
+  "status": "saved locally; not committed or published",
+  "protected_production_work": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/observability/observations.jsonl",
+      "before_sha256": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
+      "current_sha256": "36a52efd2c3345f333c6da8183b5902643acbaf97f5cfeee61998e4009fa4e88",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/evals/eval-log.jsonl",
+      "before_sha256": "39935b75c3774cbf2eff07454e50b0d6aca0b3a3b7d67be9930219a6a7974946",
+      "current_sha256": "39935b75c3774cbf2eff07454e50b0d6aca0b3a3b7d67be9930219a6a7974946",
+      "unchanged": true
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/memory/retrieval-log.jsonl",
+      "before_sha256": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020",
+      "current_sha256": "31c09505c4c1278e92f2f0923afdb8aaaabd9fb910ea058cf7c75422c706e020",
+      "unchanged": true
+    }
+  ],
+  "remote_last_observed": {
+    "main": "05120197073144c0f46b6fb30a192733d529cc4f",
+    "codex/tri-system-evaluation": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+    "method": "actual git ls-remote origin refs/heads/main refs/heads/codex/tri-system-evaluation, exit0"
+  },
+  "production_head": "05120197073144c0f46b6fb30a192733d529cc4f"
+}

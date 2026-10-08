@@ -1,0 +1,42 @@
+[
+  {
+    "path": "scripts/check-agent-context.mjs",
+    "bytes": 41531,
+    "sha256": "9bb0711e9c7f7f6adb8fa2bfcdcfc8a27cf1a8b3aedca78feab1f70d1912294b"
+  },
+  {
+    "path": "scripts/test-agent-context.mjs",
+    "bytes": 43830,
+    "sha256": "2c2975fb847737408385a868f3e12484927c504ca2dedc825a3883818b1bc086"
+  },
+  {
+    "path": ".claude/agents/references/plan-design-guidance.md",
+    "bytes": 7681,
+    "sha256": "2922306d1260eae30aaa362641e1d35a48bd80ca2187384cd4746aadb6d73b28"
+  },
+  {
+    "path": ".claude/skills/office/open-design/SKILL.md",
+    "bytes": 46080,
+    "sha256": "27f4812efa6c6d6e5a2ed8ea6d19921e72d17d31696c0437916fc0000022e3e6",
+    "bash_blocks_sha256": [
+      "e39af6d194a440279723bd0d04096c55c214085098dc718b98957ccd92b35734",
+      "2e9ccb907250c9ad0603208c9c6df12ef100ba6589256d3a75b2835033e73659",
+      "aad2c1250c0d06a68bd61bf8e1ded3686b9f4513025f0ec9acb2d1806b7f6106",
+      "0b83d7db60156e446b37afb52f3e137cafb709a36d587eb8d9b7bedf70587ae6"
+    ],
+    "preamble_sha256": "b0f2bbc4eb885daf7f1d5c64638879d14d7b910d5499f93058fd65fb758775e8"
+  },
+  {
+    "path": ".claude/skills/office/html-prototype/SKILL.md",
+    "bytes": 46023,
+    "sha256": "817daef7f87d7dd2b25c723b220c1d64ad423a9c62745cc42663d074b5d49320",
+    "bash_blocks_sha256": [
+      "cd8cc77e7013b1ff464ab519747d395d85fc56ab18642d09fbceff0a6264f379",
+      "e53c27bdbae80b1e822f6d1d60c03111dd2f2318f17456b6a5d4baa84c6b66b9",
+      "985688cbbffadc28c6860c84aa6a4f5b4e29f9c1ca33e2baf5eb316d01c1a041",
+      "29d7b0bf3d0d1f635fbd94212dfc927d2d78d23ab0617fc4a8f0f7275794761d",
+      "a32aa1d26815bb7ceeaa31796b9162fe24834c0fbc0493ce403edd0d932ba65b"
+    ],
+    "preamble_sha256": "2216259008991c740ca6c8d3447a145d9f53b8c9d41648d6066390b00ad702a4"
+  }
+]

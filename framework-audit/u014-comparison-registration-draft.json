@@ -1,0 +1,120 @@
+{
+  "status": "DRAFT_NOT_RELEASED",
+  "at": "2026-10-03T07:14:39.921456+00:00",
+  "conditions": {
+    "B": "frozen 05120197 inventory",
+    "T": "native unchanged NATIVE",
+    "S": "old targeted simplifyRoot",
+    "I": "independent design frozen M1-M3",
+    "C": "u014-candidate-source-manifest.json exact17 delta"
+  },
+  "case_sets": {
+    "first": [
+      "D01",
+      "D05"
+    ],
+    "conditional": [
+      "D06"
+    ]
+  },
+  "order": [
+    {
+      "case": "D01",
+      "trial": 1,
+      "conditions": [
+        "B",
+        "C",
+        "T",
+        "S",
+        "I"
+      ]
+    },
+    {
+      "case": "D01",
+      "trial": 2,
+      "conditions": [
+        "I",
+        "S",
+        "T",
+        "C",
+        "B"
+      ]
+    },
+    {
+      "case": "D05",
+      "trial": 1,
+      "conditions": [
+        "B",
+        "C",
+        "T",
+        "S",
+        "I"
+      ]
+    },
+    {
+      "case": "D05",
+      "trial": 2,
+      "conditions": [
+        "I",
+        "S",
+        "T",
+        "C",
+        "B"
+      ]
+    },
+    {
+      "case": "D06",
+      "trial": 1,
+      "conditions": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "case": "D06",
+      "trial": 2,
+      "conditions": [
+        "C",
+        "B"
+      ]
+    }
+  ],
+  "quality": {
+    "dimensions": [
+      "correctness",
+      "completeness",
+      "usability",
+      "rework_burden"
+    ],
+    "target": [
+      3,
+      3,
+      3,
+      3
+    ],
+    "tolerance": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "controls_required": true,
+    "judge": "artifact/terminal first anonymous and lock before process",
+    "exploratory_only": true
+  },
+  "limits": {
+    "development": 24,
+    "qualification_new": 2,
+    "standalone_new": 6,
+    "hidden_reserved": 96,
+    "total": 144
+  },
+  "invalid_runs": "remain denominator; no automatic repeat or replacement",
+  "native_run_released": false,
+  "limits_of_cases": {
+    "D01": "supplied owner bounded task; not framework skill selection",
+    "D05": "fixture dependency failure/retry; not real agent delegation",
+    "D06": "fresh-context lawful payload correction; not old in-flight migration, revocation, or native compact"
+  },
+  "hidden_allocation": "96 retained. Fifth C prevents original4x12x2 allocation from covering all5. Pre-register B/C primary full matched comparison and justified alternate coverage before any hidden run; no hidden output used to decide allocation."
+}

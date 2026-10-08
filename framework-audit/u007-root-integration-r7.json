@@ -1,0 +1,151 @@
+{
+  "prepared_at": "2026-10-02T22:41:33.951509+00:00",
+  "status": "W27_W28_W29_COLLECTED_AUTHOR_OFFLINE_TESTED_PENDING_EXACT_P07_REVIEW",
+  "files": {
+    "case-protocol.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "bytes": 31446
+    },
+    "case-protocol.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+      "bytes": 30229
+    },
+    "conditions.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+      "bytes": 24895
+    },
+    "conditions.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920",
+      "bytes": 22755
+    },
+    "driver.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "c6db8f7d4612db1ce764159b5f8630dd9eebb9882906d4f3c66c66059d16abe0",
+      "bytes": 49209
+    },
+    "driver.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "b85bc427ebd9d7b8a29e248ee0c3520db946ae42bb4a8047a8c68136c5ace90e",
+      "bytes": 60487
+    },
+    "integration.test.mjs": {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "sha256": "4e0852c69944bcc869f666d306801bcc6cb479f2e4e434425abe802855ee6475",
+      "bytes": 49486
+    }
+  },
+  "baseline_snapshot": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r6",
+  "prior_integration": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r6.json",
+    "sha256": "b79ad202691866422421c9255df424d6082cca9d3a542800837bc7d8d7479156",
+    "bytes": 4916
+  },
+  "diff": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r6-r7.diff",
+    "sha256": "69bf50857134c655d63970d7adb69673d14f24323d7bc91f86a151900b575101",
+    "bytes": 24163
+  },
+  "reports": {
+    "u007-native-recovery-driver-report.md": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-native-recovery-driver-report.md",
+      "sha256": "c390f3910fb9d46d0d35b6ce63bb9b5c0f77fc58ed15481ac1541d0ce0e2891f",
+      "bytes": 7363
+    },
+    "u007-native-recovery-integration-report.md": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-native-recovery-integration-report.md",
+      "sha256": "72381ec9c4a84f7579a967d04fb7eb1315ba19e8505eb04bb54ff349b1f860b4",
+      "bytes": 10455
+    },
+    "u007-p07-preparation-report.md": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-preparation-report.md",
+      "sha256": "92abed2b1b5295c8437eda9f2cc8278425a521b9702b980295d449080e2ecb00",
+      "bytes": 11343
+    }
+  },
+  "source_manifest": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json",
+    "sha256": "53cf8e61a3a1e0232ed3a3f638dc5698651fa0dad5d39f62629573ffc294f136",
+    "prior_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest.json",
+    "prior_sha256": "cbbf8d9cf338b8bbf2aa3434e500a9f83eb69f524018968a4d8b0d798b9c41b9",
+    "unchanged_records": 541,
+    "added_records": [
+      {
+        "path": ".claude/observability/scripts/get_rules.py",
+        "kind": "file",
+        "bytes": 2195,
+        "sha256": "db87c92b97f6945c54846297eba5e57d0e373eb5c3237ec4b9fc1a37e5a3d020"
+      },
+      {
+        "path": ".claude/observability/rules.yaml",
+        "kind": "file",
+        "bytes": 9407,
+        "sha256": "98ff8956517f1bb9f1d6f093674ba68276f1c5ba9dd26e6310cb18b25359fbc2"
+      }
+    ]
+  },
+  "author_tests": {
+    "W28": {
+      "reported_targeted_passed": 6,
+      "reported_full_passed": 55,
+      "reported_exit_code": 0,
+      "evidence": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-native-recovery-driver-report.md",
+        "sha256": "c390f3910fb9d46d0d35b6ce63bb9b5c0f77fc58ed15481ac1541d0ce0e2891f",
+        "bytes": 7363
+      }
+    },
+    "W29": {
+      "red": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/red.tap",
+        "sha256": "d8fd1f164ff64c8188e3f452ba96fc776ebca6444b92b1ef05aef6e04508e48b",
+        "bytes": 14693
+      },
+      "targeted": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/green-targeted.tap",
+        "sha256": "380a2a8b255e507368b45ccbad3a41fecf6baeee3c4b7a774ff59229d149e2e7",
+        "bytes": 18685
+      },
+      "full": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/green-regression.tap",
+        "sha256": "e4120374e1b6e1cccaab960b59a72dff3d7f49919b849520d241724ad7e7f9b2",
+        "bytes": 54689
+      },
+      "metadata": {
+        "red.json": {
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/red.json",
+          "sha256": "f9823550f24d200ac5bfc8430aef5e2acd06ad67bf503a1a1c5fcc947169783a",
+          "bytes": 2031
+        },
+        "green-targeted.json": {
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/green-targeted.json",
+          "sha256": "c11f8461d02f09b0a65b5d6580f7a7390979c2593926357c5f628eb0069f5528",
+          "bytes": 2053
+        },
+        "green-regression.json": {
+          "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/green-regression.json",
+          "sha256": "e4a5d575d80db07f208dd8669c2802136f11ada63bc8eee0fc97bc45c8798bd8",
+          "bytes": 2021
+        }
+      },
+      "targeted_passed": 16,
+      "full_passed": 35,
+      "full_exit_code": 0,
+      "test_sha256": "4e0852c69944bcc869f666d306801bcc6cb479f2e4e434425abe802855ee6475"
+    },
+    "W27": {
+      "reported_offline_passed": 14,
+      "no_native_model_execution": true,
+      "draft_binding_pending": true
+    }
+  },
+  "root_tests": [],
+  "limits": [
+    "Root copied exact owner bytes; no new implementation or redundant tests.",
+    "P07 not registered/run; formal comparison and production not released.",
+    "Raw-event completeness and native launch/boundary success remain unproved."
+  ]
+}

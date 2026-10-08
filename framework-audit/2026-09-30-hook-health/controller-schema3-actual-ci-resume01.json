@@ -1,0 +1,377 @@
+{
+  "status": "PASS_ACTUAL_CI_CHAIN_READONLY_NO_WHOLE_PREFLIGHT_OR_MUTATION",
+  "controller_sha256": "707ac360542f6dc268b735a5fe2a220e27e1fb8183bfa2723265daede19f342d",
+  "target_commit": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+  "ci_environment_sha256": "e93faaa4b19f3e5f3503adb57ebac24338cfe805f0c325892d7c165c01ecbf51",
+  "ci_environment": {
+    "schema_version": 1,
+    "kind": "luca-ci-shell-dependency-change",
+    "source_commit": "689444174a9a32b1a3fcf92e492cf446e284e4b0",
+    "target_commit": "d6acaf21e89e4c662289c716f7dcd4d3102751e0",
+    "relative": ".github/workflows/ci.yml",
+    "preimage_sha256": "fff63b76d5315b8398f469987bc80d0f7268ac5453f1bb999e965af90a851bfd",
+    "postimage_sha256": "c354695e7c2c41bec3c08965347e7a5d4314f47311e099685ad15558fb1cd38d",
+    "postimage_bytes": 12630,
+    "patch_sha256": "337aef8b94029ebc6bf7ded5d4c9c131690630011a171b4dfa8812af6bf4dde7",
+    "postimage": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/ci-shell-workflow-resume01.yml.txt",
+      "sha256": "c354695e7c2c41bec3c08965347e7a5d4314f47311e099685ad15558fb1cd38d"
+    }
+  },
+  "scope02_sha256": "1eff6622a143d5f94ccbe8babaf2211a457d6d332d4e28e6d98b973e0f8bdd97",
+  "verified_original_target_blobs": 15,
+  "prediction_blobs_exclude_ci_yaml": true,
+  "mother_base_and_ci_preimage_verified_twice": true,
+  "steps": [
+    {
+      "step": "candidate-head",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-parent",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-source-parent",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-source-scope",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-scope",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-commit-scope",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-mode-base",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-mode-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-mode-target",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-preimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-base-preimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-postimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-ci-patch",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-original-diff",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-0",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-1",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-2",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-3",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-4",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-5",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-6",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-7",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-8",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-9",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-10",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-11",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-12",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-13",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "candidate-blob-14",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-head",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-branch",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-index",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-0",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-1",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-3",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-4",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-5",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-8",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-9",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-10",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-11",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-12",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-13",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-preimage-14",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-ci-base",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-ci-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-mode-base",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-mode-source",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-mode-target",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-preimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-base-preimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-postimage",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "ci-source-fence-patch",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-head",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-branch",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-index",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-0",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-1",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-3",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-4",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-5",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-8",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-9",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-10",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-11",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-12",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-13",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-preimage-14",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-ci-base",
+      "exit": 0,
+      "home": null
+    },
+    {
+      "step": "mother-before-source-ci-source",
+      "exit": 0,
+      "home": null
+    }
+  ]
+}

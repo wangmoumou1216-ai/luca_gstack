@@ -1,0 +1,30 @@
+{
+  "config": {
+    "model": "gpt-6-astra",
+    "model_reasoning_effort": "high",
+    "features": {
+      "js_repl": false
+    },
+    "tools": null,
+    "shell_environment_inherit": "core"
+  },
+  "cached_model": {
+    "slug": "gpt-6-astra",
+    "shell_type": "unified_exec",
+    "tool_mode": "code_mode_only",
+    "experimental_supported_tools": [
+      "send_user_message_async",
+      "clock"
+    ],
+    "node_repl_disabled": false,
+    "node_repl_auto_review_required": true,
+    "use_responses_lite": true,
+    "multi_agent_version": "v2"
+  },
+  "cache_metadata": {
+    "fetched_at": "2026-10-02T21:34:07.152239Z",
+    "client_version": "0.159.2"
+  },
+  "cache_sha256": "4c35d83f4562022f490113f1052fae47fb191b4b7b13f94d10efee185e3fff75",
+  "limitation": "Existing cache/config metadata, not actual P06 model-visible registry or call result. No instruction bodies or credential values included."
+}

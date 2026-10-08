@@ -1,0 +1,2 @@
+[codex/design-workflow-fixes a7a0d53] fix(ci): avoid persisting checkout credentials in diagnostic checks
+ 1 file changed, 1 insertion(+)

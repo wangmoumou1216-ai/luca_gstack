@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "source_sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+  "skill": "task-plan",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "tech_spec_handoff",
+          "design_brief_handoff"
+        ],
+        "optional": []
+      },
+      "workflow": {
+        "required": [
+          "tech_spec_handoff",
+          "design_brief_handoff"
+        ],
+        "optional": []
+      }
+    },
+    "notes": "上述 modes.required 列表仅适用于 input_mode=prd 的正常 PRD/Brief 分支；input_mode 与 standalone/workflow 正交。conversation_synthesis 以完整可核 source_register（path/sha256/section/register_sha256）、original_sources 和独立 source_must_ids 替换 PRD/Brief 输入，保留同等覆盖：Phase 7 原始 MUST→REQ/ASSERT→DEV+TEST 双向覆盖。无 UI 的 D/STATE 有源 N/A，工程状态/错误仍须测试。缺模式/源表 NEEDS_CONTEXT，漂移/漏 MUST/未决 UI 停门；不能由缺 Brief 猜 CONV，历史可核普通 PRD 沿用。",
+    "quality_gates": [
+      "original_source_must_coverage_when_conversation_synthesis",
+      "upstream_handoff_verdicts",
+      "brief_prd_end_to_end_gate_when_prd_mode",
+      "exact_current_sources",
+      "l0_index",
+      "l1_source_index",
+      "l2_node_index",
+      "assertion_matrix",
+      "task_cards",
+      "design_decision_coverage_when_prd_mode",
+      "state_coverage_when_prd_mode",
+      "coverage_gate"
+    ],
+    "output_path": "docs/engineering/YYYY-MM-DD-<topic>-task-plan.md",
+    "handoff_path": "docs/handoff/YYYY-MM-DD-<topic>-task-plan-handoff.md"
+  }
+}

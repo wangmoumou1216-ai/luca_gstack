@@ -1,0 +1,805 @@
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -19,17 +19,15 @@
+ <!-- K2:START -->
+ ## K2 — Routing order
+ 
+-For every non-mechanical request, classify in this exact order:
++For bounded tasks unrelated to framework, skill, project, memory or cross-session recovery,
++read any supplied owner; execute within scope. K3 Plan triggers and human/permission
++gates still apply. Otherwise route in order: **Project Gate** (existing projects before scenario
++or skill), **Plan** (complexity before skill hit), **Framework Flow**, **Multi-Skill**,
++**Single-Skill**, **STOP**. Assess ambiguity/refusal; never treat STOP as permission.
++Unmatched work uses `NONE` + semantic fallback.
+ 
+-1. **Project Gate** — old/existing/continuing project before any scenario or skill.
+-2. **Plan** — test complexity before accepting a route-guard skill hit.
+-3. **Framework Flow** — framework evolution, self-growth, benchmark, or governance work.
+-4. **Multi-Skill** — several independent high-confidence skill matches.
+-5. **Single-Skill** — one high-confidence match and no Plan trigger.
+-6. **STOP** — ambiguity/refusal; assess and discover; never treat STOP as permission. `NONE` + semantic fallback covers unmatched work.
+-
+-The routing truth is `.claude/skill-os/skill-routing-map.yaml`. A user-chosen Workflow may add
+-handoff gates; otherwise skills remain standalone.
++Routing: `.claude/skill-os/skill-routing-map.yaml`. Only a user-selected Workflow
++activates workflow handoff gates; otherwise skills remain standalone.
+ <!-- K2:END -->
+ 
+ <!-- K3:START -->
+@@ -45,11 +43,16 @@
+ <!-- K4:START -->
+ ## K4 — Skill discovery and STOP
+ 
++For an explicitly selected applicable method, read its authority through EOF; skip repeat
++catalog discovery. Plan and safety still apply.
++
++For genuine skill discovery or unresolved selection:
+ Before classifying as **Multi-Skill**, **Single-Skill**, or **STOP**, and before choosing or
+ invoking a skill, read `.claude/skill-os/generated/skill-catalog.md` through `FILE_END`. Route by
+-**semantic** intent, not keyword coincidence. Direct invocation still obeys Plan and safety. Exempt
+-only a truly **mechanical single-file** edit with no design, research, review, or product judgment.
+-Ambiguity needs user choice; no match needs catalog discovery. In discovery, **name the exact matching catalog skill** and authority; a generic catalog mention is incomplete.
++**semantic** intent, not keyword coincidence. A truly **mechanical single-file** edit with no
++design/research/review/product judgment, or a bounded unrelated task under K2, needs no discovery.
++Human ambiguity requires a real response. In discovery, **name the exact matching catalog skill**
++and authority.
+ <!-- K4:END -->
+ 
+ <!-- K5:START -->
+@@ -120,8 +123,8 @@
+ <!-- K10:START -->
+ ## K10 — Startup, conditional context, and harness truth
+ 
+-Minimal **startup** applies only to non-trivial work. A trivial mechanical question with no skill
+-or repository action answers directly and loads no conditional target. Otherwise:
++Minimal **startup** applies to framework, skill, project, memory or cross-session recovery work.
++Bounded unrelated tasks use K2; all other controls remain. For startup:
+ 
+ 1. Run `python3 memory/scripts/get_memory.py --summary`.
+ 2. Read this checkout's `CONTEXT.md` through its `FILE_END`.
+@@ -140,7 +143,7 @@
+ A repository-contract question is non-trivial even when it only asks for classification or an
+ explanation. For name/route discovery, the catalog is sufficient. To decide a named skill's input,
+ authorization, handoff, or completion behavior, read that skill's `SKILL.md` and its explicitly
+-applicable one-hop contract owner even when execution is deferred. Do not run its preamble or load
++applicable one-hop contract owner even if deferred. Do not run its preamble or load
+ execution-only schemas, templates, scripts, Git history, sibling metadata, or implementation owners.
+ Finish the required owners first and stop loading when they answer the request; a referenced
+ implementation name is not permission for another read.
+--- a/scripts/check-agent-context.mjs
++++ b/scripts/check-agent-context.mjs
+@@ -569,6 +569,60 @@
+       if (obligation.id === 'K4' && !match[1].includes('name the exact matching catalog skill')) errors.push(`${path} K4 missing exact skill discovery obligation`);
+     }
+ }
++if (projectedRoots.includes('AGENTS.md')) {
++  const block = id => (rootText['AGENTS.md'].match(
++    new RegExp(`<!-- ${id}:START -->([\\s\\S]*?)<!-- ${id}:END -->`))?.[1] || '')
++    .replaceAll('**', '');
++  const paragraphs = text => text.split(/\n\s*\n/).map(part => part.replace(/\s+/g, ' ').trim());
++  const runtimeClause = (text, runtime) => String(text || '').match(
++    new RegExp(`${runtime}:\\s*([\\s\\S]*?)(?=\\b(?:Codex|Claude):|$)`, 'i'))?.[1] || '';
++  const catalogEntry = entries.find(entry => entry.id === 'skill-catalog');
++  const discovery = paragraphs(block('K4')).find(part => part.includes('.claude/skill-os/generated/skill-catalog.md')) || '';
++  const selected = paragraphs(block('K4')).find(part => /^For an explicitly selected applicable method,/.test(part)) || '';
++  const codexCondition = runtimeClause(catalogEntry?.condition, 'Codex');
++  const claudeCondition = runtimeClause(catalogEntry?.condition, 'Claude');
++  // A coherent generated projection can still reverse the root's loading branch.
++  // Check the consuming paragraph and each harness clause, not a detached keyword.
++  if (!/^For genuine skill discovery or unresolved selection:/.test(discovery)
++      || !/authority through EOF; skip repeat catalog discovery/.test(selected)
++      || !/Plan and safety still apply/.test(selected)
++      || !/^genuine skill discovery or unresolved selection/.test(codexCondition)
++      || !/explicitly selected applicable method reads its authority without repeat catalog discovery/.test(codexCondition)
++      || !/^before choosing or invoking a skill/.test(claudeCondition)) {
++    errors.push('Codex catalog discovery scope disagrees across root and manifest or drops the Claude prerequisite');
++  }
++  if (!/^completing genuine discovery or unresolved skill selection\./.test(runtimeClause(catalogEntry?.load_before, 'Codex'))
++      || !/^skill selection or invocation\./.test(runtimeClause(catalogEntry?.load_before, 'Claude'))) {
++    errors.push('Codex catalog discovery deadline disagrees with the conditional root branch');
++  }
++  const startup = paragraphs(block('K10')).find(part => /^Minimal startup/.test(part)) || '';
++  const domains = /framework,\s*skill,\s*project,\s*memory or cross-session recovery/;
++  const bounded = paragraphs(block('K2')).find(part => /^For bounded tasks unrelated to/.test(part)) || '';
++  if (!domains.test(bounded) || !/read any supplied owner; execute within scope/.test(bounded)
++      || !/K3 Plan triggers and human\/permission gates still apply/.test(bounded)) {
++    errors.push('Codex bounded-task routing scope loses its owner, scope, or real gates');
++  }
++  if (!domains.test(startup) || !/Bounded unrelated tasks use K2/.test(startup)) {
++    errors.push('Codex startup scope restores unconditional loading or loses the bounded-task route');
++  }
++  const catalogStatement = obligations.find(entry => entry.id === 'K4')?.statement || '';
++  if (!/Codex[^.]*explicitly selected[^.]*authority[^.]*without repeat discovery/.test(catalogStatement)
++      || !/Claude retains its root catalog prerequisite/.test(catalogStatement)) {
++    errors.push('Codex catalog kernel scope disagrees with the harness-specific loading branches');
++  }
++  const startupStatement = obligations.find(entry => entry.id === 'K10')?.statement || '';
++  if (!/Codex startup applies to/.test(startupStatement) || !domains.test(startupStatement)
++      || !/bounded unrelated tasks use K2/.test(startupStatement)
++      || !/Claude retains its root startup scope/.test(startupStatement)) {
++    errors.push('Codex startup kernel scope disagrees with the conditional root branch');
++  }
++  const routingStatement = obligations.find(entry => entry.id === 'K2')?.statement || '';
++  if (!/Codex bounded tasks unrelated to/.test(routingStatement) || !domains.test(routingStatement)
++      || !/supplied owner within scope/.test(routingStatement)
++      || !/real Plan, permission and human gates still apply/.test(routingStatement)) {
++    errors.push('Codex bounded-task routing kernel scope disagrees with the conditional root branch');
++  }
++}
+ if (['roots-projected', 'projected'].includes(state.phase)) {
+   if (/mandatory startup context[\s\S]{0,800}read[^\n]*`?CLAUDE\.md`?/i.test(rootText['AGENTS.md'])) errors.push('AGENTS.md restored unconditional root cross-read');
+ }
+--- a/scripts/test-agent-context.mjs
++++ b/scripts/test-agent-context.mjs
+@@ -49,7 +49,7 @@
+   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
+ }
+ 
+-const EXPECTED_MUTATIONS = 107;
++const EXPECTED_MUTATIONS = 116;
+ let mutationCount = 0;
+ function mutate(name, edit, expected) {
+   const dir = fixture();
+@@ -84,8 +84,67 @@
+   const text = readFileSync(path, 'utf8');
+   const projected = JSON.parse(text.match(/```json\n([\s\S]*?)\n```/)[1]);
+   edit(projected);
+-  writeFileSync(path, text.replace(/```json\n[\s\S]*?\n```/, () => `\`\`\`json\n${JSON.stringify(projected)}\n\`\`\``));
+-}
++  const body = `[\n${projected.map(row => JSON.stringify(row)).join(',\n')}\n]`;
++  writeFileSync(path, text.replace(/```json\n[\s\S]*?\n```/, () => `\`\`\`json\n${body}\n\`\`\``));
++}
++function changeCatalogLoading(dir, field, value) {
++  const path = join(dir, '.claude/skill-os/agent-context-manifest.json');
++  const manifest = JSON.parse(readFileSync(path, 'utf8'));
++  manifest.entries.find(entry => entry.id === 'skill-catalog')[field] = value;
++  writeFileSync(path, JSON.stringify(manifest));
++  // Keep the projection coherent: failure must concern policy, not generated drift.
++  changeIndex(dir, rows => { rows.find(entry => entry.id === 'skill-catalog')[field] = value; });
++}
++mutate('coherent catalog sources restore unconditional Codex discovery', dir => {
++  changeCatalogLoading(dir, 'condition', 'Before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.');
++}, /Codex catalog discovery scope/);
++mutate('coherent catalog sources move Codex discovery to every invocation', dir => {
++  changeCatalogLoading(dir, 'load_before', 'Skill selection or invocation.');
++}, /Codex catalog discovery deadline/);
++mutate('selected method loses its direct authority branch', dir => {
++  const path = join(dir, 'AGENTS.md');
++  writeFileSync(path, readFileSync(path, 'utf8').replace(
++    /For an explicitly selected applicable method,[\s\S]*?Plan and safety still apply\.\n\n/, ''));
++}, /Codex catalog discovery scope/);
++mutate('catalog condition becomes a detached reference after an unconditional loader', dir => {
++  const path = join(dir, 'AGENTS.md');
++  writeFileSync(path, readFileSync(path, 'utf8')
++    .replace('For genuine skill discovery or unresolved selection:\n', '')
++    .replace('<!-- K4:END -->', 'Reference: For genuine skill discovery or unresolved selection.\n<!-- K4:END -->'));
++}, /Codex catalog discovery scope/);
++mutate('bounded unrelated work restores full root startup', dir => {
++  const path = join(dir, 'AGENTS.md');
++  writeFileSync(path, readFileSync(path, 'utf8').replace(
++    /Minimal \*\*startup\*\* applies to framework,[\s\S]*?For startup:/,
++    'Minimal **startup** applies only to non-trivial work. Otherwise:'));
++}, /Codex startup scope/);
++mutate('startup keeps its exception but the routing root restores full discovery', dir => {
++  const path = join(dir, 'AGENTS.md');
++  writeFileSync(path, readFileSync(path, 'utf8').replace(
++    /For bounded tasks unrelated to framework,[\s\S]*?Otherwise route in order:/,
++    'For every non-mechanical request, route in order:'));
++}, /Codex bounded-task routing scope/);
++mutate('kernel drops bounded-task routing while the startup exception remains', dir => {
++  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
++  const kernel = JSON.parse(readFileSync(path, 'utf8'));
++  kernel.obligations.find(entry => entry.id === 'K2').statement =
++    'Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order.';
++  writeFileSync(path, JSON.stringify(kernel));
++}, /Codex bounded-task routing kernel scope/);
++mutate('kernel erases the Codex and Claude catalog distinction', dir => {
++  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
++  const kernel = JSON.parse(readFileSync(path, 'utf8'));
++  kernel.obligations.find(entry => entry.id === 'K4').statement =
++    'Before skill selection or invocation, read the full catalog. Treat STOP as semantic assessment, not execution permission.';
++  writeFileSync(path, JSON.stringify(kernel));
++}, /Codex catalog kernel scope/);
++mutate('kernel restores full startup for both harnesses', dir => {
++  const path = join(dir, '.claude/skill-os/agent-root-kernel.json');
++  const kernel = JSON.parse(readFileSync(path, 'utf8'));
++  kernel.obligations.find(entry => entry.id === 'K10').statement =
++    'Keep minimal startup, exact load_before boundaries, read-to-end rules, and truthful Claude/Codex invocation and capability differences inline.';
++  writeFileSync(path, JSON.stringify(kernel));
++}, /Codex startup kernel scope/);
+ mutate('explicit final prototype consumer pointer disappears', dir => {
+   const p = join(dir, '.claude/skills/office/tech-spec/SKILL.md');
+   writeFileSync(p, readFileSync(p, 'utf8').replaceAll('final_artifact_ref', 'unselected-artifact'));
+--- a/.claude/skill-os/agent-context-manifest.json
++++ b/.claude/skill-os/agent-context-manifest.json
+@@ -10,8 +10,8 @@
+       "runtime": ["claude", "codex"],
+       "truth_owner": ".claude/skills/office/*/SKILL.md + .claude/skill-os/skill-routing-map.yaml + .claude/skill-os/skill-visibility.json",
+       "leading_words": ["skill", "workflow", "route", "STOP", "ambiguous"],
+-      "condition": "Before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.",
+-      "load_before": "skill selection or invocation",
++      "condition": "Codex: genuine skill discovery or unresolved selection, including STOP or semantic ambiguity with no matched skill; an explicitly selected applicable method reads its authority without repeat catalog discovery. Claude: before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.",
++      "load_before": "Codex: completing genuine discovery or unresolved skill selection. Claude: skill selection or invocation.",
+       "target": ".claude/skill-os/generated/skill-catalog.md",
+       "contains": "Every local skill's defining constraint and authority path, grouped by visibility.",
+       "loader": "root adapter",
+--- a/.claude/skill-os/agent-root-kernel.json
++++ b/.claude/skill-os/agent-root-kernel.json
+@@ -12,7 +12,7 @@
+     },
+     {
+       "id": "K2",
+-      "statement": "Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order.",
++      "statement": "Apply Project Gate, Plan, Framework Flow, Multi-Skill, Single-Skill, then STOP in that order. Codex bounded tasks unrelated to framework, skill, project, memory or cross-session recovery use the supplied owner within scope; real Plan, permission and human gates still apply.",
+       "required_terms": ["Project Gate", "Plan", "Framework Flow", "Multi", "Single", "STOP"],
+       "required_patterns": ["Project Gate[\\s\\S]*Plan[\\s\\S]*Framework Flow[\\s\\S]*Multi-Skill[\\s\\S]*Single-Skill[\\s\\S]*STOP", "never treat STOP as permission"],
+       "forbidden_patterns": ["STOP (?:is|grants|gives) (?:execution )?permission", "Single-Skill[\\s\\S]{0,80}before[\\s\\S]{0,80}Plan"]
+@@ -26,7 +26,7 @@
+     },
+     {
+       "id": "K4",
+-      "statement": "Load the skill catalog before Multi-Skill, Single-Skill, or STOP classification and before skill choice or invocation; treat STOP as a semantic-assessment state, not execution permission.",
++      "statement": "Load the skill catalog for genuine discovery or unresolved selection before Multi-Skill, Single-Skill, or STOP classification and skill choice or invocation. Codex explicitly selected applicable methods read their authority without repeat discovery; bounded unrelated tasks use K2. Claude retains its root catalog prerequisite. Treat STOP as semantic assessment, not execution permission.",
+       "required_terms": ["STOP", "semantic", "single-file", "mechanical", "skill-catalog"],
+       "required_patterns": ["Before classifying[\\s\\S]{0,100}Multi-Skill[\\s\\S]{0,40}Single-Skill[\\s\\S]{0,40}STOP[\\s\\S]{0,100}before choosing[\\s\\S]{0,40}invoking a skill", "Route by[\\s\\S]{0,20}semantic[\\s\\S]{0,100}not[\\s\\S]{0,30}keyword", "truly[\\s\\S]{0,20}mechanical single-file"],
+       "forbidden_patterns": ["Before answering or choosing a skill", "STOP (?:is|means) permission", "catalog (?:lookup|discovery) is optional"]
+@@ -68,7 +68,7 @@
+     },
+     {
+       "id": "K10",
+-      "statement": "Keep the minimal startup protocol, exact load_before boundaries, read-to-end rule, and truthful Claude/Codex invocation and capability differences inline.",
++      "statement": "Keep minimal startup, exact load_before boundaries, read-to-end rules, and truthful Claude/Codex invocation and capability differences inline. Codex startup applies to framework, skill, project, memory or cross-session recovery work; bounded unrelated tasks use K2. Claude retains its root startup scope.",
+       "required_terms": ["startup", "conditional", "FILE_END", "classification", "load_before", "Claude", "Codex"],
+       "required_patterns": ["Minimal[\\s\\S]{0,20}startup", "matching[\\s\\S]{0,40}conditional entry[\\s\\S]{0,40}target[\\s\\S]{0,80}EOF[\\s\\S]{0,100}load_before", "Only a boundary that precedes an answer blocks that answer", "do not[\\s\\S]{0,20}pre-read[\\s\\S]{0,80}boundary has not been reached", "name/route discovery[\\s\\S]{0,80}catalog is sufficient", "execution-only schemas[\\s\\S]{0,100}implementation owners", "Claude[\\s\\S]{0,220}Codex|Codex[\\s\\S]{0,220}Claude"],
+       "forbidden_patterns": ["for each matching[^\\n]{0,160}before answering", "framework/meta/`NO_PIN`[\\s\\S]{0,100}matches `project-session`", "Codex (?:uses|executes)[^\\n]{0,60}Claude slash", "Claude (?:uses|invokes)[^\\n]{0,40}\\$<skill-name>"]
+--- a/.claude/skill-os/generated/context-index.md
++++ b/.claude/skill-os/generated/context-index.md
+@@ -7,7 +7,7 @@
+ 
+ ```json
+ [
+-{"id":"skill-catalog","obligation_ids":["K4","K10"],"runtime":["claude","codex"],"leading_words":["skill","workflow","route","STOP","ambiguous"],"condition":"Before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.","load_before":"skill selection or invocation","target":".claude/skill-os/generated/skill-catalog.md","contains":"Every local skill's defining constraint and authority path, grouped by visibility.","loader":"root adapter","read_to_end":true,"fallback":"Inspect .claude/skills/office and the routing map directly; do not treat STOP as permission.","truth_owner":".claude/skills/office/*/SKILL.md + .claude/skill-os/skill-routing-map.yaml + .claude/skill-os/skill-visibility.json"},
++{"id":"skill-catalog","obligation_ids":["K4","K10"],"runtime":["claude","codex"],"leading_words":["skill","workflow","route","STOP","ambiguous"],"condition":"Codex: genuine skill discovery or unresolved selection, including STOP or semantic ambiguity with no matched skill; an explicitly selected applicable method reads its authority without repeat catalog discovery. Claude: before choosing or invoking a skill, including STOP or semantic ambiguity with no matched skill.","load_before":"Codex: completing genuine discovery or unresolved skill selection. Claude: skill selection or invocation.","target":".claude/skill-os/generated/skill-catalog.md","contains":"Every local skill's defining constraint and authority path, grouped by visibility.","loader":"root adapter","read_to_end":true,"fallback":"Inspect .claude/skills/office and the routing map directly; do not treat STOP as permission.","truth_owner":".claude/skills/office/*/SKILL.md + .claude/skill-os/skill-routing-map.yaml + .claude/skill-os/skill-visibility.json"},
+ {"id":"plan-contract","obligation_ids":["K2","K3"],"runtime":["claude","codex"],"leading_words":["plan","complex","multi-phase","irreversible"],"condition":"Any of the five Plan conditions is true or the user explicitly requests planning.","load_before":"producing a phase plan, its assertions, or its approval scope","target":".claude/agents/plan-agent.md","contains":"Plan triggers, phase format, approval gates, assertions, and incremental replanning.","loader":"root adapter or route-guard plan decision","read_to_end":true,"fallback":"Keep K3 inline and stop before Supervisor/Hierarchical execution."},
+ {"id":"project-session","obligation_ids":["K1","K5","K6"],"runtime":["claude","codex"],"leading_words":["project","老项目","新项目","继续","NO_PIN","只读引用"],"condition":"The request names, implies, switches, creates, or cross-reads a project; project identity or authority must be decided; or a project-scoped action is imminent. A pure framework/meta NO_PIN explanation with none of these uses the inline floor.","load_before":"deciding project identity or authority, or the first project-scoped read, write, switch, creation, or cross-project reference","target":".claude/skill-os/runtime/project-session.md","contains":"Pin truth, NO_PIN, transaction-only switching, cross-project read grants, and shared-alias limits.","loader":"root adapter and project gate","read_to_end":true,"fallback":"Remain NO_PIN and do not touch shared project aliases until the project gate is resolved.","truth_owner":".claude/hooks/project-scope-guard.mjs"},
+ {"id":"memory-extraction","obligation_ids":["K8","K10"],"runtime":["claude","codex"],"leading_words":["remember","记住","纠正","memory","ingest","query","lint"],"condition":"The user corrects future behaviour, asks to remember, or requests memory ingest/query/lint/governance.","load_before":"deciding whether to store anything or writing memory","target":".claude/skill-os/extraction-bar.md","contains":"Extraction threshold and default-do-not-store rule.","loader":"root adapter or session-sync","read_to_end":true,"fallback":"Do not store; preserve the inline SC-20260523-003 fallback."},
+--- a/.claude/agents/orchestrator.md
++++ b/.claude/agents/orchestrator.md
+@@ -23,11 +23,11 @@
+ 
+ | 触发 | 进入模式 |
+ |------|---------|
+-| Plan Agent 产出了执行计划 | **Free Task Mode** |
++| Plan Agent 产出了执行计划，且所选模式的批准门已满足 | **Free Task Mode** |
+ | 任意复杂任务，用户批准计划后 | **Free Task Mode** |
+ | 用户输入 `/office` 并选择推荐流程 | **Skill Workflow Mode** |
+ | 用户说"继续流程/进入下一步/从断点恢复" | 读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 判断 mode |
+-| `<WORK_ROOT>/.luca/workflow-state.yaml` 有 PENDING 节点 | **Skill Workflow Mode** |
++| 用户已选 Workflow，且其绑定状态有 PENDING/IN_PROGRESS 节点 | **Skill Workflow Mode**，核验后续执行授权 |
+ 
+ **不激活：**
+ 
+@@ -37,7 +37,7 @@
+ | 2 文件无依赖可并行 | Parallel Fan-out，主 Agent 同一消息并发调用，不进入 Orchestrator（≥3 文件即命中 Plan Agent 触发条件 1） |
+ | 用户直接调用单个 skill | Standalone 模式，skill 自行运行，不走 Orchestrator |
+ 
+-> **冲突解决规则：** 若 workflow-state 有 PENDING 节点且用户同时点名某个 skill：优先执行该 standalone skill，完成后询问用户是否恢复 workflow。不自动进入 Orchestrator。
++> **冲突解决规则：** 若 workflow-state 有 PENDING 节点且用户同时点名某个 skill：优先执行该 standalone skill。只有已有明确恢复授权时才按 §3.5 续 Workflow；单凭状态文件不激活流程。
+ 
+ ---
+ 
+@@ -109,14 +109,18 @@
+ ```
+ Step 1  读取 Plan Agent 输出的计划
+         - 获取总 Phase 数、当前 Phase、编排模式
++        - 恢复时读本次精确 checkpoint/产物与有效授权，核已完成效果及在途句柄；
++          状态文字不代替当前事实，按 §2.2 收取在途执行，不从头重派
+         - 将断言列表交给测试环节保管（Orchestrator 不执行断言）
+ 
+-Step 2  Phase 执行循环（WHILE 有 PENDING Phase）
++Step 2  Phase 执行循环（WHILE 有未完成 Phase）
+ 
+   2a  context 预算检查（见 §4）
+-      IF > 80% → 写 checkpoint → 提示用户新 session 继续
++      按实际上下文压力与交接需要判断；轮数提醒本身不停止执行。
+ 
+   2b  按计划编排执行当前 Phase
++      仅选择 required 前置已通过且权限仍有效的未完任务；IN_PROGRESS 先观察原调用。
++      失败/缺证停对应依赖，其他独立已授权任务沿 §2.2/§5 的原并发限制执行。
+ 
+       【phase_type 路由（优先判断）】
+       IF phase_type == skill_execution：
+@@ -126,7 +130,8 @@
+         【用户参数前置收集】（execution_context == subagent 时必须执行，不得跳过）
+         扫描该 SKILL.md 中需用户选择的参数（AskUserQuestion 步骤 / "ask the user" 字样，
+         如 deepresearch 的 research_depth 档位）：
+-          有 → 先在主会话向用户提问，将用户选择以显式参数写入 WA prompt；
++          有 → 先核用户已有明确选择及其适用范围，将仍有效的选择以显式参数写入 WA prompt；
++               尚未选择、已被更正或相互冲突时，才在主会话询问缺失项并等真实响应；
+                禁止静默替用户选档、禁止依赖 skill 内 headless fallback 兜底
+                （来源：2026-06-12 用户指示"需要询问我是哪种调研档位，不允许静默处理"）
+           无 → 继续
+@@ -137,7 +142,7 @@
+         IF execution_context == main_agent：
+           主 Agent 直接读取 SKILL.md，在当前对话上下文执行
+           （skill 内部协议负责写 handoff，Orchestrator 不重复写）
+-          skill 完成后展示产出与判定；已有明确后续授权且无未决 Human Gate 时继续，
++          skill 完成后展示产出与判定；经 2c 验证/记录、2d 授权检查后继续，
+           缺授权或需要采用/产品取舍时等待真实确认，不重复已确认事实。
+           （不更新 workflow-state.yaml，该文件是 Skill Workflow Mode 专属）
+         IF approved open-design postprocess_plan selects motion-polish：
+@@ -146,7 +151,9 @@
+           不等待 raw semantic PASS 或未来 OD DONE handoff；保留 raw FAIL 与全部原 D/STATE/AC
+           只在同一未完成 Phase 修复已批准范围，final 完整独立 PASS + exact final_artifact_ref
+           resolve 后回 OD Phase 5/6 完成父级一次；required FAIL/UNKNOWN 不前进、不进 TS
+-        → 进入 2c 测试环节（断言：handoff 文件存在 + gate_result PASS）
++        → 进入 2c 测试环节：按本次 skill authority 验产物与适用交接，
++          已选择项目 Workflow 的节点保留项目 handoff；显式会话 handoff 验 OS 临时产物，
++          不为它再造项目交接或写 workflow-state，NO_PIN 不穿共享 docs 别名
+       ELSE（phase_type == task_execution，默认）：
+         按编排模式执行：
+         - Solo: 主 Agent 直接执行
+@@ -159,13 +166,15 @@
+       - 将 Plan Agent 的断言列表 + 产出路径传入 quality-gate
+       - quality-gate 运行断言，返回 PASS / FAIL(BLOCKING) / FAIL(WARNING) / CONDITIONAL_PASS
+       - Orchestrator 处理测试结果：
+-          PASS → 标记该 Phase 完成，继续下一个 Phase
+-          FAIL(BLOCKING) → 停止，展示 findings，等用户决策（修复/跳过/终止）
++          PASS → 保留结果，完成 2c-eval 记录后才按 2d 标记并继续
++          FAIL(BLOCKING) → 停止依赖，展示并保留 findings；同范围修复已获明确授权且无
++                          未决 Human Gate/未授权 effect 时修复后重验，否则等用户决策（修复/跳过/终止）
+                           如状态为 BLOCKED/NEEDS_CONTEXT，按 plan-agent.md §4 Escalation Format 输出
+                           同一 Phase 连续 2 次 FAIL(BLOCKING)、或修复涉及计划变更 →
+                           走 plan-agent.md「增量重规划」协议（delta 重规划，不推倒全案）
+-          FAIL(WARNING) → 记录 findings，继续执行
+-          CONDITIONAL_PASS → 记录 findings 到当前 Phase 日志，继续执行（与 Skill Workflow Mode 处理方式一致）
++          FAIL(WARNING) / CONDITIONAL_PASS → 保留原判定、真实退出码与附带条件，
++                          按 gate 的适用范围进入 2d；未满足的 required 项仍阻断依赖，
++                          不把 warning/条件性结果改写成完整 PASS
+ 
+   2c-eval 【Eval 记录／权限分离】dispatch quality-gate 前由 Orchestrator 生成唯一
+         `eval_run_id` 并作为输入传入。quality-gate 只返回报告 + `EVAL_ENVELOPE_JSON`，不写文件。
+@@ -195,12 +204,19 @@
+       补漏回验：本 Phase 若发生过「用户打断纠正产出物」且归因判为 L3/L4 但治理动作尚未落地
+       （协议：.claude/skill-os/correction-attribution.md），在此补跑对应处置；已落地则跳过（幂等）。
+ 
+-  2d  Supervisor/Hierarchical 模式：人工确认检查点
+-      - 主 Agent 展示当前 Phase 的产出摘要 + 测试结果
+-      - 等待用户确认后继续下一 Phase
++  2d  各模式的继续检查（Supervisor/Hierarchical 同时展示阶段摘要）
++      - 核实际终态、当前 Phase 的产物/测试与必要 eval 记录；完整通过才标 DONE。
++        允许保留的 warning/defer 按既有状态标 DONE_WITH_CONCERNS，不伪造完整通过。
++      - 前置验证及必要 eval 记录通过，下一 Phase 已获明确批准，且无未决 Human Gate、
++        也无本次有效授权未覆盖的新 effect → 直接继续，不重复询问。
++      - 缺少批准、范围变化或需要真人决定 → 说明具体待决项，等待真实响应；
++        沉默、超时或笼统“自动继续”均不替代该项决定。
++      - 失败、缺证或未完成的前置停在对应依赖链；implement 仍以 §2.1a–b 为准。
+ 
+ Step 3  全部 Phase 完成后，触发 quality-gate 运行完整断言列表
+         Orchestrator 汇总并展示：PASS N / FAIL M / WARN K
++        所有 required 产物/验证/记录及在途处置闭合才称整体完成；未解失败/缺片继续列出，
++        不能仅因 PENDING 清空或部分 Group 成功就宣称全部完成。
+ 
+ Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时（Scene A/B/D）：
+         回读 tech-spec §RTM「测试准则」列，逐条判 pass / fail + 证据，三维框架——
+@@ -216,6 +232,16 @@
+           出门前裁决；fable 不可用→降级 opus 并告知）——见 §5 Dispatch 规则
+ ```
+ 
++**已派发工作的观察与消费：** 绑定当前调用实际返回的原生 agent/task/process 句柄，
++使用当前宿主提供的 wait/status/read 能力观察同一次执行。等待超时只表示本次等待结束，
++沿原句柄继续观察，不据此重派或重启；idle、ACK 或进度消息均不等于任务成功。
++实际终态、完成报告和所需产物/验证齐备后，才可消费结果；失败/未知/部分完成保留原始
++输出并阻断依赖。终态失败后的修复沿既有失败协议，另次执行不能覆盖原失败。
++没有可用观察能力或句柄丢失时，如实报告缺口并暂停依赖链，不猜测已完成或已停止。
++失败只阻断受影响依赖；其他已授权且无依赖冲突的工作可继续，所有在途句柄仍须收取终态
++或报告无法观察/中断的事实。汇总时保留失败/缺片，未解决的 required 输入不进入成功合并。
++§5 的关键调用证据门和 implement 的单活跃门仍优先，不从本条取得新的并发权限。
++
+ ### 2.2-pf Parallel Skill Fan-out（非交互 Skill 并行执行）
+ 
+ **适用条件：** 仅非 implement 的通用计划声明 `parallel_skills`，且所有 skill 均为非交互型
+@@ -226,11 +252,13 @@
+ Step 2  对每个 skill 运行 Pre-flight 检查 + 用户参数前置收集（见 §2b），全部 PASS 才继续
+ Step 3  同一条消息中并发启动所有 Work Agent（每个独立冷启动上下文）
+         每个 WA 使用 skill_execution 模式，skill_name 不同
+-Step 4  等待所有 WA 返回完成报告（全部 DONE 或有 BLOCKED）
++Step 4  按 §2.2 观察各 WA 的实际终态与完成报告；有 BLOCKED/NEEDS_CONTEXT 时先停依赖，
++        其余在途任务仍按原句柄观察或按已授权取消处理，不能把部分返回当全部结束
+ Step 5  【结果汇总】将各 WA 的 handoff 路径收集到合并摘要：
+         docs/handoff/YYYY-MM-DD-<topic>-parallel-<skill1>+<skill2>-summary.md
+         格式：每个 skill 的关键 findings（≤200字/skill）+ 共识点 + 冲突点
+ Step 6  触发 quality-gate，传入所有 WA 的 outputs + 汇总摘要路径
++        required 失败/缺片仍按 §2c 停依赖，汇总摘要不把缺项变成成功
+ Step 7  记录 eval（每个 skill 各记一条）
+ ```
+ 
+@@ -242,8 +270,8 @@
+ ### 2.3 5 种编排模式执行规范
+ 
+ **Solo**
+-- 主 Agent 直接执行，无 subagent
+-- 完成后自行验证对应断言
++- 主 Agent 直接执行任务，不派执行 worker
++- 主 Agent 完成产物及必要自检；Phase 的独立质量门仍按 §2c 触发，不用自检替代
+ 
+ **Sequential Chain**
+ - Phase 有顺序依赖，前 Phase 产出作为后 Phase 的输入
+@@ -251,7 +279,7 @@
+ 
+ **Parallel Fan-out**
+ - 在**同一条消息**中发起多个独立操作（工具并发调用）
+-- 所有子任务完成后合并结果，统一验证
++- 按 §2.2 回收真实结果与失败，所需输入验证通过后合并；缺片不省略，统一验证仍保留
+ 
+ **Supervisor（Work Agent + Eval Agent 配对）**
+ ```
+@@ -263,6 +291,10 @@
+          填写可选变量 AVAILABLE_SKILL_PATHS（路径列表）
+          否则省略该变量（字面量 {{AVAILABLE_SKILL_PATHS}} 残留时模板有 guard，会自动跳过）
+      → 通过 Agent tool 的 prompt 字段传入完整 prompt
++     → 沿 TASK_CONTEXT 传原始目标、当前 Phase 与最新有效用户授权的来源；沿
++       INHERITED_CONSTRAINTS 传本次 scope、唯一写 owner、效果边界和未决 Human Gate。
++       PRIMARY_OUTPUTS / DONE_CRITERIA 保留原验收；仅传父任务有效权限与本 Phase 的交集，
++       不新增必填变量，不以“已派发”替代用户授权。
+      → PRIMARY_OUTPUTS 在派发前相对 WORK_ROOT 解析成固定绝对路径；后台任务不得跟随共享 display aliases 或后续项目切换改变落点
+      → required 多切片/来源合并测量前，完整读取 .claude/agents/references/evidence-receipts.md；
+        派发前 pre-freeze expected 范围/版本/方法与原分母，不能按返回数量重建。
+@@ -294,18 +326,18 @@
+ 
+ 注入格式：`- <路径> — <何时调用该 skill>`（每个 skill 一行）。未指定时填"无"。
+ 
+-  2. WA-N 返回完成报告（JSON: status / outputs_produced / blockers）
++  2. 按 §2.2 核验 WA-N 实际终态与完成报告（JSON: status / outputs_produced / blockers）
+   3. 触发测试环节（quality-gate）：
+      → 传入：phase_id + outputs_produced + blockers(来自 WA 完成报告) + Plan Agent 断言列表
+      → 返回：PASS / FAIL / CONDITIONAL_PASS + findings
+-  4. FAIL → 展示问题 → 主 Agent 修复 or 重新实例化 WA
+-  5. PASS → 继续下一 Phase
++  4. FAIL → 按 §2c 的原失败/有效修复授权处理；在途未终结不能重派
++  5. PASS → 按 §2d 检查下一 Phase 的既有授权与未决门，再继续
+ ```
+ 
+ **Hierarchical**
+ - 顶层 Orchestrator 管理多个 Worker Group
+ - 每个 Worker Group 可以是 Sequential / Parallel / Supervisor
+-- 必须在执行前等用户确认计划
++- 首次执行前必须有真实计划批准；仍有效的批准继承，不因恢复或阶段完成重复确认
+ - 建议每个顶层 Phase 完成后写 checkpoint（防 context 溢出）
+ 
+ **Hierarchical 失败恢复协议：**
+@@ -317,7 +349,8 @@
+      - 有下游依赖 → 暂停依赖链上的所有 Group，按 Escalation Format 告知用户
+   3. 按 plan-agent.md §4 的 Escalation Format 输出：
+      STATUS / REASON / ATTEMPTED / RECOMMENDATION
+-  4. 用户选择：修复该 WA（重新实例化）/ 跳过（标为 DONE_WITH_CONCERNS）/ 终止
++  4. 已授权同范围修复按 §2c 执行；缺授权或需要跳过/改变计划时等待具体用户选择。
++     跳过不授予消费缺失 required 输入的权利；须明确依赖如何处置，不把失败改成成功
+   5. 修复后从失败的 Phase 续点，已完成的 Group 不重跑
+ ```
+ 
+@@ -345,7 +378,8 @@
+         不要求用户另说“跳过”，也不因无 PRD 先补完整需求链。
+ Step 3  仅尚需发现或明确选择场景整链时按 scene 推荐路径变体（见 §3.3）；
+         机制/多方案未定回对应 owner；关键入口不明等待真实答案。
+-Step 4  只在本次选定路径内找第一个 status=PENDING 的 node；
++Step 4  只在本次选定路径内核已完成/失败/在途事实，选择首个可执行未完 node；
++        在途节点先沿原句柄观察，required 前置未完则停依赖，不重复派发。
+         路径外节点不伪标 DONE，不拿它们的 handoff 阻塞短入口。
+ Step 5  读本次路径实际选定上游的精确 handoff summary（`<WORK_ROOT>/docs/handoff/`）；
+         已有需求/原型直接来源由 Brief 继承，不制造上游 handoff。
+@@ -379,7 +413,7 @@
+ ### 3.4 Skill 执行循环
+ 
+ ```
+-WHILE 有 PENDING 节点:
++WHILE 本次选定路径仍有未完节点（PENDING / IN_PROGRESS / 待修复）:
+ 
+   3.4a  检查 handoff gate（optional-workflow-graph.yaml）
+         仅检查本次路径真实适用的 gate，遵守 applies_when；
+@@ -390,23 +424,24 @@
+         PASS → 继续
+ 
+   3.4b  context 预算检查（见 §4）
+-        IF > 80% → 写 handoff → 建议新 session → STOP
++        按实际上下文压力与交接需要判断；轮数提醒本身不停止执行。
+ 
+   3.4c  加载 next_skill 的 SKILL.md → 执行
++        main_agent 继承当前有效授权；subagent 沿 §2.3 的现有字段传背景/约束并按 §2.2 观察。
+         Skill 内部可自由使用 subagent，Orchestrator 不干预
+ 
+   3.4d  Skill 完成后：
+-        - 确认 `<WORK_ROOT>/docs/handoff/` 有新文件
+-        - 以 `_PROJECT_ROOT=<WORK_ROOT>` 调用唯一写入器更新 `.luca/workflow-state.yaml` → status: DONE
++        - 核本次精确产物/handoff、实际终态及上游消费条件，不以目录有新文件替代本次结果
+         - 调度 @quality-gate subagent 验证产出
+-        - quality-gate PASS → 观察提取（同 2c-obs 三条检查）→ 继续
+-        - quality-gate FAIL → 将该节点状态回滚为 IN_PROGRESS 再询问用户
+-          （修复 / 跳过=DONE_WITH_CONCERNS / 终止）——不留"DONE 但 gate FAIL"的矛盾态
++        - 按 2c-eval 保留并记录原 envelope；PASS 且必要记录成功后，才以
++          `_PROJECT_ROOT=<WORK_ROOT>` 调用唯一写入器更新 `.luca/workflow-state.yaml` → status: DONE
++        - warning/条件性结果保留限制，required 未满足不放行；观察提取同 2c-obs，下一节点走 3.4e
++        - quality-gate FAIL/UNKNOWN 或缺证/记录失败 → 不标 DONE，保留原失败，按 §2c 处理
+ 
+   3.4e  human-in-the-loop 检查点：brainstorm / ux-brainstorm / design-brief / html-prototype
+         有未决方案、范围或采用决定时等待真实确认；已确认事实/所选工具/后续授权直接继承。
+         Brief 完成不产生新的执行授权；同一已授权链可以继续，但最终 bundle/TAC采用、
+-        未决产品决定及新 effect 的 Human Gate 保持，不能以“自动”绕过。
++        未决产品决定及本次有效授权未覆盖的 effect 的 Human Gate 保持，不能以“自动”绕过。
+ 
+   3.4f  用户确认后，将采纳决策标记 [ADOPTED]，否决方案标记 [REJECTED]
+ ```
+@@ -414,32 +449,33 @@
+ ### 3.5 断点恢复
+ 
+ ```
+-Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 找最后一个 DONE 的 node
+-Step 2  读该 node 的 handoff summary
+-Step 3  展示："上次完成了 <last_done>，核心决策：<D-001...>"
+-        "下一步是 <next_pending>，是否继续？"
+-Step 4  用户确认 → 进入 §3.4 执行循环
++Step 1  在已验证绑定根内读 workflow-state、所选路径及已完成/失败/在途节点。
++        沿本次原生句柄核在途状态；失去句柄按 §2.2 报缺口，不能当 PENDING 直接重派。
++Step 2  读本次精确 handoff/checkpoint、原目标、最新有效授权/更正和已完成效果。
++Step 3  完整读取 `.claude/skill-os/runtime/long-session.md` 后核当前事实；
++        旧 DONE 与 DONE_WITH_CONCERNS 均核产物和限制，不仅凭状态或“最后一个”确定续点。
++        已失效/失败的 required 依赖先修复；展示首个真正未完点及在途处置。
++Step 4  已有明确继续授权且无未决 Human Gate/未授权 effect → 进入 §3.4；
++        否则说明具体缺口，等真实确认。恢复不重跑已完成效果。
+ ```
+ 
+ ---
+ 
+ ## 4. Context 预算管理（两种模式共用）
+ 
+-> **代理指标：** Orchestrator 无法直接测量 token 占用率。以对话轮数估算：route-guard 在第 20 轮起、每 10 轮自动提醒；Orchestrator 收到提醒时即视为已达 60% 阈值。
+-
+-| context 占用率（估算） | 行动 |
+-|----------------------|------|
+-| < 60%（轮数 < 20） | 正常执行 |
+-| 60% - 80%（轮数 20-30） | 警告，建议完成当前 Phase/Skill 后 compact |
+-| > 80%（轮数 > 30，或收到 route-guard compact 提醒） | 强制：完成当前 → 写 checkpoint/handoff → 建议新 session |
+-
+-**重型操作连续性规则：** 连续执行 2 个运行时 > 20K tokens 的 Phase 后，建议 compact 或新 session。
++轮数仅作非强制提醒。route-guard 的轮数 checkpoint 提示不能换算为 token 占用率，
++也不能单凭轮数或 compact 提醒强制停止、压缩或切换 session。宿主未提供实际占用数据时
++标为未知；已配置的真实资源上限仍须遵守。
++
++确有上下文压力、需要交接或到达既有必要阶段边界时，完整读取
++`.claude/skill-os/runtime/long-session.md` 并使用已有 checkpoint。保留原目标、最新授权、
++当前证据、在途句柄及首个未完点；是否需要新 session 依据实际连续性风险，不另建状态协议。
+ 
+ **新 session 恢复指令：**
+ ```
+ 请在新 session 中输入：
+ "继续 <topic>，从 <next-phase/next-skill> 开始"
+-状态已保存在 docs/handoff/ 或 Plan Agent 的计划中。
++使用本次精确 checkpoint/handoff 与计划；NO_PIN 按 long-session 的框架/临时路径恢复。
+ ```
+ 
+ ---
+@@ -489,6 +525,6 @@
+ - **不嵌套 subagent 调度。** Work Agent 内部的 subagent 由 Work Agent 自己管理。
+ - **不修改 skill 内部逻辑。** 只负责"调度谁"和"传递什么"。
+ - **不跳过测试环节。** 即使看起来成功，每个 Phase 完成后必须触发 quality-gate。
+-- **不自动跳过 human-in-the-loop 检查点。** 除非用户明确说"自动继续"。
++- **保留真实 human-in-the-loop 决定。** 已授权继续按 §2d/§3.4e 执行；“自动继续”不替代未决决定或未批准 effect。
+ 
+ <!-- FILE_END: orchestrator.md -->
+--- a/.claude/agents/work-agent-template.md
++++ b/.claude/agents/work-agent-template.md
+@@ -53,7 +53,15 @@
+ 之后的 session 项目选择也不改变本任务根。明确取消时停止尚未派发的新工具动作，并如实区分
+ 已发出、仍在途和宿主无法中断的操作。
+ 
+-> **MODE 前置守卫：** 读取 `{{MODE}}` 字段，若为 `skill_execution`，**跳过 SECTION 1-3 的 task_execution 执行协议，直接执行 SECTION 0b**。若为 `task_execution`（或字面量 `{{MODE}}` 未填写），按默认流程执行。
++**授权继承（两种 MODE 共用）：** 从 TASK_CONTEXT 区分原始目标与当前 Phase，并读取
++SECTION 1 的任务输入/INHERITED_CONSTRAINTS、SECTION 2 的产物及 SECTION 5 的验收要求。
++继承最新有效用户授权的来源、scope、唯一写 owner 与效果边界；已授权且无未决真人决定的
++范围内直接执行。缺少必要授权、输入冲突或需要新决定时返回 BLOCKED/NEEDS_CONTEXT，
++由主会话处理，派发本身不扩大权限。skill_execution 仍由所选 skill 拥有领域方法和质量门。
++
++> **MODE 前置守卫：** 完成上述共用输入/授权检查后，`skill_execution` 执行 SECTION 0b，
++> 跳过 SECTION 3 的直接任务执行步骤；`task_execution` 执行 SECTION 3。
++> MODE 未填写或不在这两值内时输出 BLOCKED，不猜默认模式启动工作。
+ 
+ ---
+ 
+@@ -69,13 +77,15 @@
+ ```
+ Step 1  [Read Skill] 完整读取 {{SKILL_PATH}}，必须读到最后一行（含 FILE_END 标记）
+ Step 2  [Follow Protocol] 按 SKILL.md 中的执行协议完整执行，不跳步
+-Step 3  [Produce Outputs] 将产出物写入 SKILL.md 规定的输出路径
+-Step 4  [Write Handoff] 将 handoff summary 写入 {{WORK_ROOT}}/docs/handoff/YYYY-MM-DD-{{SKILL_TO_EXECUTE}}-handoff.md
+-        handoff 必须包含：skill 名称、产出路径列表、gate_result（PASS/FAIL）、关键决策摘要
++Step 3  [Produce Outputs] 按 SKILL.md 方法产出，路径必须在本次冻结授权内；冲突回报 NEEDS_CONTEXT
++Step 4  [Write Handoff] 沿本次 PRIMARY_OUTPUTS/继承约束绑定的精确 handoff 路径与共享规范写入
++        已选择项目 Workflow 的普通节点保留项目 docs/handoff 节点交接与 gate_result/criteria；
++        显式会话级 handoff skill 沿其 authority 产出 OS 临时文件，不再创建项目节点交接。
++        NO_PIN 框架/meta 按所选 authority 和已验证 scope 写框架/临时产物，不穿 docs 别名；
++        所选 skill 的合法终端豁免继续适用，原判定及失败证据保留
+ Step 5  [Done Criteria]
+-        - [ ] {{WORK_ROOT}}/docs/handoff/*-{{SKILL_TO_EXECUTE}}-handoff.md 文件存在
+-        - [ ] handoff 包含 gate_result 字段
+-        - [ ] SKILL.md 规定的主要产出文件存在
++        对照 SECTION 5 及 skill 自有质量门核本次精确产物，不以同名/历史文件存在判完成；
++        required 未通过按 SECTION 6 返回，沿原授权修复不替领域 owner 降门
+ Step 6  [Completion Report] 输出 SECTION 2 定义的完成报告 JSON
+ ```
+ 
+@@ -141,6 +151,12 @@
+ -->
+ 
+ ### 完成报告格式（必须严格遵守，不得添加额外字段）
++
++两种 MODE 均依据本次实际产物、验证结果与终态报告；ACK、idle、进度或一次等待超时不算完成。
++已启动工具仍在途时沿原生句柄继续观察，不仅因等待超时重复启动。失败、未完依赖及无法
++观测/中断的操作原样写入 blockers/notes，不用后次成功覆盖原失败；缺终态不报 DONE。
++最新更正/取消先核对本次任务的影响：仅继续仍有效且独立的已授权动作；停受影响依赖，
++保留原授权来源、已完成效果及未完点供父会话核实，不向旧对象盲重发。
+ 
+ 完成所有工作后，输出以下 JSON（放在回复的最后）：
+ 
+@@ -205,7 +221,7 @@
+         不添加未请求的功能、配置、抽象或兜底逻辑。
+         每个改动必须能追溯到 GOAL、PRIMARY_OUTPUTS 或 DONE_CRITERIA。
+         如果执行过程中某个分支需要 skill 能力：
+-          → 检查 SECTION 0 的「可用 Skill」列表
++          → 检查本次注入的「可用 Skill」列表
+           → 找到对应 SKILL.md 路径，Read 该文件
+           → 遵照 SKILL.md 的执行协议完整执行
+           → 产出物写入该 skill 规定的输出路径
+@@ -241,7 +257,8 @@
+ - 不修改以下 Protected Paths 中的文件（见 SECTION 0）：{{PROTECTED_PATHS}}
+   > **默认保护**：若 `{{PROTECTED_PATHS}}` 未被填写（字面量残留），视为保护 `framework/` 和 `CLAUDE.md`。
+ - 不创建任务描述中未提及的文件
+-- 不调用其他 Agent 或启动 subagent
++- task_execution 不另派 Agent；skill_execution 仅执行所选 skill 明示且父任务已授权的内部协作，
++  仍遵守继承的模型路由/并发限制；implement 的禁止嵌套与单活跃门不因此放宽
+ - 不做规划——如果任务范围不明确，进入 Failure Protocol
+ - 不做 speculative abstraction、drive-by refactor、无关格式化、无关注释改写
+ - 不在完成报告中遗漏任何 Primary Output（已完成的列在 outputs_produced，未完成的列在 outputs_skipped）
+@@ -297,7 +314,7 @@
+ | 限制 | 值 |
+ |------|---|
+ | 推荐 prompt 长度 | < 2000 tokens |
+-| 最大读取文件数 | 10 个（超过则优先读最直接相关的） |
++| 输入包目标 | 直接相关文件优先，约 10 个；必读清单/领域 owner 不因数量被省略，确有容量缺口回报 NEEDS_CONTEXT |
+ | 不读取 | 完整会话历史、其他 Phase 的产出（除非 Input Contract 明确列出） |
+ 
+ Work Agent 在冷启动上下文中运行，不依赖会话历史。所有需要的信息必须在 Input Contract 中显式传入。
+--- a/.claude/skills/office/auto/SKILL.md
++++ b/.claude/skills/office/auto/SKILL.md
+@@ -142,7 +142,7 @@
+ 
+ 对每个 WA，填写 `.claude/agents/work-agent-template.md` 变量，**以下必填项全部填写，不得保留占位符**
+ （auto 的每个 WA 都是 skill 执行器，必须填 MODE=skill_execution 及其两个必填变量 SKILL_TO_EXECUTE /
+-SKILL_PATH；否则模板的 MODE 前置守卫会把 WA 当 task_execution 走 SECTION 1-3，skill 永不被执行）：
++SKILL_PATH；缺失/无效 MODE 按模板守卫返回 BLOCKED，不猜 task_execution 默认值）：
+ 
+ ```
+ {{MODE}}                  : skill_execution（auto 的每个 WA 都是 skill 执行器，固定此值）
+@@ -184,14 +184,14 @@
+ **Work Agent 不得：**
+ - 在未完整读完 SKILL.md 的情况下开始执行
+ - 修改其他 Phase 的产出
+-- 在 skill 未完成时返回 Completion Report
++- 在 skill 未完成时返回 DONE；阻塞/缺信息仍须返回真实失败报告
+ 
+ #### 3.3 Orchestrator 编排规则
+ 
+ ```
+ 并行 Phase（‖）: 在同一条消息中并发启动所有 WA
+-串行 Phase（→）: 等待前 Phase 所有 WA 完成 + handoff 写入后，再启动下一 Phase
+-质量门控     : 每 Phase 结束后，主 Agent 检查产出路径，任一缺失 → 重试该 WA
++串行 Phase（→）: 前 Phase 实际终态、精确 handoff 与 required 验证/记录通过后，才消费并启动后继
++质量门控     : 核本次实际终态、产物与 skill 质量门；缺失按 W9 处理，在途等待不重启 WA
+ ```
+ 
+ 派发前，主 Agent 必须把全部输入、`PRIMARY_OUTPUTS` 与 handoff 路径相对 `WORK_ROOT`
+@@ -209,12 +209,16 @@
+ 
+ | WA 返回状态 | Orchestrator 动作 |
+ |------------|-----------------|
+-| `DONE` — 产出路径存在 | 继续下一 Phase |
+-| `DONE` — 但产出路径不存在 | 视为隐式 BLOCKED，执行重试 |
+-| `BLOCKED` — 首次 | **重试一次**（重新启动同一 WA，传入相同参数） |
+-| `BLOCKED` — 重试后仍失败 | **停止当前 Pipeline**，向用户报告：阻塞 Phase、blockers 列表、建议操作（手动执行该 skill / 跳过该 Phase）|
+-| 超时无响应（> 5min） | 同 BLOCKED 首次处理 |
+-| `NEEDS_CONTEXT` — 缺信息/歧义 | **停止当前 Phase**，向用户呈现 WA 的 blockers（缺什么信息 / 哪两份文档矛盾），补充上下文后重跑该 WA；不盲目重试 |
++| `DONE` — 产出路径存在 | 核同次原生终态、精确产物及 required 质量门；通过且后续已有授权、无未决真人门才继续 |
++| `DONE` — 但产出路径不存在 | 保留原报告与缺项，视为隐式 BLOCKED；先核实际终态，再决定已授权修复/重试 |
++| `BLOCKED` — 首次 | 核实际失败终态和已完成效果；原授权内可修复/重试一次，只处理未完成范围，前次仍在途不重启 |
++| `BLOCKED` — 重试后仍失败 | 停受影响依赖，报告阻塞 Phase/原失败及建议；其他在途 WA 仍沿原句柄收取或按已授权取消处理 |
++| 超时无响应（> 5min） | 沿当前调用返回的原生句柄继续 wait/status/read；超时、idle、ACK 不等于失败终态或成功，不因此重新启动 WA |
++| `NEEDS_CONTEXT` — 缺信息/歧义 | 停受影响依赖，呈现具体 blockers；收到真实补充后核原生终态和已完成效果，沿已授权未完点恢复，不盲重跑 |
++
++句柄丢失或无法观察时报告真实缺口并暂停依赖，不能猜测前次已停止；已配置硬截止仍执行
++当前宿主的取消/清理并收取终态或在途限制，不通过另次启动重置预算。新尝试保留前次失败、
++实际效果和资源；OD 专用一次 retry/桌面恢复计数仍按上文，不以 W9 重置。
+ 
+ **不允许无限重试**：单个 WA 最多重试 1 次，失败后必须上报，不得静默跳过。
+ 
+--- a/.claude/skill-os/runtime/long-session.md
++++ b/.claude/skill-os/runtime/long-session.md
+@@ -4,22 +4,22 @@
+ 
+ ## Checkpoint triggers
+ 
+-Write a checkpoint after each phase of a multi-phase task, after two heavy agents, when the conversation approaches context pressure, and immediately before an irreversible Git or external effect. A checkpoint records:
++Write a checkpoint after each phase of a multi-phase task, after two heavy agents, when the conversation approaches context pressure, and immediately before an irreversible Git or external effect. A simple, bounded task with one executor needs no separate state record unless one of these triggers applies. A checkpoint records:
+ 
+-1. completed work with exact files and verification evidence;
+-2. current work and any live agent ownership;
+-3. remaining phases in approved order;
+-4. decisions that cannot be reconstructed from code;
+-5. the exact resume command or read list.
++1. the original goal and completion criteria, distinct from the next-step focus;
++2. completed work and effects with exact files and verification evidence; original failure evidence and whether each failure remains unresolved;
++3. current work, any live agent ownership, and unfinished dependencies and phases in approved order;
++4. the latest actual user authorization and corrections with their sources, plus decisions that cannot be reconstructed from code;
++5. the first unfinished action and exact resume command or read list, distinguishing sources actually read or verified from references and unknowns.
+ 
+ For a project-pinned workflow, use its declared handoff/checkpoint path. For `NO_PIN` framework/meta work, use `framework-audit/` or an OS temporary handoff; never write through `docs/`.
+ 
+ ## Context bounds
+ 
+-Give explorers only the search question, workers the exact task and owned files, and reviewers only the frozen diff, requirements, and assertions. Do not give reviewers implementation history. Read long files progressively but always reach the final line when a governing file is selected.
++Give explorers only the search question, workers the exact task and owned files, and reviewers only the frozen diff, requirements, and assertions. Do not give reviewers implementation history. A narrowed next-step focus must retain the original goal, approved scope, and unfinished responsibilities unless the user explicitly cancels or replaces them. Read long files progressively but always reach the final line when a governing file is selected.
+ 
+ ## Resume
+ 
+-On resume, verify the repository SHA and worktree first, re-run the narrow phase gate, and continue from the first unfinished phase. Never repeat a completed mutation or stage the protected dirty files named by the checkpoint.
++On resume, verify the repository SHA and worktree first, reconcile the current authorization, corrections, relevant file preimages, and evidence with the checkpoint, then re-run the narrow phase gate and continue from the first unfinished point. A reference alone proves neither a read nor verification; keep recorded results tied to their source and do not claim they were rechecked. An unresolved failure blocks its dependent work. Never repeat a completed effect or stage the protected dirty files named by the checkpoint.
+ 
+ <!-- FILE_END: skill-os/runtime/long-session.md -->
+--- a/.claude/skills/office/handoff/SKILL.md
++++ b/.claude/skills/office/handoff/SKILL.md
+@@ -48,22 +48,23 @@
+ 
+ 如果用户传了参数，把参数视为“下个 session 将聚焦什么”，据此裁剪内容。没有参数时，从当前
+ 对话中提炼尚未完成的目标；目标仍未知时写 UNKNOWN；若缺失会妨碍可靠续接才问一个阻塞问题，绝不编造下一任务。
++参数只收窄续接重点；除非用户明确取消或替换，原目标、完成定义及未完成责任仍需保留。
+ 
+ ### 2. 收集最小充分上下文
+ 
+ 只保留下个 agent 真正需要的信息：
+ 
+-1. 当前目标与完成定义。
+-2. 已完成到哪里，以及当场可验证的状态。
+-3. 已作出的关键决策、约束和明确不做的事。
+-4. 剩余步骤、首个建议动作、已知阻塞与风险。
++1. 原目标与完成定义，以及与其区分的下个 session focus。
++2. 实际已完成的工作与效果、对应证据及当场可验证的状态；未完成或仅已确认接收的工作不写成完成。
++3. 最新真实用户授权、更正及来源，关键决策、约束和明确不做的事；被更正的旧决策不再视为授权。
++4. 剩余责任与依赖、首个建议动作、原始失败证据及是否仍未解决、已知阻塞与风险。
+ 5. 已存在的权威制品：spec、plan、ADR、issue、commit、diff、报告等。
+ 6. 当前批准的 scope/U-ID、权限及未批效果、实际仓库/分支/HEAD、dirty 文件与保护边界；
+-   哪些内容实际读/验证过，哪些只是引用或未知。
+-7. 可执行的恢复读列表/命令与首个未完成点；接手者先核对 HEAD、preimage 和授权，避免重复效果。
++   哪些内容实际读/验证过，哪些只是引用或未知；引用不等于已读或已验证。
++7. 可执行的恢复读列表/命令与首个未完成点；接手者先核对当前 HEAD、preimage、真实授权与更正及证据，再从未完成点继续，避免重复已完成效果；未解决失败阻止依赖它的工作。
+ 
+-已有内容一律引用路径、commit 或 URL，不复制长段正文。引用本地路径时使用绝对路径，方便新
+-session 直接定位；不要为了交接而额外改写那些制品。
++已有权威制品用路径、commit 或 URL 定位；只摘录续接必需的事实与验证结论，不复制长段正文。
++引用本地路径时使用绝对路径，方便新 session 直接定位；不要为了交接而额外改写那些制品。
+ 
+ ### 3. 脱敏
+ 
+@@ -104,12 +105,14 @@
+ ## Authority and resume instructions
+ ```
+ 
++将原目标与完成定义保留在 `Current state`，将续接重点放在 `Next-session focus`；不因聚焦下一步而丢掉剩余责任。
++
+ ### 6. 验证后交付
+ 
+ 完成前必须当场验证：
+ 
+ 1. 文件存在，且其规范化绝对路径位于 `os.tmpdir()` 下。
+-2. 上述标题全部存在，恢复命令与已知/未知和权限边界一致。
++2. 上述标题全部存在，原目标与续接重点区分，恢复命令与已知/未知、原始失败、剩余依赖及最新权限边界一致。
+ 3. 权威制品以路径/URL 引用，没有重复粘贴大段内容。
+ 4. 没有明显 secret、token、password、cookie、私钥或未脱敏 PII。
+ 5. `Suggested skills` 中的每个名字都能在当前环境找到。

@@ -1,0 +1,11 @@
+{
+  "approved_at": "2026-09-30T06:21:02.692777+00:00",
+  "user_instruction": "你觉得没问题了，你就发布、推送，并合入本地 main",
+  "scope": "Activate reviewed 13-file patch, reviewed source manifest for this root, exact 11 hook commands, focused commit and ordinary push to origin/main; preserve unrelated work, other roots and private bindings.",
+  "patch_sha256": "9b2c53963b74f829af785b0167a0055fb35cad1fdf71668438f3bd8fdac54361",
+  "head": "eddae51c01a07794227954b7ca87492ffe5f8c0a",
+  "origin_main": "eddae51c01a07794227954b7ca87492ffe5f8c0a",
+  "reviews": "both PASS 7/7",
+  "full_verify": "PASS 107 / FAIL 0",
+  "status": "AUTHORIZED_NOT_YET_ACTIVATED"
+}

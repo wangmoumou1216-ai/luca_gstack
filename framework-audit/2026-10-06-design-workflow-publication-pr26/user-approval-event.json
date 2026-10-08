@@ -1,0 +1,101 @@
+[
+  {
+    "native_transcript": "/Users/luca/.codex/sessions/2026/10/06/rollout-2026-10-06T08-46-03-01a10eac-b920-7303-af95-dc419099c22b.jsonl",
+    "line": 4395,
+    "event": {
+      "timestamp": "2026-10-06T05:36:08.855Z",
+      "ordinal": 4394,
+      "type": "response_item",
+      "payload": {
+        "type": "message",
+        "id": "msg_01a10fb6-5096-79b0-8c22-2c089dafb3df",
+        "role": "user",
+        "content": [
+          {
+            "type": "input_text",
+            "text": "按照计划解决，验证，发布\n"
+          }
+        ],
+        "internal_chat_message_metadata_passthrough": {
+          "turn_id": "01a10fb6-4f49-79d0-92ec-9b243fd0e8e1",
+          "create_time": 1791264968.854972,
+          "content_item_kinds": [
+            "user.text"
+          ]
+        }
+      },
+      "metadata": {
+        "retained_source": {
+          "id": {
+            "message_id": "msg_01a10fb6-5096-79b0-8c22-2c089dafb3df",
+            "turn_id": "01a10fb6-4f49-79d0-92ec-9b243fd0e8e1",
+            "role": "user"
+          },
+          "revision": "retained_01a10fb6-5097-73d0-81e3-571c725060ba",
+          "complete": true
+        },
+        "client_authored": false,
+        "user_input_order": 252,
+        "mcp_attribution": {
+          "status": "complete",
+          "sources": [
+            {
+              "plugin_id": "codex-app-tools@openai-bundled",
+              "server_name": "codex_app",
+              "tool_name": "list_threads",
+              "first_turn_id": "01a10ead-161a-7621-b4e8-e379efe73b0a"
+            },
+            {
+              "plugin_id": "codex-app-tools@openai-bundled",
+              "server_name": "codex_app",
+              "tool_name": "read_thread",
+              "first_turn_id": "01a10ead-161a-7621-b4e8-e379efe73b0a"
+            },
+            {
+              "plugin_id": "codex-app-tools@openai-bundled",
+              "server_name": "codex_app",
+              "tool_name": "attach_artifact",
+              "first_turn_id": "01a10ead-161a-7621-b4e8-e379efe73b0a"
+            },
+            {
+              "plugin_id": "codex-app-tools@openai-bundled",
+              "server_name": "codex_app",
+              "tool_name": "get_usage_limits",
+              "first_turn_id": "01a10f60-831c-7071-96a4-4894f5968546"
+            },
+            {
+              "plugin_id": "codex-app-tools@openai-bundled",
+              "server_name": "codex_app",
+              "tool_name": "open_in_codex",
+              "first_turn_id": "01a10f60-831c-7071-96a4-4894f5968546"
+            },
+            {
+              "plugin_id": "codex-app-tools@openai-bundled",
+              "server_name": "codex_app",
+              "tool_name": "list_artifacts",
+              "first_turn_id": "01a10f62-ea62-7401-8622-1ff7fdf70300"
+            },
+            {
+              "plugin_id": "codex-app-tools@openai-bundled",
+              "server_name": "codex_app",
+              "tool_name": "create_worktree",
+              "first_turn_id": "01a10f62-ea62-7401-8622-1ff7fdf70300"
+            },
+            {
+              "plugin_id": "codex-app-tools@openai-bundled",
+              "server_name": "codex_app",
+              "tool_name": "get_worktree_creation_status",
+              "first_turn_id": "01a10f62-ea62-7401-8622-1ff7fdf70300"
+            },
+            {
+              "plugin_id": "codex-app-tools@openai-bundled",
+              "server_name": "codex_app",
+              "tool_name": "archive_worktree",
+              "first_turn_id": "01a10f62-ea62-7401-8622-1ff7fdf70300"
+            }
+          ]
+        }
+      }
+    }
+  }
+]

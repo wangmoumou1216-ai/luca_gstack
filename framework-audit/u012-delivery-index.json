@@ -1,0 +1,119 @@
+{
+  "created_at": "2026-10-03T03:21:30.298948+00:00",
+  "status": "DONE_WITH_CONCERNS",
+  "scope": "bounded original evaluation, three-module candidate development, test/review, unified Git delivery; no production adoption",
+  "commit": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "branch": "codex/tri-system-evaluation",
+  "records": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u008-results.md",
+      "bytes": 3704,
+      "sha256": "387808db709a627a44b16752ac87f5d70e2d951ff069b9d780bca22a104b4352"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u009-refutation.md",
+      "bytes": 2724,
+      "sha256": "970ed2f45f3b6acb68ed02107f4c4f13600905ef0b940584b395c0c808e9fe2c"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u009-j20-envelope.json",
+      "bytes": 6085,
+      "sha256": "3613ae67cd49545f20dc92689cc6cef7e5b5ef5d7d42e2ccc68b7a9d74b0e511"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u010-adjudication.md",
+      "bytes": 9860,
+      "sha256": "3e7e141f411f2bbc126e201121606c2f904126fdfebca67db7ad8a31d6c35a2d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u010-j21-envelope.json",
+      "bytes": 8857,
+      "sha256": "cd56b5411b95a06f44e18dad80a0ee21ab63269f728085c00e3fff09137fe489"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u010-j21-provenance.json",
+      "bytes": 337,
+      "sha256": "d43ad9afec794d15f804dec722a1f98933304adff2ea477b6e8dd3fdc9f37174"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u011-recommendation.md",
+      "bytes": 8224,
+      "sha256": "aa1198f221319d59e3b1dc08be1cc7e94a04fa08148882f50b1a0fb318256737"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-migration-and-three-agent-workpacks.md",
+      "bytes": 8608,
+      "sha256": "726cc69e1a18020e1dc97abaa8d22b2a7463e60df0eb0b481f949f2f8c9ab9e4"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-completion-audit.md",
+      "bytes": 6307,
+      "sha256": "d63bb4489fd9cb42fc587496e57847276735c5d99115d08f445f68d2d7c999fe"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-final-delivery.md",
+      "bytes": 2365,
+      "sha256": "83325cf522fd90fe2d1dbcc6915a1454f08ada0033d0cb922eb40b8ae5f7489f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-final-candidate-manifest.json",
+      "bytes": 4496,
+      "sha256": "447757cf52432b3df58ee9ad8579ccb49900e1e96be67dfb45934686b9169e32"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-committed-candidate-verification.json",
+      "bytes": 647,
+      "sha256": "749d99f0d968bf6281439289aa257d2b87a9260110bf9997c49185af2021e0b8"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-normal-commit-r3-result.json",
+      "bytes": 482,
+      "sha256": "40021a50ed92c486c5c84bae364f4b20312811059359115753ce435da91f6a8b"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-normal-commit-r3.log",
+      "bytes": 9289,
+      "sha256": "5c0f8964a0487f600bfcb75d4b5a54d77ec734a0170ca2100d122d7b7d0d4f4a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-push-result.json",
+      "bytes": 722,
+      "sha256": "98becd7954714fb43c92a45e3265d3b8c793230bf2df84cd698bf83fef5bb46f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-push.log",
+      "bytes": 447,
+      "sha256": "b29ad8bd58a9cc69b94c425a71e4b6a79abbe9e1b71fb32a8556f10f7d02ab02"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-remote-verification.json",
+      "bytes": 548,
+      "sha256": "ca44d00ee04884bd31b1e0301065d1946833721d6526b52b4cafbec7e24b9196"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-production-preservation-check.json",
+      "bytes": 2340,
+      "sha256": "533e959cfffe65cecdfe1c43368fa9357cd62a681a8c6c4cf206f1853c5f5e2f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-j19-native-behavior-review.json",
+      "bytes": 4605,
+      "sha256": "0822be15611261073fb87d2cb339e43b0d845847ca75a412c4f6354ef087bdf3"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-heartbeat-completion.json",
+      "bytes": 313,
+      "sha256": "6adedc827072697fec93dfb8afc4185705a4b86c0743bb5b8db2406090217174"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-execution-ledger.json",
+      "bytes": 91134,
+      "sha256": "28ee6f84d5636d408860f796600c4d095e680b6de0525bd0279eb0df56a2dd8e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-goal-completion.json",
+      "bytes": 296,
+      "sha256": "17f8f9349de4afc95f844197372fed077195e322521424a9567aab9728834b84"
+    }
+  ]
+}

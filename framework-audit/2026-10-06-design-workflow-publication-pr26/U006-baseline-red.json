@@ -1,0 +1,18 @@
+{
+  "label": "U006-baseline-red",
+  "command": [
+    "env",
+    "LUCA_CI_FILE=/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/framework-audit/2026-10-06-design-workflow-implementation/U-006/preimages/.github/workflows/ci.yml",
+    "node",
+    "scripts/check-ci-contract.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "driver_pid": 40064,
+  "pid": 40073,
+  "started": "2026-10-06T06:52:04.045624+00:00",
+  "ended": "2026-10-06T06:52:04.080023+00:00",
+  "exit_code": 1,
+  "source_hashes_before": {},
+  "source_hashes_after": {},
+  "sources_unchanged": true
+}

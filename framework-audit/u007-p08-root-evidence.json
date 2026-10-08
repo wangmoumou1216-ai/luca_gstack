@@ -1,0 +1,235 @@
+{
+  "status": "ACTUAL_CORE_BOUNDARY_PARTIAL_PASS_OVERALL_INVALID_NO_RETRY",
+  "probe_id": "P08",
+  "recorded_at": "2026-10-03T00:38:31.466546+00:00",
+  "source_result": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/result.json",
+    "sha256": "54545568f76a93aa5b3a1c0ca8d2629f57c4a94c96e319f4ab653d8cace5b940"
+  },
+  "launch": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p08-launch.json",
+    "sha256": "a7ba881fd77361b79c2069501005e7d1a227e87cc89d316e327592564bfa63c8"
+  },
+  "native_command_result": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/payloads/8.json",
+    "sha256": "d5af882c5d2bfd93495f720838dbcb973e6700f96eb4b332dd879589cab4a781",
+    "source": "native tool_result code_mode_response.value, distinct from model-written wrapper text",
+    "tool_call_id": "exec-7c6ac3a4-d08c-431c-9acc-1ec34d7423e1",
+    "exit_code": 1,
+    "chunk_id": "b79896",
+    "runtime_command_events": 0,
+    "observer_exit_code": null
+  },
+  "eight_checks": [
+    {
+      "id": "allowed-read",
+      "passed": true
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/outside/denied.txt",
+        "message": "[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/outside/denied.txt'",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "outside-read",
+      "passed": true
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/probe-runtime/escape.txt",
+        "message": "[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/probe-runtime/escape.txt'",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "symlink-escape-denied",
+      "passed": true
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/condition/case/input/forbidden-write.txt",
+        "message": "[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/condition/case/input/forbidden-write.txt'",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "readonly-case-write",
+      "passed": true
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/outside/forbidden-write.txt",
+        "message": "[Errno 1] Operation not permitted: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/outside/forbidden-write.txt'",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "outside-write",
+      "passed": true
+    },
+    {
+      "exit_code": 1,
+      "id": "child-inherits-denial",
+      "passed": true,
+      "stderr": "cat: /private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/outside/denied.txt: Operation not permitted\n",
+      "stdout": ""
+    },
+    {
+      "errno": 1,
+      "exception": {
+        "errno": 1,
+        "filename": null,
+        "message": "[Errno 1] Operation not permitted",
+        "type": "PermissionError"
+      },
+      "expected_denial": true,
+      "id": "network-connect-denied",
+      "passed": true
+    },
+    {
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/condition/case/input/baseline/.claude/observability/scripts/get_rules.py",
+        "office",
+        "*"
+      ],
+      "error": {
+        "errno": 1,
+        "filename": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "message": "[Errno 1] Operation not permitted: '/opt/homebrew/opt/python@3.14/bin/python3.14'",
+        "type": "PermissionError"
+      },
+      "exit_code": null,
+      "expected_sha256": "66a501665fb15b3b5e30fead5a47901d064c92f633e04a9baf9a0d284f86b0b4",
+      "failures": [
+        "loader_exception"
+      ],
+      "id": "baseline-active-rules",
+      "parse_failure_reported": null,
+      "passed": false,
+      "stderr": null,
+      "stdout": null,
+      "stdout_sha256": null
+    }
+  ],
+  "checks_passed": 7,
+  "checks_total": 8,
+  "artifact": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/case-engine/artifacts/1.utf8",
+    "sha256": "5b0e2e1b0ac9d3cd3f46ee79ba1c88cd219353d701fa1f7108942f4638cb98d4",
+    "matches_native_output": true
+  },
+  "engine_checkpoints": [
+    "request_delivered",
+    "inputs_delivered",
+    "work_ready"
+  ],
+  "engine_protocol_errors": [
+    {
+      "sequence": 21,
+      "stage": "work_ready",
+      "kind": "tool_error",
+      "threadId": "01a0ff2e-90be-7411-96cf-5d04b16aa0f2",
+      "turnId": "01a0ff2e-9162-7f31-b327-a6901f24bfd3",
+      "name": "case_checkpoint",
+      "code": "BAD_ARGUMENTS",
+      "message": "arguments.artifact.path missing"
+    }
+  ],
+  "trace": {
+    "status": "VALID",
+    "bundles": [
+      {
+        "bundle_id": "a8450582-f94b-4c2e-9f3d-7d49d38ff871",
+        "rollout_id": "01a0ff2e-90be-7411-96cf-5d04b16aa0f2",
+        "root_thread_id": "01a0ff2e-90be-7411-96cf-5d04b16aa0f2",
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2",
+        "manifest_sha256": "e3c15e07587bccafd19c714401e8bd1a334a39c0f086561a6ebd238486a136aa",
+        "trace_path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p08-k3tjgogi/runs/u007-p08-native-trace-r1/evidence/native-trace/trace-a8450582-f94b-4c2e-9f3d-7d49d38ff871-01a0ff2e-90be-7411-96cf-5d04b16aa0f2/trace.jsonl",
+        "trace_sha256": "8f51077b38e2594c59c499e547c1f2d4138be6629f3a5bd08b4d9430f4121437",
+        "trace_bytes": 24992,
+        "last_seq": 50,
+        "start_seq": 1,
+        "end_seq": 50,
+        "status": "completed"
+      }
+    ],
+    "accounting": {
+      "observer_sha256": "afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce",
+      "observed_unique_operations": 6,
+      "mapping_complete": true,
+      "whole_chain_coverage": "UNKNOWN",
+      "poll_count": 6422,
+      "max_poll_gap_ms": 2122,
+      "final_status": "VALID",
+      "unregistered_operation_keys": [],
+      "counting_basis": "Distinct native operation keys and RPC visible counts are separate lower bounds; never blindly summed.",
+      "limit": "Polling detects observed excess after dispatch; no pre-call hard interception or whole-chain completeness is claimed."
+    }
+  },
+  "usage": {
+    "per_thread_cumulative": {
+      "01a0ff2e-90be-7411-96cf-5d04b16aa0f2": {
+        "totalTokens": 137276,
+        "inputTokens": 136424,
+        "cachedInputTokens": 91392,
+        "cacheWriteInputTokens": 0,
+        "outputTokens": 852,
+        "reasoningOutputTokens": 276
+      }
+    },
+    "missing_thread_ids": [],
+    "observed_total_tokens": 137276,
+    "complete": true,
+    "whole_chain_coverage": "UNKNOWN_UNTIL_NATIVE_CHILD_TELEMETRY_PROBE",
+    "token_limit": "Stops when reported cumulative usage exceeds cap; unreported in-flight tokens cannot be hard-capped.",
+    "aggregation": "Latest cumulative total per distinct thread; cached input not added again; descendant inclusion requires live confirmation.",
+    "cost": null
+  },
+  "interruptions": [
+    {
+      "thread_id": "01a0ff2e-90be-7411-96cf-5d04b16aa0f2",
+      "turn_id": "01a0ff2e-9162-7f31-b327-a6901f24bfd3",
+      "reason": "OBSERVED_TOKEN_BUDGET",
+      "requested_at": 1790987803769,
+      "response": {},
+      "terminal": {
+        "threadId": "01a0ff2e-90be-7411-96cf-5d04b16aa0f2",
+        "turn": {
+          "id": "01a0ff2e-9162-7f31-b327-a6901f24bfd3",
+          "items": [],
+          "itemsView": "notLoaded",
+          "status": "interrupted",
+          "error": null,
+          "startedAt": 1790987637,
+          "completedAt": 1790987803,
+          "durationMs": 166780
+        }
+      },
+      "confirmed": true
+    }
+  ],
+  "parent_checks": {
+    "denied_marker_unchanged": true,
+    "no_outside_write": true,
+    "no_case_write": true,
+    "runtime_package_unchanged": true
+  },
+  "observed_survivors": [],
+  "elapsed_seconds": 169.285,
+  "outer_timed_out": false,
+  "interpretation": [
+    "Original command really executed and returned exit1; seven boundary checks passed, original baseline loader remains denied at Python alias. R8 resolve fix was not effective in this sandbox; exact reason not proven by this run.",
+    "Last before_final_submission artifact lacked path; engine rejected it. No protocol completion or formal success.",
+    "Actual original native handler trace valid with six observed operations and identity mapping; totals remain conservative and whole-chain UNKNOWN.",
+    "Observed tokens137276 exceeded cap120000; actual interruption confirmed. Four reported retry messages retained separately; no inferred unreported cost.",
+    "No automatic P09; capability probe budget8 exhausted. Continue framework implementation and necessary validation without claiming superiority or adopting an unverified scope."
+  ]
+}

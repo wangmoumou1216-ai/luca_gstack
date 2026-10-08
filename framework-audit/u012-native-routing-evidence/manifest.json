@@ -1,0 +1,41 @@
+{
+  "files": [
+    {
+      "agent": "/root/native_route_e",
+      "thread_id": "01a0ff7f-f4f6-7410-9e35-599258ddb6c0",
+      "started_at_ms": 1790992971114,
+      "completed_at_ms": 1790992984057,
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-routing-evidence/e-native-records.json",
+      "sha256": "c9fa3a10fda2121cf5b70b7dbfd436b0ba937c31dff300fa44e11896e1e562fd",
+      "records": 3
+    },
+    {
+      "agent": "/root/native_route_f",
+      "thread_id": "01a0ff80-31f0-7fa2-aeca-340187e8d238",
+      "started_at_ms": 1790992986717,
+      "completed_at_ms": 1790993017365,
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-routing-evidence/f-native-records.json",
+      "sha256": "5da51e34ea81208db94a145002e2108af935f5ec223f88ac77936ee2bea5f897",
+      "records": 8
+    },
+    {
+      "agent": "/root/native_route_g",
+      "thread_id": "01a0ff80-bdcc-79a2-8abc-aeb6ad5f85c7",
+      "started_at_ms": 1790993022527,
+      "completed_at_ms": 1790993036335,
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-routing-evidence/g-native-records.json",
+      "sha256": "4977f295125b21eca6a7f6fcc880a5e626dae33d5495d8a5f10eb8700c88b013",
+      "records": 6
+    },
+    {
+      "agent": "/root/native_route_h",
+      "thread_id": "01a0ff80-faf9-7b91-9e6d-4efb39d48a68",
+      "started_at_ms": 1790993038184,
+      "completed_at_ms": 1790993063734,
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-routing-evidence/h-native-records.json",
+      "sha256": "d2a156ff260eeac3dae2f48b878a1c53eefe6c7bd2573a4585cf82380c53ccdc",
+      "records": 6
+    }
+  ],
+  "scope": "exact native tool calls/returns and assistant responses; reasoning/system/user messages excluded"
+}

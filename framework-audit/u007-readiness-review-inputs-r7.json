@@ -1,0 +1,71 @@
+{
+  "eval_run_id": "tri-system-u007-p07-result-20261003-r7",
+  "prepared_at": "2026-10-02T23:10:21.646458+00:00",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-root-evidence.json",
+      "sha256": "9b961e6970a75366d14a0dc052de401338e8d56b40760fb5e04b9a638cb77f2a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-root-result.md",
+      "sha256": "c9f50b5f31129cb0ea3fb4da46b7b050ba41a750d0f5eaad4dc5c818f037562e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-native-command-window.json",
+      "sha256": "467df00587adafae6fafe7c8b58c99369c4686bedd21426882311b2bb12db484"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-launch.json",
+      "sha256": "e5c5be96fdfe7011f21f33486c8938ee87d5bd0b3b36e2a66921fa0fcc5360e4"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-registration.json",
+      "sha256": "d24eec3a9a7677ccfd4088bf65693389578197f20b503cbc0bbbbccdca4b0a58"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-manifest.json",
+      "sha256": "f12760254896629697477423d55ef2d48ba118cb56f341e3c943ed4cb35ebc0d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-9.md",
+      "sha256": "1e884bb8f68d0f615bb790384e426cfe6ba3fe680354fce388ba3c13bea3a3ca"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r6-envelope.json",
+      "sha256": "5464edfac03ff8ba51ac0255bfcebb582d6a91d828efee476c22d6862f62740d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-implementation-contract.md",
+      "sha256": "74c43c98dd2fc88df66c84d660c0f044deae35d7223e9a6c17b05ace22ec04a6"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-evaluation-execution-plan-v4.md",
+      "sha256": "f5cec5181287b1e5ed2549a42f92dd082c9744841da09e5b530406f5744fbc67"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-task-r7.md",
+      "sha256": "15d891561923cb8abbfd3844b67bfa3c11c613abe166b28d7d12f3844c39b6b9"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "c6db8f7d4612db1ce764159b5f8630dd9eebb9882906d4f3c66c66059d16abe0"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/runs/u007-p07-native-appserver-r1/evidence/rpc.jsonl",
+      "sha256": "4b5baa2231773d6d3cf806e2daf834abb8cc2ae451ef080f1f3f6051255d9ab3",
+      "bytes": 130049
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/runs/u007-p07-native-appserver-r1/evidence/result.json",
+      "sha256": "cc2cdd86ecebc899927cd466ab680628cbca5287de780df1fc001261fa3cd0df",
+      "bytes": 39582
+    }
+  ],
+  "budget_snapshot": {
+    "work": 29,
+    "review_including_this": 14,
+    "behavior_runs": 7,
+    "capability_limit": 7,
+    "formal_runs": 0
+  }
+}

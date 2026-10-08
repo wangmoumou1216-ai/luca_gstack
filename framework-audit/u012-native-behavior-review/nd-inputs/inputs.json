@@ -1,0 +1,26 @@
+{
+  "task": "Aggregate every required source",
+  "sources": [
+    {
+      "id": "R1",
+      "version": 1,
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/required-1.csv",
+      "sha256": "6747c291961f7813ff31424777822d85bdc1b9d996f8d147a686f38577440251",
+      "required": true
+    },
+    {
+      "id": "R2",
+      "version": 1,
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/required-2.csv",
+      "sha256": "1d3f38d91fb7bde5ce15ca25dadc09a05b94fa530651d785c524b5b426f1d954",
+      "required": true
+    },
+    {
+      "id": "R3",
+      "version": 1,
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/context/required-inputs/required-3.csv",
+      "sha256": "41bc371411c1e0409d6cd0a5625baf71c767353310893f7f7e78ed9a6691d67d",
+      "required": true
+    }
+  ]
+}

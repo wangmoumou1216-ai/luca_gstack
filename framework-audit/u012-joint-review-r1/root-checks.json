@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-03T01:02:55.988771+00:00",
+  "bound_source_manifest": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-joint-review-r1/manifest.json",
+  "checks": [
+    {
+      "command": "python3 scripts/build-agent-context.py check",
+      "exit_code": 0,
+      "output": "PASS generated agent context is current",
+      "tool_chunk": "b6c597"
+    },
+    {
+      "command": "node scripts/check-agent-context.mjs",
+      "exit_code": 0,
+      "output": "PASS agent context: phase=projected K=10 pointers=17 catalog=48 fallback=6",
+      "tool_chunk": "5a456e"
+    },
+    {
+      "command": "node scripts/check-agent-contracts.mjs",
+      "exit_code": 0,
+      "output": "agent-contracts: 86/86 assertions pass",
+      "tool_chunk": "00f57c"
+    }
+  ],
+  "limits": "Structural contract checks only; no model behavior, adoption or comparative value claim."
+}

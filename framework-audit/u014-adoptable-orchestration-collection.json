@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-03T08:18:14.557038+00:00",
+  "root": "/Users/luca/.codex/worktrees/tri-system-adoptable-fixes/luca_gstack",
+  "base": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "patch": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-adoptable-xl61j9l4/adoptable-minimum.patch",
+  "patch_sha256": "e164955742a703ab483a9f6d0f3a7dc72648b09532884ae807e4b51ab30ec55a",
+  "files": [
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "before": "3eed1c58e4c6cbdd5b3a8ad0fa3c0841723012de0cf789fb7f369980905dc29e",
+      "after": "33073be1c0766746d9fc5a936adcc34a303a17fa2506d439c879fbe6e98ae21b"
+    },
+    {
+      "path": ".claude/skills/office/auto/SKILL.md",
+      "before": "2806bf06a486818934a194a4355713ddc395bc838860ed1ec47689ebf1494078",
+      "after": "75de696b34da6cb286c366e84e9f20f2c8c95a8340b4df1629bdce67e8bc54b3"
+    }
+  ],
+  "status": "collected pending exact behavior and final independent acceptance"
+}

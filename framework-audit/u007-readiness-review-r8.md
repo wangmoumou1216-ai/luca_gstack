@@ -1,0 +1,13 @@
+**J12：PASS，4/4，仅限 R8 离线修复。**
+
+1. **W30 PASS**：保留八项原判据；子解释器 canonicalize、逐项异常及 loader 失败留证正确，16/16 mock 测试通过。
+2. **W31 PASS**：raw 报称结果可检索；重复去重、冲突及外来/过期事件拒绝，伪造认证字段不能提升可信度。计数 null、UNKNOWN、formal=false 保留。
+3. **W32 PASS**：真实模块回放及 RED/GREEN 证据匹配；root 两处路径替换可逆还原作者测试哈希，最终 11/11 复验通过。
+4. **时点划分 PASS**：U007 运行控制、U008 语义收益、U012 迁移责任分开，未新增开工门。
+
+未发现阻断本次修复的代码问题。33 项冻结输入复核一致；17 个保守动作，约 2 分钟，未重跑测试或修改文件。长 TAP 只读相关案例及摘要，模型 usage 未知。
+
+**J11 整体资格 FAIL 不变；本票不放行 probe、正式比较或生产。**
+
+EVAL_ENVELOPE_JSON
+{"schema_version":1,"producer":"quality-gate","eval_run_id":"tri-system-u007-r8-offline-repair-20261003","subject":{"skill":"quality-gate","topic":"J12 R8限定离线修复验收","scene":"unknown","input_summary":"核对33项冻结输入、R7→R8差异、W30程序及测试、W31/W32回放与RED/GREEN、root路径调整和runtime-obligations；复用J11，不重新规划方法或验证原生行为。","output_paths":[],"duration":"medium"},"verdict":{"status":"PASS","passed":4,"total":4,"findings":["J12-1 PASS：u007-probe-program-r8.py保持八项检查、顺序、marker及规则stdout哈希判据。active_rules使用Path(sys.executable).resolve()；逐项捕获异常继续，loader启动失败保留exit/hash为null，子进程启动拒绝不冒充权限继承成功。非零退出、stderr、解析告警、hash不符分别保留。已读完整程序和单测，原始unittest日志16/16、exit0与当前程序/测试身份匹配。mock仅证明离线逻辑，不证明真实sandbox或修后loader成功。","J12-2 PASS：driver.mjs新增raw分支仅接收当前active family/turn的四类tool call/output，完整保留原item；同身份相同内容去重、冲突INVALID且不替换原件。只JSON.parse完整文本块，无日志代码执行；认证标签由driver固定，输出中伪造verification、call_id、permissions等不能覆盖。未建立wrapper/inner映射、未增加动作收费；nullable/UNKNOWN/formal=false及预算取消路径未改。W31相关8项RED全失败、GREEN8/8、回归63/63；关键反例分别断言原件保留、污染拒绝、未映射hook、失败与缺产物，而非仅匹配实现字符串。","J12-3 PASS：integration.test.mjs调用真实driver、conditions及case runtime，只模拟stdio peer；动态响应来自真实engine，中断必须由真实driver发起。最终作者测试同字节：R7 RED0/3、R8 GREEN3/3、回归38/38，日志及依赖before/after身份匹配。将root两处fixture默认路径替换在内存逆转，精确恢复作者driver.test与integration.test哈希；repo fixture与冻结fixture逐字节相同。root最终11/11、exit0，TAP诊断绑定当前driver/conditions/protocol，保持INVALID_RUN、visible2、total null。已补读被工具输出截断的关键集成断言；未重跑测试，未发现影响本次限定修复完成的代码缺陷。","J12-4 PASS：runtime-obligations完整读取，并定向核对公开D01—D06授权、协议及D05/D06恢复字段：协作是能力可用时可选，D05依赖事件非原生child，D06是fresh而非compact。表中U007负责适用运行、边界、计数和停止证据；U008负责候选实际采纳/质量/收益；U012负责获批迁移的实际切换回退，未省必要用途或提前要求未来全量验证。J11整体资格FAIL、原生边界/全链UNKNOWN继续；本票不授权P08、正式比较或生产。33项输入前后哈希一致；17保守动作，核验窗口2026-10-02T23:50:44Z至23:52:44Z，0写入/测试重跑/模型探针/网络/新Agent。原始工具输出标称约3.8万token含截断，实际模型usage未知；长TAP仅定向案例和摘要，未声称全文复验或真实原生成功。"]}}

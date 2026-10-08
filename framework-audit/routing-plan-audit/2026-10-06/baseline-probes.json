@@ -1,0 +1,68 @@
+[
+  {
+    "input": "这是会议的语音转文字稿，帮我整理成需求文档，别加自己的想法",
+    "argv": [
+      "node",
+      ".claude/hooks/route-guard.mjs"
+    ],
+    "cwd": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-routing-plan-baseline-sn8l76fp",
+    "exit_code": 0,
+    "stdout": "{\n  \"decision\": \"MULTI_SKILL\",\n  \"candidates\": [\n    \"/idea\",\n    \"/brainstorm\"\n  ],\n  \"routes\": [\n    {\n      \"type\": \"project\",\n      \"skill\": \"/idea\"\n    },\n    {\n      \"type\": \"project\",\n      \"skill\": \"/brainstorm\"\n    }\n  ],\n  \"complexityScore\": 0,\n  \"signals\": [],\n  \"hasActiveProject\": false,\n  \"planHint\": false\n}\n",
+    "stderr": ""
+  },
+  {
+    "input": "帮我做个原型看看效果",
+    "argv": [
+      "node",
+      ".claude/hooks/route-guard.mjs"
+    ],
+    "cwd": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-routing-plan-baseline-sn8l76fp",
+    "exit_code": 0,
+    "stdout": "{\n  \"decision\": \"SINGLE_SKILL\",\n  \"skill\": \"/html-prototype\",\n  \"routeType\": \"project\",\n  \"candidates\": [\n    \"/html-prototype\"\n  ],\n  \"complexityScore\": 0,\n  \"signals\": [],\n  \"hasActiveProject\": false,\n  \"planHint\": false\n}\n",
+    "stderr": ""
+  },
+  {
+    "input": "解释“先做个计划”这句话是什么意思",
+    "argv": [
+      "node",
+      ".claude/hooks/route-guard.mjs"
+    ],
+    "cwd": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-routing-plan-baseline-sn8l76fp",
+    "exit_code": 0,
+    "stdout": "{\n  \"decision\": \"PLAN_MODE\",\n  \"complexityScore\": 6,\n  \"signals\": [\n    \"用户明确要求 plan\"\n  ]\n}\n",
+    "stderr": ""
+  },
+  {
+    "input": "不用先做个计划，只告诉我 README 文件在哪里",
+    "argv": [
+      "node",
+      ".claude/hooks/route-guard.mjs"
+    ],
+    "cwd": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-routing-plan-baseline-sn8l76fp",
+    "exit_code": 0,
+    "stdout": "{\n  \"decision\": \"PLAN_MODE\",\n  \"complexityScore\": 6,\n  \"signals\": [\n    \"用户明确要求 plan\"\n  ]\n}\n",
+    "stderr": ""
+  },
+  {
+    "input": "先做个计划：整理订单查询、库存管理、报表导出三个模块",
+    "argv": [
+      "node",
+      ".claude/hooks/route-guard.mjs"
+    ],
+    "cwd": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-routing-plan-baseline-sn8l76fp",
+    "exit_code": 0,
+    "stdout": "{\n  \"decision\": \"PLAN_MODE\",\n  \"complexityScore\": 12,\n  \"signals\": [\n    \"用户明确要求 plan\",\n    \"多功能需求\"\n  ]\n}\n",
+    "stderr": ""
+  },
+  {
+    "input": "/brainstorm 先做个计划，再新增订单、库存、报表",
+    "argv": [
+      "node",
+      ".claude/hooks/route-guard.mjs"
+    ],
+    "cwd": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-routing-plan-baseline-sn8l76fp",
+    "exit_code": 0,
+    "stdout": "{\n  \"decision\": \"SINGLE_SKILL\",\n  \"skill\": \"/brainstorm\",\n  \"candidates\": [\n    \"/brainstorm\"\n  ],\n  \"complexityScore\": 12,\n  \"signals\": [\n    \"用户明确要求 plan\",\n    \"多功能需求\"\n  ],\n  \"hasActiveProject\": false,\n  \"planHint\": true\n}\n",
+    "stderr": ""
+  }
+]

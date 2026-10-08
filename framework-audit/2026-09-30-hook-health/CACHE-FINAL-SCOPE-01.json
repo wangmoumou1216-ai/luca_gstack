@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "kind": "hook-cache-final-file-set",
+  "sets": [
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "base": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+      "files": [
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.claude/skill-os/runtime/project-session.md",
+          "relative": ".claude/skill-os/runtime/project-session.md",
+          "sha256": "062844d516979f12a1b22e512905060b47cff3630c4a7f683dc87107d872ea1c",
+          "bytes": 12275,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.codex/hooks.json",
+          "relative": ".codex/hooks.json",
+          "sha256": "9945d170a1163417bdd0807cae9e7f84e4c8434d5ffb056292f094ab6e503c17",
+          "bytes": 11652,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/.codex/hook-source-integrity.mjs",
+          "relative": ".codex/hook-source-integrity.mjs",
+          "sha256": "5668e523584fe27bf0d53430756a9974c69729325e83eea80728ee071ff7735b",
+          "bytes": 12380,
+          "tracked": false
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/README.md",
+          "relative": "README.md",
+          "sha256": "46731ed1cb9b4c374bd4d1d210874e43ddd37e104df3c442c720dbc454378cec",
+          "bytes": 27055,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/codex-hook-health.mjs",
+          "relative": "scripts/codex-hook-health.mjs",
+          "sha256": "1d94cbc492156d764a2b193394b122a752ed17b920303a2b3682ab8d63f0ef78",
+          "bytes": 18089,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/install-codex-source-guard.mjs",
+          "relative": "scripts/install-codex-source-guard.mjs",
+          "sha256": "a388d8567f4a13d5b919d19df95c1d2e9a5262197c9dd4ae84d4fb41e0c0d697",
+          "bytes": 18844,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/source-guard-review.mjs",
+          "relative": "scripts/source-guard-review.mjs",
+          "sha256": "2ce571965a8bf5986f70c6e34a63e2cca291e7d1cb8934d794556d50f3f1e51f",
+          "bytes": 11121,
+          "tracked": false
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/source-guard-test-fixture.mjs",
+          "relative": "scripts/source-guard-test-fixture.mjs",
+          "sha256": "7c14168075ca140326ab5008852c36f1ca21d234d5fdb904c8a2e24a67730a3b",
+          "bytes": 2384,
+          "tracked": false
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-codex-child-hook-integrity.mjs",
+          "relative": "scripts/test-codex-child-hook-integrity.mjs",
+          "sha256": "4a0aa8e267b16ec7b26eb9a73d00414e58768d8a360ae4e684a14e83d7125eb8",
+          "bytes": 8587,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-codex-hook-health.mjs",
+          "relative": "scripts/test-codex-hook-health.mjs",
+          "sha256": "83e4af05598211589b05aeaeb61205e8072bf9643930033edeea08862fa907f5",
+          "bytes": 17072,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-codex-trust-hooks.mjs",
+          "relative": "scripts/test-codex-trust-hooks.mjs",
+          "sha256": "b774ac99f1621730b7b53f5ea111f2eaf03c9bb7056907cd166e9109b33c4706",
+          "bytes": 11869,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-controlled-change.mjs",
+          "relative": "scripts/test-controlled-change.mjs",
+          "sha256": "02ba3a880d24a783169b6782edafb362054dc76287654df43b56b6d5f443bc09",
+          "bytes": 39866,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-hook-source-digests.mjs",
+          "relative": "scripts/test-hook-source-digests.mjs",
+          "sha256": "6a87c9afa8a27fb1fe27b8dabcb75effe9efd159cf1f7b042714dcc6725870c7",
+          "bytes": 9166,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-prompt-attestation.mjs",
+          "relative": "scripts/test-prompt-attestation.mjs",
+          "sha256": "16d4e54dd597740049a714e3e1e620b4d18b872da7a515e8b777bae5bec39124",
+          "bytes": 94651,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack/scripts/test-source-guard-preserve.mjs",
+          "relative": "scripts/test-source-guard-preserve.mjs",
+          "sha256": "cdc6f53713fd8636835cd726eb75157a9093eded2826168d7128a01e65edf647",
+          "bytes": 19834,
+          "tracked": true
+        }
+      ],
+      "diff_sha256": "f0b44225c41fbdcced53c57533505b5a9d0cfa0c4f3f1c894ee978b83274af0a"
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse",
+      "base": "0f63d4edb2c3df7096e12c6ccd6f1e7114975f8e",
+      "files": [
+        {
+          "path": "/Users/luca/Desktop/项目/muse/app/host-hook-ready.js",
+          "relative": "app/host-hook-ready.js",
+          "sha256": "e47a395a6fa7d88abbefd0f40612670687a76f338fd753dcce1d9b158648cc84",
+          "bytes": 18550,
+          "tracked": true
+        },
+        {
+          "path": "/Users/luca/Desktop/项目/muse/app/test-host-hook-ready.mjs",
+          "relative": "app/test-host-hook-ready.mjs",
+          "sha256": "a16070bba7b8c458b4166c623e4b82b546bf22966e926b03cf7967864b9995f5",
+          "bytes": 18314,
+          "tracked": true
+        }
+      ],
+      "diff_sha256": "341530412b908f1176257eeca06c508bf3b8faad0e484d78165830a68ca70ba5"
+    }
+  ],
+  "plan": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/FOLLOWUP-PLAN.md",
+    "sha256": "ea9fc31d245c02314057d35c22849747c2648316325ad8995c627c11660b3175"
+  },
+  "hooks": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-hooks-r3.json",
+    "sha256": "9945d170a1163417bdd0807cae9e7f84e4c8434d5ffb056292f094ab6e503c17"
+  },
+  "install_review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-install-review-final1.json",
+    "sha256": "55368485109ecd9ba79b588348584c61dc02d96b63347ef028baa936db868eca"
+  },
+  "pending_live": [
+    "Codex desktop native UserPromptSubmit after one-time legacy migration reload",
+    "Luca three-mode empty draft acceptance and lawful Sidecar settings repair"
+  ]
+}

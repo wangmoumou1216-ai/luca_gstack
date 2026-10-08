@@ -1,0 +1,60 @@
+{
+  "kind": "read-only-metadata-diagnostic",
+  "source_fact": "Official docs: hooks discovered next to active config layers",
+  "source_url": "https://learn.chatgpt.com/docs/hooks",
+  "hypothesis": "W14 discovery failure may be missing active project config layer; this controlled contrast changes only config.toml existence.",
+  "root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o",
+  "source_hooks_sha256": "6ea4c6e05e3d61ced51b8cb785dcd04a9ce2acc94494a08e1be304fb42b1dfad",
+  "records": [
+    {
+      "label": "trusted-root-hooks-file-without-config-layer",
+      "argv": [
+        "/Users/luca/.local/bin/codex",
+        "-c",
+        "projects.\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o\".trust_level=\"trusted\"",
+        "app-server",
+        "--listen",
+        "stdio://"
+      ],
+      "data": [
+        {
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o",
+          "own_hooks": [],
+          "non_own_count": 5,
+          "errors": [],
+          "warnings": []
+        }
+      ],
+      "own_count": 0
+    },
+    {
+      "label": "same-trusted-root-with-config-layer",
+      "argv": [
+        "/Users/luca/.local/bin/codex",
+        "-c",
+        "projects.\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o\".trust_level=\"trusted\"",
+        "app-server",
+        "--listen",
+        "stdio://"
+      ],
+      "data": [
+        {
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-hook-layer-n59sgf2o",
+          "own_hooks": [],
+          "non_own_count": 5,
+          "errors": [],
+          "warnings": []
+        }
+      ],
+      "own_count": 0
+    }
+  ],
+  "model_calls": 0,
+  "hook_executions": 0,
+  "global_config_writes": 0,
+  "methods": [
+    "initialize",
+    "hooks/list"
+  ],
+  "scope": "Metadata only, not behavioral readiness or native trust execution."
+}

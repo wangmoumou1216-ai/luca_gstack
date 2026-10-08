@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u007-readiness-20261003-r4",
+  "subject": {
+    "skill": "quality-gate",
+    "topic": "J08 actual P06 evidence and recovery decision",
+    "scene": "unknown",
+    "input_summary": "Independent delta review of frozen P06 RPC, result, journal, registration, manifest and parent witness; reused unchanged J07 code/draft checks. Examined exact local hook bindings and protocol metadata without executing models or probes.",
+    "output_paths": [],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 1,
+    "total": 3,
+    "findings": [
+      {
+        "id": "J08-1",
+        "status": "FAIL",
+        "criterion": "Obtain trustworthy native command and boundary evidence from P06",
+        "evidence": [
+          "Verified all nine r4 input hashes and the input-manifest SHA256 831d3cfae7cd52c091b0e9b24d3d569feaa7ccd96c213931bc81ef1ab1888df7.",
+          "Parsed all 80 rpc.jsonl records. The complete item-type inventory contains userMessage, agentMessage and dynamicToolCall only; no commandExecution event or command output appears.",
+          "RPC line 60 completes commentary promising one command. Lines 69–72 record case_checkpoint(inputs_delivered), its callback, outbound result and completed dynamic-tool item.",
+          "Journal sequences 1–5 show request_delivered and release of all four frozen inputs. Sequences 8–10 show the sole recorded case action advancing inputs_delivered. No case_write occurred; output/probe-result.json is absent.",
+          "RPC line 65 reports cumulative 20215 tokens: input19951 plus output264. Line75 reports cumulative40936: input40649 plus output287, cachedInput19712 already included. The second incremental total is20721, not an additional40936.",
+          "RPC lines76,78,80 establish turn/interrupt request, acknowledgement and interrupted terminal state. result.json records OBSERVED_TOKEN_BUDGET, no unfinished turns, SIGTERM sent, transport exit0 and later group SIGKILL returning ESRCH.",
+          "Outer launch exit1, outer_timed_out=false, elapsed137.98 seconds. Parent marker unchanged and forbidden writes absent were independently rechecked; no output artifact exists.",
+          "RPC lines32–35 contain four reconnect timeout diagnostics; line36 explicitly records fallback from WebSockets to HTTPS. Their exact effect on token accounting or the unobserved tool path is not established."
+        ],
+        "important_correction": {
+          "status": "UNKNOWN",
+          "evidence": "RPC lines61–64 contain completed pre/postToolUse hooks for exec-7b6a3da4-df07-44c5-9fe3-b30d991ab9d4. This differs from the visible checkpoint call exec-88a066f0-56ae-4e0d-aa4e-e9d120094bb6 and has no corresponding item/started, item/completed or commandExecution record.",
+          "meaning": "There is an unmapped tool-associated activity. Its tool name, arguments, result and whether any command was attempted cannot be reconstructed from these RPC records. Do not equate zero commandExecution records with zero attempted calls.",
+          "counting_impact": "driver tool_actions=1 accurately counts the visible dynamic callback/item pair, but completeness of whole-chain tool-action accounting is UNKNOWN. The unmatched hook pair must not be silently discarded or confidently counted as a successful native command.",
+          "local_check": "Current /Users/luca/.codex/hooks.json SHA256534ac6025e73e8c7953a34b42518418687c34184dd1395cf26146b3c0c717964 maps both events to /Users/luca/.claude/hooks/hook-write.sh. That 461-byte shim delegates to a visual-notifier project. The shim was fully read; the unrelated project was not opened. Hook completion therefore supplies no native-command execution or permission-denial proof.",
+          "stderr": "P06 evidence/stderr.log is empty, SHA256e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855; it does not resolve the unmatched activity."
+        },
+        "classification": {
+          "this_configuration_obtained_required_probe_evidence": "FAIL",
+          "model_overall_command_capability": "UNKNOWN",
+          "native_filesystem_and_network_boundary": "UNKNOWN",
+          "native_python_pyyaml_and_rule_loader": "UNKNOWN",
+          "framework_net_value": "UNKNOWN",
+          "budget_interruption_and_observed_terminal_cleanup": "PASS"
+        }
+      },
+      {
+        "id": "J08-2",
+        "status": "FAIL",
+        "criterion": "Release formal development comparison",
+        "evidence": [
+          "P06 has no eight-check command stdout, no loader result, no probe-result artifact and no completed protocol.",
+          "Actual model/profile metadata matches the reviewed request, but metadata does not demonstrate effective filesystem, symlink, process-child or network controls.",
+          "Absence of forbidden writes without an evidenced attempt cannot establish denial.",
+          "Mechanical promotion matches J07 authorization exactly: unchanged case bytes; registration status/time/formal case path; manifest probe authorization and READY bound to final registration hash. No failure is attributable to an unauthorized draft change.",
+          "The seven source hashes remain unchanged from J07, so W24 offline fidelity remains PASS and earlier fixed code defects are not reopened."
+        ],
+        "remaining_requirements": [
+          "Actual model-native command evidence under the bound profile/runtime, including required allow/deny checks and native baseline loader output; accepted effective proof may only cite actual evidence.",
+          "Resolution or explicit bounded treatment of the unmatched tool activity and completeness of tool-action observability before using action costs or declaring necessary-control coverage.",
+          "A successfully completed current protocol with actual artifacts and retained terminal/cleanup evidence.",
+          "For formal cases that use child Agents or fresh recovery, relevant real identity/accounting/cancellation and recovery evidence remains required. This is use-specific, not a demand for every host or every combination.",
+          "Baseline runtime consumption and necessary control checks relevant to the released formal cases remain required; offline source/copy equality alone cannot prove them."
+        ],
+        "prohibited_shortcuts": [
+          "Do not fabricate effective_probe or promote thread metadata to behavior proof.",
+          "Do not substitute standalone command/exec or unsandboxed thread shell execution for evidence of the model-native command path.",
+          "Do not use process exit0, an unchanged marker, an INVALID_RUN label alone, or the absence of a recorded command as a complete capability verdict.",
+          "Do not score this invalid capability probe as an ordinary candidate-quality or framework-value failure."
+        ]
+      },
+      {
+        "id": "J08-3",
+        "status": "PASS",
+        "criterion": "One concrete recovery action with a stopping boundary",
+        "next_action": "Root performs one bounded, read-only local tool-registration/dispatch diagnosis for the unmatched exec-7b6a3da4-df07-44c5-9fe3-b30d991ab9d4 activity in thread01a0fe7d-b656-74d3-a194-99eadb6e3946, turn01a0fe7d-be4c-7b11-8b1f-e75c00434ba0. Determine whether the reviewed native command tool was registered for the selected model and how a dispatched call can finish hooks without producing an app-server item.",
+        "exact_scope": [
+          "Anchor the diagnosis to existing P06 RPC lines61–65 and69–75, plus the canonical Codex0.160.0 binary identity and existing thread/start request.",
+          "Read only relevant existing local configuration keys controlling native tool availability, the selected model's existing cached registration entry if present, and installed/generated tool-registration or dispatch protocol/code needed to answer this one question.",
+          "The already inspected ThreadStartParams.json dynamicTools field describes the supplied dynamic tools but does not itself enumerate or prove native command-tool availability.",
+          "If an existing diagnostic record is available, correlate only this exact thread/turn/call ID and time window. Do not scan unrelated conversations, private/archive material, or the visual-notifier project.",
+          "No new app-server conversation, turn, model call, command probe, installation, permissions change, global configuration change or implementation edit."
+        ],
+        "decision_value": [
+          "A concrete disabled, unsupported or misrouted native tool would justify a specific configuration/method correction instead of another prompt rewrite.",
+          "Evidence that a call failed before observable item creation would identify a telemetry/control gap and change how the driver can qualify whole-chain action counts.",
+          "If existing local metadata and records cannot recover the call, stop with that precise observability limit. Do not convert uncertainty into a claim that the model ignored the command."
+        ],
+        "budget_and_authority": "Capability6/6 and work24/24 remain exhausted; this review is10/28. This ticket grants no new runtime or construction budget. Any subsequent method, observation mechanism or budget revision must be an explicit root operational decision under the existing user authorization, retaining all six failures and costs. Increasing tokens alone is not supported by the present evidence.",
+        "completion_boundary": "Finish the local diagnosis when it yields a concrete registration/dispatch cause or establishes that this specific call cannot be recovered from existing evidence. Then root decides the smallest justified methodological revision; neither this report nor maintaining the freeze completes three-module implementation, acceptance, commit and push."
+      },
+      {
+        "id": "J08-AUDIT",
+        "status": "PASS",
+        "started_at": "2026-10-02T21:26:06Z",
+        "finished_at": "2026-10-02T21:29:28Z",
+        "conservative_tool_actions": 17,
+        "observable_tool_tokens_approx": 34000,
+        "model_runs": 0,
+        "probe_runs": 0,
+        "tests_run": 0,
+        "file_writes": 0,
+        "integrity": "All frozen r4 input hashes matched before and after review. Seven implementation/test sources match prior J07 hashes. Registered case matches reviewed draft bytes.",
+        "read_limits": "Large rendered result/RPC outputs were partly truncated. All80 RPC records were machine-parsed for complete method/item inventories; decisive raw events were inspected, duplicate user-message bodies and streamed assistant deltas were equality-checked, and omitted decisive result fields were read separately. No claim of unrestricted full semantic inspection of every repeated raw field.",
+        "unknowns": [
+          "Unmapped tool-associated call name, arguments, result and its contribution to action counts.",
+          "Actual model-visible native tool registry and any internal dispatch rejection.",
+          "Provider-side unreported usage or monetary cost.",
+          "Effect of reconnect attempts on exact cost and missing tool telemetry.",
+          "Native permission behavior and framework comparative value."
+        ]
+      }
+    ]
+  }
+}

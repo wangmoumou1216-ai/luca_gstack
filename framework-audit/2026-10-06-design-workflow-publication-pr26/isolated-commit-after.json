@@ -1,0 +1,17 @@
+{
+  "commit": "c8471dc637041aaa06367eb21bd96381dff73e6e",
+  "source_hashes_match": true,
+  "tracked_clean": true,
+  "checks": [
+    "state",
+    "design",
+    "engineering",
+    "original-copy",
+    "generated-corrected",
+    "context",
+    "agents",
+    "ci-mutations",
+    "historical-manifest"
+  ],
+  "command_correction": "generated .mjs was nonexistent; actual .py check passed"
+}

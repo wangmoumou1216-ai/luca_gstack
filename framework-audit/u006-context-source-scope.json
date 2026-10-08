@@ -1,0 +1,161 @@
+{
+  "module": "context",
+  "root": "/Users/luca/Desktop/luca_gstack",
+  "baseline_manifest_sha256": "cbbf8d9cf338b8bbf2aa3434e500a9f83eb69f524018968a4d8b0d798b9c41b9",
+  "permission": "read-only, semantics only where relevant; identity inventory is not permission to read all sources",
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "kind": "file",
+      "bytes": 11253,
+      "sha256": "db5ea430452a32cf5d98fac04917ae2ef2da5ae46ca2ea775423fb434336d8d8"
+    },
+    {
+      "path": "CONTEXT.md",
+      "kind": "file",
+      "bytes": 3483,
+      "sha256": "b654bf50eff5fba1ba8ca51e76f41d575111bffcf20837df0e1f33f0a9aa1b3e"
+    },
+    {
+      "path": ".claude/skill-os/generated/context-index.md",
+      "kind": "file",
+      "bytes": 12083,
+      "sha256": "9f40be97d14e6b8b18efb00464e5742b0a71c6580b00b2208f1adb6716e4dee2"
+    },
+    {
+      "path": ".claude/skill-os/generated/skill-catalog.md",
+      "kind": "file",
+      "bytes": 12948,
+      "sha256": "027a7ecbb53c9c5c65991ca3706bf396d6507f586237ea94d70798d46743637a"
+    },
+    {
+      "path": ".claude/agents/plan-agent.md",
+      "kind": "file",
+      "bytes": 35707,
+      "sha256": "00ad93605d8cdaac020f72308556ae972b8f1c352139ad4518b6c762b4319813"
+    },
+    {
+      "path": ".claude/agents/references/evidence-receipts.md",
+      "kind": "file",
+      "bytes": 17881,
+      "sha256": "756b995f2cedc2fc50192a643a5c3b2ca5b7b825caabe6bef6769299f96dd282"
+    },
+    {
+      "path": ".claude/agents/references/project-verification.md",
+      "kind": "file",
+      "bytes": 18500,
+      "sha256": "f58cf741cc8e642fd8a46dac0887e654c2a3056121455cc6cd70c1fa46cb9249"
+    },
+    {
+      "path": ".claude/skill-os/runtime/project-session.md",
+      "kind": "file",
+      "bytes": 12273,
+      "sha256": "c75e34d9dcfa5cafde745090bc5a9673c84b1aba18548ad647ff8f74e8651821"
+    },
+    {
+      "path": ".claude/skill-os/runtime/long-session.md",
+      "kind": "file",
+      "bytes": 1421,
+      "sha256": "641aa996c6257570c9829ff668e7c59226a820b21ce1a8e6842aed9b173c2117"
+    },
+    {
+      "path": ".claude/skill-os/runtime/cross-harness.md",
+      "kind": "file",
+      "bytes": 1238,
+      "sha256": "d9899018487257331988a965799543bc89aa55f31a1fe964c35a47e3a6825c5f"
+    },
+    {
+      "path": ".claude/skill-os/runtime/workflow-mode.md",
+      "kind": "file",
+      "bytes": 3114,
+      "sha256": "e6573465a8d369d0da3b7a5954ff58e191ccd8315cdad69c9da505ff5d55f0f5"
+    },
+    {
+      "path": ".claude/skill-os/model-routing.yaml",
+      "kind": "file",
+      "bytes": 14293,
+      "sha256": "4c4435a3cffb1efc62cb8c4e135219db53e3a33ceb18ffc10b8e86271a587064"
+    },
+    {
+      "path": ".claude/skills/office/SKILL.md",
+      "kind": "file",
+      "bytes": 14954,
+      "sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377"
+    },
+    {
+      "path": ".claude/skill-os/agent-context-manifest.json",
+      "kind": "file",
+      "bytes": 15590,
+      "sha256": "9c7c3d4ccfe1c0aeb1cb970617701ab8a060906ad4def72085e55b88622ef034"
+    },
+    {
+      "path": "scripts/resolve-agent-context.mjs",
+      "kind": "file",
+      "bytes": 1142,
+      "sha256": "57336884efe38d0815921e47b4423d6d90a6a3483f28a0f1f6663a3e58bc0ed1"
+    },
+    {
+      "path": "scripts/build-agent-context.py",
+      "kind": "file",
+      "bytes": 18349,
+      "sha256": "a4fd415325e78e11cd1320f4c42acbebb1220f615495bfdc09d91dadcf7733f1"
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "kind": "file",
+      "bytes": 41505,
+      "sha256": "300d3eb50b55c51af4f4237700639b0344c2c778d55137bc060a401796810cfd"
+    },
+    {
+      "path": "scripts/test-agent-context-resolution.mjs",
+      "kind": "file",
+      "bytes": 2241,
+      "sha256": "4da21e965dee1511c33b8177964cb7dffb7b6706939179f9c16759b5e662bbe7"
+    },
+    {
+      "path": "scripts/test-agent-context-branch-fixtures.mjs",
+      "kind": "file",
+      "bytes": 25863,
+      "sha256": "60515273baaf7dd6623a588d1ff97c45cd5475cfa25ff490b3c442e69e09faf6"
+    },
+    {
+      "path": "scripts/run-agent-context-ab.mjs",
+      "kind": "file",
+      "bytes": 525030,
+      "sha256": "195d4c18707a37f256bd855e6e7ee7502658b0972c48d54b742b6679568d4b42"
+    },
+    {
+      "path": ".claude/skill-os/extraction-bar.md",
+      "kind": "file",
+      "bytes": 4493,
+      "sha256": "7e928899fabbf28b5a0f8afb21222457be3a4760c9ab349b636aaa94e70bcd66"
+    },
+    {
+      "path": ".claude/skill-os/correction-attribution.md",
+      "kind": "file",
+      "bytes": 9331,
+      "sha256": "afdf6a173d9c817a304b24afd7247df4c62c01b2937d4231079a9cd3b7e3618f"
+    },
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "kind": "file",
+      "bytes": 31059,
+      "sha256": "3eed1c58e4c6cbdd5b3a8ad0fa3c0841723012de0cf789fb7f369980905dc29e"
+    },
+    {
+      "path": ".claude/skill-os/runtime/prototype-delivery.md",
+      "kind": "file",
+      "bytes": 11115,
+      "sha256": "12c0483a034fe15eb38dc2316cdb2bc6f35721a77468e948107a59a88c74f09a"
+    }
+  ],
+  "additional_reads": "required startup owners according to existing repository contract are allowed for session operation; evidence-source expansion must ask main with exact path/purpose, no implicit implementation traversal",
+  "forbidden": [
+    "u004-cases/private/",
+    "u005* unblinded design",
+    "downstream projects",
+    "global/private config and credentials",
+    "framework/ modifications",
+    "other module output before freeze"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "wf-20261006-release-spec",
+  "subject": {
+    "skill": "code-hygiene:Spec",
+    "topic": "design-workflow-repairs",
+    "scene": "unknown",
+    "input_summary": "独立只读核对批准计划、77文件冻结源码及实际diff；九项实现Spec符合要求。核心证据保持原分母，原生扩展限制保留；最终precommit、隔离提交及exacthead CI仍待完成，本票不授发布通过。",
+    "output_paths": [
+      "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/scripts/test-design-workflow-contract.mjs"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 9,
+    "total": 9,
+    "findings": []
+  }
+}

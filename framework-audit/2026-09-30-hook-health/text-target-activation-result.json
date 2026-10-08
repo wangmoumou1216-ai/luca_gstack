@@ -1,0 +1,115 @@
+{
+  "status": "ACTIVATED_SOURCE_INSTALL_AND_THREE_PROFILE_TRUST_VERIFIED_LIVE_RELOAD_PENDING",
+  "target_commit": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+  "source_digest": "1981bc83163ea3d56d83e51defbdb247184c075691f8542659bbb165b8e90469",
+  "profile_homes": [
+    "/Users/luca/.codex",
+    "/Users/luca/.luca/codex/aihub-direct",
+    "/Users/luca/.codex-aihub-test"
+  ],
+  "steps": [
+    {
+      "step": "text-preflight-head",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-preflight-branch",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-preflight-index",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-health-before",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-candidate-source-health",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-controlled-state",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-trust-before-0",
+      "exit": 0,
+      "codex_home": "/Users/luca/.codex"
+    },
+    {
+      "step": "text-trust-before-1",
+      "exit": 0,
+      "codex_home": "/Users/luca/.luca/codex/aihub-direct"
+    },
+    {
+      "step": "text-trust-before-2",
+      "exit": 0,
+      "codex_home": "/Users/luca/.codex-aihub-test"
+    },
+    {
+      "step": "text-controlled-state-boundary",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-main-fast-forward",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-source-install",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-trust-apply-0",
+      "exit": 0,
+      "codex_home": "/Users/luca/.codex"
+    },
+    {
+      "step": "text-trust-readback-0",
+      "exit": 0,
+      "codex_home": "/Users/luca/.codex"
+    },
+    {
+      "step": "text-trust-apply-1",
+      "exit": 0,
+      "codex_home": "/Users/luca/.luca/codex/aihub-direct"
+    },
+    {
+      "step": "text-trust-readback-1",
+      "exit": 0,
+      "codex_home": "/Users/luca/.luca/codex/aihub-direct"
+    },
+    {
+      "step": "text-trust-apply-2",
+      "exit": 0,
+      "codex_home": "/Users/luca/.codex-aihub-test"
+    },
+    {
+      "step": "text-trust-readback-2",
+      "exit": 0,
+      "codex_home": "/Users/luca/.codex-aihub-test"
+    },
+    {
+      "step": "text-health-after",
+      "exit": 0,
+      "codex_home": null
+    },
+    {
+      "step": "text-three-profile-host-readback",
+      "exit": 0,
+      "codex_home": null
+    }
+  ],
+  "live_session": "UNVERIFIED; existing sessions must reload registered commands",
+  "gui": "UNVERIFIED",
+  "at": "2026-09-30T14:34:35.086933+00:00"
+}

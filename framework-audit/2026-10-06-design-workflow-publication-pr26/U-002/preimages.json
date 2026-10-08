@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-10-06T06:14:27.914163+00:00",
+  "root": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "files": {
+    ".claude/skills/office/brainstorm/SKILL.md": {
+      "sha256": "cb48d7ffed032cd2ab18320cdbc560f48ae6206e4136ba09406680deacd54a5d",
+      "bytes": 41854
+    },
+    ".claude/skills/office/ux-brainstorm/SKILL.md": {
+      "sha256": "c4a0ce65bc5db6b9152e247461d9da4143bd8f18cb27928fe132d73de4526949",
+      "bytes": 38006
+    },
+    ".claude/skills/office/brainstorm/references/adversarial-review.md": {
+      "sha256": "9277609f8dafef5541480a2a7112a99580db14af91ffa852455483461026c6e9",
+      "bytes": 12223
+    },
+    ".claude/skills/office/ux-brainstorm/references/adversarial-review.md": {
+      "sha256": "69c3f254e50e1c39f26032ff4617ce09694d4b4aa52e9f43ef2f42c8789d947d",
+      "bytes": 7272
+    },
+    ".claude/skill-os/codex-viability.yaml": {
+      "sha256": "05718cc213e45ada0d1a28e306c7486aa5075f4ea6aadce6d50d49d8132ac7ba",
+      "bytes": 6096
+    },
+    ".claude/agents/quality-gate.md": {
+      "sha256": "4c16a87530af2b3c9b00f876b734b4807aea933c310d79d9e1f204e8222b7c69",
+      "bytes": 20319
+    }
+  }
+}

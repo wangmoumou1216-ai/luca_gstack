@@ -1,0 +1,55 @@
+{
+  "at": "2026-10-02T20:28:55.392839+00:00",
+  "scope": "read-only current source gap diagnosis; no change to U002 or any candidate",
+  "source_head": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "files": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/observability/scripts/get_rules.py",
+      "repository_path": ".claude/observability/scripts/get_rules.py",
+      "bytes": 2195,
+      "sha256": "db87c92b97f6945c54846297eba5e57d0e373eb5c3237ec4b9fc1a37e5a3d020",
+      "equal_to_committed_head": true
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/observability/rules.yaml",
+      "repository_path": ".claude/observability/rules.yaml",
+      "bytes": 9407,
+      "sha256": "98ff8956517f1bb9f1d6f093674ba68276f1c5ba9dd26e6310cb18b25359fbc2",
+      "equal_to_committed_head": true
+    }
+  ],
+  "office_active_rules": [
+    {
+      "id": "R-20260522-001",
+      "rule": "office: CLAUDE.md 路由表与 SKILL.md Step 3 列表必须保持一致，任一变更须同步另一处"
+    },
+    {
+      "id": "R-20260523-001",
+      "rule": "office/route: 项目上下文门禁优先于场景B功能优化路由；“老项目/已有项目/继续项目”先确认或切换项目，再决定 skill。"
+    },
+    {
+      "id": "R-20260820-001",
+      "rule": "强制项目切换轮结束后，下一条用户消息应自动续接已明确的原始任务，不得制造重复确认；真实人类决策门除外"
+    },
+    {
+      "id": "R-20260824-001",
+      "rule": "office: 项目创建意图与名称已明确后，不得要求用户重复输入同一门禁口令；应在官方事务路径内自行完成，无法完成时一次性报告 blocker。"
+    },
+    {
+      "id": "R-20260923-003",
+      "rule": "office/route-guard: 普通任务无完整关键词命中时返回 NONE/semantic fallback，不得把 no_keyword_match 映射为 STOP；仅项目或作用域歧义、元问题与受保护拒绝可 STOP。"
+    }
+  ],
+  "direct_dependency": "get_rules.py uses stdlib plus PyYAML to read .claude/observability/rules.yaml; returns empty if unavailable, office suppresses stderr",
+  "impact": "B/S frozen materials cannot reproduce five applicable office rules via the existing preamble. Some rules overlap other owner text; equivalence not demonstrated. Missing script disclosure alone does not close baseline fidelity.",
+  "unverified": [
+    "PyYAML availability inside actual candidate sandbox",
+    "Complete closure of other skills/workflow and project-dependent paths",
+    "Actual rule loading or model consumption in B/S"
+  ],
+  "root_read_evidence": [
+    "8da23b full script",
+    "29bf57 full rules"
+  ],
+  "root_yaml_parse_only": true
+}

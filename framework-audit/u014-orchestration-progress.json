@@ -1,0 +1,189 @@
+{
+  "status": "DONE_WITH_CONCERNS: owned local repair delivered; actual model qualification/adoption unresolved",
+  "updated_at": "2026-10-03T07:33:15.947366+00:00",
+  "owner": "module2-orchestration",
+  "model_runs_started": 0,
+  "entry_decision": {
+    "selected": "existing runTrial -> codex app-server stdio; retain case dynamicTools, material bindings, strict native profiles and family usage/terminal evidence",
+    "simpler_cli": "codex exec --help exposes JSON events and final schema, but no documented dynamic tool callback injection; no verified drop-in retaining case checkpoint/fresh/family semantics. Do not switch or claim eligibility from CLI events alone.",
+    "driver_changes_for_alias": false
+  },
+  "python_root_cause": {
+    "outer_canonical_binary_still_reports_opt_alias": true,
+    "Path_resolve_inside_original_profile_returns_inaccessible_alias": true,
+    "nested_spawn_raises_EPERM": true,
+    "canonical_env_repairs_actual_loader_under_unchanged_profile": true,
+    "evidence": [
+      {
+        "mode": "unchanged",
+        "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/python-alias-unchanged.json",
+        "sha256": "41e9ee939b96313a65cf1e927eb4d5b0a4f0f66a759a8167f1b60116c5c10d54",
+        "command_exit_code": 0,
+        "loader_passed": false,
+        "loader_stdout_sha256": null,
+        "profile_changed": false
+      },
+      {
+        "mode": "canonical-env",
+        "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/python-alias-canonical-env.json",
+        "sha256": "bf6763b5df9772d1537efae5d7e303e4942720bb2561f9a35298468de2239d9c",
+        "command_exit_code": 0,
+        "loader_passed": true,
+        "loader_stdout_sha256": "66a501665fb15b3b5e30fead5a47901d064c92f633e04a9baf9a0d284f86b0b4",
+        "profile_changed": false
+      }
+    ]
+  },
+  "native_probe_launch": {
+    "argv": [
+      "/usr/bin/env",
+      "PYTHONEXECUTABLE=/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+      "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+      "-B",
+      "case/input/probe.py",
+      "<P09 outside directory>",
+      "<P09 loopback port>",
+      "<P09 probe-runtime directory>"
+    ],
+    "shell": "/bin/sh",
+    "tty": false,
+    "cwd": "<P09 run condition root>",
+    "permission_config": "P09 manifest.runtime_release.native_command_permissions; preserve deny root, minimal read, exact condition and canonical runtime roots, network false. No alias/broad root allowance.",
+    "app_server_flags": [
+      "app-server",
+      "--listen",
+      "stdio://",
+      "--disable",
+      "apps",
+      "-c",
+      "allow_login_shell=false",
+      "--disable",
+      "shell_snapshot"
+    ],
+    "driver_launch": "programmatic runTrial with explicit known Codex binary (P08 existing launch shape); root freezes manifest/case/registration exact hashes."
+  },
+  "checkpoint_guidance": {
+    "exact_call": {
+      "checkpoint": "before_final_submission"
+    },
+    "artifact": "omit key entirely when protocol has no requested saved checkpoint; artifact:{} is invalid. Validator unchanged."
+  },
+  "cost_and_qualification_limits": {
+    "P08_observed_total_tokens": 137276,
+    "P08_input_tokens": 136424,
+    "P08_cached_input_tokens": 91392,
+    "P08_output_tokens": 852,
+    "P08_stream_reconnects": 4,
+    "P09_budget_inherited": {
+      "wall_seconds": 480,
+      "tool_actions": 30,
+      "observed_tokens": 120000
+    },
+    "root_only_actual_registration_and_launch": true,
+    "offline_test_is_not_model_qualification": true
+  },
+  "remaining_driver_repairs": [],
+  "fairness": "One shared launch correction must apply equally to B/T/S/I/C if Python used. Keep full active rule bytes and condition owners, same input/permission/model/resources, failures and unknown accounting. Candidate C comes from frozen baseline inventory with17 committed framework blobs; evaluator tools excluded.",
+  "parent_env_delta": {
+    "PYTHONEXECUTABLE": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "PATH_prepend": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin",
+    "PATH_remainder": "unchanged inherited value; not printed",
+    "verification": "NOT sufficient: original sandbox command python3 still sys.executable opt alias, nested loader EPERM. Do not freeze parent-env-only launch as qualified."
+  },
+  "python3_lookup_verification": {
+    "evidence": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/python3-parent-env.json",
+    "sha256": "752a6d710920328f6df9185b326cd25475ccc1252dc1fcc16d5272e85c488b05",
+    "exit_code": 0,
+    "python3_lookup": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3",
+    "resolved": "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "loader_passed": false,
+    "loader_stdout_sha256": null
+  },
+  "owned_driver_delivery": [
+    {
+      "path": "/Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "b514cb98eacc3bf689931c3236a72e8da55f766124828839ba0cb20dafabb7a6"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "06b3b6c28d422734b70d27c4d6beff8c491deaac75e1b6850b3a22b13c1c20c7"
+    }
+  ],
+  "driver_repairs_complete": [
+    "C enumerated without changing I child limit or existing conditions",
+    "trace probes allow8/10; frozen record must equal manifest; unsupported caps and resource increases rejected before spawn"
+  ],
+  "targeted_tests": {
+    "red_tool_chunk": "7d1c23",
+    "red": {
+      "passed": 1,
+      "failed": 2
+    },
+    "green_log": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/u014-targeted-green.log",
+    "green": {
+      "passed": 3,
+      "failed": 0
+    },
+    "model_runs": 0
+  },
+  "cost_attribution": {
+    "fixed_input_vs_task_input_tokens": "UNKNOWN: raw cumulative137276 does not separate fixed native tools, framework instructions, user request, or repeated processing.91392 cached is a subset of input, not extra tokens.",
+    "stream_reconnects": 4,
+    "reconnect_cost_attribution": "UNKNOWN: event count does not establish incremental billable tokens; retain failures and actual family totals.",
+    "policy": "No cap change. Root may remove duplicate inline probe script from qualification request while keeping identical complete initial_file; this is scaffolding change, not a demonstrated framework saving."
+  },
+  "python_launch_decision": "Verified minimal launch remains /usr/bin/env PYTHONEXECUTABLE=<canonical python3.14> <canonical python3.14> -B case/input/probe.py ... inside sandbox; original profile and script unchanged. Parent-only env was tested and failed; retained evidence.",
+  "driver_ready": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-orchestration-ready.json",
+    "sha256": "c898f8576c5fc3fc289826209486c246c823a17fab8b00206425ae282e37e752",
+    "files": [
+      {
+        "path": "/Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.mjs",
+        "sha256": "b514cb98eacc3bf689931c3236a72e8da55f766124828839ba0cb20dafabb7a6",
+        "bytes": 58107
+      },
+      {
+        "path": "/Users/luca/.codex/worktrees/71f8/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+        "sha256": "06b3b6c28d422734b70d27c4d6beff8c491deaac75e1b6850b3a22b13c1c20c7",
+        "bytes": 80878
+      }
+    ]
+  },
+  "full_driver_regression": {
+    "exit_code": 0,
+    "tests": 74,
+    "passed": 73,
+    "failed": 0,
+    "skipped": 1,
+    "skip_reason": "existing W34 real-observer synthetic bundle absent from frozen candidate commit; no substitute invented",
+    "elapsed_ms": 24586.562959,
+    "log": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/driver-regression.log",
+    "inputs": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/driver-regression-mirror-inputs.json",
+    "transport": "fixture fake server; not a model or native permission qualification"
+  },
+  "common_B_C_python3_entry": {
+    "status": "LOCAL_SHELL_AND_LOADER_PASS_APPSERVER_ADOPTION_NOT_YET_PROVEN",
+    "driver_change": false,
+    "config_argv_delta": [
+      "-c",
+      "shell_environment_policy.set.PYTHONEXECUTABLE=\"/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14\""
+    ],
+    "parent_environment": {
+      "PATH_prepend": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin",
+      "PYTHONEXECUTABLE_parent_only": "insufficient in tested sandbox; do not rely on it"
+    },
+    "native_command": "python3 -B ... unchanged through /bin/sh; same permission profile and original loader",
+    "evidence": [
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/python3-command-policy-set.json",
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-orchestration-o57wrvn4/python3-shell-policy-set.json"
+    ],
+    "passed": true,
+    "loader_stdout_sha256": "66a501665fb15b3b5e30fead5a47901d064c92f633e04a9baf9a0d284f86b0b4",
+    "carrier": "Root may supply these public Codex CLI config argv entries with an isolated task-owned executable wrapper to existing codexCommand. No driver field needed. Do not write global config or candidate framework files. Freeze carrier bytes/config and qualify actual app-server commands before comparison.",
+    "fairness": "Identical task-local canonical Python path and one exact env policy.set apply to all B/T/S/I/C; no alias or broad read grants. Root adopts only with same frozen entry and scope."
+  },
+  "purpose_report": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u011-orchestration-evidence-limits.md",
+    "sha256": "988e343b8f1bc0e1a461e296de703839036ba0ca2f4e34876114a8636fda3e9c"
+  }
+}

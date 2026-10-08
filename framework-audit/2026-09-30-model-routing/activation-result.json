@@ -1,0 +1,71 @@
+{
+  "status": "ACTIVATED_TRUST_VERIFIED",
+  "activated_at": "2026-09-30T06:22:39.918122+00:00",
+  "patch_sha256": "9b2c53963b74f829af785b0167a0055fb35cad1fdf71668438f3bd8fdac54361",
+  "source_digest": "a229918d10266b91b6205ec46efb8ab65e3d612b3bd5458762caad617cecebf3",
+  "file_count": 13,
+  "trusted_hooks": 11,
+  "other_roots_preserved": 3,
+  "manifest_sha256": "9d36fd3d087f093902e61ee51fb7f7b203d7682d51b62f944114ca60ae23409a",
+  "steps": [
+    {
+      "step": "activation-patch-check",
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-patch-apply",
+      "argv": [
+        "git",
+        "apply",
+        "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-source-install",
+      "argv": [
+        "node",
+        "scripts/install-codex-source-guard.mjs",
+        "--root",
+        "/Users/luca/Desktop/luca_gstack",
+        "--preserve-other-roots"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-trust-dry-run",
+      "argv": [
+        "node",
+        "scripts/codex-trust-hooks.mjs",
+        "--host-launch",
+        "--dry-run"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-trust-apply",
+      "argv": [
+        "node",
+        "scripts/codex-trust-hooks.mjs",
+        "--host-launch"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "activation-trust-readback",
+      "argv": [
+        "node",
+        "scripts/codex-trust-hooks.mjs",
+        "--host-launch",
+        "--dry-run"
+      ],
+      "exit": 0
+    }
+  ]
+}

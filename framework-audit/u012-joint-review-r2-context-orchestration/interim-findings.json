@@ -1,0 +1,14 @@
+{
+  "review_id": "J16",
+  "source": "actual independent /root/a_gate interim message",
+  "final_verdict_pending": true,
+  "F2_prior_auto_finding": "reviewer reports four consumer sites now closed",
+  "new_blocking_finding": {
+    "owner": "Context / office shared contract",
+    "path": ".claude/skills/office/SKILL.md",
+    "lines": "150–156 vs 173",
+    "counterexample": "Three required upstream handoffs ~2K tokens each: mandatory full dependency consumption exceeds unconditional 5K total cap.",
+    "repair_authorized": "Only adjacent 5K budget meaning and mandatory-dependency overflow handling; optional-history/single-batch bound, retain necessary source checks, honest capacity GAP, no new protocol.",
+    "dispatch": "sent to current W41 original thread; not a new turn"
+  }
+}

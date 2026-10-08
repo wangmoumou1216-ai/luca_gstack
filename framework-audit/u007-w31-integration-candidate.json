@@ -1,0 +1,36 @@
+{
+  "status": "FROZEN_FOR_W32_GREEN_ONLY",
+  "module_root": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r8-driver",
+  "files": {
+    "case-protocol.mjs": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r8-driver/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8"
+    },
+    "case-protocol.test.mjs": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r8-driver/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af"
+    },
+    "conditions.mjs": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r8-driver/conditions.mjs",
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc"
+    },
+    "conditions.test.mjs": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r8-driver/conditions.test.mjs",
+      "sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920"
+    },
+    "driver.mjs": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r8-driver/driver.mjs",
+      "sha256": "1bf9c49969f5ca91591d82c18b29b117c39b6925598b4142ce61b67508144a82"
+    },
+    "driver.test.mjs": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r8-driver/driver.test.mjs",
+      "sha256": "475f77f519b87a621688a647db65b5fcd2b0c8efd53a884e2f01d5591c219199"
+    },
+    "integration.test.mjs": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r8-driver/integration.test.mjs",
+      "sha256": "4e0852c69944bcc869f666d306801bcc6cb479f2e4e434425abe802855ee6475"
+    }
+  },
+  "root_worktree_unchanged": true,
+  "runtime_release": false
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "kind": "luca-stable-local-release-gate",
+  "release_sha256": "561d386794cbece4ab5e2c7a1acfd2d041991b0cdb51f1e911c55c8ca9cac611",
+  "review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-local-review-resume06.json",
+    "sha256": "7aaf670a736ecba48e6b37e24572421d00e6d70331bc634cb7fc8dcd209e2f23",
+    "eval_run_id": "hook-cache-local-release-20261001-resume06",
+    "invocation_id": "e5e44229-eece-4462-b023-c220ec2c5904",
+    "agent_id": "01a0f5a7-692e-7553-ba35-6e6706b7ec50",
+    "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T12-09-44-01a0f5a7-692e-7553-ba35-6e6706b7ec50.jsonl:01a0f5a7-699b-7980-9388-203743201d2b",
+    "root_session_id": "01a0f592-1c01-7681-9a1c-791758f66556",
+    "activation_id": "9909267a-d8d5-4674-af6d-4a5043e737d2"
+  }
+}

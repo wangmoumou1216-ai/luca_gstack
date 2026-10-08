@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u014-focused-decision-method",
+  "subject": {
+    "skill": "U014-focused-decision-method",
+    "topic": "J31 bounded instruction-decision regression method",
+    "scene": "unknown",
+    "input_summary": "Read-only assessment of seven synthetic operational cases, output contract, predeclared oracle, four-run old/new cross-harness design and adoption limits. Reused non-author context; no model execution.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-fix-behavior-cases-draft.json"
+    ],
+    "duration": "lightweight"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": [
+      "Method supports only concrete instruction-consumption and next-decision fixes when actual same-harness old failures become new passes without required-control regression. No patch is preapproved.",
+      "Before execution, derive and freeze a separate actor input excluding predeclared_oracle; do not pass the complete draft JSON to the model.",
+      "Use independent fresh sessions and isolated version-bound authority inputs; prevent current-checkout automatic rules and previous outputs from contaminating the old condition. Freeze actual commands and input snapshots.",
+      "Judge semantic decisions and their consistency, not exact prose matches. Preserve both-correct, both-wrong and divergent results rather than forcing improvement.",
+      "Four single-sample runs establish at most these observed cases, not reliability rates, actual multiagent execution, recovery, delivery, efficiency or whole-system superiority. Unproved slices remain candidates."
+    ]
+  }
+}

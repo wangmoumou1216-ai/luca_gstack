@@ -1,0 +1,9 @@
+{"type":"thread.started","thread_id":"01a0fcbe-71ca-7532-bfac-03e5f04fe3fa"}
+{"type":"turn.started"}
+{"type":"error","message":"Reconnecting... 2/5 (request timed out)"}
+{"type":"error","message":"Reconnecting... 3/5 (request timed out)"}
+{"type":"error","message":"Reconnecting... 4/5 (request timed out)"}
+{"type":"error","message":"Reconnecting... 5/5 (request timed out)"}
+{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Falling back from WebSockets to HTTPS transport. request timed out"}}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"The initial context does **not** include identifiable `luca_gstack` repository `AGENTS.md` content, its routing hierarchy, Plan thresholds, repository-specific model routing rules, prior audit conclusions, or implementation details.\n\nIt does include:\n\n- Your supplied `AGENTS.md` instruction pointing to a personal Obsidian knowledge-base rules file and requiring it to be read for ingest, query, or lint tasks. The referenced file’s contents were not supplied.\n- General operating instructions, tool descriptions, environment metadata, and a skill catalog. These are injected context, not evidence about `luca_gstack`.\n- Skill names and brief descriptions, which do not establish the contents of their underlying files or any repository’s configuration.\n\nPretrained knowledge is separate from injected context and cannot establish what is present in your repository.\n\nI have not invoked tools or read files for this disclosure. This reports contextual provenance only; it makes no claim about physical isolation."}}
+{"type":"turn.completed","usage":{"input_tokens":20572,"cached_input_tokens":13184,"cache_write_input_tokens":0,"output_tokens":234,"reasoning_output_tokens":39}}

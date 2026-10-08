@@ -1,0 +1,727 @@
+{
+  "writer": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack/.claude/skills/office/references/write_state.py",
+  "writer_sha256": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+  "guard_sha256": "2b0bb60fa9a7f31a1d5b1ac43a7c8546a9b20a189157170cc977984b60c22127",
+  "source_integrity": {
+    "before": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "2b0bb60fa9a7f31a1d5b1ac43a7c8546a9b20a189157170cc977984b60c22127",
+      "idea": "854887aaa5459e6bcdb59dc520976f570a593e930c6f4dc2e47de47bc40febc4",
+      "challenge": "370904c7c9f83e7d97e4cdcac03f1388ca0aa55273b2c6d8e33c4568970e3fcc",
+      "retro": "8c4bc9cd3cef4fc0ffc520b4e2a15501d66058e793bf60a59a392ef675dab8aa",
+      "figma-demo": "64ffd5c0c0bf70d122317945b8ca1f85e876fd3adea73675de7fa4a65a28c3ec",
+      "evals": "1335b67f424485218b3fadb8dd805b512f19ac2ac7c008ada40f7cf709c7ca0a",
+      "open-design": "b3e8db76b412156558d1d0e1055d1a181fe245856bfb3cb75fc7d458f8b9ffa3",
+      "html-prototype": "b7eabca9ef4147deda7e2018f161d83f529d18b04d9e8196aff1b5d889b07476",
+      "redteam": "b582e9595a7fa0f19eb7c0496af0be8b42743f218a671f24128e4dc54e78c77b",
+      "ux-audit": "74741f1ad9d94b4c0760cf55a8943c0a33c390baf349a4a5703b621bf3f1216d"
+    },
+    "after": {
+      "writer": "dcfe5a38ec9d06f0847e1235f302602d947bc2fe4772e4fe7626291a93eacf06",
+      "guard": "2b0bb60fa9a7f31a1d5b1ac43a7c8546a9b20a189157170cc977984b60c22127",
+      "idea": "854887aaa5459e6bcdb59dc520976f570a593e930c6f4dc2e47de47bc40febc4",
+      "challenge": "370904c7c9f83e7d97e4cdcac03f1388ca0aa55273b2c6d8e33c4568970e3fcc",
+      "retro": "8c4bc9cd3cef4fc0ffc520b4e2a15501d66058e793bf60a59a392ef675dab8aa",
+      "figma-demo": "64ffd5c0c0bf70d122317945b8ca1f85e876fd3adea73675de7fa4a65a28c3ec",
+      "evals": "1335b67f424485218b3fadb8dd805b512f19ac2ac7c008ada40f7cf709c7ca0a",
+      "open-design": "b3e8db76b412156558d1d0e1055d1a181fe245856bfb3cb75fc7d458f8b9ffa3",
+      "html-prototype": "b7eabca9ef4147deda7e2018f161d83f529d18b04d9e8196aff1b5d889b07476",
+      "redteam": "b582e9595a7fa0f19eb7c0496af0be8b42743f218a671f24128e4dc54e78c77b",
+      "ux-audit": "74741f1ad9d94b4c0760cf55a8943c0a33c390baf349a4a5703b621bf3f1216d"
+    },
+    "drift": false
+  },
+  "started_at": "2026-10-06T06:05:19.891091+00:00",
+  "completed_at": "2026-10-06T06:05:20.532806+00:00",
+  "passed": 0,
+  "total": 9,
+  "exit_code": 1,
+  "outcomes": [
+    {
+      "case": "caller-idea-replace-failure",
+      "status": "FAIL",
+      "error": "AssertionError: idea replace-failure swallowed failure: exit=0, stdout='workflow-state 写入跳过\\nDEPENDENT_PHASE_REACHED\\n'"
+    },
+    {
+      "case": "caller-challenge-replace-failure",
+      "status": "FAIL",
+      "error": "AssertionError: challenge replace-failure swallowed failure: exit=0, stdout='workflow-state 写入跳过\\nDEPENDENT_PHASE_REACHED\\n'"
+    },
+    {
+      "case": "caller-retro-replace-failure",
+      "status": "FAIL",
+      "error": "AssertionError: retro replace-failure swallowed failure: exit=0, stdout='workflow-state 写入跳过\\nDEPENDENT_PHASE_REACHED\\n'"
+    },
+    {
+      "case": "caller-figma-demo-replace-failure",
+      "status": "FAIL",
+      "error": "AssertionError: figma-demo replace-failure swallowed failure: exit=0, stdout='workflow-state 写入跳过\\nDEPENDENT_PHASE_REACHED\\n'"
+    },
+    {
+      "case": "caller-evals-replace-failure",
+      "status": "FAIL",
+      "error": "AssertionError: evals replace-failure swallowed failure: exit=0, stdout='workflow-state 写入跳过\\nDEPENDENT_PHASE_REACHED\\n'"
+    },
+    {
+      "case": "caller-open-design-replace-failure",
+      "status": "FAIL",
+      "error": "AssertionError: open-design replace-failure swallowed failure: exit=0, stdout='workflow-state 写入跳过\\nDEPENDENT_PHASE_REACHED\\n'"
+    },
+    {
+      "case": "caller-html-prototype-replace-failure",
+      "status": "FAIL",
+      "error": "AssertionError: html-prototype replace-failure swallowed failure: exit=0, stdout='workflow-state 写入跳过\\nDEPENDENT_PHASE_REACHED\\n'"
+    },
+    {
+      "case": "caller-redteam-replace-failure",
+      "status": "FAIL",
+      "error": "AssertionError: redteam replace-failure swallowed failure: exit=0, stdout='workflow-state 写入跳过\\nDEPENDENT_PHASE_REACHED\\n'"
+    },
+    {
+      "case": "caller-ux-audit-replace-failure",
+      "status": "FAIL",
+      "error": "AssertionError: ux-audit replace-failure swallowed failure: exit=0, stdout='workflow-state 写入跳过\\nDEPENDENT_PHASE_REACHED\\n'"
+    }
+  ],
+  "actual_runs": [
+    {
+      "case": "caller-idea-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-0eu1okx_",
+      "state_before": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"idea\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/idea/$(date +%Y-%m-%d)-${_TOPIC}-idea.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\necho DEPENDENT_PHASE_REACHED\n"
+          ],
+          "source": {
+            "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-caller-mutation-bc1tvvhn/idea/SKILL.md",
+            "sha256": "854887aaa5459e6bcdb59dc520976f570a593e930c6f4dc2e47de47bc40febc4",
+            "actual_block": "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"idea\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/idea/$(date +%Y-%m-%d)-${_TOPIC}-idea.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\""
+          },
+          "pid": 94492,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-0eu1okx_",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-0eu1okx_",
+          "started_at": "2026-10-06T06:05:19.894829+00:00",
+          "input": {
+            "_TOPIC": "t",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state 写入跳过\nDEPENDENT_PHASE_REACHED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T06:05:19.954495+00:00",
+          "actual_identity": {
+            "pid": 94496,
+            "argv": [
+              ".claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-0eu1okx_",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-0eu1okx_",
+            "started_at": "2026-10-06T06:05:19.929458+00:00"
+          },
+          "actual_identities": [
+            {
+              "pid": 94496,
+              "argv": [
+                ".claude/skills/office/references/write_state.py"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-0eu1okx_",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-0eu1okx_",
+              "started_at": "2026-10-06T06:05:19.929458+00:00"
+            }
+          ]
+        }
+      ],
+      "artifacts_after": {
+        "docs/idea/2026-10-06-t-idea.md": "generated artifact must survive\n"
+      },
+      "decoy_state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "cleanup": {
+        "checked_at": "2026-10-06T06:05:19.957430+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "caller-challenge-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-q_h83aao",
+      "state_before": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/prd/*-prd.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-prd\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"challenge\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/prd/$(date +%Y-%m-%d)-${_TOPIC}-challenge.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\necho DEPENDENT_PHASE_REACHED\n"
+          ],
+          "source": {
+            "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-caller-mutation-bc1tvvhn/challenge/SKILL.md",
+            "sha256": "370904c7c9f83e7d97e4cdcac03f1388ca0aa55273b2c6d8e33c4568970e3fcc",
+            "actual_block": "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/prd/*-prd.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-prd\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"challenge\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/prd/$(date +%Y-%m-%d)-${_TOPIC}-challenge.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\""
+          },
+          "pid": 94497,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-q_h83aao",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-q_h83aao",
+          "started_at": "2026-10-06T06:05:19.960295+00:00",
+          "input": {
+            "_TOPIC": "t",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state 写入跳过\nDEPENDENT_PHASE_REACHED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T06:05:20.020599+00:00",
+          "actual_identity": {
+            "pid": 94501,
+            "argv": [
+              ".claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-q_h83aao",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-q_h83aao",
+            "started_at": "2026-10-06T06:05:19.995056+00:00"
+          },
+          "actual_identities": [
+            {
+              "pid": 94501,
+              "argv": [
+                ".claude/skills/office/references/write_state.py"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-q_h83aao",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-q_h83aao",
+              "started_at": "2026-10-06T06:05:19.995056+00:00"
+            }
+          ]
+        }
+      ],
+      "artifacts_after": {
+        "docs/prd/2026-10-06-t-challenge.md": "generated artifact must survive\n"
+      },
+      "decoy_state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "cleanup": {
+        "checked_at": "2026-10-06T06:05:20.023201+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "caller-retro-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-6agzr85x",
+      "state_before": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"retro\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/retro/$(date +%Y-%m-%d)-${_TOPIC}-retro.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\necho DEPENDENT_PHASE_REACHED\n"
+          ],
+          "source": {
+            "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-caller-mutation-bc1tvvhn/retro/SKILL.md",
+            "sha256": "8c4bc9cd3cef4fc0ffc520b4e2a15501d66058e793bf60a59a392ef675dab8aa",
+            "actual_block": "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"retro\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/retro/$(date +%Y-%m-%d)-${_TOPIC}-retro.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\""
+          },
+          "pid": 94502,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-6agzr85x",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-6agzr85x",
+          "started_at": "2026-10-06T06:05:20.026019+00:00",
+          "input": {
+            "_TOPIC": "t",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state 写入跳过\nDEPENDENT_PHASE_REACHED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T06:05:20.087936+00:00",
+          "actual_identity": {
+            "pid": 94506,
+            "argv": [
+              ".claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-6agzr85x",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-6agzr85x",
+            "started_at": "2026-10-06T06:05:20.061938+00:00"
+          },
+          "actual_identities": [
+            {
+              "pid": 94506,
+              "argv": [
+                ".claude/skills/office/references/write_state.py"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-6agzr85x",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-6agzr85x",
+              "started_at": "2026-10-06T06:05:20.061938+00:00"
+            }
+          ]
+        }
+      ],
+      "artifacts_after": {
+        "docs/retro/2026-10-06-t-retro.md": "generated artifact must survive\n"
+      },
+      "decoy_state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "cleanup": {
+        "checked_at": "2026-10-06T06:05:20.090548+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "caller-figma-demo-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zrrkgopz",
+      "state_before": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -td \"$_PROJECT_ROOT\"/docs/prototype/*/ 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"figma-demo\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html\"\nexport _EXTRA_JSON=\"{\\\"blueprint\\\":\\\"docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/blueprint.yaml\\\"}\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\necho DEPENDENT_PHASE_REACHED\n"
+          ],
+          "source": {
+            "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-caller-mutation-bc1tvvhn/figma-demo/SKILL.md",
+            "sha256": "64ffd5c0c0bf70d122317945b8ca1f85e876fd3adea73675de7fa4a65a28c3ec",
+            "actual_block": "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -td \"$_PROJECT_ROOT\"/docs/prototype/*/ 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"figma-demo\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html\"\nexport _EXTRA_JSON=\"{\\\"blueprint\\\":\\\"docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/blueprint.yaml\\\"}\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\""
+          },
+          "pid": 94507,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zrrkgopz",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zrrkgopz",
+          "started_at": "2026-10-06T06:05:20.093579+00:00",
+          "input": {
+            "_TOPIC": "t",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state 写入跳过\nDEPENDENT_PHASE_REACHED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T06:05:20.156348+00:00",
+          "actual_identity": {
+            "pid": 94513,
+            "argv": [
+              ".claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zrrkgopz",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zrrkgopz",
+            "started_at": "2026-10-06T06:05:20.130457+00:00"
+          },
+          "actual_identities": [
+            {
+              "pid": 94513,
+              "argv": [
+                ".claude/skills/office/references/write_state.py"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zrrkgopz",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-zrrkgopz",
+              "started_at": "2026-10-06T06:05:20.130457+00:00"
+            }
+          ]
+        }
+      ],
+      "artifacts_after": {
+        "docs/prototype/2026-10-06-t/index.html": "generated artifact must survive\n"
+      },
+      "decoy_state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "cleanup": {
+        "checked_at": "2026-10-06T06:05:20.159090+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "caller-evals-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v04c2nd7",
+      "state_before": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"evals\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/evals/$(date +%Y-%m-%d)-${_TOPIC}-evals.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\necho DEPENDENT_PHASE_REACHED\n"
+          ],
+          "source": {
+            "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-caller-mutation-bc1tvvhn/evals/SKILL.md",
+            "sha256": "1335b67f424485218b3fadb8dd805b512f19ac2ac7c008ada40f7cf709c7ca0a",
+            "actual_block": "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"evals\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/evals/$(date +%Y-%m-%d)-${_TOPIC}-evals.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\""
+          },
+          "pid": 94514,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v04c2nd7",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v04c2nd7",
+          "started_at": "2026-10-06T06:05:20.161933+00:00",
+          "input": {
+            "_TOPIC": "t",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state 写入跳过\nDEPENDENT_PHASE_REACHED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T06:05:20.221110+00:00",
+          "actual_identity": {
+            "pid": 94518,
+            "argv": [
+              ".claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v04c2nd7",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v04c2nd7",
+            "started_at": "2026-10-06T06:05:20.196072+00:00"
+          },
+          "actual_identities": [
+            {
+              "pid": 94518,
+              "argv": [
+                ".claude/skills/office/references/write_state.py"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v04c2nd7",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-v04c2nd7",
+              "started_at": "2026-10-06T06:05:20.196072+00:00"
+            }
+          ]
+        }
+      ],
+      "artifacts_after": {
+        "docs/evals/2026-10-06-t-evals.md": "generated artifact must survive\n"
+      },
+      "decoy_state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "cleanup": {
+        "checked_at": "2026-10-06T06:05:20.223835+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "caller-open-design-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-drwy9k5j",
+      "state_before": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"open-design\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\necho DEPENDENT_PHASE_REACHED\n"
+          ],
+          "source": {
+            "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-caller-mutation-bc1tvvhn/open-design/SKILL.md",
+            "sha256": "b3e8db76b412156558d1d0e1055d1a181fe245856bfb3cb75fc7d458f8b9ffa3",
+            "actual_block": "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"open-design\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\""
+          },
+          "pid": 94519,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-drwy9k5j",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-drwy9k5j",
+          "started_at": "2026-10-06T06:05:20.226882+00:00",
+          "input": {
+            "_TOPIC": "t",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state 写入跳过\nDEPENDENT_PHASE_REACHED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T06:05:20.287230+00:00",
+          "actual_identity": {
+            "pid": 94523,
+            "argv": [
+              ".claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-drwy9k5j",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-drwy9k5j",
+            "started_at": "2026-10-06T06:05:20.261816+00:00"
+          },
+          "actual_identities": [
+            {
+              "pid": 94523,
+              "argv": [
+                ".claude/skills/office/references/write_state.py"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-drwy9k5j",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-drwy9k5j",
+              "started_at": "2026-10-06T06:05:20.261816+00:00"
+            }
+          ]
+        }
+      ],
+      "artifacts_after": {
+        "docs/prototype/2026-10-06-t/index.html": "generated artifact must survive\n"
+      },
+      "decoy_state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "cleanup": {
+        "checked_at": "2026-10-06T06:05:20.289932+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "caller-html-prototype-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyuqjn8d",
+      "state_before": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nmkdir -p \"$_PROJECT_ROOT/docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}\"\nexport _NODE=\"html-prototype\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\necho DEPENDENT_PHASE_REACHED\n"
+          ],
+          "source": {
+            "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-caller-mutation-bc1tvvhn/html-prototype/SKILL.md",
+            "sha256": "b7eabca9ef4147deda7e2018f161d83f529d18b04d9e8196aff1b5d889b07476",
+            "actual_block": "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nmkdir -p \"$_PROJECT_ROOT/docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}\"\nexport _NODE=\"html-prototype\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/prototype/$(date +%Y-%m-%d)-${_TOPIC}/index.html\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\""
+          },
+          "pid": 94524,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyuqjn8d",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyuqjn8d",
+          "started_at": "2026-10-06T06:05:20.293038+00:00",
+          "input": {
+            "_TOPIC": "t",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state 写入跳过\nDEPENDENT_PHASE_REACHED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T06:05:20.358664+00:00",
+          "actual_identity": {
+            "pid": 94531,
+            "argv": [
+              ".claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyuqjn8d",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyuqjn8d",
+            "started_at": "2026-10-06T06:05:20.332614+00:00"
+          },
+          "actual_identities": [
+            {
+              "pid": 94531,
+              "argv": [
+                ".claude/skills/office/references/write_state.py"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyuqjn8d",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-gyuqjn8d",
+              "started_at": "2026-10-06T06:05:20.332614+00:00"
+            }
+          ]
+        }
+      ],
+      "artifacts_after": {
+        "docs/prototype/2026-10-06-t/index.html": "generated artifact must survive\n"
+      },
+      "decoy_state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "cleanup": {
+        "checked_at": "2026-10-06T06:05:20.361445+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "caller-redteam-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qokysl89",
+      "state_before": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"redteam\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/redteam/$(date +%Y-%m-%d)-${_TOPIC}-redteam.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\necho DEPENDENT_PHASE_REACHED\n"
+          ],
+          "source": {
+            "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-caller-mutation-bc1tvvhn/redteam/SKILL.md",
+            "sha256": "b582e9595a7fa0f19eb7c0496af0be8b42743f218a671f24128e4dc54e78c77b",
+            "actual_block": "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"redteam\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/redteam/$(date +%Y-%m-%d)-${_TOPIC}-redteam.md\"\npython3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\""
+          },
+          "pid": 94532,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qokysl89",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qokysl89",
+          "started_at": "2026-10-06T06:05:20.364412+00:00",
+          "input": {
+            "_TOPIC": "t",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state 写入跳过\nDEPENDENT_PHASE_REACHED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T06:05:20.423989+00:00",
+          "actual_identity": {
+            "pid": 94536,
+            "argv": [
+              ".claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qokysl89",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qokysl89",
+            "started_at": "2026-10-06T06:05:20.398508+00:00"
+          },
+          "actual_identities": [
+            {
+              "pid": 94536,
+              "argv": [
+                ".claude/skills/office/references/write_state.py"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qokysl89",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-qokysl89",
+              "started_at": "2026-10-06T06:05:20.398508+00:00"
+            }
+          ]
+        }
+      ],
+      "artifacts_after": {
+        "docs/redteam/2026-10-06-t-redteam.md": "generated artifact must survive\n"
+      },
+      "decoy_state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "cleanup": {
+        "checked_at": "2026-10-06T06:05:20.426660+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    },
+    {
+      "case": "caller-ux-audit-replace-failure",
+      "fixture_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aluxfw4k",
+      "state_before": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "state_after": "custom:\n  retained: true\niteration: 5\nnodes:\n  brainstorm:\n    handoff_path: docs/handoff/kept.md\n    status: DONE\n  design-brief:\n    status: DONE\n  ux-audit:\n    custom_node: kept\n    output: old.md\n    status: PENDING\nscene: B\ntopic: 速记\n",
+      "topic_after": "old-topic",
+      "processes": [
+        {
+          "argv": [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"ux-audit\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/evaluation/$(date +%Y-%m-%d)-${_TOPIC}-ux-audit.md\"\nif _EXTRA_JSON=$(python3 - <<'PYEOF'\nimport json, os, pathlib, re, sys, yaml\nroot = pathlib.Path(os.environ['_PROJECT_ROOT'])\ntry:\n    with (root / '.luca/workflow-state.yaml').open(encoding='utf-8') as stream:\n        state = yaml.safe_load(stream)\nexcept FileNotFoundError:\n    print('NO_WORKFLOW_NODE')\n    sys.exit(0)\nif not isinstance(state, dict) or not isinstance(state.get('nodes', {}), dict):\n    raise ValueError('workflow-state/nodes 必须为 mapping；状态尚未同步')\nif 'ux-audit' not in state.get('nodes', {}):\n    print('NO_WORKFLOW_NODE')\n    sys.exit(0)\nreport = root / os.environ['_OUTPUT']\nlines = [line for line in report.read_text(encoding='utf-8').splitlines()\n         if re.search(r'综合(?: UX)? 得分[：:]', line)]\nif not lines:\n    raise ValueError('主报告缺少完整、可计算的综合 UX 得分')\nscores = []\nfor line in lines:\n    match = re.fullmatch(r'\\s*综合(?: UX)? 得分[：:]\\s*([0-9]+)/100\\s*[（(]完整评分[）)]\\s*', line)\n    if not match or not 0 <= int(match.group(1)) <= 100:\n        raise ValueError('综合分数须真实完整且与报告整数值一致；不截断小数、不采用 UNKNOWN/不完整评分')\n    scores.append(int(match.group(1)))\nif len(set(scores)) != 1:\n    raise ValueError('报告综合分数存在歧义；状态尚未同步')\nprint(json.dumps({'baseline_score': scores[0]}))\nPYEOF\n); then\n  if [ \"$_EXTRA_JSON\" = \"NO_WORKFLOW_NODE\" ]; then\n    unset _EXTRA_JSON\n    printf '%s\\n' 'ux-audit: standalone 无 workflow 节点，未更新状态。'\n  else\n    export _EXTRA_JSON\n    python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\n  fi\nelse\n  _STATE_RC=$?\n  printf '%s\\n' 'ERROR: UX 报告已保留，baseline/state 尚未同步；停止依赖后继，不报告 workflow DONE 或 handoff 成功。' >&2\n  exit \"$_STATE_RC\"\nfi\necho DEPENDENT_PHASE_REACHED\n"
+          ],
+          "source": {
+            "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-caller-mutation-bc1tvvhn/ux-audit/SKILL.md",
+            "sha256": "74741f1ad9d94b4c0760cf55a8943c0a33c390baf349a4a5703b621bf3f1216d",
+            "actual_block": "case \"${_PROJECT_ROOT:-}\" in\n  /*) ;;\n  *) printf '%s\\n' 'ERROR: 缺少已验证的绝对 _PROJECT_ROOT；不从共享别名推断项目。' >&2; exit 1 ;;\nesac\nif [ ! -d \"$_PROJECT_ROOT\" ] || [ \"$(cd \"$_PROJECT_ROOT\" && pwd -P)\" != \"$_PROJECT_ROOT\" ]; then\n  printf '%s\\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2\n  exit 1\nfi\nexport _TOPIC=\"${_TOPIC:-$(cat \"$_PROJECT_ROOT/.luca/current-topic.txt\" 2>/dev/null)}\"\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ]; then\n  _TOPIC=$(ls -t \"$_PROJECT_ROOT\"/docs/idea/*-idea.md 2>/dev/null | head -1 | \\\n    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-idea\\.md$//')\nfi\nif [ -z \"$_TOPIC\" ] || [ \"$_TOPIC\" = \"<topic>\" ] || [ \"$_TOPIC\" = \"unknown\" ] || [ \"$_TOPIC\" = \"none\" ]; then\n  printf '%s\\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2\n  exit 1\nfi\n# 只有本次已经确认的场景才参与 topic 事务；未知场景只更新节点。\ncase \"${_SCENE:-}\" in A|B|C|D) export _SCENE ;; *) unset _SCENE ;; esac\nexport _NODE=\"ux-audit\"\nexport _STATUS=\"DONE\"\nexport _OUTPUT=\"docs/evaluation/$(date +%Y-%m-%d)-${_TOPIC}-ux-audit.md\"\nif _EXTRA_JSON=$(python3 - <<'PYEOF'\nimport json, os, pathlib, re, sys, yaml\nroot = pathlib.Path(os.environ['_PROJECT_ROOT'])\ntry:\n    with (root / '.luca/workflow-state.yaml').open(encoding='utf-8') as stream:\n        state = yaml.safe_load(stream)\nexcept FileNotFoundError:\n    print('NO_WORKFLOW_NODE')\n    sys.exit(0)\nif not isinstance(state, dict) or not isinstance(state.get('nodes', {}), dict):\n    raise ValueError('workflow-state/nodes 必须为 mapping；状态尚未同步')\nif 'ux-audit' not in state.get('nodes', {}):\n    print('NO_WORKFLOW_NODE')\n    sys.exit(0)\nreport = root / os.environ['_OUTPUT']\nlines = [line for line in report.read_text(encoding='utf-8').splitlines()\n         if re.search(r'综合(?: UX)? 得分[：:]', line)]\nif not lines:\n    raise ValueError('主报告缺少完整、可计算的综合 UX 得分')\nscores = []\nfor line in lines:\n    match = re.fullmatch(r'\\s*综合(?: UX)? 得分[：:]\\s*([0-9]+)/100\\s*[（(]完整评分[）)]\\s*', line)\n    if not match or not 0 <= int(match.group(1)) <= 100:\n        raise ValueError('综合分数须真实完整且与报告整数值一致；不截断小数、不采用 UNKNOWN/不完整评分')\n    scores.append(int(match.group(1)))\nif len(set(scores)) != 1:\n    raise ValueError('报告综合分数存在歧义；状态尚未同步')\nprint(json.dumps({'baseline_score': scores[0]}))\nPYEOF\n); then\n  if [ \"$_EXTRA_JSON\" = \"NO_WORKFLOW_NODE\" ]; then\n    unset _EXTRA_JSON\n    printf '%s\\n' 'ux-audit: standalone 无 workflow 节点，未更新状态。'\n  else\n    export _EXTRA_JSON\n    python3 .claude/skills/office/references/write_state.py 2>/dev/null || echo \"workflow-state 写入跳过\"\n  fi\nelse\n  _STATE_RC=$?\n  printf '%s\\n' 'ERROR: UX 报告已保留，baseline/state 尚未同步；停止依赖后继，不报告 workflow DONE 或 handoff 成功。' >&2\n  exit \"$_STATE_RC\"\nfi"
+          },
+          "pid": 94537,
+          "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aluxfw4k",
+          "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aluxfw4k",
+          "started_at": "2026-10-06T06:05:20.429563+00:00",
+          "input": {
+            "_TOPIC": "t",
+            "_SCENE": "C"
+          },
+          "probe": {
+            "WF_PROBE_TAG": "call-1",
+            "WF_PROBE_REPLACE_FAIL": "1"
+          },
+          "exit_code": 0,
+          "stdout": "workflow-state 写入跳过\nDEPENDENT_PHASE_REACHED\n",
+          "stderr": "",
+          "completed_at": "2026-10-06T06:05:20.529473+00:00",
+          "actual_identity": {
+            "pid": 94543,
+            "argv": [
+              ".claude/skills/office/references/write_state.py"
+            ],
+            "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aluxfw4k",
+            "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aluxfw4k",
+            "started_at": "2026-10-06T06:05:20.504375+00:00"
+          },
+          "actual_identities": [
+            {
+              "pid": 94542,
+              "argv": [
+                "-"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aluxfw4k",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aluxfw4k",
+              "started_at": "2026-10-06T06:05:20.463984+00:00"
+            },
+            {
+              "pid": 94543,
+              "argv": [
+                ".claude/skills/office/references/write_state.py"
+              ],
+              "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aluxfw4k",
+              "data_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-state-guard-aluxfw4k",
+              "started_at": "2026-10-06T06:05:20.504375+00:00"
+            }
+          ]
+        }
+      ],
+      "artifacts_after": {
+        "docs/evaluation/2026-10-06-t-ux-audit.md": "综合 UX 得分：85/100（完整评分）\n"
+      },
+      "decoy_state_after": "topic: 速记\nscene: B\niteration: 5\ncustom:\n  retained: true\nnodes:\n  brainstorm:\n    status: DONE\n    handoff_path: docs/handoff/kept.md\n  design-brief:\n    status: DONE\n",
+      "cleanup": {
+        "checked_at": "2026-10-06T06:05:20.532145+00:00",
+        "fixture_removed": true,
+        "state_absent": true,
+        "topic_absent": true,
+        "support_absent": true
+      }
+    }
+  ]
+}

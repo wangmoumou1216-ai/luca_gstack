@@ -1,0 +1,28 @@
+{
+  "scope": "NO_PIN approved workflow repair U-001-a,b U-002..U-006; R6 D-001 deferred",
+  "user_authorization": "按照计划解决，验证，发布",
+  "plan_sha256": "6e2ed3c76fb939468088800f3d82bb0925157be282fd2f7b573855f913f63f3a",
+  "baseline": "d211bd3c1479720836219b035ec9963d278efa49",
+  "work_root": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "branch": "codex/design-workflow-fixes",
+  "effects": [
+    "create isolated worktree/branch",
+    "edit exact planned source/test/derived files",
+    "run isolated validation and native cold probes",
+    "install declared test dependencies within worktree if needed",
+    "commit task-owned changes",
+    "push branch",
+    "create and attach PR",
+    "merge after gates",
+    "pull Desktop main with ff-only",
+    "archive task-created worktree after evidence copied"
+  ],
+  "excluded": [
+    "unrelated Desktop dirty files",
+    "framework/ writes",
+    "real project state",
+    "live OD effects",
+    "Claude native token runs",
+    "R6 philosophy change"
+  ]
+}

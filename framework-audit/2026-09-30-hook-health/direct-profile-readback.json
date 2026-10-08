@@ -1,0 +1,471 @@
+{
+  "checkedAt": "2026-09-30T08:49:30.283Z",
+  "binary": "/Users/luca/.codex/packages/standalone/releases/0.159.2-aarch64-apple-darwin/bin/codex",
+  "configUnchanged": true,
+  "before": {
+    "/Users/luca/.codex": {
+      "sha256": "f05e4f12ba357085362003c9a7afdc103ca4e046bf5c3bf3486f187f4548d1ea",
+      "mtimeMs": 1790756121051.6526
+    },
+    "/Users/luca/.luca/codex/aihub-direct": {
+      "sha256": "a92f63ec8fc5abc82df741eb3c3f4515dd3732cc0310ce7b7adc4b9d03ac18c3",
+      "mtimeMs": 1790673091625.246
+    }
+  },
+  "after": {
+    "/Users/luca/.codex": {
+      "sha256": "f05e4f12ba357085362003c9a7afdc103ca4e046bf5c3bf3486f187f4548d1ea",
+      "mtimeMs": 1790756121051.6526
+    },
+    "/Users/luca/.luca/codex/aihub-direct": {
+      "sha256": "a92f63ec8fc5abc82df741eb3c3f4515dd3732cc0310ce7b7adc4b9d03ac18c3",
+      "mtimeMs": 1790673091625.246
+    }
+  },
+  "matrix": [
+    {
+      "root": "/Users/luca/Desktop/luca_gstack",
+      "profileHome": "/Users/luca/.codex",
+      "staticRegistration": true,
+      "appGate": "PASS",
+      "registeredCount": 11,
+      "exactRows": [
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_start:0:0",
+          "count": 1,
+          "event": "sessionStart",
+          "identityMatches": true,
+          "currentHash": "sha256:c663e5c5d582e5baaddf04734427ca90b0f4bf2fc0f0ad370330b1f8e3442460",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "67f938843199e44ea47536abde603aebac13f51f9d0615cd9a215198b54d4c9e"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_start:1:0",
+          "count": 1,
+          "event": "sessionStart",
+          "identityMatches": true,
+          "currentHash": "sha256:4bdb79218ef563852d5e148a7636c247cf8e45c1e0adfad13edff459268a7886",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "57395302af850e66895dc1d8877e4784a5e19cf8f2c8afe82f83b2eaf1a3b425"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:user_prompt_submit:0:0",
+          "count": 1,
+          "event": "userPromptSubmit",
+          "identityMatches": true,
+          "currentHash": "sha256:436cf28a4c861bed587d7e439a9e66adbeec1f5bed311141bbf7e49099ec2b35",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "07fb670898cbb7c91db3f8c67613cbb32ca107abd5d9496eb4e69aafa28678f7"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:pre_tool_use:0:0",
+          "count": 1,
+          "event": "preToolUse",
+          "identityMatches": true,
+          "currentHash": "sha256:651a5a44643d30f5b1f5516fc7f5d06a5690675dd73f3fb85983a753f5f73b29",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "b17130e2a94fb350bbf5ccd261253be21df0488ac8ecd96ac648d474bd2b6779"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:pre_tool_use:1:0",
+          "count": 1,
+          "event": "preToolUse",
+          "identityMatches": true,
+          "currentHash": "sha256:1cb6791cd1041dc36db42ee80f59a3a1c22c4d1967ee836a948d591627c24ffc",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "57395302af850e66895dc1d8877e4784a5e19cf8f2c8afe82f83b2eaf1a3b425"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:post_tool_use:0:0",
+          "count": 1,
+          "event": "postToolUse",
+          "identityMatches": true,
+          "currentHash": "sha256:9c45b6c10e5dfb5204547dbbfc3476ba2cce5e23471fada8a2f069780ff82261",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "4d358f0ea40d468a1d559bbf3303e24576b0cf8a1e4f65798c42e0f1f0aff566"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:stop:0:0",
+          "count": 1,
+          "event": "stop",
+          "identityMatches": true,
+          "currentHash": "sha256:f2cefb4e3a72882787266a760dd0b1880b698eca07980502ee31f78739a0ab2e",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "d38893cd7be888cfc08fbe2b53a04c50514ff8e157ee527e6519087096e6658f"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:subagent_start:0:0",
+          "count": 1,
+          "event": "subagentStart",
+          "identityMatches": true,
+          "currentHash": "sha256:e1772d694f7c57b1ac58291cee8af240411bbc52e64353fb1de7c69aa5766ced",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "57395302af850e66895dc1d8877e4784a5e19cf8f2c8afe82f83b2eaf1a3b425"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:subagent_stop:0:0",
+          "count": 1,
+          "event": "subagentStop",
+          "identityMatches": true,
+          "currentHash": "sha256:f64fc93e263e0bc2ddad81bf83b4afc6c99aea138e1df5b9fc9432bac620b1ac",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "57395302af850e66895dc1d8877e4784a5e19cf8f2c8afe82f83b2eaf1a3b425"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_end:0:0",
+          "count": 1,
+          "event": "sessionEnd",
+          "identityMatches": true,
+          "currentHash": "sha256:83a6e9aafa1f3928abf230ae453b7c8e0218dcc8a7fbb61306c84d30e50270db",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "ea7cd2aaf4ebe54f80176f1bd2f41762930fcb0d7ae4a193794bf5febba6116c"
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_end:1:0",
+          "count": 1,
+          "event": "sessionEnd",
+          "identityMatches": true,
+          "currentHash": "sha256:47b42b84820aaf6f9ee720899528477d9b4e2ed3cdf952d74d52d1854be3c283",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "57395302af850e66895dc1d8877e4784a5e19cf8f2c8afe82f83b2eaf1a3b425"
+        }
+      ],
+      "foreignCount": 5,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "root": "/Users/luca/Desktop/luca_gstack",
+      "profileHome": "/Users/luca/.luca/codex/aihub-direct",
+      "staticRegistration": true,
+      "appGate": "Codex host hooks are not trusted",
+      "registeredCount": 11,
+      "exactRows": [
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_start:0:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_start:1:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:user_prompt_submit:0:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:pre_tool_use:0:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:pre_tool_use:1:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:post_tool_use:0:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:stop:0:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:subagent_start:0:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:subagent_stop:0:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_end:0:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        },
+        {
+          "key": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json:session_end:1:0",
+          "count": 0,
+          "identityMatches": false,
+          "commandSha256": null
+        }
+      ],
+      "foreignCount": 0,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse/lucagstack",
+      "profileHome": "/Users/luca/.codex",
+      "staticRegistration": true,
+      "appGate": "PASS",
+      "registeredCount": 11,
+      "exactRows": [
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:session_start:0:0",
+          "count": 1,
+          "event": "sessionStart",
+          "identityMatches": true,
+          "currentHash": "sha256:2123d9e0e6976ef50bc62691d1c62333be329cede074d126addb8899c4e9cd87",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "45b0fd0f5b90d3556952a21e087ca3fd6eb6907ad2d5c1bdd1f0a8f34e088d70"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:session_start:1:0",
+          "count": 1,
+          "event": "sessionStart",
+          "identityMatches": true,
+          "currentHash": "sha256:599a1d146c3b7aac492306af5308a3e8a4a76fa652827af75e59d4ce1e6f41a3",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:user_prompt_submit:0:0",
+          "count": 1,
+          "event": "userPromptSubmit",
+          "identityMatches": true,
+          "currentHash": "sha256:94b8e1284dfb6b2727ce842ab95bab0d0b0fb9033d905077c40371c277234af5",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "ce28613e9e931bc6dfa19fa7064452b04b0f6e62fec2aaaf4df614eb305a4586"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:pre_tool_use:0:0",
+          "count": 1,
+          "event": "preToolUse",
+          "identityMatches": true,
+          "currentHash": "sha256:6b2927fb8d4ab4e24028707a593ec5d935d3cc4bcdd0ed994f6bbee0383a5c03",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "929f0af894d148ee305671f7e69fe9861bd237fca0211200cf571c673fa44b1c"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:pre_tool_use:1:0",
+          "count": 1,
+          "event": "preToolUse",
+          "identityMatches": true,
+          "currentHash": "sha256:8e853b8ebd1384641695fe316b5bc6488ae34bea12cfdf5e5f4b068f4a6635a9",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:post_tool_use:0:0",
+          "count": 1,
+          "event": "postToolUse",
+          "identityMatches": true,
+          "currentHash": "sha256:79879305bf36eff05bd77c0069051f47f8fe48f9efc3163752776db9873da2bd",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "f16fa3ec93760852329e491118ab243e7e605c0d8db3485506f535f7a8d0cc06"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:stop:0:0",
+          "count": 1,
+          "event": "stop",
+          "identityMatches": true,
+          "currentHash": "sha256:8612b3c835ddfdf3cbdd62a20050570f16d383f040ff5018bea5c27e6cef0d8e",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "b0459c8e3b2a506f58292e218ac5693215f8622310b5aec1d14a2092205532fa"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:subagent_start:0:0",
+          "count": 1,
+          "event": "subagentStart",
+          "identityMatches": true,
+          "currentHash": "sha256:53e488eaad231309631a6a088ab4e854f999ad165044aa973738151851c9df84",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:subagent_stop:0:0",
+          "count": 1,
+          "event": "subagentStop",
+          "identityMatches": true,
+          "currentHash": "sha256:f359c49f3563b5c7aac4fa61f0ec0fc7bddc3197dd147666fb2e01b661553839",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:session_end:0:0",
+          "count": 1,
+          "event": "sessionEnd",
+          "identityMatches": true,
+          "currentHash": "sha256:5f12426a7918624632daa91ee1371ad145b73d5a8c3824e11daea2cc802de50c",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "21c4da0d7d0874719b00c6852323fc14ee50c59dca3a6bb4497c7b9e6a09d2a9"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:session_end:1:0",
+          "count": 1,
+          "event": "sessionEnd",
+          "identityMatches": true,
+          "currentHash": "sha256:40c801522034abc1d48bcb4c1fa104ec628b927eedbe3c99cf3b6cc939f1202a",
+          "trustStatus": "trusted",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        }
+      ],
+      "foreignCount": 5,
+      "warnings": 0,
+      "errors": 0
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse/lucagstack",
+      "profileHome": "/Users/luca/.luca/codex/aihub-direct",
+      "staticRegistration": true,
+      "appGate": "Codex host hooks are not trusted",
+      "registeredCount": 11,
+      "exactRows": [
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:session_start:0:0",
+          "count": 1,
+          "event": "sessionStart",
+          "identityMatches": true,
+          "currentHash": "sha256:2123d9e0e6976ef50bc62691d1c62333be329cede074d126addb8899c4e9cd87",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "45b0fd0f5b90d3556952a21e087ca3fd6eb6907ad2d5c1bdd1f0a8f34e088d70"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:session_start:1:0",
+          "count": 1,
+          "event": "sessionStart",
+          "identityMatches": true,
+          "currentHash": "sha256:599a1d146c3b7aac492306af5308a3e8a4a76fa652827af75e59d4ce1e6f41a3",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:user_prompt_submit:0:0",
+          "count": 1,
+          "event": "userPromptSubmit",
+          "identityMatches": true,
+          "currentHash": "sha256:94b8e1284dfb6b2727ce842ab95bab0d0b0fb9033d905077c40371c277234af5",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "ce28613e9e931bc6dfa19fa7064452b04b0f6e62fec2aaaf4df614eb305a4586"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:pre_tool_use:0:0",
+          "count": 1,
+          "event": "preToolUse",
+          "identityMatches": true,
+          "currentHash": "sha256:6b2927fb8d4ab4e24028707a593ec5d935d3cc4bcdd0ed994f6bbee0383a5c03",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "929f0af894d148ee305671f7e69fe9861bd237fca0211200cf571c673fa44b1c"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:pre_tool_use:1:0",
+          "count": 1,
+          "event": "preToolUse",
+          "identityMatches": true,
+          "currentHash": "sha256:8e853b8ebd1384641695fe316b5bc6488ae34bea12cfdf5e5f4b068f4a6635a9",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:post_tool_use:0:0",
+          "count": 1,
+          "event": "postToolUse",
+          "identityMatches": true,
+          "currentHash": "sha256:79879305bf36eff05bd77c0069051f47f8fe48f9efc3163752776db9873da2bd",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "f16fa3ec93760852329e491118ab243e7e605c0d8db3485506f535f7a8d0cc06"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:stop:0:0",
+          "count": 1,
+          "event": "stop",
+          "identityMatches": true,
+          "currentHash": "sha256:8612b3c835ddfdf3cbdd62a20050570f16d383f040ff5018bea5c27e6cef0d8e",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "b0459c8e3b2a506f58292e218ac5693215f8622310b5aec1d14a2092205532fa"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:subagent_start:0:0",
+          "count": 1,
+          "event": "subagentStart",
+          "identityMatches": true,
+          "currentHash": "sha256:53e488eaad231309631a6a088ab4e854f999ad165044aa973738151851c9df84",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:subagent_stop:0:0",
+          "count": 1,
+          "event": "subagentStop",
+          "identityMatches": true,
+          "currentHash": "sha256:f359c49f3563b5c7aac4fa61f0ec0fc7bddc3197dd147666fb2e01b661553839",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:session_end:0:0",
+          "count": 1,
+          "event": "sessionEnd",
+          "identityMatches": true,
+          "currentHash": "sha256:5f12426a7918624632daa91ee1371ad145b73d5a8c3824e11daea2cc802de50c",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "21c4da0d7d0874719b00c6852323fc14ee50c59dca3a6bb4497c7b9e6a09d2a9"
+        },
+        {
+          "key": "/Users/luca/Desktop/项目/muse/lucagstack/.codex/hooks.json:session_end:1:0",
+          "count": 1,
+          "event": "sessionEnd",
+          "identityMatches": true,
+          "currentHash": "sha256:40c801522034abc1d48bcb4c1fa104ec628b927eedbe3c99cf3b6cc939f1202a",
+          "trustStatus": "modified",
+          "enabled": true,
+          "commandSha256": "5d8e810f2ed00fb0db761c2feef66dd8addf0852bf0f530b8c9c4a8505075e7b"
+        }
+      ],
+      "foreignCount": 0,
+      "warnings": 0,
+      "errors": 0
+    }
+  ]
+}

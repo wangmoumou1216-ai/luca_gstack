@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e",
+  "skill": "design-brief",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "design_input"
+        ],
+        "optional": [
+          "prd_artifact",
+          "ux_research_report",
+          "ux_audit_report",
+          "ux_brainstorm_artifact",
+          "pasted_solution",
+          "architecture_brief",
+          "prototype_artifact",
+          "voice_copy_spec"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "design_input"
+        ],
+        "optional": [
+          "prd_artifact",
+          "ux_research_report",
+          "ux_audit_report",
+          "ux_brainstorm_artifact",
+          "prototype_artifact",
+          "voice_copy_spec"
+        ]
+      }
+    },
+    "entry_modes": {
+      "pipeline": "ready selected design + exact chosen upstream handoff; inherit mature decisions",
+      "existing_requirements": "written/spoken requirements; normalize source facts without fabricated PRD",
+      "prototype_visual_refinement": "actual prototype + preserve scope + permitted UI changes; template adaptation before freeze"
+    },
+    "modes_detail": {
+      "traceable_delivery": {
+        "required": [
+          "prd_artifact"
+        ],
+        "note": "Actual PRD end-to-end coverage required for tech-spec/task-plan/development; design-source PASS cannot substitute."
+      },
+      "design_generation": {
+        "required": [
+          "design_input"
+        ],
+        "note": "Complete current-source coverage permits generation from requirements/prototype without forcing PRD or research."
+      },
+      "standalone_light": {
+        "required": [
+          "design_input"
+        ],
+        "note": "May omit PRD, but must not claim end-to-end traceable delivery."
+      }
+    },
+    "quality_gates": [
+      "design_coordinate_system",
+      "ai_native_layers",
+      "eight_field_decision_cards",
+      "state_coverage",
+      "page_interaction_mapping",
+      "output_target_platform_scope_sources",
+      "traceability_gate",
+      "design_generation_packet",
+      "tool_consumption_contract",
+      "single_entry_contract",
+      "source_inheritance",
+      "prototype_preservation_when_applicable",
+      "template_adaptation_before_freeze",
+      "scoped_traceability"
+    ]
+  }
+}

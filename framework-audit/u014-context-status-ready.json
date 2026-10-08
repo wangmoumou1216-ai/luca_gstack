@@ -1,0 +1,45 @@
+{
+  "status": "READY_FOR_ROOT_REGISTERED_COMPARISON",
+  "created_at_utc": "2026-10-03T08:20:49.980424+00:00",
+  "unit": "decision-state",
+  "baseline_commit": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "changed_paths": [
+    ".claude/skills/office/references/handoff-protocol.md"
+  ],
+  "patch": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-context-adoptable-63biqba7/decision-state.patch",
+    "sha256": "5c1d6270cf0daceb1e9b4400991ef8fc77213c8333773cc37418b66c3cbf15bb"
+  },
+  "preimage": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-context-adoptable-63biqba7/baseline/.claude/skills/office/references/handoff-protocol.md",
+    "sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6"
+  },
+  "postimage": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-context-adoptable-63biqba7/variants/decision-state/.claude/skills/office/references/handoff-protocol.md",
+    "sha256": "0ac7afe3bb49d3abc46a9a788b6f83ace5f745da82051c7a574737834ce8d03c"
+  },
+  "patch_manifest": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-context-adoptable-63biqba7/patch-manifest.json",
+    "sha256": "72386fa16289bbc12358af0ef00f4bb4d7d68e181d4b4b11dc032e30ec71acdd"
+  },
+  "local_patch_verification": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-context-adoptable-63biqba7/patch-verification.json",
+    "sha256": "3997edd95c5c1318ff61c990c64a65b8a93f4ade3eb1079483d8ec4dbf5f0905",
+    "scope": "Git apply/check/reverse and exact bytes in author OS temporary directories; not model behavior"
+  },
+  "preserved_constraints": [
+    "new proposals remain PROPOSED",
+    "latest valid correction takes precedence",
+    "historical acceptance is not current execution authorization",
+    "undecided or out-of-scope actions require a real user decision"
+  ],
+  "excluded_from_current_comparison_and_publication": [
+    "required-sources",
+    "combined",
+    "long-session",
+    "session-handoff",
+    "optional-memory changes"
+  ],
+  "root_trial_scope": "Root has registered 4 cross-host old/new limited-rule decision comparisons covering decision-state inheritance and orchestration control. This owner has launched no model.",
+  "completion_scope": "Frozen minimal candidate handoff only; behavioral acceptance, adoption, integration and publication are not claimed."
+}

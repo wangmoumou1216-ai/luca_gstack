@@ -1,0 +1,27 @@
+{
+  "review_id": "J15",
+  "eval_run_id": "tri-system-u012-joint-implementation-20261003-r1",
+  "status": "FAIL",
+  "passed": 5,
+  "total": 7,
+  "record_type": "root summary of actual independent final message, not original envelope",
+  "findings": {
+    "F1": "Bounded unrelated branch loses narrow action-authority discovery, including ordinary current-page query; routing owner repairing.",
+    "F2": "auto requires project handoff for every WA, conflicts with selected session handoff and terminal exemptions; orchestration owner repairing."
+  },
+  "passed_criteria": [
+    1,
+    3,
+    4,
+    5,
+    7
+  ],
+  "criterion7_scope": "Permits considering limited current-desktop native rule-consumption behavior verification with final exact rules and real handles. This verdict grants no new run and does not establish full B/S comparison, net benefit or parity.",
+  "minimum_behavior_coverage": [
+    "Routing: selected method, genuine discovery, bounded task, applicable Plan/Project/Human/action authority",
+    "Orchestration: real wait timeout same handle, failed terminal not consumed, other inflight disposition, authorized continue/new decision stop",
+    "Context: actual handoff generation/readback, actual fresh receiver, latest correction vs older checkpoint, completed effects not repeated, unresolved failure retained"
+  ],
+  "P08": "INVALID remains; 8/8 capability probes exhausted, no retry or cap increase",
+  "recorded_at": "2026-10-03T01:07:05.026368+00:00"
+}

@@ -1,0 +1,103 @@
+{
+  "checked_at": "2026-10-03T06:33:51.680966+00:00",
+  "candidate_head": "cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3",
+  "candidate_branch": "codex/tri-system-evaluation",
+  "candidate_status": "",
+  "production_head": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "production_branch": "main",
+  "production_tracked_dirty": [
+    "M .claude/observability/observations.jsonl",
+    " M memory/evals/eval-log.jsonl",
+    " M memory/retrieval-log.jsonl"
+  ],
+  "production_scoped_paths": [
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "production_equals_baseline": true,
+      "production_sha256": "3eed1c58e4c6cbdd5b3a8ad0fa3c0841723012de0cf789fb7f369980905dc29e"
+    },
+    {
+      "path": ".claude/agents/work-agent-template.md",
+      "production_equals_baseline": true,
+      "production_sha256": "2d4fb9acbdaff28f82c207b4f085fb8cc6b3c5f695d1baa0f7a781f57ca67bf2"
+    },
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "production_equals_baseline": true,
+      "production_sha256": "ca233766d7f97e4cb7733ed901b7f43b6069fb12c70e7b0eb18fc2bb5575315c"
+    },
+    {
+      "path": ".claude/skill-os/agent-context-manifest.json",
+      "production_equals_baseline": true,
+      "production_sha256": "9c7c3d4ccfe1c0aeb1cb970617701ab8a060906ad4def72085e55b88622ef034"
+    },
+    {
+      "path": ".claude/skill-os/agent-root-kernel.json",
+      "production_equals_baseline": true,
+      "production_sha256": "a9d480eb21bc1d29be5629555d4865b358f0e3592a7081ebb13dd2648820782c"
+    },
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "production_equals_baseline": true,
+      "production_sha256": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f"
+    },
+    {
+      "path": ".claude/skill-os/generated/context-index.md",
+      "production_equals_baseline": true,
+      "production_sha256": "9f40be97d14e6b8b18efb00464e5742b0a71c6580b00b2208f1adb6716e4dee2"
+    },
+    {
+      "path": ".claude/skill-os/runtime/long-session.md",
+      "production_equals_baseline": true,
+      "production_sha256": "641aa996c6257570c9829ff668e7c59226a820b21ce1a8e6842aed9b173c2117"
+    },
+    {
+      "path": ".claude/skills/office/SKILL.md",
+      "production_equals_baseline": true,
+      "production_sha256": "57d758ab23b304b590fd771a201c69d6263eb93c554fdeb243c45ace3a088377"
+    },
+    {
+      "path": ".claude/skills/office/auto/SKILL.md",
+      "production_equals_baseline": true,
+      "production_sha256": "2806bf06a486818934a194a4355713ddc395bc838860ed1ec47689ebf1494078"
+    },
+    {
+      "path": ".claude/skills/office/handoff/SKILL.md",
+      "production_equals_baseline": true,
+      "production_sha256": "4141ff03f96a0140631f41852d06f4a955e96f7272a1452421a65a1aa99cfa66"
+    },
+    {
+      "path": ".claude/skills/office/references/handoff-protocol.md",
+      "production_equals_baseline": true,
+      "production_sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6"
+    },
+    {
+      "path": "AGENTS.md",
+      "production_equals_baseline": true,
+      "production_sha256": "db5ea430452a32cf5d98fac04917ae2ef2da5ae46ca2ea775423fb434336d8d8"
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "production_equals_baseline": true,
+      "production_sha256": "300d3eb50b55c51af4f4237700639b0344c2c778d55137bc060a401796810cfd"
+    },
+    {
+      "path": "scripts/test-agent-context-resolution.mjs",
+      "production_equals_baseline": true,
+      "production_sha256": "4da21e965dee1511c33b8177964cb7dffb7b6706939179f9c16759b5e662bbe7"
+    },
+    {
+      "path": "scripts/test-agent-context.mjs",
+      "production_equals_baseline": true,
+      "production_sha256": "2c2975fb847737408385a868f3e12484927c504ca2dedc825a3883818b1bc086"
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "production_equals_baseline": true,
+      "production_sha256": "bf09e333cac5a87ef497574b6a6081f606957ec91cf0e414db76691be306f082"
+    }
+  ],
+  "candidate_changed_file_count": 28,
+  "adoption_gate": "PENDING_INDEPENDENT_REVIEW",
+  "git_mutations_this_review": false
+}

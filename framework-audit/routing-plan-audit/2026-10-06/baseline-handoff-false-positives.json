@@ -1,0 +1,26 @@
+[
+  {
+    "input_label": "PASS",
+    "input": "gate_result: PASS",
+    "baseline_assertion_exit_code": 0,
+    "required_strict_gate_acceptance": true
+  },
+  {
+    "input_label": "FAIL",
+    "input": "gate_result: FAIL",
+    "baseline_assertion_exit_code": 0,
+    "required_strict_gate_acceptance": false
+  },
+  {
+    "input_label": "CONDITIONAL_PASS",
+    "input": "gate_result: CONDITIONAL_PASS",
+    "baseline_assertion_exit_code": 0,
+    "required_strict_gate_acceptance": false
+  },
+  {
+    "input_label": "COMMENT",
+    "input": "# gate_result omitted",
+    "baseline_assertion_exit_code": 0,
+    "required_strict_gate_acceptance": false
+  }
+]

@@ -1,0 +1,68 @@
+{
+  "status": "completed",
+  "role": "D independent candidate",
+  "work_call": "W07",
+  "created_at": "2026-10-02T16:53:46.761531+00:00",
+  "cwd": "/tmp/luca-tri-u005-w60l0ayd",
+  "input_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u005-independent-input.md",
+  "input_sha256": "1350db894bfc8524a3edee4ce1e6a4143ee67396682c9725660d98167850a290",
+  "input_chars": 261930,
+  "case_transform": {
+    "dictionary_values": 111,
+    "source_sha256": "8b0d8fd82591ce7f479c17f283a686af109452436c2e61e3a39c7e27d845953c",
+    "roundtrip_equal": true,
+    "case_semantics_omitted": false
+  },
+  "allowed_tools": 0,
+  "capacity_note": "Input is 261930 characters after lossless duplicate reuse. Exact tokens unknown; exceeding 16000 target/24000 review checkpoint cannot be excluded. Full case semantics, authority, latest correction and failure denominator are retained rather than truncated. Actual usage will be reported; 120000 observed-token ceiling is not claimed pre-enforced.",
+  "model_selection": "Current CLI default equals approved peak binding; keep runtime settings, no hardcoded override or effort change; actual adoption checked if reported, lack of receipt was waived by user.",
+  "blinding": "Coordinator must not read candidate body before A/D independently frozen and reviewed. Metadata/tool-event and contamination checking only.",
+  "formal_behavior_runs": 0,
+  "argv": [
+    "codex",
+    "--no-daemon",
+    "--ask-for-approval",
+    "never",
+    "exec",
+    "--cd",
+    "/tmp/luca-tri-u005-w60l0ayd",
+    "--sandbox",
+    "read-only",
+    "--skip-git-repo-check",
+    "--json",
+    "--ephemeral",
+    "--output-last-message",
+    "/Users/luca/Desktop/luca_gstack/framework-audit/u005-independent-design.md",
+    "-"
+  ],
+  "started_at": "2026-10-02T16:54:52.447680+00:00",
+  "stdout_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u005-independent-design.jsonl",
+  "stderr_path": "/Users/luca/Desktop/luca_gstack/framework-audit/u005-independent-design.stderr",
+  "client_pid": 95500,
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 626.578,
+  "ended_at": "2026-10-02T17:05:19.018796+00:00",
+  "json_event_count": 9,
+  "parse_errors": 0,
+  "item_types": {
+    "error": 1,
+    "agent_message": 1
+  },
+  "unexpected_item_types": {
+    "error": 1
+  },
+  "usage_records": [
+    {
+      "input_tokens": 92495,
+      "cached_input_tokens": 13184,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 14309,
+      "reasoning_output_tokens": 1034
+    }
+  ],
+  "output_exists": true,
+  "output_sha256": "27831bcf48b9d935bb2718024344f2904064aaca7f5086964445ecda865c06c0",
+  "output_bytes": 50430,
+  "body_read_by_coordinator": false
+}

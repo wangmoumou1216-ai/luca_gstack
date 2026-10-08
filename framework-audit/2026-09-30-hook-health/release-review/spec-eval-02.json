@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-release-spec-20260930-02",
+  "subject": {
+    "skill": "hook-release-spec-final",
+    "topic": "hook-pre-release",
+    "scene": "unknown",
+    "input_summary": "Independent Spec-only frozenSCOPE-02 candidate review R1–R8. Candidate/isolated proof only; production activation/trust/cache/native acceptance remainUNKNOWN.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/spec-02.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 8,
+    "total": 8,
+    "findings": []
+  }
+}

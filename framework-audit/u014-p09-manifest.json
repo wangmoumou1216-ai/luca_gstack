@@ -1,0 +1,297 @@
+{
+  "version": 1,
+  "status": "PROBE_ONLY_AUTHORIZED",
+  "source_root": "/Users/luca/Desktop/luca_gstack",
+  "source_head": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "source_manifest": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json",
+  "unblind_record": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-first-unblind.json",
+  "implementation_contract": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-implementation-contract.md",
+  "implementation_contract_sha256": "74c43c98dd2fc88df66c84d660c0f044deae35d7223e9a6c17b05ace22ec04a6",
+  "conditions": [
+    {
+      "id": "B",
+      "status": "IMPLEMENTED_NOT_RELEASED",
+      "policy_reference": "u007-implementation-contract.md#2"
+    },
+    {
+      "id": "T",
+      "status": "IMPLEMENTED_NOT_RELEASED",
+      "policy_reference": "u007-implementation-contract.md#2"
+    },
+    {
+      "id": "S",
+      "status": "IMPLEMENTED_NOT_RELEASED",
+      "policy_reference": "u007-implementation-contract.md#2"
+    },
+    {
+      "id": "I",
+      "status": "IMPLEMENTED_NOT_RELEASED",
+      "policy_reference": "u007-implementation-contract.md#2"
+    }
+  ],
+  "runtime_release": {
+    "run": {
+      "case_id": "P09-native-boundary-canonical-python",
+      "condition_id": "T",
+      "trial": 1
+    },
+    "run_id": "u014-p09-native-boundary-r1",
+    "probe_id": "P09",
+    "bindings": {
+      "driver_sha256": "b514cb98eacc3bf689931c3236a72e8da55f766124828839ba0cb20dafabb7a6",
+      "conditions_sha256": "81b3cde5a44e6fb3d60145be7c14578098534a8444adc4d6d20c2b7d1b1edd4c",
+      "case_protocol_sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "cases_sha256": "039ecdda70e18f4b369bc48d229684dc6c7f6ddebc295ffcbfaf668cd6c1b24c",
+      "source_manifest_sha256": "53cf8e61a3a1e0232ed3a3f638dc5698651fa0dad5d39f62629573ffc294f136",
+      "condition_material_sha256": "66bee6476856dc260e2425e8b4785522db699e066d49fa8fd6d3f7ffba77d2e5",
+      "native_trace_sha256": "afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce"
+    },
+    "model": {
+      "name": "gpt-6-astra",
+      "effort": "high"
+    },
+    "resources": {
+      "wall_seconds": 480,
+      "tool_actions": 30,
+      "observed_tokens": 120000
+    },
+    "entry": {
+      "transport": "codex-app-server-stdio",
+      "native_launch": {
+        "allow_login_shell": false,
+        "shell_snapshot": false,
+        "experimental_raw_events": true
+      }
+    },
+    "native_trace": {
+      "enabled": true,
+      "schema_version": 1
+    },
+    "native_command_permissions": {
+      "profile_id": "u007-native-read-boundary",
+      "profile": {
+        "filesystem": {
+          ":root": "deny",
+          ":minimal": "read",
+          "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/runs/u014-p09-native-boundary-r1/condition": "read",
+          "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14": "read",
+          "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/probe-runtime": "read",
+          "/Users/luca/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin": "read",
+          "/Users/luca/Library/Python/3.14/lib/python/site-packages": "read"
+        },
+        "network": {
+          "enabled": false
+        }
+      },
+      "runtime_read_roots": [
+        "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14",
+        "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u014-p09-d5l47uyd/probe-runtime",
+        "/Users/luca/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin",
+        "/Users/luca/Library/Python/3.14/lib/python/site-packages"
+      ],
+      "effective_probe": null
+    },
+    "status": "READY",
+    "stage": "probe",
+    "registration": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-registration.json",
+      "sha256": "6eeb92fa1905e8a1df30dbbd58790eb90b544e89734c32e955debdbe4834200a"
+    }
+  },
+  "budgets": {
+    "development_runs": 24,
+    "hidden_runs": 96,
+    "additional_runs": 24,
+    "total_runs": 144,
+    "capability_driver_probes_max": 10,
+    "reserved_migration_retest": 14,
+    "max_concurrent_chains": 3,
+    "simple": {
+      "wall_seconds": 480,
+      "tool_actions": 30,
+      "observed_tokens": 120000
+    },
+    "heavy": {
+      "wall_seconds": 3600,
+      "observed_tokens": 120000,
+      "tool_actions": 90
+    },
+    "additional_general_max": 0
+  },
+  "protected_uses": [
+    "USE-01",
+    "USE-02",
+    "USE-03",
+    "USE-04",
+    "USE-05",
+    "USE-06",
+    "USE-07",
+    "USE-08",
+    "USE-09",
+    "USE-10",
+    "USE-11",
+    "USE-12",
+    "USE-13",
+    "USE-14"
+  ],
+  "required_migration_evidence": {
+    "changed_routing_context_entry": [
+      "normal continuation",
+      "relevant-owner fallback",
+      "required human decision retained",
+      "reject stale identity or missing authority"
+    ],
+    "changed_result_or_recovery_semantics": [
+      "failed dependency retained",
+      "valid retry and downstream consumption",
+      "fresh resume preserves prior effects and current change",
+      "failed switch rollback continues old path"
+    ]
+  },
+  "same_quality": {
+    "dimensions": [
+      "correctness",
+      "completeness",
+      "usability",
+      "rework_burden"
+    ],
+    "target": [
+      3,
+      3,
+      3,
+      3
+    ],
+    "tolerance": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "controls_must_pass": true,
+    "paired_by": [
+      "case",
+      "trial"
+    ]
+  },
+  "created_at": "2026-10-02T17:40:22.387491+00:00",
+  "interface_addenda": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-1.md",
+      "sha256": "953caf31e773b35bfc05c8993141f5d5f543b6202c30c8d6ccf7d1340073f70f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-2.md",
+      "sha256": "1a308a1e849f67e10f5acb9ecae5a130b93c99d069b5a8bd0d15d1ff9e7a7830"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-3.md",
+      "sha256": "a73d065a3169231f48e0cac954f109b377f4fa206b748358f72b52103f2dbee6"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-4.md",
+      "sha256": "5ea1a081c26ed680969929cfa69898be0562e5d4e4bfc9452ef4706c13f1534a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-5.md",
+      "sha256": "5727306f38a0b5779d0e18c51f0ff73ab5386bf3f6c2a5ddc252946ca106ed3a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-6.md",
+      "sha256": "4238376c4138210fd992af1fc98447cae18e16fece78abc6aabda5f4c4e1ab9a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-7.md",
+      "sha256": "a165d7b60bb5fc97fd39b7456e539b0bdc515d58d0c74793bd96c118eca9fb89"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-8.md",
+      "sha256": "93b425c87b76ec8bb8ed63aca862fef361ddcf72e3eea4fc526badeaa5056a0d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-9.md",
+      "sha256": "1e884bb8f68d0f615bb790384e426cfe6ba3fe680354fce388ba3c13bea3a3ca"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-9-clarification-1.md",
+      "sha256": "b4b86825249d76c870b5dece3283223bf293982f802ada736defd34bcac0d4bf"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-10.md",
+      "sha256": "c86c07c039654d5161a0015863f40abc1a663f10745b9a52e9faff763ec39f65",
+      "bytes": 3537
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-11.md",
+      "sha256": "83287caebeb8751b1497130ad5fbc81dc7dd054787922902bcda608c99327bd6",
+      "bytes": 6620
+    }
+  ],
+  "updated_at": "2026-10-03T00:02:58.155746+00:00",
+  "next_allowed_work": "R9 offline implementation by original three chats plus exact official source field retrieval by W33",
+  "staff_call_allocation": {
+    "preparation": 32,
+    "review_advice": 26,
+    "total": 58,
+    "revision": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-10.md"
+  },
+  "current_collected_implementation": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r8.json",
+    "sha256": "0468d45131a551cc35dab091a05c9edbd96b51b7dbd3e07d364d395becb8a7d9",
+    "bytes": 4263
+  },
+  "latest_capability_attempt": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-root-evidence.json",
+    "sha256": "9b961e6970a75366d14a0dc052de401338e8d56b40760fb5e04b9a638cb77f2a",
+    "bytes": 7705,
+    "probe_id": "P07",
+    "status": "ACTUAL_NATIVE_COMMAND_OBSERVED_BUT_PROBE_FAILED_NO_FORMAL_RELEASE"
+  },
+  "next_action": "Freeze R9, validate exact inputs, independent readiness, then root may register P08 once.",
+  "current_resource_allocation": {
+    "work_cap": 35,
+    "review_cap": 26,
+    "staff_total": 61,
+    "work_assigned": 35,
+    "review_advice_assigned": 15,
+    "capability_used": 7,
+    "capability_cap": 8,
+    "formal_runs": 0,
+    "additional_general_cap": 8,
+    "reserved_migration_retest": 8
+  },
+  "latest_independent_review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r7.md",
+    "sha256": "ec26fb38e8c4b16802b6049283abfeadf14f4425b17c53a7e80597d58905dfc3",
+    "bytes": 2525,
+    "verdict": "FAIL",
+    "passed": 2,
+    "total": 3,
+    "format": "root_transcribed_summary",
+    "accepted_scope": "actual P07 facts and failure retention; not method qualification"
+  },
+  "current_diagnosis": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-dispatch-diagnosis.json",
+    "sha256": "562f5c3ab4b9fc437c82eee994c188907b901ebf523fd286c521412e16ba50c6"
+  },
+  "r6_previous_manifest": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-comparison-manifest-before-r6-collection.json",
+    "sha256": "7284204b86c80f9fb0bd0c7e0363bfbea2df6b9af675e610acb94624bdcfc9f5"
+  },
+  "current_launch_evidence": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-native-launch-recovery-evidence.md",
+    "sha256": "d40fc046cdc5bba6dd8d5689b9acdef0598b7c459483098e75ecbe78e35f83a3"
+  },
+  "addendum9_previous_manifest": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-comparison-manifest-before-addendum9.json",
+    "sha256": "3687e3702f95f0ebb47d5ba4b9bfd22a03f252966e6357e522eca84321271b36"
+  },
+  "latest_offline_repair_review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r8.md",
+    "sha256": "654a2c3bc5b097a2aa5333bb24492675b49b7d920dc964dadf59d9c5e0b27c43",
+    "bytes": 4135,
+    "verdict": "PASS",
+    "passed": 4,
+    "total": 4,
+    "scope": "R8 offline repairs only"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "decision": "ALLOW_ONE_REVIEWED_P10",
+  "at": "2026-10-03T07:52:17.985022+00:00",
+  "authority": "latest user U014 execute; J28 exact final qualification",
+  "review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-readiness-envelope.json",
+    "sha256": "5e2ecd07129eb535766e4e2ec96b0d97b461bb23842b41ef70403fcf17543612"
+  },
+  "review_inputs": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-review-inputs.json",
+    "sha256": "2236d3a184cba81ab304a1f723012a28ac6d25d5ef73ee7bfb26ba381f9b28f6"
+  },
+  "model_projection": {
+    "name": "gpt-6-astra",
+    "effort": "high"
+  },
+  "publication": "HOLD"
+}

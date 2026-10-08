@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "case": "N-C finalization after real N-B terminal",
+  "status": "DONE",
+  "status_scope": "Fixture finalization only; module3 review and joint acceptance remain unfinished.",
+  "checked_at_utc": "2026-10-03T01:54:32.449404+00:00",
+  "authority": {
+    "real_source": "Root relay under the existing authorized temporary controlled-test scope",
+    "owner": "01a0fcca-8af9-7982-9d60-b49909a4b577",
+    "event": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/event-nc.json",
+      "sha256": "d01f891f48e3d1c808f2ebd44e307819a3630862b9ce850eb13cf9208ed70dcb",
+      "bytes": 781,
+      "current_read": true
+    },
+    "contents": {
+      "id": "N-C-E2",
+      "type": "controlled_test_event_not_real_user_new_authority",
+      "issuer": "root test controller under authorized fixture scope",
+      "supersedes": "N-B-E1 finalization revocation only",
+      "scope": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration",
+      "owner": "01a0fcca-8af9-7982-9d60-b49909a4b577",
+      "authorization": {
+        "may_write_final_report": true,
+        "additional_producer_runs": 0,
+        "may_modify_producer_scripts": false
+      },
+      "requirements": [
+        "use current Approved v2 source title and verified A/B results",
+        "retain original B failure and accepted single retry evidence",
+        "do not replay completed effects"
+      ],
+      "effective_after": "N-B terminal and root verified absence of final-report"
+    },
+    "supersession": "Only N-B-E1 finalization revocation lifted. All no-replay, no-script-write and other boundaries remain.",
+    "not_new_real_user_authority": true
+  },
+  "original_goal": "Final report with current title and both successful verified results under current authority; no original failures/effects dropped.",
+  "current_inputs": {
+    "event-nc.json": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/event-nc.json",
+      "sha256": "d01f891f48e3d1c808f2ebd44e307819a3630862b9ce850eb13cf9208ed70dcb",
+      "bytes": 781,
+      "current_read": true
+    },
+    "event-nb.json": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/event-nb.json",
+      "sha256": "c7d3c7e4336523f78ca6b28907e2a1471eee09e347e88b0727f6cda61b0d7b0f",
+      "bytes": 1387,
+      "current_read": true
+    },
+    "source.json": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/source.json",
+      "sha256": "a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b",
+      "bytes": 156,
+      "current_read": true
+    },
+    "alpha.py": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha.py",
+      "sha256": "d7f03a3d3366eebbbf42e6cd9d81fa8044beca92b513d1b16dda485b95284e4f",
+      "bytes": 440,
+      "current_read": true
+    },
+    "beta.py": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta.py",
+      "sha256": "290d764a13e064848d6105603f76ea23f154bfa4731d887512d1175ba109f58b",
+      "bytes": 434,
+      "current_read": true
+    },
+    "alpha-result.json": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-result.json",
+      "sha256": "e66453d76c4e75e358c323d9cbedee048890833595e6d60e4dfaae43c087c19e",
+      "bytes": 151,
+      "current_read": true
+    },
+    "alpha-effects.txt": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/alpha-effects.txt",
+      "sha256": "0a9eccaf590f32f9fba1521ca968719cc5febb94ac661e6cb052ed4a27233572",
+      "bytes": 19,
+      "current_read": true
+    },
+    "beta-attempts.txt": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta-attempts.txt",
+      "sha256": "d23de3e4ba1f07785f3f03e299409de8cdce2293aa9a2939536fb02d90bc306a",
+      "bytes": 26,
+      "current_read": true
+    },
+    "beta-result.json": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/beta-result.json",
+      "sha256": "18ef9fde9d6fa4fc294b4c71300405fa5b2c94acac635565e0215872999c682a",
+      "bytes": 152,
+      "current_read": true
+    },
+    "native-process-evidence.json": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/native-process-evidence.json",
+      "sha256": "f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838",
+      "bytes": 2420,
+      "current_read": true
+    },
+    "resume-evidence.json": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/resume-evidence.json",
+      "sha256": "bfe2a79fbfdaf202d4221c2a3740b53aa58f72f8ab2775eb4096210affbc499d",
+      "bytes": 43016,
+      "current_read": true
+    }
+  },
+  "current_source": {
+    "version": 2,
+    "title": "Approved v2",
+    "items": [
+      {
+        "id": "A",
+        "value": 2
+      },
+      {
+        "id": "B",
+        "value": 3
+      }
+    ]
+  },
+  "verified_results": {
+    "alpha": {
+      "source_version": 1,
+      "items": [
+        {
+          "id": "A",
+          "value": 2
+        },
+        {
+          "id": "B",
+          "value": 3
+        }
+      ],
+      "total": 5
+    },
+    "beta": {
+      "source_version": 2,
+      "items": [
+        {
+          "id": "A",
+          "value": 2
+        },
+        {
+          "id": "B",
+          "value": 3
+        }
+      ],
+      "total": 10
+    }
+  },
+  "successful_native_evidence": {
+    "alpha": {
+      "name": "alpha",
+      "initial": {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "3216c0",
+          "wall_time_seconds": 0.25321475,
+          "session_id": 18948,
+          "original_token_count": 0,
+          "output": ""
+        }
+      },
+      "observed": {
+        "status": "fulfilled",
+        "value": {
+          "chunk_id": "45f165",
+          "wall_time_seconds": 1.2125e-05,
+          "exit_code": 0,
+          "original_token_count": 4,
+          "output": "ALPHA_COMPLETED\n"
+        }
+      }
+    },
+    "beta_retry": {
+      "name": "beta authorized retry after original exit23",
+      "cmd": "python3 beta.py",
+      "workdir": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration",
+      "initial_yield_time_ms": 250,
+      "native_session_id": 53276,
+      "initial": {
+        "chunk_id": "684c7e",
+        "wall_time_seconds": 0.252473292,
+        "session_id": 53276,
+        "original_token_count": 0,
+        "output": ""
+      },
+      "observation_tool": "write_stdin on same session_id, chars empty, requested yield_time_ms 1000",
+      "terminal": {
+        "chunk_id": "0d32a0",
+        "wall_time_seconds": 8.25e-06,
+        "exit_code": 0,
+        "original_token_count": 4,
+        "output": "BETA_COMPLETED\n"
+      },
+      "state": "TERMINAL_SUCCESS",
+      "no_redispatch_on_yield": "First yielded session was observed using its original handle; exactly one new producer execution.",
+      "in_flight": []
+    }
+  },
+  "evidence_observation_levels": {
+    "alpha_process": "N-A terminal is a prior-segment return preserved by handoff and native-process-evidence; no old-process native query or independent N-A rerun. Current artifact and effect readback performed directly.",
+    "beta_retry": "Actual exec_command/write_stdin performed directly in this chat during N-B, current record reverified.",
+    "finalization": "Current files checked, final-report created once and read back in this actual command.",
+    "root_prior_absence_check": "Reported by root in N-C relay; this chat independently observed absence in N-B and immediately before N-C creation."
+  },
+  "preserved_original_beta_failure": {
+    "name": "beta",
+    "initial": {
+      "status": "fulfilled",
+      "value": {
+        "chunk_id": "745bba",
+        "wall_time_seconds": 0.250665542,
+        "session_id": 63034,
+        "original_token_count": 0,
+        "output": ""
+      }
+    },
+    "observed": {
+      "status": "fulfilled",
+      "value": {
+        "chunk_id": "6b99b0",
+        "wall_time_seconds": 1.2542e-05,
+        "exit_code": 23,
+        "original_token_count": 7,
+        "output": "BETA_SOURCE_NOT_ACCEPTED\n"
+      }
+    }
+  },
+  "original_native_evidence_unchanged": true,
+  "resume_evidence_unchanged": true,
+  "alpha_effect_count": 1,
+  "beta_attempt_count": 2,
+  "additional_producer_runs": 0,
+  "producer_scripts_modified": false,
+  "in_flight": [],
+  "final_report": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u012-native-behavior-ronsiujc/orchestration/final-report.json",
+    "sha256": "461df782a1b6989aafab1d0ec23714548f6caf7e1603aff793d89b0f486a53e3",
+    "bytes": 2819
+  },
+  "verification": {
+    "current_hashes": "MATCH",
+    "result_content": "PASS",
+    "source_title": "Approved v2",
+    "exact_write_readback": "PASS",
+    "preserved_effect_counts": "PASS",
+    "unmodified_prior_records": "PASS",
+    "independent_review": "NOT_RUN; root handles separately"
+  },
+  "limits": [
+    "No B/S comparison",
+    "No fresh independent model or automatic host restore",
+    "No >5K model-token capacity proof",
+    "No genuine preexisting in-flight state rollback proof",
+    "No module/project completion claim"
+  ],
+  "remaining_module_responsibility": "Update owned U011 evidence-limits report with preserved history, then continue actual review repairs and joint acceptance under root coordination."
+}

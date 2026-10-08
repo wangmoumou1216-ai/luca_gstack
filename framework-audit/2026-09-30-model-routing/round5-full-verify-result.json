@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "exit": 0,
+  "patch_sha256": "e580ffe30402144b91b4c1036193195696f79cb1bb561244634971e7c654d5f4",
+  "fixture": "/private/tmp/luca-routing-full-gate-8hq7n9pg/release",
+  "elapsed_seconds": 579.05,
+  "log": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/full-verify.log"
+}

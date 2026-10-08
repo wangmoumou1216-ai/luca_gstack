@@ -1,0 +1,174 @@
+{
+  "package": "u004-cases",
+  "schema_version": 3,
+  "freeze": "v1.2 directed W06 revision; prepared for independent J r2",
+  "frozen_at_utc": "2026-10-02T16:35:44.944171+00:00",
+  "source_task_sha256": "484d1b4863f181768c55496ed67bd95ad0218480a22ae6ee24afc7331ecaa3c9",
+  "counts": {
+    "development": 6,
+    "hidden": 12,
+    "development_simple": 2,
+    "development_heavy": 4,
+    "hidden_simple": 4,
+    "hidden_heavy": 8,
+    "formal_behavior_runs": 0
+  },
+  "files": [
+    {
+      "path": "private/freeze-0/hidden-cases.json",
+      "bytes": 305861,
+      "sha256": "7cfeaba878470e413d580795487bdb96a4ae6aed3d7c2ce1e26a85a069efa974"
+    },
+    {
+      "path": "private/freeze-1.1/hidden-cases.json",
+      "bytes": 469696,
+      "sha256": "8d7475abc4a31b06615ded254704e7e8b04dfbe180d8a484c47a4587e2b7b49c"
+    },
+    {
+      "path": "private/hidden-cases.json",
+      "bytes": 756617,
+      "sha256": "743cffd14dd74e6048eb3c2ae00b80763a29c5eb18a408f84d4f9473cf189da2"
+    },
+    {
+      "path": "public/README.md",
+      "bytes": 10540,
+      "sha256": "4e30421efdfc98fa824c2d7de9b2cf3e8ace3027998643ebbfbb3902ad4a4c36"
+    },
+    {
+      "path": "public/coverage.md",
+      "bytes": 4875,
+      "sha256": "1c28eb739ddccf02e2a59d2057c8812361a11c239f2c046eec8e81180390fbfc"
+    },
+    {
+      "path": "public/developer-cases.json",
+      "bytes": 360270,
+      "sha256": "8b0d8fd82591ce7f479c17f283a686af109452436c2e61e3a39c7e27d845953c"
+    },
+    {
+      "path": "public/freeze-0/README.md",
+      "bytes": 7818,
+      "sha256": "7b698e05573f84b1a3c6fa62de31b96a2f0b2909405edbdde33c6769129e028c"
+    },
+    {
+      "path": "public/freeze-0/coverage.md",
+      "bytes": 4544,
+      "sha256": "7dbfe3b8dd57e312a2e3d7bd4f0fdcdd50ad91a89f2301e6b0076e03d4655dab"
+    },
+    {
+      "path": "public/freeze-0/developer-cases.json",
+      "bytes": 151126,
+      "sha256": "021b286cbf7b9d679e1a45a5fcca750a55b788f2f034935434c351683caa1005"
+    },
+    {
+      "path": "public/freeze-0/manifest.json",
+      "bytes": 2975,
+      "sha256": "fb8a03d46797f049ed21715046d108f0610a219c0d62ee2cc60a65856c61590f"
+    },
+    {
+      "path": "public/freeze-1.1/README.md",
+      "bytes": 8570,
+      "sha256": "cf79f0efbc0e06ea3040a78591044aa96c65bcff3daeeedb7bc1740f5a9b4955"
+    },
+    {
+      "path": "public/freeze-1.1/coverage.md",
+      "bytes": 4544,
+      "sha256": "7dbfe3b8dd57e312a2e3d7bd4f0fdcdd50ad91a89f2301e6b0076e03d4655dab"
+    },
+    {
+      "path": "public/freeze-1.1/developer-cases.json",
+      "bytes": 233071,
+      "sha256": "b3e2e3da312e3ef95be0b64f384cf60c0e0e078137a1ec629701a5cca8b4171f"
+    },
+    {
+      "path": "public/freeze-1.1/freeze-amendment.md",
+      "bytes": 2518,
+      "sha256": "113a1ba8b727d1cbbe3e08da97f58815a4e5b7422257e2b545c7bfaabc7e4a97"
+    },
+    {
+      "path": "public/freeze-1.1/manifest.json",
+      "bytes": 6119,
+      "sha256": "8144e6c77b3ed7502bb8e61729a8d183d9fe2be513ae0e23abc97a3dbd67e256"
+    },
+    {
+      "path": "public/freeze-amendment.md",
+      "bytes": 2518,
+      "sha256": "113a1ba8b727d1cbbe3e08da97f58815a4e5b7422257e2b545c7bfaabc7e4a97"
+    },
+    {
+      "path": "public/revision-1.2-audit.json",
+      "bytes": 5367,
+      "sha256": "21757756ff36c3df7de4cd2ed451b29895724f0393f56f3ede4ea9821a9cb2f8"
+    },
+    {
+      "path": "public/revision-1.2.md",
+      "bytes": 2945,
+      "sha256": "af45a89763c7e84c92152a2af7cdf301b6a9868a41f57b594f8a7d15f3a5f241"
+    }
+  ],
+  "self_excluded": {
+    "path": "public/manifest.json",
+    "reason": "A file cannot contain its own stable digest; SHA delivered separately."
+  },
+  "self_checks": {
+    "matrix_and_counts": "PASS",
+    "all_18_source_and_rule_binding_inventory": "PASS bounded self-check, not independent adequacy proof",
+    "schema_and_fixed_values": "PASS",
+    "positive_alternatives": "5 accepted witnesses",
+    "negative_relations": "3 rejected witnesses",
+    "novelty_without_instance_labels": "PASS bounded structural comparison for flagged cases",
+    "event_nodes_and_material_release": "PASS construction check",
+    "prior_v1_1_bytes_preserved": "PASS",
+    "public_exact_secret_leak_scan": "PASS",
+    "manifest_payload_integrity": "PASS"
+  },
+  "qualification": "Construction/structural checks only. No candidate behavior, real driver injection, external tool, real host or human acceptance has been verified.",
+  "resources": {
+    "preparation_pool_slot": "W06, preparation call 3/20",
+    "declared_budget_minutes": 45,
+    "declared_tool_action_limit": 90,
+    "start_utc": "2026-10-02T16:08:45.359190+00:00",
+    "freeze_utc": "2026-10-02T16:35:44.944171+00:00",
+    "elapsed_seconds": 1619.585,
+    "actual_token_usage": "unavailable; no trustworthy per-agent token meter",
+    "extra_agents": 0,
+    "formal_runs": 0,
+    "scope": "No added cases or general driver; only owned case package edited",
+    "selfcheck_failure_count": 1,
+    "selfcheck_failure_class": "transient Python syntax error before mutation, corrected once"
+  },
+  "access_boundary": "Explicit no-read policy, not OS security. Custodian may read all. Coordinator and A/D candidates must not read private/; driver discloses one current case request and eligible materials, never answer or other hidden cases. Judge receives only the currently authorized blind review packet.",
+  "uncovered_use_ids": [],
+  "uncovered_scope_policy": "All real-world and runtime ranges listed in coverage.md remain protected; local synthetic coverage cannot authorize removal.",
+  "case_material_frozen_at_utc": "2026-10-02T16:35:44.944171+00:00",
+  "previous_manifest_sha256": "8144e6c77b3ed7502bb8e61729a8d183d9fe2be513ae0e23abc97a3dbd67e256",
+  "run_contract": {
+    "conditions": 4,
+    "development_cases": 6,
+    "development_repeats_per_condition": 1,
+    "development_base_runs": 24,
+    "hidden_cases": 12,
+    "hidden_repeats_per_condition": 2,
+    "hidden_base_runs": 96,
+    "base_total_runs": 120,
+    "unified_total_ceiling": 144,
+    "actual_formal_runs": 0
+  },
+  "construction_checks": {
+    "cases_checked": 18,
+    "artifact_schema_and_fixed_value_checks": 37,
+    "required_key_mutations_rejected": 37,
+    "source_nodes_walked": 89,
+    "events_checked": 23,
+    "semantic_rules_bound_to_visible_sources": 56,
+    "positive_alternative_witnesses": 5,
+    "negative_relation_witnesses_rejected": 3,
+    "formal_behavior_runs": 0,
+    "field_patterns_with_visible_basis": 277,
+    "field_patterns_using_semantic_relations": 36
+  },
+  "selfcheck_note": "Self-check only. Planted witnesses do not establish a complete semantic judge or candidate success. No new general driver, cases or formal behavior runs. Independent J r2 has not yet run.",
+  "independent_review": {
+    "version_1_1": "FAIL (3/6), retained",
+    "version_1_2": "PENDING; K does not declare gate passed"
+  }
+}

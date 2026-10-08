@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-terminal-final-20260930-01",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing ROUND5 terminal acceptance",
+    "scene": "unknown",
+    "input_summary": "对冻结 ROUND5 候选执行七项独立验收，核对完整性、模型角色、项目隔离、冷审、持久准备、关键义务阻断及证据真实性；独立临时副本实跑与反向 mutation。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/REPORT.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/reviewed-candidate.patch",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/candidate-manifest.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 7,
+    "total": 7,
+    "findings": [
+      "WARN: full-verify-result.json 在最终读取时仍为 RUNNING；C7 通过仅表示现有证据和限制表述真实，不能据此声称全仓 PASS 或生产部署。",
+      "WARN: 原生日志证明实际 astra/high 与同 turn 完成，不证明全部内部 reroute 可观测。"
+    ]
+  }
+}

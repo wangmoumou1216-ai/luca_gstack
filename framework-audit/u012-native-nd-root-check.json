@@ -1,0 +1,22 @@
+{
+  "scope": "artifact numeric/required-set check only; model reads and behavior independent review pending",
+  "checks": [
+    {
+      "id": "R1",
+      "pass": true
+    },
+    {
+      "id": "R2",
+      "pass": true
+    },
+    {
+      "id": "R3",
+      "pass": true
+    },
+    {
+      "id": "totals",
+      "pass": true
+    }
+  ],
+  "artifact_sha256": "f08393077113f9d7791a16929f3d7bb17f69174ce3aed151b1216f59fe791ca2"
+}

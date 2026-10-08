@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u010-final-scope-20261003-r1",
+  "subject": {
+    "skill": "quality-gate",
+    "topic": "U010 final scope adjudication for the isolated three-module candidate",
+    "scene": "unknown",
+    "input_summary": "Read-only independent review of five criteria, U008-U012 evidence, frozen owner reports, bounded J18-J20 results, W47 disposition, W48 single-anchor repair, and normal commit r3. Nonblind context; no private/archive reads, tests, probes, network, agents, or writes.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u008-results.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u009-refutation.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u009-j20-envelope.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u011-recommendation.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u012-migration-and-three-agent-workpacks.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u012-final-candidate-manifest.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u012-j19-native-behavior-review.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u012-normal-commit-r3-result.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u012-normal-commit-r3.log",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u012-committed-candidate-verification.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": [
+      "C1 PASS — Purpose fidelity: U008 explicitly records NOT_MEASURABLE / NO_COMPARATIVE_VERDICT, formal comparisons 0 and hidden comparisons 0. U009 distinguishes native architecture, framework contract, and local implementation/configuration/wiring. Its four bidirectional groups cover protection versus simplification, multiagent quality versus coordination cost, context necessity versus interference, and architectural unsuitability versus local defects. The evidence supports the present no-production-replacement decision without claiming relative net value.",
+      "C2 PASS — All 14 original uses have explicit dispositions in the three fully read frozen owner reports and joint recommendation. Native minimum alternatives, framework increments, and construction, maintenance, runtime and coordination costs remain separate. Missing quantitative costs and cross-harness benefits remain UNKNOWN, not zero. Controlled explicit desktop consumption and CLI qualification failure are not conflated. No silent removal of a use was identified in the reviewed candidate scope.",
+      "C3 PASS — Ownership and version seams: routing, orchestration and context packs are disjoint; root R9 tool files are separately attributed. W48 adds capability-parity.json to the original routing owner's responsibility. Independent recursive comparison found exactly one JSON scalar change: the stale route-guard anchor became the existing runtime soft-candidate phrase. All previous 27 files and the existing semantic-parity test bytes were unchanged. The final manifest contains exactly 28 files; all 28 committed blob SHA256 values and the exact changed-path set independently match.",
+      "C4 PASS — Migration decision fidelity: the current disposition is retain existing production paths and preserve an implemented candidate. G-A permits the bounded static/unmeasurable evaluation exit. G-P6 and U012 do not permit changed semantic paths to be declared migration-compatible without same-version switch, refusal, rollback and real inflight evidence. Such real old-state evidence remains UNKNOWN/GAP here. No actual production switch is proposed, so that missing evidence blocks future replacement claims but does not create an endless prerequisite for the authorized candidate delivery.",
+      "C5 PASS — Publication readiness within the approved isolated branch: normal git commit r3 exited 0 after full verify PASS 114, FAIL 0, WARN 0, DELEGATED 1. Normal commit was used without hook bypass; its success is evidence that the configured commit-msg path did not reject the commit, although the log does not contain a separate commit-msg transcript. Commit cd0cff15c9b00701e5d9dfdc69fee0fe7c121fd3 has parent 05120197073144c0f46b6fb30a192733d529cc4f and tree c1736a557004361b99b36b0533af9b7f2ded8163. Independent read-only Git checks confirm branch codex/tri-system-evaluation, exactly 28 changed paths, matching committed blobs, and a clean worktree.",
+      "Authorized release scope — Root may perform the already-authorized normal, non-force push of this exact isolated candidate branch and commit. This vote does not authorize production deployment, changing old inflight state, unrelated files, or replacing a remote branch by force. Push has not yet occurred in the evidence reviewed. Root must obtain the actual push result and verify the remote branch SHA before reporting Git delivery complete.",
+      "Historical failures preserved — Attempt 1 failed before suites because candidate-local Playwright dependencies were absent. Attempt 2 completed with PASS 112 / FAIL 2, both failures arising from the stale capability anchor. W48 repaired that exact manifest mismatch; r3 success does not rewrite either earlier failure. P08 remains INVALID with qualification unmet and the probe pool exhausted. Program tests and R9 44/44 integration results are not model comparisons.",
+      "H timing limitation — The actual selected H native capture was read. Its first commentary conclusion preceded root/index/owner reads; the final response was correct and no page guess or unauthorized UI action occurred. Current root K2/K10, context index and luca-app owner already impose the relevant read-before-answer boundary. W47's no-new-rule disposition is supported by those artifacts, not accepted solely because the owner stated it. H remains FAIL and prevents a claim that the current-page owner-reading behavior gate fully passed; it does not block preservation and publication of this isolated candidate.",
+      "Independent review provenance — J19 provides bounded independent N-A–D results, 5/5, covering actual processes, controlled handoff/recovery and data readback; these do not prove automatic loading, real compaction, real multiagent superiority or production migration. J20 provides E/F/G PASS and H timing FAIL. J18 was read as the root-adjudication summary with static final-repair and consumer-compatibility scope; its original native transcript was not independently reread here.",
+      "Read scope — Required U008/U009/U011/U012 documents and three frozen owner reports were fully read, with truncated owner output supplemented. Required execution-plan sections and applicable replans were read. W47 section 7, necessary H raw capture, W48 exact before/candidate delta and actual check outputs, and complete r3 result/log were read. The R9 TAP diagnostic payload had truncation; all 44 result lines, final counters, bound source hashes and empty stderr were verified separately, without claiming every diagnostic JSON field was read. No hidden/private/archive material was read or cited during J21.",
+      "Final identity — u012-final-candidate-manifest.json SHA256 447757cf52432b3df58ee9ad8579ccb49900e1e96be67dfb45934686b9169e32; W48 capability-parity.json SHA256 1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317. Independent final receipts: a8e732 full r3 result/log and completion audit; d1f217 Git identities/path set/clean state; c21ced all 28 committed blob comparisons with zero mismatches.",
+      "Record hashes — r3 result SHA256 40021a50ed92c486c5c84bae364f4b20312811059359115753ce435da91f6a8b; r3 log SHA256 5c0f8964a0487f600bfcb75d4b5a54d77ec734a0170ca2100d122d7b7d0d4f4a; committed verification SHA256 749d99f0d968bf6281439289aa257d2b87a9260110bf9997c49185af2021e0b8. Reviewed current U011 SHA256 9227737037d8081b8f12b29a3c0043d4c334419430773d03731ecff28e79d566 and U012 SHA256 b0d417930222f031592af22da8d7ca000cb871adc7f5429ca930f6cebd3ca3aa.",
+      "Exact completion boundary — After actual normal push, remote SHA verification, saving this final vote and mechanically synchronizing pending/inflight status text and the final evidence index, the bounded original evaluation plus authorized candidate development, testing, review and unified Git delivery may close as DONE_WITH_CONCERNS. The completion audit still contained pre-terminal status text when read and must be updated factually. No further model probe or broad revalidation is required solely to close the present no-production-replacement decision. Relative net benefit, production adoption, real old-state migration/rollback and untested harness benefits remain unproved future adoption conditions, not completed capabilities."
+    ]
+  }
+}

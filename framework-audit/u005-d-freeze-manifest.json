@@ -1,0 +1,68 @@
+{
+  "status": "FROZEN_PENDING_J_D",
+  "frozen_at": "2026-10-02T17:10:18.299368+00:00",
+  "input_qualified": "pending independent review; root has not read body",
+  "items": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u005-independent-design.md",
+      "bytes": 50430,
+      "sha256": "27831bcf48b9d935bb2718024344f2904064aaca7f5086964445ecda865c06c0"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u005-independent-input.md",
+      "bytes": 285399,
+      "sha256": "1350db894bfc8524a3edee4ce1e6a4143ee67396682c9725660d98167850a290"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u005-launch-metadata.json",
+      "bytes": 2675,
+      "sha256": "ce75ca594acd2921044c4be7f095b684995dcb72d9c02954c1e0d21c2fb2483b"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u005-independent-design.jsonl",
+      "bytes": 51494,
+      "sha256": "af128d7e8ac9e86ff53f7c7f8fbb582379c9dbb164fbbf5eb2c06f7bea7fcb7f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u005-independent-design.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-neutral-protected-purpose.md",
+      "bytes": 2316,
+      "sha256": "16f7f5cdd338b1ce74bfdda625830d3986e206f18505ebf090c07bb0bf087279"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-native-neutral.md",
+      "bytes": 18144,
+      "sha256": "07e59af85582f543fc7eb87e02e82903272de933d9df1c1f5da1e3ac17b1ac8a"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/developer-cases.json",
+      "bytes": 360270,
+      "sha256": "8b0d8fd82591ce7f479c17f283a686af109452436c2e61e3a39c7e27d845953c"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/README.md",
+      "bytes": 10540,
+      "sha256": "4e30421efdfc98fa824c2d7de9b2cf3e8ace3027998643ebbfbb3902ad4a4c36"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u004-cases/public/coverage.md",
+      "bytes": 4875,
+      "sha256": "1c28eb739ddccf02e2a59d2057c8812361a11c239f2c046eec8e81180390fbfc"
+    }
+  ],
+  "observed_usage": [
+    {
+      "input_tokens": 92495,
+      "cached_input_tokens": 13184,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 14309,
+      "reasoning_output_tokens": 1034
+    }
+  ],
+  "observed_input_plus_output_tokens": 106804,
+  "diagnostic_classification": "One item.type=error and four reconnect error events are transport diagnostics, not tool invocations. Full actual events retained; reviewer must verify."
+}

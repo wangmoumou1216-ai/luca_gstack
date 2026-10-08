@@ -1,0 +1,123 @@
+{
+  "scope": "NO_PIN framework audit; current source only; no production edits",
+  "root": "/Users/luca/Desktop/luca_gstack",
+  "head": "d211bd3c1479720836219b035ec9963d278efa49",
+  "files": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/references/write_state.py",
+      "sha256": "2c1caf2c41cc6ad4a19ebbc818c51498d2dcfc84ef7f511f72d02c3f86ebf2ad"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-workflow-state-guard.py",
+      "sha256": "4f87398636955ebafb08b13bb0f6995f7b0ec52879ec8e11a565150f3dbac48d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/brainstorm/SKILL.md",
+      "sha256": "cb48d7ffed032cd2ab18320cdbc560f48ae6206e4136ba09406680deacd54a5d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/ux-brainstorm/SKILL.md",
+      "sha256": "c4a0ce65bc5db6b9152e247461d9da4143bd8f18cb27928fe132d73de4526949"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/codex-viability.yaml",
+      "sha256": "05718cc213e45ada0d1a28e306c7486aa5075f4ea6aadce6d50d49d8132ac7ba"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/routing-chain-check.md",
+      "sha256": "9be42589271e467118dceac0ca0b56ebcfed2f550deee0b6e08db2ef16589287"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/model-routing.yaml",
+      "sha256": "1fead141706c67b1e3a5ade9b4ac1fd1a5520d5f619d1e75eb861682446f3791"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/auto/SKILL.md",
+      "sha256": "c887eb42f6e4f192de08cd7f520a8b5cc8e8dcff2a5a5af1efacf885f31a39a7"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/agents/references/plan-design-guidance.md",
+      "sha256": "71f6da283256af06d54722dc9690164c9cb2425dc89cebf3792d0ee0db6fce0f"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/agents/orchestrator.md",
+      "sha256": "8002e2ef9966368fdc443d1c6968b05eee7c37985d05b222ba8575ee7e25dee3"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/to-spec/SKILL.md",
+      "sha256": "665fa35ab69ded74b625b3240fd2340762d45d5efd0282276aa472fec3eb9d90"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/tech-spec/SKILL.md",
+      "sha256": "c12f3f61942375551c72bea203f5c8d2d5e12573188da362fce33b7fe4050c90"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/task-plan/SKILL.md",
+      "sha256": "38e80538d73367b87ffac747aa2d6121e4088d0ecd90341d00c1652eba689d60"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/input-modes.yaml",
+      "sha256": "a710038d4d85dc4c590ec1a763aa3a0add7829b6395dffe342d8c7635129ea8e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/generated/input-modes/task-plan.json",
+      "sha256": "3cc0af99f72b4f9a9ec6c514e888ef36180ef436bf2926f84b0cb19924237e68"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/optional-workflow-graph.yaml",
+      "sha256": "8a266250a08ac6f939162430a5c131baf534e72801703d616dfa45e071fbf6f4"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/references/ai-native-design-framework.md",
+      "sha256": "3c5a8f37f69e48d4b8b34fab261d586c3a66f25215b561d478990d5480091fd6"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/references/ai-native-taste-anchors.md",
+      "sha256": "32437e731794b028108e49ff66cf93a9386558639a25cbbdaf573b2c5c13514d"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/open-design/SKILL.md",
+      "sha256": "60fe9c39cae30e77949ea7f88eb1cc28572199aada4d1a22ee3862b7f41b54d9"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/runtime/page-context.md",
+      "sha256": "772a63116b2be445602d109671abd2361ce55a2a2666201703d4bc15ddb8f5bc"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/original-copy-handoff.mjs",
+      "sha256": "a957ba7114b1f742b6fee6d4a4956f54e7fc7fbfd718755f9281f002acb75b76"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/agents/quality-gate.md",
+      "sha256": "4c16a87530af2b3c9b00f876b734b4807aea933c310d79d9e1f204e8222b7c69"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/runtime/project-session.md",
+      "sha256": "c75e34d9dcfa5cafde745090bc5a9673c84b1aba18548ad647ff8f74e8651821"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/ux-audit/SKILL.md",
+      "sha256": "b511d773b0b9ff866e466e9e8311036c1a5444261cd635301e6de7dfc6c928e5"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-project-selection-v34.mjs",
+      "sha256": "b1b4ae742e0137a235fbec2edb400caf8031f63dd985a152463d8888e5cf2851"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/scripts/test-project-gate-v34-mutations.mjs",
+      "sha256": "cdc2226eb5ff0c57d3bef7fdaa4004caee3e67b37dd273251ab4082e52c91987"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skill-os/skill-invariants.md",
+      "sha256": "e1df5b5d85fd099c3429f1cf896cf70e695c787ed37de8188a18a935bf7104b6"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/html-prototype/SKILL.md",
+      "sha256": "c9b5bd9f4c4812e8a0d7a7fc62319261833458dfbd69372058c57bf062ad3735"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/.claude/skills/office/design-brief/SKILL.md",
+      "sha256": "6817d572af94bbc2939ea22971523ee2774257fe56e3bd5416444b5330606a49"
+    }
+  ]
+}

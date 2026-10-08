@@ -1,0 +1,73 @@
+{
+  "status": "N-C finalization artifacts observed complete; same actor turn continues own U011 report",
+  "checks": {
+    "title_version": true,
+    "accepted_results": true,
+    "alpha_once": true,
+    "beta_two_attempts": true,
+    "original_failure_bytes_unchanged": true,
+    "nb_evidence_unchanged": true
+  },
+  "files": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/source.json",
+      "sha256": "a771e3e597649734aba8157c565b2e330ab10d00e02039733dd4f6ffc892ac5b",
+      "bytes": 156
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/event-nb.json",
+      "sha256": "c7d3c7e4336523f78ca6b28907e2a1471eee09e347e88b0727f6cda61b0d7b0f",
+      "bytes": 1387
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/event-nc.json",
+      "sha256": "d01f891f48e3d1c808f2ebd44e307819a3630862b9ce850eb13cf9208ed70dcb",
+      "bytes": 781
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/alpha-result.json",
+      "sha256": "e66453d76c4e75e358c323d9cbedee048890833595e6d60e4dfaae43c087c19e",
+      "bytes": 151
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/alpha-effects.txt",
+      "sha256": "0a9eccaf590f32f9fba1521ca968719cc5febb94ac661e6cb052ed4a27233572",
+      "bytes": 19
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/beta-result.json",
+      "sha256": "18ef9fde9d6fa4fc294b4c71300405fa5b2c94acac635565e0215872999c682a",
+      "bytes": 152
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/beta-attempts.txt",
+      "sha256": "d23de3e4ba1f07785f3f03e299409de8cdce2293aa9a2939536fb02d90bc306a",
+      "bytes": 26
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/native-process-evidence.json",
+      "sha256": "f171f8e7cba54e6bbe0afd6d1d43fa58bd10977f3288df30fca441c3d51ed838",
+      "bytes": 2420
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/resume-evidence.json",
+      "sha256": "bfe2a79fbfdaf202d4221c2a3740b53aa58f72f8ab2775eb4096210affbc499d",
+      "bytes": 43016
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/final-report.json",
+      "sha256": "461df782a1b6989aafab1d0ec23714548f6caf7e1603aff793d89b0f486a53e3",
+      "bytes": 2819
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-artifacts/finalization-evidence.json",
+      "sha256": "6dd6fb0584075b02ba06d00271ae7de326f3933e7f08792f789ff567ba448a60",
+      "bytes": 9875
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u012-native-nc-thread-at-finalization.json",
+      "sha256": "b48f793369146bb9ccf0b931bbbda9fb0ea70736f35ae37297196d03b2f3559b",
+      "bytes": 52917
+    }
+  ]
+}

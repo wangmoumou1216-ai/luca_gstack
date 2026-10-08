@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "focused-publication-receipt",
+  "status": "PUBLISHED_REMOTE_READBACK_VERIFIED_CI_PENDING",
+  "payload_sha256": "25af2a1eac0fa2a0bf3e554edc3afbfe707803ff55a8c11dd33617042a33b1c1",
+  "review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-publication-review-resume04.json",
+    "sha256": "f3e336e3fbdbe2f18a0f5094365454ed05f2f9e9b05cdddebb95ef2d1211f8d1"
+  },
+  "native_proof": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/stable-publication-review-native-resume04.json",
+    "sha256": "0bfe0c66e3d1a3153939d617fe6dd5d35daef87450b5077cf0ce4797bec68a23"
+  },
+  "actions": [
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "target_commit": "689444174a9a32b1a3fcf92e492cf446e284e4b0",
+      "ref": "refs/heads/main",
+      "remote_readback": "689444174a9a32b1a3fcf92e492cf446e284e4b0\trefs/heads/main"
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse",
+      "target_commit": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd",
+      "ref": "refs/heads/refactor/claude-code-kernel",
+      "remote_readback": "b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd\trefs/heads/refactor/claude-code-kernel"
+    }
+  ],
+  "at": "2026-10-01T03:02:04.139441+00:00",
+  "local_activation_performed": false
+}

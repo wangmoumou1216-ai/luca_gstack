@@ -1,0 +1,30 @@
+{
+  "probe_id": "P01",
+  "run_id": "u007-p01-native-fs-r1",
+  "exit_code": 134,
+  "timed_out": false,
+  "elapsed_seconds": 0.049,
+  "cleanup": [
+    "group-already-gone"
+  ],
+  "child_result": null,
+  "parent_checks": {
+    "allowed_marker_unchanged": true,
+    "denied_marker_unchanged": true,
+    "no_workspace_forbidden_write": true,
+    "no_outside_forbidden_write": true,
+    "approved_write_exists": false
+  },
+  "status": "FAIL",
+  "stderr": "dyld[45422]: Library not loaded: /opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python\n  Referenced from: <D2AB3F71-45B3-319F-AA0A-9305018B023F> /opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14\n  Reason: tried: '/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python' (blocked by sandbox)\n",
+  "registered_input_sha256": "9ae1acc7f514ddf094f3419756b73999e208ab9cdeb87606dbd374614c8d0fb7",
+  "model_calls": 0,
+  "limits_of_claim": [
+    "No model or native hook invocation",
+    "No app-server effective profile proof",
+    "No MCP/Apps isolation proof",
+    "No actual read-range adoption proof",
+    "No network attempt performed"
+  ],
+  "recorded_at": "2026-10-02T18:24:58.903053+00:00"
+}

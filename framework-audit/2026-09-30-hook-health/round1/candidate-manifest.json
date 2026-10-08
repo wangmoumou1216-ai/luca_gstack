@@ -1,0 +1,59 @@
+{
+  "status": "AWAITING_FINAL_REVIEW",
+  "candidate_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-health-2xlmvokq",
+  "source_root": "/Users/luca/Desktop/luca_gstack",
+  "files": [
+    {
+      "path": "scripts/codex-hook-health.mjs",
+      "before_sha256": null,
+      "after_sha256": "0a2c1e587d1e8fd7a35cfc13c69e9687241ad36552f88acb84ff6447f868dee5",
+      "new": true
+    },
+    {
+      "path": "scripts/codex-trust-hooks.mjs",
+      "before_sha256": "333858e5d3a297c9344e445d63f5eaa95e660794c8acab6b70d0c7cce08d95ec",
+      "after_sha256": "2bfe1f64a595a3e793c1ea914095e035c03ab9e262288bf6549304cda3c9e531",
+      "new": false
+    },
+    {
+      "path": "scripts/test-codex-hook-health.mjs",
+      "before_sha256": null,
+      "after_sha256": "bb5b512181da1eb0da9deaebccdd2e7db9cbb4d135c1253e9ab4cfb0d9c5f3e2",
+      "new": true
+    },
+    {
+      "path": "scripts/test-codex-trust-hooks.mjs",
+      "before_sha256": "b616238b873f38b5668502d2757e9fd7aee9d5c069bef6d6e96cf332af32b49d",
+      "after_sha256": "d0d6199835dd837866ae11748fcb1ea442f1807a9b0c2099aa0440990bac690f",
+      "new": false
+    },
+    {
+      "path": "scripts/verify.sh",
+      "before_sha256": "6cf90be0c5d5bec39ffadde202d4f05ec67a024e9539a4e3fe1309f08d78125a",
+      "after_sha256": "f8a88af3a884358aa8de7a49567df000f501cf9d1c35096e2b1d10b5956f636f",
+      "new": false
+    },
+    {
+      "path": "README.md",
+      "before_sha256": "ce8307b0a2ea79237e275b7d85de3ae5e2b83f791b2d19cf756027569058a1bc",
+      "after_sha256": "c19debd8473a296c60c2861a5026b1aef6280421f69b7d753952c1a3b4b37157",
+      "new": false
+    },
+    {
+      "path": ".codex/hooks.json",
+      "before_sha256": "5588e34ad2dcec9dc9ff8dc89bcdf56f98b0d16866b20dfb59f0ac4081d4a07b",
+      "after_sha256": "3eafff498aa4d9c1c8437064cce5d82bff058c879456b1c5ebb3e33a3b7280b8",
+      "new": false
+    }
+  ],
+  "baseline_source_digest": "a229918d10266b91b6205ec46efb8ab65e3d612b3bd5458762caad617cecebf3",
+  "candidate_source_digest": "b6091a2b3d7bb9a0bb658174c7d2762770488757892d441bc9e36238564488a8",
+  "patch_sha256": "a629764912fd884e9e45f3851113818230c32abd66b77221d51b006380bc37ce",
+  "activation_effects": [
+    "Apply seven baseline-checked files",
+    "Install reviewed source manifest for this root preserving other roots",
+    "Official exact trust update for eleven commands",
+    "Reload session and verify a real tool invocation"
+  ],
+  "git_publication": false
+}

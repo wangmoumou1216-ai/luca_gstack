@@ -1,0 +1,43 @@
+{
+  "decision": "ALLOW_ONE_REVIEWED_P07",
+  "decided_at": "2026-10-02T23:00:37.566402+00:00",
+  "authority": "Root operational decision under explicit user full-lifecycle autonomous authorization; J10 supplies independent readiness evidence.",
+  "review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r6-envelope.json",
+    "sha256": "5464edfac03ff8ba51ac0255bfcebb582d6a91d828efee476c22d6862f62740d"
+  },
+  "review_inputs": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-inputs-r6.json",
+    "sha256": "8118526459a8bdaf88d689daf66ade03da52464066041843c32e46fe7f1a2248"
+  },
+  "root_integration": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r7.json",
+    "sha256": "a14cbecd66c16f5b63b7044be40898d28d974e7d50b87a09e98fffdc7fb46da5"
+  },
+  "launcher": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-launch.py",
+    "sha256": "9b320a97314e041010df535fd826b42ccaa7aa800c147fc434a3470d5f276a86"
+  },
+  "model_projection": {
+    "name": "gpt-6-astra",
+    "effort": "high"
+  },
+  "model_projection_evidence": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-model-selection.json",
+    "sha256": "e8dba191daa03d8bbdf60903b4dabb405669447c5f8a9942e5dbc04609cc2d29"
+  },
+  "resources": {
+    "wall_seconds": 300,
+    "visible_actions": 20,
+    "observed_tokens": 60000,
+    "outer_cleanup_threshold_seconds": 325
+  },
+  "scope": "This exact P07 once, including normal model-service transport. No new permissions, config mutation, fallback entry or retry. No formal comparison/production release.",
+  "result_requirements": [
+    "Actual native command and parameters/output/exit",
+    "All eight checks including baseline loader and required errno semantics",
+    "Protocol artifacts/checkpoints and parent witnesses",
+    "Actual cleanup/errors and nullable accounting",
+    "No automatic P08 on failure"
+  ]
+}

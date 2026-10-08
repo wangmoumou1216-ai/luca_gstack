@@ -1,0 +1,7 @@
+{
+  "scripts/verify.sh": "4e12ba2d7d577a36f5b28145ee12764ab02215bbc074e266daaf2dfee2b7c7f4",
+  ".github/workflows/ci.yml": "11eb779568c141bdae0cec3ef3568326d4712ecf01e78ba193b5535616a279a1",
+  "scripts/check-ci-contract.mjs": "f4c23ce74db0fb94016548f1d8f7e12db6b3027c00a18d23cba8bd5ef2dd770a",
+  "scripts/test-ci-contract.mjs": "4e226d051e1c48b664d08ca38878df32163d489424a5377b8c207dfd37fcc44f",
+  "CHANGELOG.md": "93d95f71dca1bfd0319a1539d7fd3b328f5de63708aebc72988b4e6a3084c0f7"
+}

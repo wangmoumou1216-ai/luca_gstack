@@ -1,0 +1,322 @@
+{
+  "status": "REGISTERED",
+  "registered_at": "2026-10-03T08:25:23.533755+00:00",
+  "scope": "Targeted model decision regressions for exact minimal instruction fixes. Synthetic operational facts; not real long-task execution, true child control, migration, product workflow or global value benchmark. Route executable behavior tested separately.",
+  "authority": "Latest user continue making new version adoptable, R-U014-3; J31 method PASS. Only targeted decision tests, not P-series qualification.",
+  "limits": {
+    "wall_seconds": 480,
+    "observed_tokens": 120000,
+    "automatic_retries": 0,
+    "runs": 4
+  },
+  "budget": {
+    "additional_before": 18,
+    "additional_after_max": 22,
+    "additional_cap": 24,
+    "total_cap": 144
+  },
+  "model_provenance": "Codex request unchanged frozen P10 projection; Claude core-execution maps opus from model-routing.yaml. Effective identity recorded if returned, otherwise unknown.",
+  "sources": {
+    "old": [
+      {
+        "relative_path": ".claude/agents/orchestrator.md",
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/old/.claude/agents/orchestrator.md",
+        "sha256": "3eed1c58e4c6cbdd5b3a8ad0fa3c0841723012de0cf789fb7f369980905dc29e"
+      },
+      {
+        "relative_path": ".claude/skills/office/auto/SKILL.md",
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/old/.claude/skills/office/auto/SKILL.md",
+        "sha256": "2806bf06a486818934a194a4355713ddc395bc838860ed1ec47689ebf1494078"
+      },
+      {
+        "relative_path": ".claude/skills/office/references/handoff-protocol.md",
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/old/.claude/skills/office/references/handoff-protocol.md",
+        "sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6"
+      }
+    ],
+    "new": [
+      {
+        "relative_path": ".claude/agents/orchestrator.md",
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/new/.claude/agents/orchestrator.md",
+        "sha256": "33073be1c0766746d9fc5a936adcc34a303a17fa2506d439c879fbe6e98ae21b"
+      },
+      {
+        "relative_path": ".claude/skills/office/auto/SKILL.md",
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/new/.claude/skills/office/auto/SKILL.md",
+        "sha256": "75de696b34da6cb286c366e84e9f20f2c8c95a8340b4df1629bdce67e8bc54b3"
+      },
+      {
+        "relative_path": ".claude/skills/office/references/handoff-protocol.md",
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/new/.claude/skills/office/references/handoff-protocol.md",
+        "sha256": "0ac7afe3bb49d3abc46a9a788b6f83ace5f745da82051c7a574737834ce8d03c"
+      }
+    ]
+  },
+  "frozen_inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-focused-native-run.py",
+      "sha256": "2262974e379751626c2c1db251d309d28d573d1c8f6721d0eb03ecbe6dfb4316"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-focused-prepare.py",
+      "sha256": "846210e83954f136c1532192f6683b1e8332dbe1da12f994022ca230ee19ca3c"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p10-launch.py",
+      "sha256": "44762553e7ce6a0ceae8505328a5309f4de2cffcdda387cf309eee96790e399e"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-fix-behavior-cases-draft.json",
+      "sha256": "5657d65676cda4f00c0459266d6612ec8bbb04001e3636cdb51bf775ba07ad45"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-focused-method-envelope.json",
+      "sha256": "0fc1141e806630af5b5a6636fde92f8ed8fb6e6c05d4fb62e8d214bdbb837e57"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-adoptable-method-envelope.json",
+      "sha256": "1e9a1225e834348ac3f3b92d68a821fb1df1d49178d6e63ea397b824af415e1c"
+    },
+    {
+      "path": "/Users/luca/.codex/packages/standalone/releases/0.160.0-aarch64-apple-darwin/bin/codex",
+      "sha256": "112fae7a5a1223e673c8a1791d32338f37df8b527ff1159bb8adac6c4dbf1b4b"
+    },
+    {
+      "path": "/Users/luca/.codex/AGENTS.md",
+      "sha256": "fc33bb653076a80ed2e2cda8fd51374b4c1569b4679401e96a3ac4ed9e2408d9"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/old/.claude/agents/orchestrator.md",
+      "sha256": "3eed1c58e4c6cbdd5b3a8ad0fa3c0841723012de0cf789fb7f369980905dc29e"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/old/.claude/skills/office/auto/SKILL.md",
+      "sha256": "2806bf06a486818934a194a4355713ddc395bc838860ed1ec47689ebf1494078"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/old/.claude/skills/office/references/handoff-protocol.md",
+      "sha256": "0bfca8ef44e21e38ad22686e00dcf1000d70b59a848927633307f6846f06efa6"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/new/.claude/agents/orchestrator.md",
+      "sha256": "33073be1c0766746d9fc5a936adcc34a303a17fa2506d439c879fbe6e98ae21b"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/new/.claude/skills/office/auto/SKILL.md",
+      "sha256": "75de696b34da6cb286c366e84e9f20f2c8c95a8340b4df1629bdce67e8bc54b3"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/frozen/new/.claude/skills/office/references/handoff-protocol.md",
+      "sha256": "0ac7afe3bb49d3abc46a9a788b6f83ace5f745da82051c7a574737834ce8d03c"
+    }
+  ],
+  "runs": [
+    {
+      "id": "F01",
+      "harness": "codex",
+      "arm": "old",
+      "depends_on": null,
+      "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-1",
+      "actor_input": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-1/request.txt",
+        "sha256": "895a4ca1809efe0c8010c52f027598fa525e1ce48cd613416064fdfced43731b"
+      },
+      "schema": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-1/output-schema.json",
+        "sha256": "367cd095d195d9914d687e1a92bb29e13df8163eca2fabdbb1f5ea065356bd6d"
+      },
+      "runtime": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-codex-minimal-eval-entry.sh",
+        "sha256": "38cae34f13f229364c7f137597b38d610327c367581bdc43a81e98a57a3c8e02"
+      },
+      "argv": [
+        "/Users/luca/Desktop/luca_gstack/framework-audit/u014-codex-minimal-eval-entry.sh",
+        "exec",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--json",
+        "-C",
+        "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-1",
+        "--output-schema",
+        "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-1/output-schema.json",
+        "-m",
+        "gpt-6-astra",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-c",
+        "approval_policy=\"never\"",
+        "-c",
+        "allow_login_shell=false",
+        "--disable",
+        "apps",
+        "--disable",
+        "shell_snapshot",
+        "-c",
+        "permissions.u014-focused={\"filesystem\"={\":root\"=\"deny\",\":minimal\"=\"read\",\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-1\"=\"read\"},\"network\"={\"enabled\"=false}}",
+        "-c",
+        "default_permissions=\"u014-focused\"",
+        "-"
+      ],
+      "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/evidence/F01",
+      "model_requested": {
+        "name": "gpt-6-astra",
+        "effort": "high"
+      }
+    },
+    {
+      "id": "F02",
+      "harness": "codex",
+      "arm": "new",
+      "depends_on": "F01",
+      "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-2",
+      "actor_input": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-2/request.txt",
+        "sha256": "2b49dca3ff16ab2c529b201a7e7ec4d948ebf2fc02a5b368313b6f16abb00080"
+      },
+      "schema": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-2/output-schema.json",
+        "sha256": "367cd095d195d9914d687e1a92bb29e13df8163eca2fabdbb1f5ea065356bd6d"
+      },
+      "runtime": {
+        "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-codex-minimal-eval-entry.sh",
+        "sha256": "38cae34f13f229364c7f137597b38d610327c367581bdc43a81e98a57a3c8e02"
+      },
+      "argv": [
+        "/Users/luca/Desktop/luca_gstack/framework-audit/u014-codex-minimal-eval-entry.sh",
+        "exec",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--json",
+        "-C",
+        "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-2",
+        "--output-schema",
+        "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-2/output-schema.json",
+        "-m",
+        "gpt-6-astra",
+        "-c",
+        "model_reasoning_effort=\"high\"",
+        "-c",
+        "approval_policy=\"never\"",
+        "-c",
+        "allow_login_shell=false",
+        "--disable",
+        "apps",
+        "--disable",
+        "shell_snapshot",
+        "-c",
+        "permissions.u014-focused={\"filesystem\"={\":root\"=\"deny\",\":minimal\"=\"read\",\"/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-2\"=\"read\"},\"network\"={\"enabled\"=false}}",
+        "-c",
+        "default_permissions=\"u014-focused\"",
+        "-"
+      ],
+      "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/evidence/F02",
+      "model_requested": {
+        "name": "gpt-6-astra",
+        "effort": "high"
+      }
+    },
+    {
+      "id": "F03",
+      "harness": "claude",
+      "arm": "new",
+      "depends_on": null,
+      "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-3",
+      "actor_input": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-3/request.txt",
+        "sha256": "2b49dca3ff16ab2c529b201a7e7ec4d948ebf2fc02a5b368313b6f16abb00080"
+      },
+      "schema": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-3/output-schema.json",
+        "sha256": "367cd095d195d9914d687e1a92bb29e13df8163eca2fabdbb1f5ea065356bd6d"
+      },
+      "runtime": {
+        "path": "/Users/luca/.local/share/claude/versions/2.1.286",
+        "sha256": "75e3016e9d2570767b08e43a7467d4817a4f149232c169ca295f2c95fef21433"
+      },
+      "argv": [
+        "/Users/luca/.local/share/claude/versions/2.1.286",
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--no-session-persistence",
+        "--safe-mode",
+        "--strict-mcp-config",
+        "--mcp-config",
+        "{\"mcpServers\":{}}",
+        "--tools",
+        "",
+        "--permission-mode",
+        "dontAsk",
+        "--no-chrome",
+        "--model",
+        "opus",
+        "--effort",
+        "high",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"decisions\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"ask_user_again\": {\"type\": [\"boolean\", \"null\"]}, \"restart_same_worker\": {\"type\": [\"boolean\", \"null\"]}, \"consume_missing_result\": {\"type\": [\"boolean\", \"null\"]}, \"decision_status\": {\"type\": [\"string\", \"null\"]}, \"new_external_effect_authorized\": {\"type\": [\"boolean\", \"null\"]}, \"choose_replacement_without_user\": {\"type\": [\"boolean\", \"null\"]}, \"id\": {\"type\": \"string\"}, \"next_action\": {\"type\": \"string\"}, \"source_reference\": {\"type\": \"string\"}}, \"required\": [\"id\", \"next_action\", \"source_reference\", \"ask_user_again\", \"restart_same_worker\", \"consume_missing_result\", \"decision_status\", \"new_external_effect_authorized\", \"choose_replacement_without_user\"], \"additionalProperties\": false}}}, \"required\": [\"decisions\"], \"additionalProperties\": false}"
+      ],
+      "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/evidence/F03",
+      "model_requested": {
+        "role": "core-execution Claude compatibility",
+        "alias": "opus",
+        "effort": "high"
+      }
+    },
+    {
+      "id": "F04",
+      "harness": "claude",
+      "arm": "old",
+      "depends_on": "F03",
+      "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-4",
+      "actor_input": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-4/request.txt",
+        "sha256": "895a4ca1809efe0c8010c52f027598fa525e1ce48cd613416064fdfced43731b"
+      },
+      "schema": {
+        "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/actor-4/output-schema.json",
+        "sha256": "367cd095d195d9914d687e1a92bb29e13df8163eca2fabdbb1f5ea065356bd6d"
+      },
+      "runtime": {
+        "path": "/Users/luca/.local/share/claude/versions/2.1.286",
+        "sha256": "75e3016e9d2570767b08e43a7467d4817a4f149232c169ca295f2c95fef21433"
+      },
+      "argv": [
+        "/Users/luca/.local/share/claude/versions/2.1.286",
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--no-session-persistence",
+        "--safe-mode",
+        "--strict-mcp-config",
+        "--mcp-config",
+        "{\"mcpServers\":{}}",
+        "--tools",
+        "",
+        "--permission-mode",
+        "dontAsk",
+        "--no-chrome",
+        "--model",
+        "opus",
+        "--effort",
+        "high",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"decisions\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"ask_user_again\": {\"type\": [\"boolean\", \"null\"]}, \"restart_same_worker\": {\"type\": [\"boolean\", \"null\"]}, \"consume_missing_result\": {\"type\": [\"boolean\", \"null\"]}, \"decision_status\": {\"type\": [\"string\", \"null\"]}, \"new_external_effect_authorized\": {\"type\": [\"boolean\", \"null\"]}, \"choose_replacement_without_user\": {\"type\": [\"boolean\", \"null\"]}, \"id\": {\"type\": \"string\"}, \"next_action\": {\"type\": \"string\"}, \"source_reference\": {\"type\": \"string\"}}, \"required\": [\"id\", \"next_action\", \"source_reference\", \"ask_user_again\", \"restart_same_worker\", \"consume_missing_result\", \"decision_status\", \"new_external_effect_authorized\", \"choose_replacement_without_user\"], \"additionalProperties\": false}}}, \"required\": [\"decisions\"], \"additionalProperties\": false}"
+      ],
+      "evidence_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-focused-decisions-hcpkz0c6/evidence/F04",
+      "model_requested": {
+        "role": "core-execution Claude compatibility",
+        "alias": "opus",
+        "effort": "high"
+      }
+    }
+  ],
+  "limitations": [
+    "One sample per harness/arm, synthetic states, no actual worker/project side effects.",
+    "No automatic checkout root loaded: fresh isolated temp cwd; full applicable contracts supplied verbatim, oracle excluded.",
+    "Native defaults and harmless user Wiki instructions remain; no claim of full instruction/tool definition inventory.",
+    "Only concrete same-harness old-fail/new-pass slices without protection regressions can support adoption; both-correct is not relative benefit.",
+    "No efficiency, full multiagent, migration, required-source closure or whole-framework superiority claim."
+  ]
+}

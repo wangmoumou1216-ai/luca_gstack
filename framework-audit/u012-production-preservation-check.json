@@ -1,0 +1,80 @@
+{
+  "checked_at": "2026-10-03T03:11:10.305434+00:00",
+  "production_checkout": "/Users/luca/Desktop/luca_gstack",
+  "production_head": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "production_branch": "main",
+  "candidate_baseline": "05120197073144c0f46b6fb30a192733d529cc4f",
+  "existing_candidate_paths_checked": 17,
+  "all_existing_candidate_paths_match_baseline": true,
+  "paths": [
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/agents/work-agent-template.md",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/hooks/route-guard.mjs",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/skill-os/agent-context-manifest.json",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/skill-os/agent-root-kernel.json",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/skill-os/generated/context-index.md",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/skill-os/runtime/long-session.md",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/skills/office/SKILL.md",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/skills/office/auto/SKILL.md",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/skills/office/handoff/SKILL.md",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/skills/office/references/handoff-protocol.md",
+      "production_matches_baseline": true
+    },
+    {
+      "path": "AGENTS.md",
+      "production_matches_baseline": true
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "production_matches_baseline": true
+    },
+    {
+      "path": "scripts/test-agent-context-resolution.mjs",
+      "production_matches_baseline": true
+    },
+    {
+      "path": "scripts/test-agent-context.mjs",
+      "production_matches_baseline": true
+    },
+    {
+      "path": "scripts/test-route-guard.mjs",
+      "production_matches_baseline": true
+    },
+    {
+      "path": ".claude/skill-os/capability-parity.json",
+      "production_matches_baseline": true
+    }
+  ],
+  "scope": "Only the 17 existing framework files in the candidate; no claim about unrelated user/audit files"
+}

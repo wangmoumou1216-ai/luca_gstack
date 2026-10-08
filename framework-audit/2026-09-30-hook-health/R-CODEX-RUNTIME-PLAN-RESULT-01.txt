@@ -1,0 +1,603 @@
+Native verification: **accepted / critical / peak / codex-native**. Same-invocation adoption/completion, generation, agent and evidence bindings verified.
+
+```json
+{
+  "root_session_id": "01a0f5fb-e2b3-7120-b420-7f4c44f441ed",
+  "activation_id": "6a5b5586-05b4-4ac8-9693-37bc4f11dd1c",
+  "invocation_id": "1e1014c5-b149-4956-a11e-12b514dffb42",
+  "agent_id": "01a0f600-280b-79b2-a895-0da44182a246",
+  "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/01/rollout-2026-10-01T13-46-40-01a0f600-280b-79b2-a895-0da44182a246.jsonl:01a0f600-286e-7130-9902-4babcf18d0c3",
+  "release_digest": "d929a9ee4201fb71cea3a55257978b572411861c17efbf6599b6113b1f71af12",
+  "root_generation": 0
+}
+```
+
+CHILD_FINAL_OUTPUT_VERBATIM
+
+裁决：**PASS（15/15，限下述计划的完整性与可实施性）**。冻结输入、d6acaf21 基线、候选 clean 状态、恢复 artifact 与当前 legacy manifest 均已核验。未执行行为测试、安装或其他写入；新行为尚未通过验收。
+
+关键补充：App 的 `host-launch-client.js` 仍启动旧受保护工作区 broker，只改 `host-hook-ready.js` 不足以闭合 G03/G08。下述计划将其作为有源码依据的具名 delta。父级仍须核验本次原生调用的实际 adoption 与 same-invocation completion。
+
+PLAN_TEXT
+
+## 块 0 — 前提门
+
+**目标：** 让使用本仓有效 Hook 注册的工作区共用经过独立审查、单独发布的不可变 runtime，工作区增删源码不再破坏已发布 Hook；保持原项目隔离、模型路由、controlled-change、Host Launch 和 Stop 失败关闭语义，并完成原 C07、U-PROFILES/P01/P02/P03、C08。
+
+**该不该解：** 应当解决。`official-hook-list-f6e9.json` 中工作目录为 f6e9，11 项仓库 Hook 的 `sourcePath` 却来自母仓；注册命令又使用 `git rev-parse --show-toplevel` 选择执行源码。配置来源与执行源码根分离，导致新 worktree 缺 helper/approval 时重复阻断。
+
+**更小替代：** 三个 worktree 的一次性批准修复已经实施。继续补 helper、登记更多 root、增加认可摘要，都不能满足 G01/G02/G05。保留 legacy 安装、增加独立 runtime 发布面，是本案较小的完整方案。
+
+**默认形态偏差：** “发布独立 runtime”可能使人低估迁移消费者与状态根分离的成本。当前以 REFUTE 检查该方案，后续独立 Standards/Spec 继续攻击这些边界；没有关闭或删除完整性防线的提案。
+
+**已独立核验：**
+
+- 输入 `R-CODEX-RUNTIME-PLAN-INPUT-01.md` SHA256：
+  `563a53e8d814944406df2249771bb3f474921798cd69ddb550008e1f7c69b1f0`。
+- 母仓与候选 HEAD：
+  `d6acaf21e89e4c662289c716f7dcd4d3102751e0`；候选工作区 clean。
+- 当前 legacy manifest SHA256：
+  `c356f17ac46c58d03637d9ed7b995f748cb706227bbc85694ae1ebe819ee9343`。
+- 恢复 artifact SHA256：
+  `58fa7da73b311ffbc35382bf6453502160030d8926e69fddd41a48b573d73f61`；其 receipt 的 artifact/manifest 摘要相符，当前 manifest 有 7 个 root。
+- App HEAD：`b0e39b5cfba8a136edc0456a27512fb6ff2d6bdd`。App 存在大量无关 dirty；本次读取的 `host-hook-ready.js`、`host-launch-client.js` 及对应测试不在 dirty 列表。
+- 原 C07 证据仍为没有真实后续用户提示，不能判完成。
+
+**KILL assumptions：**
+
+- **KILL-1：** 官方宿主不能让独立新 worktree 使用同一有效注册来源。若真实三 worktree 验证推翻此前现象，G02 方案须重规划，禁止用逐目录批准冒充解决。
+- **KILL-2：** 发布 runtime 必须修改现有 legacy bootstrap/loader 才能运行。若成立，当前“并存迁移”方案失效，停止安装。
+- **KILL-3：** 某执行依赖只能从未批准的工作区或动态搜索路径加载。若成立，先补全依赖闭包或停止，不能降为告警。
+- **KILL-4：** 双根分离必须借用母仓 pin、别的 SID、修改项目/模型生命周期 schema 才能成立。若成立，停止受影响单元并提出具名 delta。
+- **KILL-5：** App 新协议必须覆盖无关 dirty 文件或安装旧 bundle 才能启用。若成立，停止 App 发布，保留现有安装。
+- **KILL-6：** 实施、审查或效果执行前的 exact baseline/CAS 已变化。旧效果载荷失效，重新冻结受影响部分；不得覆盖新状态。
+
+**尚未确认的事实：**
+
+- 新协议的真实宿主采用行为、三 profile 实际 binary/home/config 组合及旧会话缓存刷新。
+- 新 runtime 的完整 Node/Python/shell 动态依赖闭包。
+- 实施时的 installed App、Sidecar settings revision、writer lease、当前远端 HEAD 和 native review state。
+- 用户是否已完成 C07 的正常重载与原会话普通提示。
+
+这些是后续明确门控，不是当前运行成功的推断。
+
+## 块 1 — 复杂度与授权
+
+```text
+复杂度模式: Sequential Chain + 每阶段 Supervisor
+理由: 跨执行入口、依赖认证、宿主消费者与发布事务，且包含真实效果门。
+任务规模 Tier: Deep
+执行顺序: 默认串行；仅无文件交叉的测试/App单元可在共同合同冻结后并行。
+需要用户确认: 是；由协调方核对已有明确修复授权是否覆盖展示的 exact U-ID 与范围。
+本判决不产生用户授权，也不产生提交、推送、授信或本地安装批准。
+```
+
+本次判官严格只读，未派生子 agent，未调用 recorder、生命周期写函数或执行测试夹具。
+
+后续各阶段 `phase_type=task_execution`。Codex 的 `model_tier` 使用 common role：实施/取证为 **anchor**；独立关键审查使用原生注册 **quality-gate / MR-004 / peak**，不可用即拒绝，不以 effort 或自报身份替代。Claude 若承担后续工作，另按其兼容 adapter 合同，不把 Codex 原生采用证据外推给 Claude。
+
+**NO_PIN 范围：**
+
+- 唯一框架源码实施根：
+  `/Users/luca/.codex/worktrees/hook-text-data/luca_gstack`。
+- 母仓、f6e9、其他运行 root 的执行源码保持冻结，直到新的 exact activation gate。
+- `framework/`、共享 `docs/`/workflow/topic 别名、项目 pin、私有模型绑定、凭据、raw settings、合成 activation/approval 均不属于实施写范围。
+- 显式 App 依赖读取不切换项目。App 修改仅限下面列出的具名消费者 delta。
+- 母仓当前无关 dirty、App 当前无关 dirty 和现有 protected roots 必须逐项保存；不能 `git add -A`、reset、force、夺锁或借 SID。
+
+## 块 1.5 / 1.6 — 反向覆盖
+
+本案为框架维护，不存在产品 `task-plan.md` 输入；DEV/ASSERT-NNN 枚举不适用。替代覆盖如下，原编号不重编：
+
+| 原 MUST | U-block | BLOCKING 验收 |
+|---|---|---|
+| G01 | U-101、U-102、U-103 | A01、A02 |
+| G02 | U-105 | A03 |
+| G03 | U-103、U-104 | A04、A05 |
+| G04 | U-102、U-103 | A02、A06 |
+| G05 | U-102、U-105、U-108 | A03、A07、A12 |
+| G06 | U-101、U-104、U-108、U-109 | A08、A09、A12、C07 |
+| G07 | U-104 | A09 |
+| G08 | U-104、U-108、U-PROFILES | A10、A12、P02、P03 |
+| G09 | U-106、U-107、U-108 | A11、A12、A13 |
+| 原 C07 | U-109 | C07 |
+| 原 U-PROFILES / P01 | U-PROFILES | P01 |
+| 原 P02 | U-PROFILES | P02 |
+| 原 P03 | U-PROFILES | P03 |
+| 原 C08 | U-110，汇总上述单元 | A13、C07、P01–P03 |
+
+原 U-TEXT、已完成 d6 源码/App 发布启用及其 107 检查、CI `36812894375` 保持原完成记录。它们不证明本次新增行为，也不重做其已完成效果。原 U-CACHE-* 历史不改写，新单元作为追加 delta。
+
+## 块 2 — 架构、阶段、文件与 Waves
+
+### 最小完整架构
+
+**1. 并存的受保护 runtime，不替换 legacy 内核。**
+
+新增安装位置：
+
+```text
+/Users/luca/.codex/luca-child-project/hook-runtime/
+  kernel-v1/
+  releases/<review-artifact-sha256>/
+  manifest.json
+  .install.lock
+```
+
+这是后续受审 installer 的目标，不由普通文件写入工具建立。
+
+原 `source-guard/bootstrap.mjs`、`loader.mjs`、manifest 及 7 个 root/snapshot 保持其现有契约。新 runtime 不依赖 worktree 中存在最新 helper，也不为 worktree 自动授予源码执行权。
+
+runtime 发布包含真实入口及其完整依赖闭包，而非复用当前不完整的 recovery snapshot。`snapshotSourceInventory()` 当前主要复制 memory/policy/agent 与少量 Stop 文件，缺少一般 `.codex/.claude/hooks/scripts` 执行图，不能直接声称已具备完整 runtime。
+
+**2. 三个根分别处理。**
+
+| 对象 | 归属与处理 |
+|---|---|
+| code/policy root | 已批准 immutable release；JS、Python、shell 与影响 Hook 判定的 policy 读取从这里解析 |
+| workspace root/cwd | 本次宿主真实 cwd 的 canonical Git 工作区；用于状态、项目边界、controlled witness、相对工具目标 |
+| memory store | 保留现有明确 MEMORY_ROOT 所指 store；与脚本根分离，缺失/非法时按已验证工作区回退，不能回落 release |
+
+pin/child receipts 继续按原 workspace/SID/原生 lineage 定位；transcript、CODEX_HOME、模型私有 binding、Host Launch journal/claims 保持各自现有 owner。`project-substrate` 已接受显式 `gstackRoot`，不改其 schema。
+
+新增统一 context resolver；只有受保护入口认证形成的 context 可以激活 runtime 分支。普通环境变量不能自称 approved runtime。所有传入 cwd/root/env 与原生 payload 冲突必须拒绝。
+
+Node 子进程代码路径指向已选定 release，工作目录仍为 workspace。整个 Hook 调用及其子进程固定同一 release，不在执行中追随变更的 active pointer。保留的旧 release 不被后台清理。
+
+**3. 认证边界。**
+
+- kernel 仅用 Node builtins 启动，认证 manifest、artifact、loader 后才载入应用代码。
+- Node ESM/CJS 返回已核验的实际字节；禁止 workspace import、未登记模块、路径逃逸和不受审的动态依赖。
+- Python 使用隔离启动、禁用 user-site/PYTHONPATH/工作目录导入与 `.pyc` 回流；本地模块由受审 bootstrap 对实际加载字节验签后执行。
+- shell 子程序只执行受审闭包内的固定程序；启动前核对实际脚本/依赖，不执行 workspace 提供的 shell 文本作为 Hook 实现。
+- Node/Python 等平台解释器及必要第三方依赖必须在 release artifact 中明确身份、来源和验证办法。不能把 PyYAML 当作未声明的标准库，也不能以测试机已安装代替批准。
+- 目录/文件 canonical、owner/mode、no-follow、inode/device、大小界限、精确 schema、artifact 原字节 SHA、完整 inventory 均验；缺失、额外可执行依赖、symlink、traversal、metadata 错配均拒绝。
+- 保持既有合作进程/源完整性边界，不声称可防任意恶意同 UID 进程。
+
+**4. 精确命令协议与 Stop。**
+
+协议定名 `runtime-v1`，保留 11 项事件、顺序、matcher、context limit、timeout。命令只调用固定受保护 kernel，不引用 worktree `.mjs`。
+
+11 个封闭 handler ID：
+
+```text
+SessionStart[0]   host-session-start
+SessionStart[1]   model-session-start
+UserPromptSubmit  host-user-prompt
+PreToolUse[0]     host-pre-tool
+PreToolUse[1]     model-pre-tool
+PostToolUse       post-edit
+Stop              stop
+SubagentStart     model-subagent-start
+SubagentStop      model-subagent-stop
+SessionEnd[0]     session-end
+SessionEnd[1]     model-session-end
+```
+
+固定事件与 handler 必须一致，未知参数/handler 拒绝。初始本机 Node 解析结果为
+`/Users/luca/.hermes/node/bin/node`，U-101 冻结其实际身份与摘要；不得用可变 PATH 静默选择另一个解释器。kernel 的固定绝对安装路径、清理 Node 注入环境的命令、stderr 路径和完整 shell 失败分支均冻结成协议 artifact 后再实施，不能让各消费者各自推导近似正则。
+
+Stop 由认证入口读入原始 payload buffer并传给认证实现；adapter 失败时重放同一 payload 给同 release 的 recovery。若 kernel/recovery 本身不可认证，则只输出固定 `continue:false` 终止 JSON，不执行工作区 recovery，也不伪造事件关闭成功。普通事件启动/认证/执行异常仍退出 2。
+
+**5. 发布与迁移。**
+
+- review artifact 绑定 kernel、release graph、policy、解释器/外部依赖、11 项完整协议与来源 commit/文件内容。
+- installer 要求显式 reviewed artifact SHA、当前 manifest exact CAS；协作写者使用私有排他锁。
+- stage、逐文件核验、fsync 完成后最后原子发布 manifest；发布前后 drift、旧 CAS、活锁都拒绝。
+- 中断后明确 authoritative old/new 状态。死锁仅通过精确 lock SHA、inode/nonce、owner dead 与当前 manifest CAS 恢复；不按年龄夺锁。
+- rollback 使用已审旧 release 与当前 CAS，不覆盖后来发布，不倒退用户数据、不删除其他 roots。
+- 新协议授信与正常宿主 reload 分开；旧缓存保留旧行为，不能靠“磁盘已更新”宣称采用。
+- 新源码候选的普通改动不触发运行会话重新批准；只有 runtime 发布产生新批准与 adoption 义务。
+
+### 文件集合
+
+以下相对框架路径均位于唯一候选根。`新增`文件每个都有直接的 G01/G03/G04/G05/G06/G09 用途；实施不得自增通用平台或平行生命周期。
+
+**新增源码：**
+
+1. `.codex/hook-runtime-entry.mjs` — 受保护入口、固定 handler 分派及 bootstrap。
+2. `.codex/hook-runtime-loader.mjs` — release JS 实际加载认证。
+3. `.claude/hooks/lib/hook-runtime-context.mjs` — code/workspace/memory 上下文分离。
+4. `memory/scripts/_hook_runtime_bootstrap.py` — runtime Python 依赖加载认证。
+5. `scripts/hook-runtime-release.mjs` — 确定性 artifact/inventory、只读验证与证据校验。
+6. `scripts/install-codex-hook-runtime.mjs` — 独立 exact-CAS 安装/回退/死锁恢复。
+7. `scripts/test-codex-hook-runtime.mjs` — 新架构端到端、事务与定向 mutation 测试。
+
+**修改框架入口与消费者：**
+
+```text
+.codex/hooks.json
+.codex/codex-hook-adapter.mjs
+.codex/host-launch-hook.mjs
+.codex/host-launch-adapter.mjs
+.codex/model-route-hook.mjs
+.codex/stop-integrity-failure.mjs
+.claude/hooks/route-guard.mjs
+.claude/hooks/session-restore.mjs
+.claude/hooks/lib/memroot.mjs
+memory/scripts/_memroot.py
+scripts/host-launch-broker.mjs
+.claude/hooks/lib/host-launch.mjs
+scripts/codex-hook-health.mjs
+scripts/codex-trust-hooks.mjs
+scripts/verify-codex-wiring.mjs
+```
+
+其中新增必要消费者的依据：
+
+- adapter 第 45、256、267 行：脚本根被用于项目环境与子进程 cwd。
+- model-route 第 23 行：同一个 ROOT 同时承担 policy 与 child-project 根。
+- route-guard 第 601、1375 行：判定 policy/rules 当前从 workspace 读。
+- session-restore 第 424 行以后：已存在 codeRoot 分支，但 Python fallback 仍与脚本位置有关。
+- host-launch-broker 和 `lib/host-launch`：用 `ownRoot` 检查宿主授权；搬入 release 后必须保留正确 workspace/App 身份。
+- verify-codex-wiring：当前按旧入口字符串识别协议；新入口必须同步真实接线断言。
+
+`.codex/hook-source-integrity.mjs`、现有 bootstrap/loader、legacy installer/review 被读取并作为兼容基线；选择独立 runtime 路径后，**没有修改它们的必要**。相关 legacy 验收不能删除。
+
+**修改或扩充现有测试：**
+
+```text
+scripts/test-hook-source-digests.mjs
+scripts/test-codex-child-hook-integrity.mjs
+scripts/test-codex-adapter.mjs
+scripts/test-codex-model-route-hook.mjs
+scripts/test-codex-child-project.mjs
+scripts/test-controlled-change.mjs
+scripts/test-host-launch.mjs
+scripts/test-host-launch-control-plane.mjs
+scripts/test-codex-hook-health.mjs
+scripts/test-codex-trust-hooks.mjs
+scripts/test-memroot-parity.mjs
+```
+
+`test-source-guard-preserve.mjs`、`test-prompt-attestation.mjs`、`test-project-gate-v34-dual-host.mjs`、`test-project-gate-v34-mutations.mjs` 先作为不改动回归消费者；只有新的实际调用者不兼容证据成立，才追加具名 delta，不自动扩大修改范围。
+
+**文档与组合门禁：**
+
+```text
+README.md
+.claude/skill-os/runtime/project-session.md
+scripts/verify.sh
+```
+
+现有 CI 已安装 zsh 且调用接线门；先通过上述入口接入新 suite，不重复 d6 的 CI 依赖修改。若实际 CI 未覆盖新断言，须具名增加 CI delta 后再审。
+
+**App 必要 delta，仅四个文件：**
+
+```text
+/Users/luca/Desktop/项目/muse/app/host-hook-ready.js
+/Users/luca/Desktop/项目/muse/app/test-host-hook-ready.mjs
+/Users/luca/Desktop/项目/muse/app/host-launch-client.js
+/Users/luca/Desktop/项目/muse/app/test-host-launch-client.mjs
+```
+
+后两项依据是 `host-launch-client.js:114–125` 的旧 bootstrap/workspace broker 固定启动。保持 main/client API 相容，在 client 内选择经过核验的 runtime broker；不借机修改已 dirty 的 `main.js`、settings、session-open 或 renderer。若现有 API 无法完成此事，停止并提交新范围 delta。
+
+### U-blocks
+
+各 U 的 `Read List` 是下列精确文件/具名章节；实施前按需定向读，不加载其他聊天历史。所有新 U 初始 `Status: PLANNED`。
+
+**U-101 — 冻结完整运行时合同**
+
+- Source：输入 G01–G09、§Scope；原 FOLLOWUP-PLAN R-CODEX-CACHE-2/3 的原子性、失败关闭合同。
+- Dependencies：无；已有修复授权与本次有效 native planning gate。
+- Owner：WA-1 anchor；EA-1 peak 独立核对协议与依赖闭包。
+- Files：追加既有 `framework-audit/2026-09-30-hook-health/FOLLOWUP-PLAN.md`；形成同目录 `R-CODEX-RUNTIME-1-PROTOCOL.json` 与 `R-CODEX-RUNTIME-1-SCOPE.json`。
+- Approach：以已读真实入口列出完整协议、artifact schema、双根调用点及依赖闭包，冻结 U-ID/文件 preimage。
+- Read List：输入全文；上述入口、`source-guard-review.mjs:snapshotSourceInventory`、App 四文件、原 C07/P01–P03/C08。
+- Test scenarios：动态 import、Python 间接 import、Host broker、旧协议；遗漏依赖、身份不一致。
+- Verification：A01；未解析的必要依赖阻塞 U-102。
+- Gate：exact protocol/inventory 可供实现；不产生安装批准。
+
+**U-102 — 实现独立 runtime 认证与发布事务**
+
+- Source：G01/G04/G05/G06/G09。
+- Dependencies：U-101。
+- Owner：WA-1；EA-2。
+- Files：新增 entry、loader、Python bootstrap、release、installer 五文件；新 runtime 测试中的认证/事务分区。
+- Approach：保留 legacy 安装，建立独立 immutable release 和 exact-CAS publisher。
+- Read List：legacy bootstrap/loader、installer 锁/CAS/manifest-last 分支、review 字节读取函数、冻结协议。
+- Test scenarios：正常发布、重复内容、并发、before/after rename crash、tamper、非法 metadata、rollback、dead/live lock。
+- Verification：A02、A06、A07、A08。
+- Gate：真实进程及故障注入通过，legacy guard 字节未变。
+
+**U-103 — 分离代码根与状态根**
+
+- Source：G03/G04/G05；实际消费者行号见文件集合。
+- Dependencies：U-102。
+- Owner：WA-2 anchor，独占上述框架入口、共享 context、memroot、broker/lib；EA-3。
+- Files：新增 context；修改“框架入口与消费者”中除 hooks、health、trust、wiring 外的文件；对应 adapter/model/child/controlled/host/memroot 测试。
+- Approach：所有代码与 policy 使用 release，所有状态操作显式传 workspace，沿用现有 identity/schema。
+- Read List：project-substrate 的显式 gstackRoot API；child-project protectedBase/sourceHome；Host authority；controlled witness 的 repo 参数；memroot JS/Python。
+- Test scenarios：NO_PIN、合法 pin、原生 child、另一个 workspace 的同名 SID、伪 cwd/env、Host source claim、MEMORY_ROOT 有效/非法/缺失、Stop stale/ambiguous。
+- Verification：A04、A05、A06。
+- Gate：无数据或权利转移到 release/母仓；Claude legacy 行为未回归。
+
+**U-104 — 接通精确注册、doctor、授信与 App**
+
+- Source：G06/G07/G08；App client 的实际旧 bootstrap 调用。
+- Dependencies：U-101、U-103。
+- Owner：WA-3 anchor 独占 hooks/health/trust/wiring；WA-4 anchor 独占 App 四文件，默认串行；EA-4。
+- Files：`.codex/hooks.json`、health/trust/wiring 及其测试、App 四文件。
+- Approach：封闭协议识别；pure-fs 安装核验；官方 exact key/event/command/currentHash 读回；App broker 采用同一 reviewed runtime。
+- Read List：health 协议 pins 与 source-only 分支；trust exactRows/config CAS；App registeredHostCommands、verifyHostHooks、ensureReady。
+- Test scenarios：legacy/stable/runtime-v1；重复、改后缀、改 matcher、缺信任、错误注册来源、磁盘更新但旧缓存、Electron/native Node 差异。
+- Verification：A09、A10。
+- Gate：doctor 纯读且报告注册来源、workspace、release、approval、trust、失败类别；不能把新 app-server 等同旧聊天刷新。
+
+**U-105 — 三 worktree 行为、mutation 与文档闭合**
+
+- Source：G02/G03/G04/G05/G06；输入 §Scope 的双 harness 要求。
+- Dependencies：U-102、U-103、U-104。
+- Owner：WA-5 anchor；EA-5。
+- Files：新 runtime suite、已列现有测试、README、project-session runtime 合同、verify.sh。
+- Approach：在 OS-temp/独立测试仓创建三个真实 Git worktree，运行发布后的完整注册命令；将新 suite 接入既有组合门。
+- Read List：冻结协议、现有 test fixture、verify-codex-wiring、CI 调用入口。
+- Test scenarios：
+  1. 正常独立 worktree；
+  2. 旧 commit、没有新 helper；
+  3. business/test/候选源发生修改。
+- 三者必须共享同一发布 release，不给各目录安装 approvals，不修改各 worktree Hook 源码；有效注册来源另经官方宿主验证。
+- Verification：A03、A04、A08、A11。
+- Gate：新行为先红后绿；至少认证、根归属、CAS、exact trust 各一个定向 mutation 转红并恢复绿。
+
+**U-106 — 冻结终版并完成独立 Standards/Spec**
+
+- Source：G09；原 C08；routing-chain-check R4。
+- Dependencies：U-105。
+- Owner：协调方 anchor 冻结；两个彼此独立、无生产历史的 quality-gate / MR-004 / peak 串行投票。
+- Files：冻结 scope、patch、内容 SHA、runtime review artifact、精确 App 四文件 delta 与测试证据；保存在既有 audit 目录，不能写共享 docs。
+- Approach：Standards 审实现与安全/维护合同；Spec 逐条核 G01–G09、C07、P01–P03/C08 的实现或明确 pending gate。
+- Read List：各自 frozen payload、断言、源码；不得传生成推理链。
+- Test scenarios：漏消费者、测试假阳性、混用旧 SHA/旧票、无关 dirty 进入提交。
+- Verification：A11，criteria Q1–Q7。
+- Gate：两票同一终版闭合；任一审后改动触发受影响终版重审。缺票不算完成轮。
+
+**U-107 — 新 delta 的普通源码发布**
+
+- Source：G09；用户原话“验证。没问题以后，推送和发布本地”。
+- Dependencies：U-106；独立 publication gate。
+- Owner：协调方 anchor 执行；MR-005 场景的独立 peak 效果复审。
+- Files：仅已冻结的框架/App源码集合；不可纳入 audit、dirty 或其他 session 文件。
+- Approach：普通聚焦 commit/push；从当前 `@{u}` 解析真实远端，不假设 origin；冻结 exact pre/post HEAD、ref、argv。
+- Read List：当前 Git 状态、冻结 diff、上游 ref、独立票及 CI 合同。
+- Test scenarios：远端前进、commit tree 混入 dirty、错误分支、CI 仅旧 HEAD 通过。
+- Verification：A13 的 publication 分区；隔离 exact commit tree 验证及 exact-head CI。
+- Gate：新提交精确发布且 required CI 通过；不重复 d6 或 b0e39b5 的已完成发布。
+
+**U-108 — 新 runtime 与 App 的 exact 本地启用**
+
+- Source：G05/G06/G08/G09；原 C08。
+- Dependencies：U-107；独立 local-activation gate。
+- Owner：协调方 anchor；独立 peak 审具体 installation action。
+- Files/效果：受审新 runtime 安装、必要的母仓注册/源码迁移、官方 11 项精确授信、App 新四文件消费者发布；仅被冻结动作。
+- Approach：先准备完整 release/App 产物与 preservation/rollback 载荷，取得 exact review 后原子应用。原 legacy kernel、manifest/其他 roots 不热替换。
+- Read List：当前 protected CAS、源/安装/App 字节、签名、三 profile 非敏感配置、公开 controlled-state、有效原生投票。
+- Test scenarios：stale CAS、活锁、partial install、App baseline drift、授权与 artifact 不符、官方 trust readback drift。
+- Verification：A12、A13 的 activation 分区。
+- Gate：生产新 runtime 的磁盘/官方信任/实际新宿主采用分别举证。本步骤不代替 C07、P01、P03。
+
+**U-109 — 完成原 C07**
+
+- Source：FOLLOWUP-PLAN C07 与手动入口；输入第 33 行。
+- Dependencies：U-108；真实 Human Gate。
+- Owner：用户完成原会话正常重载和普通提示；协调方只读取该事件证据，EA 验证。
+- Files：原 C07 evidence 的后继记录；不改聊天内容或 transcript。
+- Approach：核对 `01a0f0f0-35db-7c21-bb53-4881b35a0972` 的真实新 turn/UserPromptSubmit 与旧阻断缺席。
+- Read List：原 C07 合同、原会话本次实际证据。
+- Test scenarios：旧缓存未刷新、仅新 CLI 成功、仅 f6e9 工具成功、普通提示仍阻断。
+- Verification：C07 手动步骤及只读 evidence verifier。
+- Gate：没有实际用户输入或明确代发授权时，保持未闭合；不重复要求已回答的确认，但不能推定回答。
+
+**U-PROFILES — 保留原 ID，完成 P01/P02/P03**
+
+- Source：FOLLOWUP-PLAN U-PROFILES 第 7–15 行；输入第 34 行。
+- Dependencies：原顺序要求 **C07 PASS 后**才执行 Sidecar 正式修复/P03；前期只读取证、准备和独立审查可提前。
+- Owner：协调方 anchor；设置/安装效果另由独立 peak 冷审；用户提供真实解锁/必要 UI 操作。
+- Files/效果：仅 canonical public settings API 的原 Sidecar 修复事务；System/Sidecar/Direct 实际使用组合的精确授信与 installed App 空白 draft 验收。
+- Approach：复用已审 helper 的合法事务逻辑；先重验当前 installed ASAR/helper/preimage/revisions/lease。若 stale，冻结新具名 payload，不盲执行旧 helper。
+- Read List：原 U-PROFILES、已审 Sidecar helper 的 manifest/assertPreimage/connectionSave/connectionActivate、当前公开状态。
+- Test scenarios：live writer、preimage drift、保存后激活前失败、凭据或当前模式意外变化、某一 profile 只在源码测试通过。
+- Verification：P01、P02、P03。
+- Gate：不 raw-write settings，不夺 lease、不读写凭据；失败后根据 durable receipts 只处理未完成事务，不盲重跑。
+
+**U-110 — 关闭原 C08 与整项任务**
+
+- Source：原 C08；G09。
+- Dependencies：U-106–U-109、U-PROFILES。
+- Owner：协调方整理；独立 quality-gate 逐条件终验。
+- Files：既有 audit 目录的最终 handoff/证据清单。
+- Approach：分别合并 source review、publication/CI、local activation、C07、P01/P02/P03。
+- Read List：同一 release 全套真实 receipts 与原 MUST。
+- Test scenarios：把 plan PASS 当测试 PASS、把 disk PASS 当 live PASS、遗漏人类门。
+- Verification：A13 final 与 Q1–Q7。
+- Gate：全部 MUST 真闭合才能 DONE；不因时间或旧检查数量宣称完成。
+
+### Waves
+
+```text
+Wave 1: U-101
+Wave 2: U-102
+Wave 3: U-103
+Wave 4: U-104
+Wave 5: U-105
+Wave 6: U-106
+Wave 7: U-107
+Wave 8: U-108
+Wave 9: U-109（C07 Human Gate）
+Wave 10: U-PROFILES（P01 → P02 → P03）
+Wave 11: U-110（C08）
+```
+
+每阶段保存 checkpoint，后续跨会话按 exact SHA 与第一未完成 U 续点，不重做完成效果。
+
+## 块 3 — BLOCKING 行为断言与 criteria
+
+以下是**实施后的执行合同，当前未运行**。新增 suite 必须实际实现对应分区，未知分区/空用例/缺证据必须非零退出；不能通过仅打印 PASS 满足断言。运行环境全部使用隔离测试目录，禁止测试写真实 trust、settings、pin、activation 或 production manifest。
+
+```bash
+# [BLOCKING] A01 — 冻结协议、入口和依赖闭包一致，缺消费者失败
+node scripts/test-codex-hook-runtime.mjs --case contract
+
+# [BLOCKING] A02 — 真实发布入口只执行批准 runtime，workspace 伪 helper/import 不执行
+node scripts/test-codex-hook-runtime.mjs --case approved-execution
+
+# [BLOCKING] A03 — 三个真实临时 worktree 共用 release，旧源码/业务与测试修改不触发逐根批准
+node scripts/test-codex-hook-runtime.mjs --case three-worktrees
+
+# [BLOCKING] A04 — state/pin/child/witness/目标路径归属正确，伪 cwd/env/跨项目仍拒绝
+node scripts/test-codex-hook-runtime.mjs --case workspace-isolation &&
+node scripts/test-codex-adapter.mjs &&
+node scripts/test-codex-child-project.mjs &&
+node scripts/test-controlled-change.mjs --all &&
+node scripts/test-project-gate-v34-dual-host.mjs
+
+# [BLOCKING] A05 — Host claims、模型证据、内存 store 不迁入 snapshot，不借用其他根身份
+node scripts/test-codex-hook-runtime.mjs --case owner-separation &&
+node scripts/test-codex-model-route-hook.mjs &&
+node --test scripts/test-host-launch.mjs scripts/test-host-launch-control-plane.mjs &&
+node scripts/test-memroot-parity.mjs
+
+# [BLOCKING] A06 — Node/Python/shell 加载篡改、缺失、逃逸、metadata 不匹配均拒绝；Stop 保留原 payload
+node scripts/test-codex-hook-runtime.mjs --case dependency-integrity &&
+node scripts/test-codex-hook-runtime.mjs --case stop-failure
+
+# [BLOCKING] A07 — concurrent writer、exact CAS、真实 crash、rollback、dead/live lock 行为
+node scripts/test-codex-hook-runtime.mjs --case publication-transaction
+
+# [BLOCKING] A08 — legacy/stable-v3/runtime 并存，旧内核与所有旧 root 保留，三个 shell 真跑失败分支
+node scripts/test-codex-hook-runtime.mjs --case migration &&
+node scripts/test-hook-source-digests.mjs &&
+node scripts/test-codex-child-hook-integrity.mjs &&
+node scripts/test-source-guard-preserve.mjs
+
+# [BLOCKING] A09 — doctor 纯读、有效注册来源正确、缓存未证实不报 PASS、不得凭 source-only 授信
+node scripts/test-codex-hook-health.mjs &&
+node scripts/test-codex-trust-hooks.mjs
+
+# [BLOCKING] A10 — App 三协议 exact consumer/broker 正负例，不能任意 regex 放宽
+node /Users/luca/Desktop/项目/muse/app/test-host-hook-ready.mjs &&
+node /Users/luca/Desktop/项目/muse/app/test-host-launch-client.mjs
+
+# [BLOCKING] A11 — 定向 mutation 会咬，Claude 真实旧入口与 Codex 新入口分别通过，组合门覆盖新 suite
+node scripts/test-codex-hook-runtime.mjs --case mutations &&
+node scripts/test-project-gate-v34-mutations.mjs &&
+npm run check:hooks --silent &&
+node scripts/verify-codex-wiring.mjs --static &&
+bash scripts/verify.sh
+```
+
+新增 `hook-runtime-release.mjs` 的 `verify-evidence` 子命令必须是只读校验器：检查严格 schema、artifact/文件/commit SHA、原生票实际 accepted/adoption/completion、官方读回和对应 stage 的必需证据。不得制造 evidence 或调用生命周期函数。缺失/UNKNOWN 不得退出 0。
+
+```bash
+# [BLOCKING] A12 — 激活前后 exact 字节/CAS/roots/App/11-command trust 与真实 adoption 分别吻合
+node scripts/hook-runtime-release.mjs verify-evidence --stage activation \
+  --file framework-audit/2026-09-30-hook-health/R-CODEX-RUNTIME-1-ACTIVATION.json
+
+# [BLOCKING] A13 — publication、CI 与终验采用同一精确新 payload
+node scripts/hook-runtime-release.mjs verify-evidence --stage publication \
+  --file framework-audit/2026-09-30-hook-health/R-CODEX-RUNTIME-1-PUBLICATION.json
+```
+
+C07/P01/P02/P03 是必须有人类或真实宿主证据的行为验收，不能用单元测试替代：
+
+- **C07：** 正常重载原命名会话 → 用户发送普通提示 → 核对该原生 thread/turn 的真实 UserPromptSubmit 成功、采用的协议、没有原先完整性阻断。缺任一步即 UNKNOWN/未闭合。
+- **P01：** 读取三模式实际公开配置 → 核对 canonical settings/revisions 与路径 → 按经过当前 exact review 的合法 Sidecar 事务修改并读回。非目标字段、凭据 revision、预期当前模式守恒。
+- **P02：** 对每个实际 binary/home/root 组合分别通过官方 hooks/list 取得 11 项 exact key/event/command/currentHash/trusted 和 Host gate 结果；不能用一份 System 结果覆盖三模式。
+- **P03：** installed App 中分别实际新建 System/Sidecar/Direct 空白 draft，记录 profile、native session、启动成功、Host claim/Hook 状态和可见结果；锁屏/不可观察保持 UNKNOWN。不得向未授权现有聊天代发测试消息。
+
+```bash
+# [BLOCKING] C07 — 缺真实原会话用户事件或未刷新缓存时拒绝通过
+node scripts/hook-runtime-release.mjs verify-evidence --stage c07 \
+  --file framework-audit/2026-09-30-hook-health/R-CODEX-RUNTIME-1-LIVE.json
+
+# [BLOCKING] P01/P02/P03 — 三模式配置、官方精确信任与 installed App live 证据各自齐全
+node scripts/hook-runtime-release.mjs verify-evidence --stage profiles \
+  --file framework-audit/2026-09-30-hook-health/R-CODEX-RUNTIME-1-PROFILES.json
+
+# [BLOCKING] C08 — 所有 MUST 同一精确发布闭合，任何 missing/unknown 均非零
+node scripts/hook-runtime-release.mjs verify-evidence --stage final \
+  --file framework-audit/2026-09-30-hook-health/R-CODEX-RUNTIME-1-FINAL.json
+```
+
+receipt 的机器通过不取代独立判官对官方/真实宿主证据来源的核验。
+
+**产出质量 criteria：**
+
+| ID | 二元判定句 | 已发生的失败形态 / 必需证据 |
+|---|---|---|
+| Q1 | G01–G09、C07、P01–P03/C08 均有可追溯实现或明确仍未完成的人类门，无静默遗漏 | 原三模式与命名会话未闭合；逐项 RTM、真实证据 |
+| Q2 | 运行时依赖只来自受审 release，workspace 变化不能改变运行代码或冒充批准 | worktree 缺 helper/approval；三个 worktree 实跑与加载 tamper 结果 |
+| Q3 | 代码根分离后，所有权限/状态 owner 与原合同一致 | 当前 ROOT 同时作代码与状态根；双根负例、pin/child/witness/Host/memory 证据 |
+| Q4 | 发布/回退仅对 exact reviewed bytes 与当前 CAS 生效，其他 roots 和旧 kernel 被保留 | 原 preserve/CAS 义务；真实并发、crash、rollback 及生产 preservation 读回 |
+| Q5 | doctor、官方新进程、旧缓存、installed App、真实用户事件分开判定 | “磁盘 PASS 但旧聊天仍阻断”；逐层独立证据，UNKNOWN 不混称 PASS |
+| Q6 | 新协议的全部消费者同步且匹配仍为封闭 exact protocol | App parser/broker 与 wiring 仍依赖旧入口；源码映射与正负例 |
+| Q7 | 源码审查、Git、CI、本地效果均绑定终版且无越权/无关 dirty | 原 stale App package 与后继变更风险；exact diff/commit/artifact/native vote/效果载荷 |
+
+## 块 4 — 失败策略、效果门与状态
+
+- BLOCKING 失败停止当前 Phase 及依赖 Wave；只修受影响 U。
+- quality-gate 连续两次 BLOCKING FAIL、kill assumption 被推翻或必需源合同矛盾，走 Plan Agent delta；保留原 U-ID，拆分用后缀。
+- 同一无进展失败三次，报告 BLOCKED 及证据，不继续盲重试。
+- 关键 native routing/关联/采用证据失败，不伪造、不借 SID、不降档。
+- 所有运行效果 UNKNOWN 均未闭合，不能用 `DONE_WITH_CONCERNS` 绕过 MUST。
+
+**分别保留的门：**
+
+1. **计划/实施范围门：** 协调方展示本 exact U 集与 App 必要 delta，确认已有真实授权覆盖；本判决仅评计划。
+2. **Standards/Spec 门：** 两个独立冷上下文、同终版、实际 native peak completion；不是本规划票复用。
+3. **Git/publication 门：** 精确 commit tree、current upstream、普通 argv、独立效果复审；随后 exact-head CI。
+4. **本地 activation 门：** exact runtime artifact、当前 manifest CAS、安装动作、App 当前安装、11 项官方信任、preservation、rollback，独立新票。
+5. **C07 人类门：** 原命名会话正常重载及真实普通提示；当前未收到替代授权。
+6. **Sidecar/public settings 门：** C07 后、真实当前 revision/lease、合法事务；不盲重用旧 helper 的批准。
+7. **P03 live 门：** 安装版 App 三模式真实空白 draft，各自证明。
+8. **C08 终验门：** 上述全部闭合，不能只计源码/安装成功。
+
+实施中仅使用：
+`PLANNED / IN_PROGRESS / DONE / DONE_WITH_CONCERNS / BLOCKED / NEEDS_CONTEXT`。
+
+遇阻按原格式上报：
+
+```text
+STATUS: BLOCKED | NEEDS_CONTEXT
+REASON: 精确文件、接口或必需证据缺口
+ATTEMPTED: 已完成的安全尝试与结果
+RECOMMENDATION: 解冻所需的具体下一步
+```
+
+## 块 5 — 出门自检与计划裁决证据
+
+- 前提门、更小替代、偏差、kill assumptions：已明确。
+- 所有新 U 来源：输入 G01–G09、原 FOLLOWUP-PLAN 或实际消费者代码。
+- Stable IDs：原 U/断言保留，新 U-101–U-110 不重编。
+- 每个实现 MUST：至少一个 BLOCKING 真实行为测试；每个人类/宿主 MUST 有独立 live 门。
+- 新颖性：U-101 安排实际依赖闭包和协议取证；未安排泛化研究或外网调研，因为直接代码与已发生故障足以界定问题。
+- 每阶段角色/owner/依赖/文件/Verification：已列明。
+- 产品设计工具：N/A。
+- 旧成果与效果：保持完成记录，不重复 d6/App 启用。
+- 本次判官写入：无。
+
+**逐要求裁决——以下 PASS 仅表示本计划覆盖充分，不表示代码已实现：**
+
+| 要求 | 判定 | 证据 |
+|---|---|---|
+| G01 | PASS | 输入第 20 行；U-102 独立 release/kernel；A02 禁止 workspace 执行 |
+| G02 | PASS | 官方 f6e9 evidence 的配置/执行根差异；U-105 三 worktree；A03 |
+| G03 | PASS | adapter:45/256、model-route:23、Host ownRoot；U-103；A04/A05 |
+| G04 | PASS | 当前 loader/helper 与 snapshot 缺口；U-102 依赖闭包认证；A02/A06 |
+| G05 | PASS | 输入第 24 行；immutable release、固定调用 release、CAS；A03/A07/A12 |
+| G06 | PASS | 当前 legacy manifest 7 roots；独立并存 kernel、旧缓存门；A08/U-109 |
+| G07 | PASS | health 的 source-only/live_session 边界；U-104、A09 |
+| G08 | PASS | App ready/client 实际代码；四文件具名 delta；A10/P02/P03 |
+| G09 | PASS | 原精确事务义务；U-106–108 的独立 source/publication/activation 门；A11–13 |
+| C07 | PASS | FOLLOWUP:62/86、现有 C07 未闭合记录；U-109 明确保留 Human Gate |
+| U-PROFILES | PASS | FOLLOWUP:7–15；原 ID 与 C07 后顺序保留 |
+| P01 | PASS | 原 public settings 事务与 helper preimage/lease 合同；当前状态先复核、不盲重跑 |
+| P02 | PASS | 三实际组合分别 official exact 11 trust + Host gate |
+| P03 | PASS | installed App 三模式真实空白 draft；GUI 未证实时 UNKNOWN |
+| C08 | PASS | FOLLOWUP:63/86；U-110 汇总全部门，禁止以旧 d6 或磁盘 PASS 代替 |
+
+END_PLAN_TEXT
+
+EVAL_ENVELOPE_JSON
+{"schema_version":1,"producer":"quality-gate","eval_run_id":"hook-runtime-plan-20261001-joint01","subject":{"skill":"R-CODEX-RUNTIME-1-plan","topic":"独立不可变 Hook runtime 与原未完成验收的完整计划","scene":"unknown","input_summary":"核验指定输入SHA、母仓/候选d6acaf21、候选clean、恢复artifact及当前legacy manifest；只读检查真实消费者与原FOLLOWUP义务。本票仅评价所附PLAN_TEXT，不证明新增行为、发布或安装完成。","output_paths":[],"duration":"heavy"},"verdict":{"status":"PASS","passed":15,"total":15,"findings":["PASS G01: U-102/A02隔离approved runtime与workspace执行源码。","PASS G02: 官方f6e9配置来源证据；U-105/A03要求三个真实worktree且无逐根批准。","PASS G03: adapter:45/256、model-route:23及Host ownRoot证明双根消费者；U-103/A04/A05完整覆盖。","PASS G04: source-guard-review:105现有snapshot不完整；U-102/A06明确Node/Python/shell依赖认证。","PASS G05: U-102/U-108及A03/A07/A12要求immutable release、exact CAS与真实adoption。","PASS G06: current legacy manifest c356f17a包含7 roots；U-102保留旧kernel，A08和U-109覆盖迁移缓存。","PASS G07: U-104/A09保留source-only不授信、旧会话UNVERIFIED及只读doctor。","PASS G08: App host-hook-ready与host-launch-client:114-125纳入具名delta，A10/P02/P03分别验收。","PASS G09: U-106/U-107/U-108分离终版Standards/Spec、普通发布、exact CI与本地activation。","PASS C07: FOLLOWUP-PLAN:62/86；U-109保留原命名会话真实重载/普通提示Human Gate。","PASS U-PROFILES: FOLLOWUP-PLAN:7-15；保留原ID及C07后的正式执行顺序。","PASS P01: 保留canonical public settings事务，必须当前preimage/revision/lease校验，不盲重用旧helper。","PASS P02: 三实际binary/home/root组合分别核对官方11项exact trusted及Host gate。","PASS P03: installed App三模式真实空白draft证据独立，未观察为UNKNOWN。","PASS C08: U-110要求全部MUST闭合，旧d6完成成果不重做且不替代新行为。"]}}

@@ -1,0 +1,259 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-yaml:
+    name: Validate YAML Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Lint YAML files
+        # .claude/workflow-state.yaml is a local-only gitignored symlink (absent on
+        # clean runners) — lint only committed framework yaml, never the symlink.
+        run: |
+          # Long scalar values and inline workflow paths are intentional here; validate YAML
+          # structure without emitting non-actionable line-length annotations.
+          yamllint -d '{extends: relaxed, rules: {line-length: disable}}' \
+            .claude/skill-os/optional-workflow-graph.yaml
+          yamllint -d '{extends: relaxed, rules: {line-length: disable}}' \
+            .claude/skill-os/input-modes.yaml
+
+  validate-markdown:
+    name: Validate Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+      - name: Install markdownlint
+        run: npm install -g markdownlint-cli
+      - name: Lint docs
+        run: markdownlint README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md --ignore node_modules
+
+  validate-skills:
+    name: Validate Skill Definitions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check all skills have SKILL.md
+        run: bash scripts/validate-skills.sh
+
+  validate-framework-logic:
+    name: Validate Framework Logic
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # G5 offline fixtures reconstruct two frozen historical trees.
+      - uses: actions/setup-node@v5
+        with:
+          # The protected hook loader uses node:module.registerHooks.
+          node-version: '22'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - name: Install Python deps (PyYAML)
+        # 语义记忆以 promoted-facts.yaml 为真值源；check_memory_health /
+        # propose_semantic / review_candidates 需 PyYAML 解析。setup-python 的
+        # 全新解释器不含 pyyaml（仅系统 python 自带），故显式安装。
+        run: pip install pyyaml
+      - name: Install zsh for three-shell Hook regression
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zsh
+          test -x /bin/zsh
+      # CI-safe subset only: these checks read committed repo files or run in
+      # tmpdir fixtures / route-guard dry-run, and degrade gracefully when the
+      # local-only docs/ and .claude/workflow-state.yaml symlinks are DANGLING
+      # on a clean runner. check:project-links and the full verify.sh (S16
+      # symlink check) are intentionally excluded — they validate those
+      # local-only symlink targets and cannot pass on a clean checkout.
+      # Page-library preview is a real browser gate, so install the pinned
+      # Playwright dependency and Chromium before running framework logic.
+      - name: Install Node dependencies
+        run: npm ci
+      - name: Install Chromium for page-library preview
+        run: npx playwright install --with-deps chromium
+      - name: Hook runtime side-effect tests
+        run: npm run check:hooks
+      - name: Route-guard golden tests
+        run: npm run test:routes
+      - name: Project-scope guard conformance
+        run: npm run test:project-scope
+      - name: Project identity transaction conformance
+        run: npm run test:project-transaction
+      - name: Observability writer concurrency + recovery
+        run: python3 scripts/test-observability-writer.py
+      - name: Quality-gate verdict recorder authority contract
+        run: python3 scripts/test-gate-verdict-recorder.py
+      - name: Routing-map coverage + skill SSOT consistency
+        run: npm run check:routing-map
+      - name: Agent root kernel, pointers, discovery, and Static Fallback
+        run: npm run check:agent-context
+      - name: Agent context mutation proof-it-bites
+        run: npm run test:agent-context
+      - name: Reconstruct frozen G5 offline fixtures
+        run: |
+          sudo mkdir -p /private/tmp/context-lightening-p1.kHzsIW /Users/luca/Desktop/项目/muse/lucagstack/framework-audit
+          sudo chown "$USER:$USER" /private/tmp/context-lightening-p1.kHzsIW /Users/luca/Desktop/项目/muse/lucagstack/framework-audit
+          git worktree add --detach /private/tmp/context-lightening-p1.kHzsIW/baseline 05aa78adc431231455dabbfae94cccf362eb4339
+          git worktree add --detach /private/tmp/context-lightening-p1.kHzsIW/candidate 635416e5892dd554db7ed8081e0ac88b2d301198
+          git -C /private/tmp/context-lightening-p1.kHzsIW/candidate restore --source 05aa78adc431231455dabbfae94cccf362eb4339 --worktree -- .claude/skill-os/page-library .claude/skill-os/runtime/page-context.md .claude/skills/office/design-brief .claude/skills/office/open-design/SKILL.md
+          install -m 0644 framework-audit/2026-09-21-context-lightening-execution-plan.md /Users/luca/Desktop/项目/muse/lucagstack/framework-audit/2026-09-21-context-lightening-execution-plan.md
+          install -d -m 0755 /private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts
+          install -m 0644 framework-audit/2026-09-22-g5-preapproval-readiness.md /private/tmp/context-lightening-p1.kHzsIW/g5-preapproval-artifacts/g5-preapproval-readiness.md
+      - name: Host Launch broker and control-plane regression
+        run: |
+          sudo mkdir -p /private/tmp
+          sudo chmod 1777 /private/tmp
+          # The foreign-source negative case requires an existing default home.
+          install -d -m 0700 "$HOME/.codex"
+          test "$(stat -c %a "$HOME/.codex")" = 700
+          test "$(stat -c %u "$HOME/.codex")" = "$(id -u)"
+          node --test scripts/test-host-launch.mjs scripts/test-host-launch-control-plane.mjs
+          node --test scripts/test-source-guard-preserve.mjs scripts/test-codex-trust-hooks.mjs scripts/test-host-launch-journal-migration.mjs
+      - name: A/B evaluator adversarial self-test
+        run: |
+          set +e
+          npm run test:agent-context-ab-evaluator 2>&1 | tee /tmp/g5-ab-self-test.log
+          result=${PIPESTATUS[0]}
+          set -e
+          if [ "$result" -ne 0 ]; then
+            failure=$(grep -E 'Error:|AssertionError|ERR_|EACCES|ENOENT|G5_BLOCKED|^  (code|path|actual|expected):' /tmp/g5-ab-self-test.log | tail -8 | tr '\n' ' ' || true)
+            echo "::error::A/B evaluator self-test failed: ${failure:-see job log}"
+            exit "$result"
+          fi
+      - name: Conditional context resolution canaries
+        run: npm run test:agent-context-resolution
+      - name: Project routing dry-run
+        run: npm run check:project-routing
+      - name: Coding discipline contracts
+        run: npm run check:coding-discipline
+      - name: Quality gate contracts
+        run: npm run check:quality-gates
+      - name: Quality gate scope isolation
+        run: npm run test:quality-gates-scope
+      - name: Retired design entry guard and preserved paths
+        run: npm run test:design-tool-retirement
+      - name: Design handoff imports, authorization and readback
+        run: npm run test:design-flow-handoff
+      - name: Page-library identities, carrier contracts and asset profiles
+        run: npm run test:page-context && npm run test:carrier-asset-profile && npm run test:template-flow && npm run test:template-copy
+      - name: Page-library browser preview and exact-original isolation
+        run: npm run test:page-context-preview && npm run test:original-adapter
+      - name: Retired design context stays out of active rules and search
+        run: npm run test:design-context-retirement
+      - name: Agent orchestration + verdict/recorder separation contracts
+        run: npm run check:agent-contracts
+      - name: Memory system tests
+        run: npm run test:memory
+      - name: Memory stable-facts health
+        run: npm run check:memory-health
+      - name: luca-open --url shim regression
+        run: npm run check:luca-open
+
+      - name: Memory root cross-language parity + split-brain discriminator
+        run: npm run check:memroot
+
+      - name: Project identity single-adjudication (4 sites canonical + JS/py parity)
+        run: npm run check:substrate
+
+      - name: AGENTS.md governance parity (memory gate / SF cross-source / stale regression)
+        run: npm run check:agents-parity
+
+      - name: Harness detection + Codex viability registry
+        run: npm run check:harness
+      - name: Codex projection static wiring (CI-safe host checks)
+        run: node scripts/verify-codex-wiring.mjs --static --ci
+      - name: Verify composition contract and mutation counterexamples
+        run: npm run test:verify-composition
+      - name: Evolution adjudication default-deny contracts
+        run: npm run check:evolution-adjudication
+      - name: CI blocking/coverage/gatherer contract
+        run: npm run check:ci-contract
+      - name: Framework HTML debt-baseline checker contract
+        run: npm run test:framework-html-baseline
+      - name: CI contract proof-it-bites
+        run: npm run test:ci-contract
+
+      # 两个独立 root adapter 各用 11 KiB 硬预算；语义完整性由 agent-context 门另行守护。
+      - name: Root adapter byte budgets (B1 remote)
+        run: |
+          CLAUDE_SZ=$(wc -c < CLAUDE.md)
+          AGENTS_SZ=$(wc -c < AGENTS.md)
+          echo "CLAUDE.md=$CLAUDE_SZ bytes; AGENTS.md=$AGENTS_SZ bytes"
+          [ "$CLAUDE_SZ" -le 11264 ]
+          [ "$AGENTS_SZ" -le 11264 ]
+      - name: Capability-parity anchors (S18 remote)
+        run: node scripts/check-capability-parity.mjs
+      - name: Cross-harness semantic projection proof-it-bites (S40 remote)
+        run: npm run test:semantic-parity
+      - name: Skill registration sync (S19 remote)
+        run: npm run check:registration
+      # Phase6 MINOR-3：三个新门补远端网（此前 S31/S32/S33 仅本地、FAST_COMMIT 可跳）
+      - name: Former mega-appendix absent from runtime context (S31 remote)
+        run: node scripts/check-appendix-pointers.mjs
+      - name: CONTEXT red-line gate (S32 remote)
+        run: |
+          c=$(awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md)
+          [ "$(echo "$c" | grep -c '^[0-9]\.')" -ge 6 ]
+          echo "$c" | grep -q 'SF-002' && echo "$c" | grep -q 'SC-20260523-002' && echo "$c" | grep -q 'SC-20260523-003'
+      - name: Model-table alias sync (S33 remote)
+        run: node scripts/check-model-table.mjs
+      - name: MEMORY_STANDALONE opt-in not leaked into tracked settings
+        run: '! git ls-files -z ".claude/settings*.json" | xargs -0 -r grep -l MEMORY_STANDALONE | grep -q .'
+
+  validate-html:
+    name: Validate HTML Prototypes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - name: Check framework HTML files exist
+        run: |
+          for f in framework/list-page.html framework/detail-page-2col.html \
+                   framework/detail-page-3col.html framework/form-page.html \
+                   framework/home-page.html; do
+            [ -f "$f" ] || (echo "MISSING: $f" && exit 1)
+          done
+          echo "All framework HTML files present ✓"
+      - name: Validate HTML syntax
+        run: |
+          npm install -g html-validate@11.10.0
+          npm run check:framework-html
+          # Downstream prototypes are optional on a clean framework checkout.
+          # When present, report their debt without changing the framework gate.
+          if ls docs/prototype/*.html 2>/dev/null | head -1 | grep -q .; then
+            for f in docs/prototype/*.html; do
+              html-validate "$f" && echo "✓ $f" || echo "⚠ $f (downstream warning only)"
+            done
+          fi
+
+  required-checks:
+    name: Required Checks
+    if: ${{ always() }}
+    needs:
+      - validate-yaml
+      - validate-markdown
+      - validate-skills
+      - validate-framework-logic
+      - validate-html
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every CI job to succeed
+        run: |
+          test "${{ needs.validate-yaml.result }}" = "success"
+          test "${{ needs.validate-markdown.result }}" = "success"
+          test "${{ needs.validate-skills.result }}" = "success"
+          test "${{ needs.validate-framework-logic.result }}" = "success"
+          test "${{ needs.validate-html.result }}" = "success"

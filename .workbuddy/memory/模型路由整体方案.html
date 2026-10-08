@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>luca_gstack 模型路由 · 整体方案</title><style>
+body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;max-width:860px;margin:0 auto;padding:32px 28px;color:#1a1a1a;background:#fff;line-height:1.75;font-size:15px}
+h1{font-size:24px;border-bottom:3px solid #0958d9;padding-bottom:10px;color:#0958d9}
+h2{font-size:19px;margin-top:34px;border-left:4px solid #0958d9;padding-left:10px}
+h3{font-size:16px;margin-top:24px}
+h4{font-size:15px;margin-top:18px}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+th,td{border:1px solid #d9d9d9;padding:7px 10px;text-align:left;vertical-align:top}
+th{background:#f0f5ff;color:#0958d9;font-weight:600}
+tr:nth-child(even) td{background:#fafafa}
+code{background:#f5f5f5;padding:1.5px 5px;border-radius:4px;font-family:'SF Mono',Menlo,monospace;font-size:13px;color:#c41d7f}
+pre{background:#f6f8fa;border:1px solid #e1e4e8;border-radius:8px;padding:14px;overflow-x:auto}
+pre code{background:none;padding:0;color:#24292e;font-size:12.5px;line-height:1.6}
+blockquote{border-left:4px solid #0958d9;background:#f0f5ff;margin:14px 0;padding:10px 16px;color:#333;border-radius:0 6px 6px 0}
+ul{padding-left:22px} li{margin:4px 0}
+hr{border:none;border-top:1px solid #ddd;margin:28px 0}
+strong{color:#003eb3}
+del{color:#999}
+</style></head><body><h1>luca_gstack 模型路由 · 整体方案（终版）</h1>
+<blockquote>日期：2026-09-16 ｜ 五阶段全链路产出（3+3+3+3 专家与红队轮次，十余个独立 agent 视角，CLI 机制断言经 0.154.0 隔离实测）<br>适用范围：<strong>Claude Code + Codex 双 harness，Codex 为主力环境</strong>（luca 13:36 确认）<br>本文件 = 唯一整体方案总文档；细节推导见《模型路由最终审查报告-合并版.md》(v2.0.1) 与《锚点制动态调配设计稿-v2.md》(v2.3)</blockquote>
+<hr>
+<h2>〇、一页总览</h2>
+<pre><code>第一部分 现状审查 —— 体系是什么、坏在哪（F1-F10）
+第二部分 动态调配方案 —— 怎么用、怎么随默认模型变（峰值三明治 + ARR）
+第三部分 执行清单 —— 谁做什么、剩什么（luca 亲手 / 框架动议 / 遗留修复）</code></pre>
+<p><strong>核心判断</strong>：框架路由设计思想先进，但主力环境 Codex 恰是守护最薄的一侧；动态调配方案补全 Codex 侧场景升档能力；框架侧质量债另列清单待修，不因新方案失效。</p>
+<hr>
+<h1>第一部分 现状审查（五阶段收敛的发现）</h1>
+<h2>1.1 体系是什么</h2>
+<ul><li><strong>真值源</strong> <code>.claude/skill-os/model-routing.yaml</code>：4 能力档（reasoning-heavy→fable / core-execution→opus / guided-execution→sonnet / mechanical→haiku）</li><li><strong>fable_whitelist</strong>（P0 出门前裁决 / P1 对抗判定 / P2 复审与规划）是 fable 唯一授权——配额经济学：把最贵模型精确滴灌到高杠杆点位</li><li><strong>codex 段</strong>：tier_to_effort 四档（xhigh/high/medium/low），model 字段省略继承，绝不写死模型名</li><li><strong>投影链</strong>：CLAUDE.md 速查表→S33 守护中；.codex/agents/*.toml→S8b 守护中；workflow-runner→<strong>无对账（F2）</strong></li></ul>
+<h2>1.2 为什么存在（三句话本质）</h2>
+<p>1. <strong>配额经济学</strong>：fable 稀缺昂贵 × 高杠杆判定不能降档<br>2. <strong>以相对序换零维护</strong>：档位相对序为不变量，模型换代自动跟随<br>3. <strong>代价</strong>：正确性靠 prose 纪律而非机检——全部 MAJOR 都是「自称强制的规则缺检查侧落点」型</p>
+<h2>1.3 发现清单（F1-F10 终局定级）</h2>
+<h3>MAJOR 3 项</h3>
+<table><thead><tr><th>编号</th><th>发现</th><th>状态</th></tr></thead><tbody><tr><td><strong>F2</strong></td><td>workflow-runner TIER_TO_EFFORT/PHASE_TIER 双写无对账——yaml 改动后 runner 静默漂移</td><td>待修（S8d 单向包含断言）</td></tr><tr><td><strong>F1弱</strong></td><td>fable dispatch 机检缺失零审计——白名单纯 prose，PostToolUse 管道半存在</td><td>待修（PreToolUse Task matcher 一行式）</td></tr></tbody></table>
+<h3>MINOR 6 项</h3>
+<table><thead><tr><th>编号</th><th>发现</th></tr></thead><tbody><tr><td>F5</td><td>AGENTS.md:855 枚举混入被拒的 minimal、漏 max</td></tr><tr><td>F6</td><td>yaml:128 仍用已否决的 minimal 作序关系示意</td></tr><tr><td>F7</td><td>daily_governance 对无 frontmatter agent 无存在性告警</td></tr><tr><td>F8</td><td>速查表守护只查 alias 子串，降级链文案可无痕剥离</td></tr><tr><td>F9</td><td>evals 体系档位层零度量（执法与度量两面皆空）</td></tr><tr><td><strong>F10</strong></td><td>用户级 config 写死 model+全局 xhigh——<strong>v2.0 改判「设计内行为」</strong>（锚点制把 model 行升格为唯一 truth，原删行动议作废）</td></tr></tbody></table>
+<h3>总评</h3>
+<table><thead><tr><th>维度</th><th>评级</th></tr></thead><tbody><tr><td>Claude 侧守护</td><td>★★★★☆</td></tr><tr><td>Codex 侧守护（主力）</td><td>★★☆☆☆</td></tr><tr><td>执法与度量</td><td>★★☆☆☆</td></tr><tr><td>动态调配方案</td><td>★★★★☆</td></tr></tbody></table>
+<hr>
+<h1>第二部分 动态调配方案（峰值三明治 + ARR）</h1>
+<h2>2.1 需求钦定（luca 14:07-15:11 原话要点）</h2>
+<p>1. Codex CLI，默认 5.6-sol，重要场景要更高模型输出<br>2. 模型动态升级，默认模型会变——锚点制，向上向下兼容<br>3. <strong>只做模型，不做 effort</strong><br>4. 红队、专家会审、计划模式 → peak；深度研究不需要<br>5. 触发者含 agent：&quot;开始计划和结果验证需要高模型&quot;</p>
+<h2>2.2 核心模式：峰值三明治（多峰循环）</h2>
+<pre><code>计划(peak) → 执行(anchor) → 验证(peak) ⟲（否决→重规划(peak)→再执行→再验证）</code></pre>
+<p>= fable_whitelist P0/P1/P2 在 Codex 侧的补全投影（F3 的修复）。</p>
+<h2>2.3 两角色制</h2>
+<table><thead><tr><th>角色</th><th>解析规则</th><th>当前实例</th></tr></thead><tbody><tr><td><strong>peak</strong></td><td>catalog <code>priority</code> 最小值（家族顶部）</td><td>gpt-6-astra (p0, ctx 1.05M)</td></tr></tbody></table>
+<h2>2.4 ARR 锚点动态兼容（向上向下）</h2>
+<pre><code>gap = priority(anchor) − priority(peak)
+gap=0    顶锚型 T —— peak=anchor 退化态（验证不对称物理失效，知情确认）
+0&lt;gap≤2  常规型 N —— 默认态零动作（当前 gap=1）
+gap&gt;2    深降型 D —— 三动作：anchor ctx 校验 / 高峰产出可下移 peak / 矩阵零改动
+断言：ctx(P) ≥ ctx(A)；ctx(A) ≥ 常用会话长度</code></pre>
+<p>四径全覆盖：<strong>上移</strong>退化知情 ｜ <strong>下移</strong>矩阵零改动 ｜ <strong>顶部换代</strong> peak 行 1 行 ｜ <strong>新模型入 catalog</strong> 自动定型。</p>
+<p>一行自检（已实测：anchor=gpt-5.6-sol peak=gpt-6-astra gap=1 → 常规N ✓）：</p>
+<pre><code>python3 -c &quot;
+import json,re; c={m[&#x27;slug&#x27;]:m for m in json.load(open(&#x27;$HOME/.codex/cockpit-model-catalog.json&#x27;))[&#x27;models&#x27;]}
+a=re.search(r&#x27;^model\s*=\s*\&quot;([^\&quot;]+)\&quot;&#x27;,open(&#x27;$HOME/.codex/config.toml&#x27;).read()).group(1)
+p=min(c,key=lambda s:c[s].get(&#x27;priority&#x27;,9999)); g=c[a].get(&#x27;priority&#x27;,9999)-c[p][&#x27;priority&#x27;]
+print(f&#x27;anchor={a} peak={p} gap={g} →&#x27;, &#x27;顶锚T&#x27; if g==0 else &#x27;常规N&#x27; if g&lt;=2 else &#x27;深降D&#x27;)
+print(&#x27;ctx断言:&#x27;, c[p][&#x27;context_window&#x27;]&gt;=c[a][&#x27;context_window&#x27;])&quot;</code></pre>
+<h2>2.5 场景→模型矩阵（10 场景 + 1 指引，无 effort 轴）</h2>
+<table><thead><tr><th>#</th><th>场景</th><th>模型</th></tr></thead><tbody><tr><td>2</td><td>计划模式/方案规划</td><td><strong>peak</strong></td></tr><tr><td>3</td><td>红队对抗</td><td><strong>peak</strong></td></tr><tr><td>4</td><td>专家会审（多路并行）</td><td><strong>peak</strong></td></tr><tr><td>5</td><td>结果验证/review/终裁</td><td><strong>peak</strong></td></tr><tr><td>6</td><td>执行中不可逆操作前复审</td><td><strong>peak</strong></td></tr><tr><td>7</td><td>compact 前摘要/compaction 后首次重规划</td><td><strong>peak</strong></td></tr><tr><td>8</td><td>深研抉择时刻（降级为指引）</td><td>人显式→peak</td></tr><tr><td>9</td><td>长上下文（&gt;anchor ctx）</td><td>peak</td></tr><tr><td>10</td><td>深度研究·事实收集</td><td>anchor（luca 钦定）</td></tr><tr><td>11</td><td>机械并行节点</td><td>anchor（不设 lite）</td></tr></tbody></table>
+<p>口诀：<strong>规划与裁决升 peak，执行与深研守 anchor；不可逆前与压缩前，同样是 peak。</strong>（触发者：人与 agent 均是）</p>
+<h2>2.6 载体与调用（0.154.0 实测）</h2>
+<pre><code># 新建 ~/.codex/peak.config.toml（全部内容，luca 亲手应用）：
+model = &quot;gpt-6-astra&quot;   # = catalog priority 最小值</code></pre>
+<ul><li><strong>config.toml 零改动</strong>；内嵌 <code>[profiles.*]</code> 已 legacy（实测 --profile 直接报错），正确载体是独立文件</li><li>调用：<code>codex --profile peak</code> / <code>codex exec --profile peak</code>；agent spawn 统一 <code>--profile peak</code>，<strong>禁 <code>-m</code> 直传</strong>（N 个硬编码点）</li><li>冒烟免费：exec banner 打印 <code>model:</code> 行，grep 即断言</li></ul>
+<h2>2.7 迁移 SOP（3 分钟，含 08-04 型事件 runbook）</h2>
+<p>触发：①锚点换代 ②顶部换代 ③场景调用失败（最常见首发）④冒烟失败</p>
+<p>1. anchor 换代：改 1 行；向下校验 ctx、向上确认退化态<br>2. 顶部换代：peak-refresh 机检 + sanity 断言（新 peak ctx ≥ anchor ctx）<br>3. 双冒烟：anchor ping + peak ping<br>4. runbook：按 priority 升序实测首个可调用模型 → 更新 peak 行（priority 编码强度不编码可用性，此 runbook 是唯一对齐机制）</p>
+<h2>2.8 已知边界（诚实清单）</h2>
+<p>B-1 catalog priority 无文档契约 ｜ B-2 双断点同凭证（场景调用 fail-loud+双冒烟覆盖）｜ B-3 退化无自动通知 ｜ B-4 行为合同未投影 AGENTS.md ｜ B-6 peak 无事前降级链 ｜ B-7 退化时验证不对称物理失效 ｜ B-8 effort 继承静默耦合（peak 文件不写 effort 行则继承顶层 xhigh，单行可切断）</p>
+<h2>2.9 冲突裁决（新旧结论握手，C-1~C-6）</h2>
+<table><thead><tr><th>#</th><th>裁决</th></tr></thead><tbody><tr><td>C-2</td><td>F10 的 model 行<strong>保留为锚点</strong>（升格唯一 truth，原删行动议作废）</td></tr><tr><td>C-3</td><td>F10 改判「设计内行为」（yaml 原则管框架投影不管私有配置）</td></tr><tr><td>C-4</td><td>三明治与 fable_whitelist 同构互证，无冲突</td></tr><tr><td>C-5</td><td><strong>温和并存</strong>：框架 effort 轴原样保留 + 用户层 peak 轴叠加，零框架改动（只读红线）</td></tr><tr><td>C-6</td><td>peak-refresh 入每日 governance——待 luca 裁（框架文件动议）</td></tr></tbody></table>
+<hr>
+<h1>第三部分 执行清单</h1>
+<h2>3.1 luca 亲手（立即可做，2 行）</h2>
+<pre><code>printf &#x27;model = &quot;gpt-6-astra&quot;\n&#x27; &gt; ~/.codex/peak.config.toml
+codex exec --profile peak &quot;ping&quot;   # 冒烟：banner 应显示 model: gpt-6-astra</code></pre>
+<h2>3.2 待 luca 裁决的框架动议（只读红线内，批准后才动框架文件）</h2>
+<ul><li><strong>动议 A</strong>：行为合同投影——AGENTS.md/.codex 投影加 peak 概念与口诀（解 B-4，agent 运行时才能&quot;知道&quot;peak）</li><li><strong>动议 B</strong>：peak-refresh 对账入每日 governance（解 C-6，检测盲区从迁移时点缩到 24h）</li></ul>
+<h2>3.3 框架侧遗留修复动议（F1-F9 质量债，维持原判不动，与 peak 轴正交）</h2>
+<table><thead><tr><th>优先</th><th>编号</th><th>动议</th><th>验收</th></tr></thead><tbody><tr><td>2</td><td>F1</td><td>PreToolUse 加 Task/Agent matcher + 别名集校验（运行时读 yaml，禁硬编码）</td><td><code>test-hooks.mjs</code></td></tr><tr><td>3</td><td>F9/F4/F7</td><td>evals fixture 加 expected_tier；5 处「硬拦」宣称改白名单措辞；无 frontmatter 告警</td><td>grep 0 命中</td></tr><tr><td>4</td><td>F5/F6/F8</td><td>枚举勘误（补 max 去 minimal）；yaml:128 示意修正</td><td>S8c 仍绿</td></tr></tbody></table>
+<h2>3.4 完结状态</h2>
+<p>✅ 五阶段全链路闭合（首轮会审+红队3 → 二阶复核+辩证3 → 需求考古+合并会审+红队3 → Codex 重算 → 方案设计 3 专家+红队2 → 握手合并）<br>✅ F1-F10 全保留、C-1~C-6 全裁决、ARR 动态兼容补全、effort 轴全清除（含旧计划文件）<br>⬜ 3.1 luca 亲手 2 行 ｜ ⬜ 3.2 两动议待裁 ｜ ⬜ 3.3 修复动议待执行</p>
+<hr>
+<p>*v1.0（09-16 15:55）：整体方案总文档成立——按 luca 要求把五阶段全部产出（审查+方案+清单）收进单一 md；真值细节仍以报告 v2.0.1 与设计稿 v2.3 为准。*</p></body></html>

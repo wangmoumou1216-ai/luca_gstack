@@ -1,0 +1,63 @@
+{
+  "status": "STATIC_FROZEN_PENDING_J_A",
+  "frozen_at": "2026-10-02T17:18:15.957601+00:00",
+  "original_use_ids": [
+    "USE-01",
+    "USE-02",
+    "USE-03",
+    "USE-04",
+    "USE-05",
+    "USE-06",
+    "USE-07",
+    "USE-08",
+    "USE-09",
+    "USE-10",
+    "USE-11",
+    "USE-12",
+    "USE-13",
+    "USE-14"
+  ],
+  "items": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-routing-use-evidence.md",
+      "sha256": "5cfce5ad9c49d41817a7d3eee3f2fd54d545d31da507a096eb0e6f815c0ff525",
+      "bytes": 49949,
+      "lines": 327
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-u006-orchestration-evidence.md",
+      "sha256": "adf9995ee7e798166918c8e2c70badae6726e053c5dbf08288b5dc3a62ffa259",
+      "bytes": 43090,
+      "lines": 303
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-context-evidence.md",
+      "sha256": "ed1c71ab5b351362cbe39d42e00cf8a2233fab88098a7351b3f8e05c54819d5a",
+      "bytes": 50903,
+      "lines": 356
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u006-current-use-evidence.md",
+      "sha256": "3739dae4b09d2b23c9096a84ca842d66ec961891d93042e8c112bb1b3a1c3b70",
+      "bytes": 18036,
+      "lines": 111
+    }
+  ],
+  "reading_receipts": {
+    "routing": [
+      "3609ac",
+      "f1ff56"
+    ],
+    "orchestration": [
+      "ea8fac",
+      "72cc15"
+    ],
+    "context": [
+      "89547b",
+      "2791d2",
+      "a4f8a6"
+    ]
+  },
+  "formal_behavior_runs": 0,
+  "D_unblinded": false
+}

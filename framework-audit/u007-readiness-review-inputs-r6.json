@@ -1,0 +1,200 @@
+{
+  "eval_run_id": "tri-system-u007-readiness-20261003-r6",
+  "prepared_at": "2026-10-02T22:48:32.509039+00:00",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-9.md",
+      "sha256": "1e884bb8f68d0f615bb790384e426cfe6ba3fe680354fce388ba3c13bea3a3ca",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-interface-addendum-9-clarification-1.md",
+      "sha256": "b4b86825249d76c870b5dece3283223bf293982f802ada736defd34bcac0d4bf",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r7.json",
+      "sha256": "a14cbecd66c16f5b63b7044be40898d28d974e7d50b87a09e98fffdc7fb46da5",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r6-r7.diff",
+      "sha256": "69bf50857134c655d63970d7adb69673d14f24323d7bc91f86a151900b575101",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-native-recovery-driver-report.md",
+      "sha256": "c390f3910fb9d46d0d35b6ce63bb9b5c0f77fc58ed15481ac1541d0ce0e2891f",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-native-recovery-integration-report.md",
+      "sha256": "72381ec9c4a84f7579a967d04fb7eb1315ba19e8505eb04bb54ff349b1f860b4",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-preparation-report.md",
+      "sha256": "92abed2b1b5295c8437eda9f2cc8278425a521b9702b980295d449080e2ecb00",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-case-draft.json",
+      "sha256": "9cfa23dee88cd24eb6abfdfa1f56e31273677ca136008bd86328eb361d8e85ec",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-registration-draft.json",
+      "sha256": "3cc586e237606a72108bcbfb2f7c8d56fe8f519f881d53d367dc603487201347",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-manifest-draft.json",
+      "sha256": "0730b14fcdb31af65f11552eff8d9b76a0f9a438f615b025233634935dcfad8a",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-preparation.json",
+      "sha256": "507b8579e5ae5475be47afdafd859568848d73f13b573965b151035c20e5b3ae",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-root-binding.json",
+      "sha256": "6063825bf4493bdd0e04cb9205b9b586e6970f50e55c15baf6ff3c8ceccd304b",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-launch.py",
+      "sha256": "9b320a97314e041010df535fd826b42ccaa7aa800c147fc434a3470d5f276a86",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p07-model-selection.json",
+      "sha256": "e8dba191daa03d8bbdf60903b4dabb405669447c5f8a9942e5dbc04609cc2d29",
+      "read_requirement": "full current bounded subject"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "sha256": "c6db8f7d4612db1ce764159b5f8630dd9eebb9882906d4f3c66c66059d16abe0",
+      "read_requirement": "hash plus exact diff / necessary context"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "sha256": "b85bc427ebd9d7b8a29e248ee0c3520db946ae42bb4a8047a8c68136c5ace90e",
+      "read_requirement": "hash plus exact diff / necessary context"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "sha256": "4e0852c69944bcc869f666d306801bcc6cb479f2e4e434425abe802855ee6475",
+      "read_requirement": "hash plus exact diff / necessary context"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+      "read_requirement": "hash only unless a specific change requires context; prior review retained"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920",
+      "read_requirement": "hash only unless a specific change requires context; prior review retained"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8",
+      "read_requirement": "hash only unless a specific change requires context; prior review retained"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af",
+      "read_requirement": "hash only unless a specific change requires context; prior review retained"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-case.json",
+      "sha256": "2be95e93736de424293e00aa9bed6647dfa565075c673fc5e2dd996c5032f516",
+      "read_requirement": "identity and focused reuse/semantic delta; do not repeat prior unchanged full review"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-registration.json",
+      "sha256": "dd236e2f20fd843dd88f22282b9f7598c11efa02005b1eb811a6000afc88d45e",
+      "read_requirement": "identity and focused reuse/semantic delta; do not repeat prior unchanged full review"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-preparation.json",
+      "sha256": "22bec755d910eed3f558b066393522a3a1f038bef1c5af9a7be2684db96ed63b",
+      "read_requirement": "identity and focused reuse/semantic delta; do not repeat prior unchanged full review"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-r5-envelope.json",
+      "sha256": "ac279cce0ef329225a0e2699c1fe152b4b696c31f8025200c201511149b33f06",
+      "read_requirement": "identity and focused reuse/semantic delta; do not repeat prior unchanged full review"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-native-launch-metadata-r1.json",
+      "sha256": "9b8b217eabaf687f722402e6b2d6388bb11f8b6f7156dd714d7ae9870cbfab1d",
+      "read_requirement": "identity and focused reuse/semantic delta; do not repeat prior unchanged full review"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json",
+      "sha256": "53cf8e61a3a1e0232ed3a3f638dc5698651fa0dad5d39f62629573ffc294f136",
+      "read_requirement": "identity and focused reuse/semantic delta; do not repeat prior unchanged full review"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/red.json",
+      "sha256": "f9823550f24d200ac5bfc8430aef5e2acd06ad67bf503a1a1c5fcc947169783a",
+      "read_requirement": "verify identity; metadata full, raw TAP targeted diagnostic/count evidence"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/green-targeted.json",
+      "sha256": "c11f8461d02f09b0a65b5d6580f7a7390979c2593926357c5f628eb0069f5528",
+      "read_requirement": "verify identity; metadata full, raw TAP targeted diagnostic/count evidence"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/green-regression.json",
+      "sha256": "e4a5d575d80db07f208dd8669c2802136f11ada63bc8eee0fc97bc45c8798bd8",
+      "read_requirement": "verify identity; metadata full, raw TAP targeted diagnostic/count evidence"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/red.tap",
+      "sha256": "d8fd1f164ff64c8188e3f452ba96fc776ebca6444b92b1ef05aef6e04508e48b",
+      "read_requirement": "verify identity; metadata full, raw TAP targeted diagnostic/count evidence"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/green-targeted.tap",
+      "sha256": "380a2a8b255e507368b45ccbad3a41fecf6baeee3c4b7a774ff59229d149e2e7",
+      "read_requirement": "verify identity; metadata full, raw TAP targeted diagnostic/count evidence"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w29-evidence-4c20_1e6/green-regression.tap",
+      "sha256": "e4120374e1b6e1cccaab960b59a72dff3d7f49919b849520d241724ad7e7f9b2",
+      "read_requirement": "verify identity; metadata full, raw TAP targeted diagnostic/count evidence"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/offline-tests.json",
+      "sha256": "4ef79c281b6c769e64a57b642ed36d32594358c5abc13a27cab30bc0cd085f9e",
+      "read_requirement": "identity / targeted source for W27 preparation claim"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/static-material-process.json",
+      "sha256": "84d6756df2445ba8e822836e46f67ed6b6fa48bdaace6147c5d2dde5e12edc28",
+      "read_requirement": "identity / targeted source for W27 preparation claim"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/static-material-check.json",
+      "sha256": "4b1539c7364ea56c5581277248311dfbaf3e9b80c6892c12ae0a980a8b38041e",
+      "read_requirement": "identity / targeted source for W27 preparation claim"
+    },
+    {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p07-04djwjwm/attempt-1/failure.txt",
+      "sha256": "f0e4409bae70c940f611177004e3e37d7131c53a579898d0bb13b0cc57284c99",
+      "read_requirement": "identity / targeted source for W27 preparation claim"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-task-r6.md",
+      "sha256": "ff41c2f72f8ea6aca3f4739e22b6c695ec9d5cd679de236626d3135d1dac0e01",
+      "read_requirement": "full task; exact assertions and scope"
+    }
+  ],
+  "limits": [
+    "No runtime release implied.",
+    "Immutable input set excludes mutable live ledger/master; own root decision later binds this set."
+  ]
+}

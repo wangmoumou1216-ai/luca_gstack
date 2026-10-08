@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u006-a-20261003-r1",
+  "subject": {
+    "skill": "U006-A",
+    "topic": "三模块静态用途审计及主协调汇总独立验收",
+    "scene": "unknown",
+    "input_summary": "完整读取任务卡、三份派发卡、冻结清单、三份报告及M汇总；复用J02限定静态输入释放，核R根HEAD、44个授权源身份，抽核源码、公开开发题相关字段与三原会话W03—W05实际工具输出。不读取D、u005或private，不运行行为。",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u006-routing-use-evidence.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-02-tri-system-u006-orchestration-evidence.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u006-context-evidence.md",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u006-current-use-evidence.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 6,
+    "total": 6,
+    "findings": [
+      "WARN：PASS仅限固定A1—A6的静态审计资格。M L58—63的六项张力不是六个已复现bug；模型采用、取消、真实compact、生产consumer、质量及净收益仍未验证。",
+      "WARN：历史读取真实性仅抽核实际可取回部分。已核routing原工具exec-b7ae17e3-da57-45fe-ae20-649d39f596a5、orchestration exec-fb378be6-7e80-4424-bbe1-771aac1183f9、context exec-bb08f6ce-5919-4267-8b8d-dac149bf086c的关键源码输出；read_thread每项最多20000字符，截断后的范围不认证。routing报告L266所述早期Plan全文历史仍UNKNOWN；不影响本次当前静态事实限定结论，不得对外改写为历史全读已证。",
+      "WARN：本轮完整报告读证为17c841/26c1b1、e5422e/7543e1、b80e15/2fdec2及a116b6；派发合并显示截断以7e71d7补齐，orchestrator局部截断以9c1944补齐。源码与计数独立核查d8e014、9c1944、d6e500、39f9c2；公开案例限定字段039846；最终四产物与任务冻结身份7d7068均未漂移。",
+      "WARN：资源按本轮可见调用盘点：28次functions包装、27次exec_command、6次read_thread及2条Git子命令，保守合计63动作；包括2次读取参数超限失败。首动作未记录绝对时钟，完整墙钟UNKNOWN；直接计时区间2026-10-02T17:28:31.080935Z至17:31:39.919806Z仅为下界。真实整链token/费用UNKNOWN。写入、suite、行为run、网络、新Agent均0。"
+    ]
+  }
+}

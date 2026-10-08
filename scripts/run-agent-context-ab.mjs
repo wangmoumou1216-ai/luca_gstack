@@ -12,6 +12,7 @@ import { homedir, tmpdir } from 'node:os';
 import { createInterface } from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as branchFixtureContracts from './agent-context-branch-fixtures.mjs';
+import { ROUTING_PLAN_FIXTURES, ROUTING_PLAN_TEXT_FORMAT, routingPlanClaimsMatch, validateRoutingPlanSuite } from './routing-plan-v1-suite.mjs';
 import {
   branchFixturePositiveClaims,
   runBranchFixtureContractTests,
@@ -40,7 +41,7 @@ const CLI_VALUE_OPTIONS = new Set([
   '--root', '--arm', '--harness', '--fixture', '--trials', '--concurrency', '--output',
   '--rescore', '--source-sha256', '--source-release-manifest', '--release-manifest',
   '--g5-phase', '--g5-cell', '--g5-ledger', '--batch-id', '--fallback-ids',
-  '--claude-model', '--claude-effort', '--codex-model', '--codex-effort',
+  '--claude-model', '--claude-effort', '--codex-model', '--codex-effort', '--suite',
 ]);
 const CLI_BOOLEAN_OPTIONS = new Set([
   '--require-pass', '--resume-valid', '--self-test', '--describe', '--offline-fake-transport-self-test',
@@ -82,6 +83,7 @@ const root = resolve(value('--root') || '');
 const arm = value('--arm');
 const harness = value('--harness');
 const fixtureArg = value('--fixture') || 'all';
+const suite = value('--suite') || 'legacy';
 const trials = Number(value('--trials') || 1);
 const concurrency = Number(value('--concurrency') || 1);
 const output = resolve(value('--output') || '');
@@ -140,7 +142,7 @@ const codexModel = value('--codex-model');
 const codexEffort = value('--codex-effort');
 const batchId = batchIdArg || randomUUID();
 const PROTOCOL_VERSION = 27;
-const SCORING_REVISION = 'v32-load-before-boundaries';
+const SCORING_REVISION = suite === 'routing-plan-v1' ? 'v33-routing-plan-artifacts' : 'v32-load-before-boundaries';
 const CONTEXT_INDEX = '.claude/skill-os/generated/context-index.md';
 const CONTEXT_MANIFEST = '.claude/skill-os/agent-context-manifest.json';
 const SKILL_CATALOG = '.claude/skill-os/generated/skill-catalog.md';
@@ -243,7 +245,7 @@ if (g5OfflineFakeTransport) {
     process.exit(2);
   }
 }
-if (!g5Mode && (g5CellId || g5LedgerPath || codexModel || codexEffort)) {
+if (!g5Mode && (g5CellId || g5LedgerPath || (suite !== 'routing-plan-v1' && (codexModel || codexEffort)))) {
   console.error('G5 cell/ledger and Codex identity options require --g5-phase');
   process.exit(2);
 }
@@ -402,6 +404,29 @@ const fixtures = {
 
 const legacyFixtureIds = Object.keys(fixtures);
 Object.assign(fixtures, createBranchFixtures({ fallbackIds }));
+if (!['legacy', 'routing-plan-v1'].includes(suite)) {
+  console.error('unknown suite; expected legacy or routing-plan-v1'); process.exit(2);
+}
+if (suite === 'routing-plan-v1') {
+  validateRoutingPlanSuite();
+  Object.assign(fixtures, ROUTING_PLAN_FIXTURES);
+  if (g5Mode || fixtureArg !== 'all') {
+    console.error('routing-plan-v1 cannot be mixed with legacy fixture or G5 flags'); process.exit(2);
+  }
+  if (!lstatSync(root).isDirectory() || realpathSync(root) !== root) {
+    console.error('routing-plan-v1 requires a canonical regular checkout root'); process.exit(2);
+  }
+  if ((harness === 'claude' && (codexModel || codexEffort)) || (harness === 'codex' && (claudeModel || claudeEffort))) {
+    console.error('routing-plan-v1 model options must match the selected harness'); process.exit(2);
+  }
+  const requestedModel = harness === 'claude' ? claudeModel : codexModel;
+  const requestedEffort = harness === 'claude' ? claudeEffort : codexEffort;
+  if ((!selfTest && !describe && !rescorePath && (!requestedModel || !requestedEffort))
+      || (requestedModel && (!requestedModel.trim() || requestedModel.trim() !== requestedModel || requestedModel === 'default' || /[\r\n\0]/.test(requestedModel)))
+      || (requestedEffort && !(harness === 'claude' ? ['low', 'medium', 'high', 'xhigh', 'max'] : ['none', 'low', 'medium', 'high', 'xhigh', 'max']).includes(requestedEffort))) {
+    console.error('routing-plan-v1 requires exact model and legal effort pins for live calls'); process.exit(2);
+  }
+}
 const g5Fixtures = createG5Fixtures();
 const g5Matrix = createG5Matrix();
 const g5MatrixSummary = validateG5Matrix(g5Matrix);
@@ -458,12 +483,13 @@ if (g5Mode && !g5Describe) {
   }
   }
 }
-if (fixtureArg !== 'all' && !fixtures[fixtureArg]) {
+if (suite === 'legacy' && fixtureArg !== 'all' && !fixtures[fixtureArg]) {
   console.error(`unknown fixture ${fixtureArg}; expected one of ${Object.keys(fixtures).join(', ')}`);
   process.exit(2);
 }
 // `all` retains the historical fixture set; new fixtures never become live by removing a draft suffix.
-const selected = fixtureArg === 'all' ? legacyFixtureIds : [fixtureArg];
+const selected = suite === 'routing-plan-v1' ? Object.keys(ROUTING_PLAN_FIXTURES).filter((id) => arm === 'candidate' || id.startsWith('RP-'))
+  : (fixtureArg === 'all' ? legacyFixtureIds : [fixtureArg]);
 const needsRelease = (ids) => ids.some((id) => !legacyFixtureIds.includes(id));
 if (!selfTest && !describe && needsRelease(selected) && !releaseManifestPath) {
   console.error('Branch fixtures are RELEASE_REQUIRED: supply a reviewed frozen --release-manifest before live execution.');
@@ -487,10 +513,12 @@ function contextFiles(contextRoot = root, contextArm = arm) {
     'memory/semantic/promoted-facts.yaml', 'memory/semantic/static-fallback-allowlist.txt',
     'memory/episodic/index.jsonl', 'memory/evals/eval-log.jsonl',
   ];
+  if (suite === 'routing-plan-v1') sources.push('.claude/hooks', 'scripts/model-route-host.mjs');
   const excluded = contextArm === 'candidate'
     ? new Set([join(contextRoot, '.claude/skill-os/claude-md-appendix.md')])
     : new Set();
-  return sources.flatMap((path) => walk(join(contextRoot, path), [], excluded)).sort();
+  return sources.flatMap((path) => walk(join(contextRoot, path), [], excluded))
+    .filter((path) => suite !== 'routing-plan-v1' || !relative(contextRoot, path).startsWith('memory/evals/')).sort();
 }
 
 function contextIdentity(contextRoot = root, contextArm = arm) {
@@ -507,14 +535,17 @@ function contextIdentity(contextRoot = root, contextArm = arm) {
 function scoringIdentity() {
   const fixturePath = fileURLToPath(new URL('./agent-context-branch-fixtures.mjs', import.meta.url));
   const fixtureTestPath = fileURLToPath(new URL('./test-agent-context-branch-fixtures.mjs', import.meta.url));
+  const routingPath = fileURLToPath(new URL('./routing-plan-v1-suite.mjs', import.meta.url));
+  const routingBytes = suite === 'routing-plan-v1' ? readFileSync(routingPath) : '';
   return {
     evaluator_sha256: sha256(readFileSync(RUNNER)),
     file_sha256: {
       'scripts/run-agent-context-ab.mjs': sha256(readFileSync(RUNNER)),
       'scripts/agent-context-branch-fixtures.mjs': sha256(readFileSync(fixturePath)),
       'scripts/test-agent-context-branch-fixtures.mjs': sha256(readFileSync(fixtureTestPath)),
+      ...(suite === 'routing-plan-v1' ? { 'scripts/routing-plan-v1-suite.mjs': sha256(routingBytes) } : {}),
     },
-    scoring_sha256: sha256(`${SCORING_REVISION}\0${readFileSync(RUNNER)}\0${readFileSync(fixturePath)}\0${readFileSync(fixtureTestPath)}`),
+    scoring_sha256: sha256(`${SCORING_REVISION}\0${readFileSync(RUNNER)}\0${readFileSync(fixturePath)}\0${readFileSync(fixtureTestPath)}${suite === 'routing-plan-v1' ? '\0' + routingBytes : ''}`),
   };
 }
 
@@ -789,7 +820,8 @@ function codexProjection(events) {
       trace.push({ type: 'runtime_notice', event });
       continue;
     }
-    if (event.type === 'thread.started') trace.push({ type: event.type, thread_id: event.thread_id });
+    if (event.type === 'thread.started') trace.push({ type: event.type, thread_id: event.thread_id,
+      ...(typeof event.model === 'string' ? { model: event.model } : {}) });
     const item = event.item || {};
     const appActionEvent = ['item.started', 'item.completed'].includes(event.type) && isCodexAppActionItem(item);
     if (appActionEvent) {
@@ -849,7 +881,9 @@ function parseAnswer(raw) {
 function answerSchemaFor(fixture) {
   const claimProperties = {};
   for (const [key, spec] of Object.entries(fixture.claims)) {
-    if (spec.type === 'array') {
+    if (spec.schema) {
+      claimProperties[key] = spec.schema;
+    } else if (spec.type === 'array') {
       // Type is public; expected cardinality is scorer-only, including an empty answer.
       claimProperties[key] = { type: 'array', items: { type: 'string' } };
     } else {
@@ -3175,6 +3209,21 @@ function modelIdentityPass(requested, actualTrace) {
 }
 
 function isolatedRoot(fixture) {
+  if (fixture.suite === 'routing-plan-v1') {
+    const cwd = realpathSync(mkdtempSync(join(tmpdir(), `routing-plan-${arm}-${harness}-`)));
+    const otherRoot = harness === 'claude' ? 'AGENTS.md' : 'CLAUDE.md';
+    try {
+      for (const source of contextFiles()) {
+        const rel = relative(root, source);
+        if (rel === otherRoot || !lstatSync(source).isFile() || lstatSync(source).isSymbolicLink()) continue;
+        const destination = join(cwd, rel); mkdirSync(dirname(destination), { recursive: true }); cpSync(source, destination);
+      }
+      const inventory = walk(cwd).map((path) => relative(cwd, path)).sort();
+      assert.ok(!inventory.some((path) => /^(?:framework-audit\/|scripts\/(?:run-agent-context-ab|routing-plan-v1-suite|test-)|memory\/evals\/routing\/)/.test(path)),
+        'routing-plan isolation contains expected/scorer artifacts');
+      return { cwd, rootFile: null, inventory, cleanup: () => rmSync(cwd, { recursive: true, force: true }) };
+    } catch (error) { rmSync(cwd, { recursive: true, force: true }); throw error; }
+  }
   if (!fixture.isolatedRoot) return { cwd: root, rootFile: null, inventory: null, cleanup: () => {} };
   const cwd = mkdtempSync(join(tmpdir(), `agent-context-fallback-${arm}-${harness}-`));
   const rootName = harness === 'claude' ? 'CLAUDE.md' : 'AGENTS.md';
@@ -4518,6 +4567,7 @@ function runG5OfflineFinalizeFileTests() {
 }
 
 function readInstructions(fixture, otherRoot, selectedArm = arm) {
+  if (fixture.suite === 'routing-plan-v1') return ` Shared policy for both arms: do not read ${otherRoot}, expected labels, scorers, audit or evaluation archives. Allowed tools are Read and Bash only; allowed shell commands are exactly python3 memory/scripts/get_memory.py --summary and separate single-file cat/sed/head reads. Read complete applicable owners through EOF. Do not write, invoke agents, access network, or execute the plan. Root instructions determine applicable startup and owners.`;
   if (fixture.isolatedRoot) {
     return ` Do not read ${otherRoot} or use any context-access tool; rely only on the already loaded single root file. In source use its bare filename relative to this isolated directory. The native StructuredOutput response channel is allowed.`;
   }
@@ -4528,6 +4578,25 @@ function readInstructions(fixture, otherRoot, selectedArm = arm) {
   const evidenceFormat = ' Shared evidence format for both arms: for each source file other than the preloaded own root, consume the complete file through EOF using a full Read or a separate single-file cat/sed/head command. Do not combine file reads with other commands or multiple files. If output is truncated, read smaller consecutive chunks until all contents are delivered. A requested range alone is not evidence of complete reading. This format does not choose which owners your root requires, and does not prohibit separate other commands required by the baseline contract.';
   if (selectedArm === 'baseline') return evidenceFormat;
   return `${evidenceFormat} Do not read ${otherRoot}. First run exactly "python3 memory/scripts/get_memory.py --summary" as its own Bash command. Allowed shell commands are only the memory-summary command and the separate single-file cat/sed/head reads described above. Do not batch commands.`;
+}
+
+function routingPlanHook(fixture, executionRoot) {
+  const hook = join(executionRoot, '.claude/hooks/route-guard.mjs');
+  const input = JSON.stringify({ prompt: fixture.request });
+  const env = { CLAUDE_PROJECT_DIR: executionRoot, LUCA_PROJECTS_ROOT: join(executionRoot, 'projects'),
+    LUCA_ACTUAL_HARNESS: harness, ROUTE_GUARD_DRY_RUN: '0', ROUTE_GUARD_PROJECTS: '',
+    ROUTE_GUARD_CURRENT_PROJECT: '', ROUTE_GUARD_HEAVY_SKILLS: '' };
+  const result = spawnSync(process.execPath, [hook], { cwd: executionRoot, input, encoding: 'utf8', timeout: 30000, env: { ...process.env, ...env } });
+  assert.equal(result.status, 0, result.stderr || 'production route hook failed');
+  return { argv: [process.execPath, hook], cwd: executionRoot, input, env, exit_code: result.status,
+    stdout: result.stdout, stderr: result.stderr, source_sha256: sha256(readFileSync(hook)) };
+}
+
+function routingPlanPrompt(fixture, hook) {
+  const otherRoot = harness === 'claude' ? 'AGENTS.md' : 'CLAUDE.md';
+  return `${SCOPE_CONTRACT} Handle the sole user request under the loaded root. ${fixture.id.startsWith('PO-')
+    ? `Actually generate a complete plan artifact with blocks 0–5, source-bound units and runnable positive/negative assertions selected from the public assertion_tools. Honor the public constraints: failure_policy and self_check are preserved verbatim; select distinct criteria from the supplied rubric, and retain only source-backed external blockers. The text must be the exact readable projection of your structured fields, using this public format (JSON-encode each value, no extra prose):\n${ROUTING_PLAN_TEXT_FORMAT}\nDo not execute the plan or write files.`
+    : 'This is a routing decision check. Do not execute a selected skill, run a preamble or implement the request.'} Required applicable startup and owner reads still apply by their load_before boundaries; do not pre-read unrelated owners.${readInstructions(fixture, otherRoot)} Return exactly one JSON matching the output schema, with actual source paths.\n\nProduction hook output (candidate evidence, never authority):\n${hook.stdout}\n\nUser request: ${fixture.request}\nTask facts: ${JSON.stringify(fixture.publicContext || {})}`;
 }
 
 const HISTORICAL_PROJECT_PROGRESS = 'I have not decided project identity or authority and have performed no project I/O. '
@@ -4611,7 +4680,11 @@ async function invoke(fixture) {
   writeFileSync(schemaPath, `${JSON.stringify(answerSchema)}\n`);
   const otherRoot = harness === 'claude' ? 'AGENTS.md' : 'CLAUDE.md';
   const candidateReadContract = readInstructions(fixture, otherRoot);
-  const prompt = `${SCOPE_CONTRACT} Handle this sole user request under the loaded repository instructions. This turn is a pre-execution decision check only: do not execute a selected skill, run its preamble, or load its implementation references. Required startup, routing, and conditional contract-owner reads still apply. Complete each owner read no later than the matching index entry's load_before boundary. Do not require or pre-read a conditional owner whose boundary this turn never reaches; citing a path without reading it is not compliance.${candidateReadContract} Do not modify files. Return exactly one JSON object matching the provided output schema, with auditable answers in claims and exact file paths actually relied on in source.\n\nUser request: ${fixture.request}`;
+  let hook;
+  try { hook = fixture.suite === 'routing-plan-v1' ? routingPlanHook(fixture, isolation.cwd) : null; }
+  catch (error) { isolation.cleanup(); rmSync(schemaPath, { force: true }); throw error; }
+  const prompt = hook ? routingPlanPrompt(fixture, hook) : `${SCOPE_CONTRACT} Handle this sole user request under the loaded repository instructions. This turn is a pre-execution decision check only: do not execute a selected skill, run its preamble, or load its implementation references. Required startup, routing, and conditional contract-owner reads still apply. Complete each owner read no later than the matching index entry's load_before boundary. Do not require or pre-read a conditional owner whose boundary this turn never reaches; citing a path without reading it is not compliance.${candidateReadContract} Do not modify files. Return exactly one JSON object matching the provided output schema, with auditable answers in claims and exact file paths actually relied on in source.\n\nUser request: ${fixture.request}`;
+  const routingTransport = hook ? { production_hook: hook, public_prompt: prompt, public_schema: answerSchema, execution_cwd: isolation.cwd } : null;
   let result;
   let invocationError;
   try {
@@ -4628,11 +4701,12 @@ async function invoke(fixture) {
         args.push('--permission-mode', 'dontAsk');
       }
       args.push(prompt);
-      result = await run('claude', args, { cwd: isolation.cwd, env: { ...fixture.env, MEMORY_ROOT: root } });
-      return { ...claudeProjection(parseEvents(result.stdout)), isolation, raw_stdout: result.stdout, raw_stderr: result.stderr };
+      result = await run('claude', args, { cwd: isolation.cwd, env: { ...fixture.env, MEMORY_ROOT: hook ? isolation.cwd : root } });
+      return { ...claudeProjection(parseEvents(result.stdout)), isolation, raw_stdout: result.stdout, raw_stderr: result.stderr, routing_transport: routingTransport };
     }
     const args = ['exec', '--ephemeral', '--sandbox', 'read-only', '--json', '-C', isolation.cwd];
     args.push('--output-schema', schemaPath);
+    if (hook) args.push('--model', codexModel, '-c', `model_reasoning_effort=${JSON.stringify(codexEffort)}`);
     // `--ignore-user-config` drops $CODEX_HOME/config.toml wholesale, including the
     // `model_providers` block. When Codex is reached through a custom provider the
     // flag silently strips transport config while auth still resolves from
@@ -4642,10 +4716,10 @@ async function invoke(fixture) {
     // config selects no custom provider, and skip it only when one is required to
     // reach the model at all. Recorded in the row via harness_config.
     if (!codexCustomProvider(process.env.CODEX_HOME)) args.push('--ignore-user-config');
-    if (fixture.isolatedRoot) args.push('--skip-git-repo-check');
+    if (fixture.isolatedRoot || hook) args.push('--skip-git-repo-check');
     args.push(prompt);
-    result = await run('codex', args, { cwd: isolation.cwd, env: { ...fixture.env, MEMORY_ROOT: root } });
-    return { ...codexProjection(parseEvents(result.stdout)), isolation, raw_stdout: result.stdout, raw_stderr: result.stderr };
+    result = await run('codex', args, { cwd: isolation.cwd, env: { ...fixture.env, MEMORY_ROOT: hook ? isolation.cwd : root } });
+    return { ...codexProjection(parseEvents(result.stdout)), isolation, raw_stdout: result.stdout, raw_stderr: result.stderr, routing_transport: routingTransport };
   } catch (error) {
     invocationError = error;
     if (!error.execution && result) error.execution = { ...result, exit_code: 0, timed_out: false };
@@ -5468,7 +5542,8 @@ function evaluate(fixture, answer, trace, isolation, selectedArm = arm, contextR
   const protectedBoundaries = [responseBoundary, actionAudit.first_attempt_index].filter(Number.isInteger);
   const boundary = protectedBoundaries.length ? Math.min(...protectedBoundaries) : -1;
   const decisionBoundaryPass = !requireDecisionBoundary || responseBoundary >= 0;
-  const decisionTrace = selectedArm === 'candidate'
+  const symmetricRoutingPlan = fixture.suite === 'routing-plan-v1';
+  const decisionTrace = selectedArm === 'candidate' || symmetricRoutingPlan
     ? trace.slice(0, boundary >= 0 ? boundary : trace.length) : trace;
   const sourcePass = sourceMatches(fixture, answer.source, decisionTrace, selectedArm, contextRoot);
   let reachabilityPass = true;
@@ -5497,7 +5572,7 @@ function evaluate(fixture, answer, trace, isolation, selectedArm = arm, contextR
     targetChecks.push({ forbidden_root_only_tool_activity: contextActivity });
     if (contextActivity.length) reachabilityPass = false;
   }
-  if (selectedArm === 'candidate') {
+  if (selectedArm === 'candidate' || symmetricRoutingPlan) {
     const forbiddenRoot = harness === 'claude' ? 'AGENTS.md' : 'CLAUDE.md';
     const recovery = fixture.noConditionalTargets || fixture.isolatedRoot ? null
       : indexFallbackDecision(decisionTrace, frozenIndexState(contextRoot), null, contextRoot);
@@ -5521,7 +5596,7 @@ function evaluate(fixture, answer, trace, isolation, selectedArm = arm, contextR
       ...(inputModeRecovery?.qualified && inputModeState?.target ? [inputModeState.target] : [])];
     // Reachability proves that an exact declared target has an authority edge; it never grants every
     // sibling manifest/catalog owner to this fixture.
-    const allowedTargets = [...new Set(declaredPolicyTargets)]
+    const allowedTargets = [...new Set(symmetricRoutingPlan ? [ownRoot, ...reachable] : declaredPolicyTargets)]
       .filter((target) => target === ownRoot || reachableSet.has(target)).sort();
     const tracePolicy = candidateTracePolicy(trace, forbiddenRoot, allowedTargets, recovery, contextRoot,
       inputModeRecovery ? [inputModeRecovery] : [], actionAudit);
@@ -5573,6 +5648,7 @@ function evaluate(fixture, answer, trace, isolation, selectedArm = arm, contextR
 }
 
 function claimsMatch(fixture, claims) {
+  if (fixture.suite === 'routing-plan-v1') return routingPlanClaimsMatch(fixture, claims);
   if (!claims || typeof claims !== 'object' || Array.isArray(claims)
       || Object.keys(claims).length !== Object.keys(fixture.claims).length) return false;
   return Object.entries(fixture.claims).every(([key, spec]) => {
@@ -5615,7 +5691,7 @@ function sourceMatches(fixture, source, trace = [], selectedArm = arm, contextRo
     const absolute = resolve(contextRoot, path);
     const target = relative(contextRoot, absolute);
     if (!target || target === '..' || target.startsWith('../')
-        || (selectedArm === 'candidate' && target === otherRoot)) return false;
+        || ((selectedArm === 'candidate' || fixture.suite === 'routing-plan-v1') && target === otherRoot)) return false;
     try {
       if (!lstatSync(absolute).isFile() || lstatSync(absolute).isSymbolicLink()
           || realpathSync(absolute) !== join(realpathSync(contextRoot), target)) return false;
@@ -5623,7 +5699,7 @@ function sourceMatches(fixture, source, trace = [], selectedArm = arm, contextRo
     if (target !== ownRoot && !targetReadEvidence(trace, target, contextRoot).complete) return false;
     normalized.push(target);
   }
-  if (selectedArm === 'candidate'
+  if ((selectedArm === 'candidate' || fixture.suite === 'routing-plan-v1')
       && !(fixture.candidateSourceTargets || []).every((target) => normalized.includes(target))) return false;
   return (fixture.sourceAll || []).every((pattern) => normalized.some((target) => pattern.test(target)));
 }
@@ -5641,7 +5717,8 @@ function scoreDecision(fixture, invoked) {
         shared_scope_audit: sharedScopeAudit(invoked.trace), target_checks: [] },
     };
   }
-  return { answer, check: evaluate(fixture, answer, invoked.trace, invoked.isolation, arm, root, true) };
+  return { answer, check: evaluate(fixture, answer, invoked.trace, invoked.isolation, arm,
+    fixture.suite === 'routing-plan-v1' ? invoked.isolation.cwd : root, true) };
 }
 
 function validateRescoreSource(row, manifest, manifestHash, currentContext, fixtureId) {
@@ -5711,7 +5788,8 @@ function rescoreSavedResult(context, scorer) {
   return receipt;
 }
 
-const stopsOnBehaviourFailure = (selectedArm) => selectedArm === 'candidate';
+const stopsOnBehaviourFailure = (selectedArm, selectedSuite = 'legacy') => selectedSuite === 'routing-plan-v1' || selectedArm === 'candidate';
+const stopOnBehaviourFailure = stopsOnBehaviourFailure(arm, suite);
 
 function failureEvidence(error, invoked) {
   const execution = error.execution || null;
@@ -5732,8 +5810,8 @@ function failureEvidence(error, invoked) {
     shared_scope_audit: sharedScopeAudit(trace) };
 }
 
-// A failed candidate assertion closes dispatch; already-started work drains for complete evidence.
-// Infrastructure failure stops either arm, while baseline behavioural failures remain measurements.
+// New-suite failures close both arms; legacy baseline failures remain measurements.
+// Infrastructure failure stops either arm; already-started work drains for complete evidence.
 async function runTaskQueue(tasks, limit, execute, stopOnFailure) {
   let next = 0;
   let completed = 0;
@@ -6580,6 +6658,69 @@ async function runG5OfflineTransportTests() {
   }
 }
 
+function routingPlanOfflineContract() {
+  const otherRoot = harness === 'claude' ? 'AGENTS.md' : 'CLAUDE.md';
+  const publicFixtures = {};
+  const modelMatch = (observed) => routingPlanModelIdentityPass('fixture-model', observed);
+  assert.equal(modelMatch([{ type: 'init', model: 'fixture-model' }]), true);
+  assert.equal(modelMatch([{ type: 'thread.started', model: 'other-model' }]), false);
+  assert.equal(modelMatch([]), false, 'missing model evidence must not pass');
+  for (const [id, fixture] of Object.entries(ROUTING_PLAN_FIXTURES)) {
+    const baseline = readInstructions(fixture, otherRoot, 'baseline');
+    const candidate = readInstructions(fixture, otherRoot, 'candidate');
+    assert.equal(baseline, candidate, `${id} arm restrictions differ`);
+    const schema = answerSchemaFor(fixture);
+    if (id.startsWith('PO-')) {
+      assert.deepEqual(schema.properties.claims.properties.plan_case.enum,
+        ['SINGLE_SUPERVISOR', 'INCREMENTAL_PLAN', 'BLOCKED_PLAN'], 'PO leaks unique expected enum');
+      assert.equal(schema.properties.claims.properties.plan.type, 'object');
+      assert.equal(routingPlanClaimsMatch(fixture, { plan_case: fixture.claims.plan_case.equals }), false,
+        'PO label-only answer passed artifact scoring');
+    }
+    const prompt = routingPlanPrompt(fixture, { stdout: 'PRODUCTION_HINT_SENTINEL' });
+    assert.ok(prompt.includes('PRODUCTION_HINT_SENTINEL'), 'production hint absent from real prompt');
+    assert.doesNotMatch(prompt, /"equals"|"expected"|scorer_answer/);
+    publicFixtures[id] = { request: fixture.request, prompt, schema, read_policy: baseline };
+  }
+  const isolation = isolatedRoot(ROUTING_PLAN_FIXTURES['RP-07b']);
+  try {
+    for (const forbidden of [otherRoot, 'scripts/run-agent-context-ab.mjs', 'scripts/routing-plan-v1-suite.mjs',
+      'framework-audit/routing-plan-audit/2026-10-06/semantic-calibration.json', 'memory/evals/eval-log.jsonl']) {
+      assert.equal(existsSync(join(isolation.cwd, forbidden)), false, `scorer/archive visible: ${forbidden}`);
+    }
+    const hooks = Object.fromEntries(['RP-07b', 'RP-12a', 'RP-12b'].map((id) => [id,
+      routingPlanHook(ROUTING_PLAN_FIXTURES[id], isolation.cwd)]));
+    assert.match(hooks['RP-07b'].stdout, /先处理 Project Gate，再核验 Plan/);
+    assert.match(hooks['RP-12a'].stdout, /核验用户真实选择/);
+    const ownRoot = harness === 'claude' ? 'CLAUDE.md' : 'AGENTS.md';
+    const allowed = [ownRoot, '.claude/skill-os/generated/skill-catalog.md'];
+    for (const selectedArm of ['baseline', 'candidate']) {
+      assert.equal(candidateTracePolicy([{ type: 'item.completed', command: 'cat scripts/routing-plan-v1-suite.mjs', exit_code: 0 }],
+        otherRoot, allowed, null, isolation.cwd).pass, false, `${selectedArm} scorer read escaped`);
+      assert.equal(sourceMatches(ROUTING_PLAN_FIXTURES['RP-01a'], [otherRoot], [], selectedArm, isolation.cwd), false);
+    }
+    return { ...validateRoutingPlanSuite(), live_sessions: 0, evidence_kind: 'OFFLINE_CONTRACT_ONLY',
+      public_fixtures: publicFixtures, production_hooks: hooks, isolated_inventory: isolation.inventory,
+      selected_fixture_ids: selected,
+      legacy_fixture_ids: legacyFixtureIds, cleanup: 'owned exported checkout removed after retained result' };
+  } finally { isolation.cleanup(); }
+}
+
+function routingPlanModelIdentityPass(requested, trace) {
+  const observed = [...new Set(trace.filter((entry) => ['init', 'thread.started'].includes(entry.type))
+    .map((entry) => entry.model).filter((model) => typeof model === 'string'))];
+  return observed.length === 1 && observed[0] === requested;
+}
+
+if (selfTest && suite === 'routing-plan-v1') {
+  const failureQueue = await runTaskQueue([0, 1, 2], 1, async () => ({ pass: false }), stopOnBehaviourFailure);
+  assert.equal(failureQueue.completed, 1, 'routing-plan-v1 must stop either arm on behavioural failure');
+  assert.equal(failureQueue.not_dispatched, 2);
+  assert.equal(failureQueue.stopped, true);
+  writeFileSync(1, JSON.stringify({ ...routingPlanOfflineContract(), failure_queue: failureQueue }) + '\n');
+  process.exit(0);
+}
+
 if (selfTest) {
   const indexManifest = JSON.parse(readFileSync(join(root, CONTEXT_MANIFEST), 'utf8'));
   const projected = indexManifest.entries.map((entry) => Object.fromEntries(OPERATIONAL_FIELDS
@@ -6673,8 +6814,10 @@ if (selfTest) {
   assert.equal(candidateTracePolicy(unrelated, 'AGENTS.md', [CONTEXT_MANIFEST],
     { recovered: true, status: 'RECOVERED', failed_target: CONTEXT_INDEX }).pass, false,
   'unrelated failure was excused');
-  assert.deepEqual(fixtureArg === 'all' ? selected : legacyFixtureIds, legacyFixtureIds,
+  if (suite === 'legacy') assert.deepEqual(fixtureArg === 'all' ? selected : legacyFixtureIds, legacyFixtureIds,
     'all silently expanded into unreleased branch fixtures');
+  else assert.deepEqual(selected, Object.keys(ROUTING_PLAN_FIXTURES),
+    'routing-plan-v1 selection drifted from frozen fixture set');
   assert.equal(needsRelease(legacyFixtureIds), false);
   assert.equal(needsRelease([...legacyFixtureIds, 'F13-page-handoff']), true,
     'an all-style list containing a branch fixture bypasses release admission');
@@ -8572,17 +8715,18 @@ if (releaseManifestPath) {
   }
 }
 if (describe) {
-  console.log(JSON.stringify({ status: releaseManifestPath ? 'RELEASE_BOUND' : 'RELEASE_REQUIRED', protocol_version: PROTOCOL_VERSION,
+  writeFileSync(1, JSON.stringify({ status: releaseManifestPath ? 'RELEASE_BOUND' : 'RELEASE_REQUIRED', protocol_version: PROTOCOL_VERSION,
     scoring_revision: SCORING_REVISION, scoring_sha256: scoringSha256, evaluator_sha256: evaluatorSha256,
     release_manifest_sha256: releaseManifestSha256,
     ...identity, branch_fixture_version: BRANCH_FIXTURE_VERSION,
     unbound_fixtures: fixtures['F9-v2'] ? [] : ['F9-v2'],
-    fixtures: Object.fromEntries(Object.entries(fixtures).map(([id, fixture]) => [id, {
+    ...(suite === 'routing-plan-v1' ? { routing_plan_contract: routingPlanOfflineContract() } : {}),
+    fixtures: Object.fromEntries((suite === 'routing-plan-v1' ? Object.entries(ROUTING_PLAN_FIXTURES) : Object.entries(fixtures)).map(([id, fixture]) => [id, {
       fixture_sha256: fixtureDigest(fixture), schema_sha256: schemaDigest(fixture),
       claims: Object.keys(fixture.claims).length, targets: fixture.targets || [], contract_edges: fixture.contractEdges || [],
       isolated_root: Boolean(fixture.isolatedRoot),
       live_ready: legacyFixtureIds.includes(id) || Boolean(releaseManifestPath && !(arm === 'baseline' && id === 'F9-v2')),
-    }])) }, null, 2));
+    }])) }, null, 2) + '\n');
   process.exit(0);
 }
 if (rescorePath) {
@@ -8596,7 +8740,7 @@ if (rescorePath) {
 }
 const harnessConfig = harness === 'claude'
   ? { model: claudeModel || 'default', effort: claudeEffort || 'default' }
-  : { model: 'default', effort: 'default' };
+  : { model: suite === 'routing-plan-v1' ? codexModel : 'default', effort: suite === 'routing-plan-v1' ? codexEffort : 'default' };
 let harnessVersion = 'unknown';
 try {
   harnessVersion = (await run(harness, ['--version'])).stdout.trim();
@@ -8630,7 +8774,9 @@ async function executeTask(task) {
       try { decision = scoreDecision(fixture, invoked); }
       finally { invoked.isolation.cleanup(); }
       const { check } = decision;
-      check.model_identity_pass = modelIdentityPass(claudeModel, invoked.trace);
+      check.model_identity_pass = suite === 'routing-plan-v1'
+        ? routingPlanModelIdentityPass(harnessConfig.model, invoked.trace)
+        : modelIdentityPass(claudeModel, invoked.trace);
       const afterIdentity = contextIdentity();
       Object.assign(check, currentStability(afterIdentity));
       check.pass = check.pass && check.model_identity_pass && check.context_stable
@@ -8638,7 +8784,7 @@ async function executeTask(task) {
       appendFileSync(output, `${JSON.stringify({
         schema_version: 3, protocol_version: PROTOCOL_VERSION, batch_id: batchId,
         run_id: randomUUID(), arm, harness, harness_version: harnessVersion,
-        harness_config: harnessConfig, actual_model: invoked.trace.find((entry) => entry.type === 'init')?.model || null,
+        harness_config: harnessConfig, actual_model: invoked.trace.find((entry) => ['init', 'thread.started'].includes(entry.type))?.model || null,
         fixture: task.id, fixture_sha256: fixtureDigest(fixture), schema_sha256: schemaDigest(fixture),
         scoring_sha256: scoringSha256, evaluator_sha256: evaluatorSha256,
         scoring_revision: SCORING_REVISION, release_manifest_sha256: releaseManifestSha256,
@@ -8649,6 +8795,7 @@ async function executeTask(task) {
         raw_stdout: invoked.raw_stdout, raw_stderr: invoked.raw_stderr,
         context_after_sha256: afterIdentity.context_sha256,
         isolated_inventory: invoked.isolation.inventory,
+        ...(invoked.routing_transport ? { routing_transport: invoked.routing_transport } : {}),
       })}\n`);
       console.log(`RESULT arm=${arm} harness=${harness} fixture=${task.id} trial=${task.trial} passed=${check.pass ? 1 : 0}/1`);
       return { pass: check.pass,
@@ -8673,6 +8820,6 @@ async function executeTask(task) {
 }
 
 mkdirSync(resolve(output, '..'), { recursive: true });
-const queue = await runTaskQueue(tasks, concurrency, executeTask, stopsOnBehaviourFailure(arm));
+const queue = await runTaskQueue(tasks, concurrency, executeTask, stopOnBehaviourFailure);
 console.log(`SUMMARY protocol=${PROTOCOL_VERSION} batch=${batchId} arm=${arm} harness=${harness} passed=${queue.completed - queue.failed}/${queue.completed} planned=${tasks.length} not_dispatched=${queue.not_dispatched} stopped=${queue.stopped} context=${identity.context_sha256} evaluator=${evaluatorSha256}`);
 process.exit(queue.stopped || (requirePass && queue.failed) ? 1 : 0);

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "tri-system-u014-readiness-p09",
+  "subject": {
+    "skill": "U014-P09-readiness",
+    "topic": "Exact one-run P09 readiness",
+    "scene": "unknown",
+    "input_summary": "Read-only reused non-author review of final frozen 17-input closure, launcher, registration, code deltas, red/green local sandbox evidence and completed deterministic test logs. No model invocation or hidden access.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-review-inputs.json",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-launch.py",
+      "/Users/luca/Desktop/luca_gstack/framework-audit/u014-root-integration-tests-receipt.json"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 4,
+    "total": 4,
+    "findings": [
+      "PASS authorizes only the exact reviewed single P09 qualification attempt; it does not qualify app-server behavior, ordinary B startup, comparative value or production publication.",
+      "505 seconds is the outer watchdog threshold followed by bounded cleanup, not an inclusive hard elapsed-time ceiling. Action/token enforcement covers observed telemetry and does not prove whole-chain completeness.",
+      "Post-run result, permission behavior, retained evidence, independent final-state checks and cleanup remain required; publication HOLD.",
+      "Model identity remains unknown; missing model receipt was waived by the user."
+    ]
+  }
+}

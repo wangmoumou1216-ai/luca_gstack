@@ -1,0 +1,16 @@
+{
+  "label": "U006-ci-green",
+  "command": [
+    "node",
+    "scripts/test-ci-contract.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/design-workflow-fixes/luca_gstack",
+  "driver_pid": 40269,
+  "pid": 40278,
+  "started": "2026-10-06T06:52:23.517432+00:00",
+  "ended": "2026-10-06T06:52:24.044996+00:00",
+  "exit_code": 0,
+  "source_hashes_before": {},
+  "source_hashes_after": {},
+  "sources_unchanged": true
+}

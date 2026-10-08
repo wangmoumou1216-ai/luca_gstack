@@ -1,0 +1,12 @@
+{
+  "collected_at": "2026-10-02T20:11:49.726358+00:00",
+  "source_report": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-orchestration-bounded-repair-report.md",
+  "report_read_tool": "4c8c7d full EOF",
+  "source_hashes": {
+    "driver.mjs": "ce5372b72266a8c99edd2c1b0a91f555cf34e99e04033ff7918a9d022550659f",
+    "driver.test.mjs": "9f0a32d28fb937224ab6aed5a00a31eb53f4d7ba031969c92f509af359bb97f2"
+  },
+  "destination": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval",
+  "prior_r3_snapshot": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-code-snapshots/r3",
+  "scope": "two owner files only; no behavior release"
+}

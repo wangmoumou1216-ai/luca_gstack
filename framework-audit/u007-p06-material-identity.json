@@ -1,0 +1,41 @@
+{
+  "id": "T",
+  "root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-u007-p06-vjfi0jng/material-identity",
+  "instructionFiles": [
+    "AGENTS.md"
+  ],
+  "allowedReadPaths": [
+    "AGENTS.md"
+  ],
+  "materialSha256": "66bee6476856dc260e2425e8b4785522db699e066d49fa8fd6d3f7ffba77d2e5",
+  "sourceBindings": [
+    {
+      "source": "u007-implementation-contract.md#2",
+      "sourceSha256": "74c43c98dd2fc88df66c84d660c0f044deae35d7223e9a6c17b05ace22ec04a6",
+      "path": "AGENTS.md",
+      "kind": "compiled-instruction",
+      "copySha256": "38adca514d58ea040e9126a04b81d60d3a9b7d061ff67253fc9d944717a59aed",
+      "patch": null
+    }
+  ],
+  "complexity": {
+    "units": {
+      "entryInstructions": 1,
+      "copiedSourceRecords": 0,
+      "entryObligationPatches": 0,
+      "conditionalHandoffMechanisms": 0
+    },
+    "patches": [],
+    "excludedSourcePaths": [],
+    "omittedLinks": [],
+    "actualUserQuestions": null,
+    "actualHandoffs": null,
+    "actualTokens": null,
+    "maintenanceTime": null
+  },
+  "limitations": [
+    "BUILD_ONLY: no model, native tool, hook, delegation, recovery or semantic-quality behavior has been verified.",
+    "The driver supplies identical current-stage request, domain owner, facts and permissions; these materials grant no effects.",
+    "Filesystem copying is not an OS read boundary. Driver isolation, native reads and child access require independent verification."
+  ]
+}

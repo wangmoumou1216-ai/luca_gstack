@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "sidecar-public-settings-frozen-actions",
+  "status": "PREPARED_REVIEW_REQUIRED",
+  "helper": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/repair-sidecar-settings-resume02.mjs.txt",
+    "sha256": "e145f9f4ab64b751f3081a21e89debf085b556dac00d0ddacbb1b41cfb80bf02"
+  },
+  "embedded_manifest_sha256": "5cfeea18143c6f0b9bc75d51ce53c9012a0f0e59b4e0a352127729d9f34796b4",
+  "manifest": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/sidecar-settings-manifest-resume02.json",
+    "sha256": "2d4986fc87e52632cfd51ac3d88f2944b67cb25c53ff170f777f22a707889d29"
+  },
+  "probe_log": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/sidecar-settings-probe-resume02.log",
+    "sha256": "e8c9e53d27e394a3370ddf59252dd58603bbb8674fdbe67be70be817ac9ee1d3"
+  },
+  "probe_source": {
+    "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-sidecar-resume02.kFjtnmP0pu/probe-sidecar-repair.mjs",
+    "sha256": "9aeb4ebdd3858c7799ec11ec17792318b1c80ae436b86ed341b4c05954e7ef68"
+  },
+  "runtime": "/Users/luca/.hermes/node/bin/node",
+  "argv": [
+    "/Users/luca/.hermes/node/bin/node",
+    "--input-type=module",
+    "-",
+    "--helper-sha",
+    "e145f9f4ab64b751f3081a21e89debf085b556dac00d0ddacbb1b41cfb80bf02",
+    "--manifest-sha",
+    "5cfeea18143c6f0b9bc75d51ce53c9012a0f0e59b4e0a352127729d9f34796b4"
+  ],
+  "stdin_path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/repair-sidecar-settings-resume02.mjs.txt",
+  "apply_suffix": [
+    "--apply"
+  ],
+  "settings_sha256": "eb34592a91ba05f8c007c89ede84e51bf08e8a6c50015f22fd4a5ed515f42f55",
+  "prerequisites": [
+    "exact source local release gate and successful activation receipt",
+    "normal Codex reload and original named chat normal user prompt C07",
+    "normal Luca quit, no active work/writer lease and exact fresh settings/App/runtime/CAS preflight",
+    "independent native critical accepted same-invocation review of this exact companion/helper"
+  ],
+  "effects": [
+    "public connectionSave sidecar binary/home patch only, mode remains system",
+    "public connectionActivate unchanged system using genuine installed readiness API and stricter frozen executable gate",
+    "credentials/other settings preserved; no raw settings/legacy write or lease clearing",
+    "normal Luca restart then three actual new empty drafts P03 with explicit per-mode observations"
+  ],
+  "limits": [
+    "PREPARED attempt receipt before first public settings mutation; no blind rerun after partial save",
+    "No existing chat prompt/message, secret read/write or unreviewed scope expansion",
+    "GUI/source/config/test/trust gates independently recorded"
+  ]
+}

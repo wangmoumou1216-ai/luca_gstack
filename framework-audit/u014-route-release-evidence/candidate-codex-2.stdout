@@ -1,0 +1,5 @@
+[route-guard] ❓ STOP — 路由置信度低（无完整关键词命中）。
+基于语义推断，最可能的 skill：
+  1. /brainstorm（参考依据：keyword matched but the prompt reads as a question *about* the term）
+语义映射清晰可按 AGENTS.md K2/K4 路由；否则展示候选请用户确认或补充。
+[route-guard] 🔬 研究/认知信号 2（研究/认知诉求）——这是"搞懂某事"类诉求，别按 STOP 自己裸奔 WebSearch：按 AGENTS.md K2/K4 在研究三档里选档（单点读一手源 → /quick-research；广域多源/需交叉验证 → /deepresearch；竞品·UX·先例 → /ux-research），或显式写出为何三档都不走。注意：harness 的"别自作主张上 deep-research"只管"别升重型编排"，**不豁免"这题属不属于 research"**。

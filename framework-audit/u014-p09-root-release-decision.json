@@ -1,0 +1,19 @@
+{
+  "decision": "ALLOW_ONE_REVIEWED_P09",
+  "at": "2026-10-03T07:36:24.461274+00:00",
+  "authority": "latest user execute U014 closed loop; root preregistered bounded qualification",
+  "review": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-readiness-envelope.json",
+    "sha256": "c46b011b2bdd4aece9fed9cc82f1521f933adbb56f5bbd3693f3d261ff29c1cb"
+  },
+  "review_inputs": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u014-p09-review-inputs.json",
+    "sha256": "f7fccedd339ac59b7e696974469b4c92354509e65aecbb23273ff1d679579c39"
+  },
+  "model_projection": {
+    "name": "gpt-6-astra",
+    "effort": "high"
+  },
+  "publication": "HOLD; runtime qualification only",
+  "outer_limit": "505s watchdog plus bounded cleanup"
+}

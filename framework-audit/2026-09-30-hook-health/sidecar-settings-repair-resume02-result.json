@@ -1,0 +1,26 @@
+{
+  "status": "PUBLIC_TRANSACTION_APPLIED_SYSTEM_MODE_PRESERVED",
+  "operationId": "hook-sidecar-resume02-679531ad-4096-4ae4-9ade-aff39e07f851",
+  "settingsPreimageSha256": "eb34592a91ba05f8c007c89ede84e51bf08e8a6c50015f22fd4a5ed515f42f55",
+  "systemCliSha256": "4d210f7c5a18fd0386434df23b5bdbb8c0e7257d3e8a2b30b0769c8bbe99a878",
+  "manifestSha256": "5cfeea18143c6f0b9bc75d51ce53c9012a0f0e59b4e0a352127729d9f34796b4",
+  "at": "2026-10-01T10:44:08.495Z",
+  "savedRevision": 7,
+  "revisionBefore": 20,
+  "revisionAfter": 22,
+  "connectionRevision": 7,
+  "mode": "system",
+  "sidecar": {
+    "binary": "/Users/luca/.local/bin/codex-luca-aihub",
+    "codexHome": "/Users/luca/.codex-aihub-test"
+  },
+  "credentialRevision": 3,
+  "activation": {
+    "configRevision": 7,
+    "credentialRevision": null,
+    "activatedAt": "2026-10-01T10:44:08.529Z",
+    "readiness": "external"
+  },
+  "settingsReadbackSha256": "0818730e9ede380a64109492933842e2fe3807214ea79d1a9fbe5f7cb07c48d1",
+  "gui": "UNVERIFIED: normal Luca startup and real three-mode empty-draft acceptance required"
+}

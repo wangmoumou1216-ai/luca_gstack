@@ -1,0 +1,284 @@
+diff --git a/scripts/tri-system-eval/conditions.mjs b/scripts/tri-system-eval/conditions.mjs
+index a44fabf..10d130d 100644
+--- a/scripts/tri-system-eval/conditions.mjs
++++ b/scripts/tri-system-eval/conditions.mjs
+@@ -5,7 +5,7 @@ import {
+ } from 'node:fs';
+ import { dirname, isAbsolute, join, posix, resolve, sep } from 'node:path';
+ 
+-export const CONDITION_IDS = Object.freeze(['B', 'T', 'S', 'I']);
++export const CONDITION_IDS = Object.freeze(['B', 'T', 'S', 'I', 'C']);
+ 
+ const CONTRACT_SHA = '74c43c98dd2fc88df66c84d660c0f044deae35d7223e9a6c17b05ace22ec04a6';
+ const DESIGN_SHA = '27831bcf48b9d935bb2718024344f2904064aaca7f5086964445ecda865c06c0';
+@@ -181,6 +181,7 @@ function isMaterial(path) {
+   // Runtime helpers are available as frozen source, not installed or invoked.
+   // Evaluation drivers, test fixtures and installation/configuration entrypoints
+   // are deliberately not candidate materials.
++  if (path.startsWith('scripts/tri-system-eval/')) return false;
+   if (/^scripts\/(?:test-|run-|agent-context-branch-fixtures|baselines\/|install-|codex-trust-|source-guard-test-)/.test(path)) return false;
+   if (/^scripts\//.test(path)) return true;
+   return MEMORY_HELPERS.includes(path) || CODEX_MATERIALS.includes(path) || ACTIVE_RULE_MATERIALS.includes(path);
+@@ -315,14 +316,17 @@ function materialDigest(root) {
+   return hash(JSON.stringify(rows));
+ }
+ 
+-/** Build materials only. This is not a native-hook installer or run release. */
++/** Build materials only. B/S use the old source; C uses its separately frozen
++ * candidate sourceRoot/manifest. No source is inferred from the current checkout.
++ * This is not a native-hook installer or run release. */
+ export async function materializeCondition({ conditionId, sourceRoot, sourceManifestPath, destination }) {
+   if (!CONDITION_IDS.includes(conditionId)) fail('CONDITION_ID', String(conditionId));
+   if (typeof destination !== 'string' || !isAbsolute(destination)) fail('DESTINATION', 'absolute new path required');
+   const requested = resolve(destination);
+   const root = join(realpathSync(dirname(requested)), requested.split(sep).at(-1));
+-  const baseline = ['B', 'S'].includes(conditionId);
+-  const source = baseline ? prepareSources(sourceRoot, sourceManifestPath, conditionId) : null;
++  const frozen = ['B', 'S', 'C'].includes(conditionId);
++  const source = frozen ? prepareSources(sourceRoot, sourceManifestPath, conditionId) : null;
++  const sourceLabel = conditionId === 'C' ? 'C' : 'B/S';
+   const canonicalSource = source?.root || (sourceRoot ? realpathSync(sourceRoot) : null);
+   if (canonicalSource && (inside(canonicalSource, root) || inside(root, canonicalSource))) fail('SOURCE_DESTINATION_OVERLAP', root);
+   // Exclusive mkdir is the ownership boundary. An existing file, directory or
+@@ -407,8 +411,8 @@ export async function materializeCondition({ conditionId, sourceRoot, sourceMani
+         'The driver supplies identical current-stage request, domain owner, facts and permissions; these materials grant no effects.',
+         'Filesystem copying is not an OS read boundary. Driver isolation, native reads and child access require independent verification.',
+         ...(source ? [
+-          'B/S includes frozen memory helpers, Codex backend sources and generated native skill materials. It does not install hook registrations, trust, project config or global memory.',
+-          'B/S requires the frozen active-rule loader and complete rules.yaml. Python/PyYAML availability and rule consumption in the actual native sandbox remain unverified.',
++          `${sourceLabel} includes frozen memory helpers, Codex backend sources and generated native skill materials. It does not install hook registrations, trust, project config or global memory.`,
++          `${sourceLabel} requires the frozen active-rule loader and complete rules.yaml. Python/PyYAML availability and rule consumption in the actual native sandbox remain unverified.`,
+           'Current observed production metadata has 11 project hooks disabled; this is entry/time-specific evidence, not historical or all-host equivalence. No hook activation is required or performed by this builder.',
+           'Declared material dependencies and literal relative ESM imports are present. Computed paths, workflow bodies, runtime packages, native discovery, private state and actual permission enforcement remain unverified.',
+           'Excluded sources and unrepresented links are listed in complexity. A qualified B requires readiness review before relative comparison.',
+diff --git a/scripts/tri-system-eval/conditions.test.mjs b/scripts/tri-system-eval/conditions.test.mjs
+index 9d5f548..7717a31 100644
+--- a/scripts/tri-system-eval/conditions.test.mjs
++++ b/scripts/tri-system-eval/conditions.test.mjs
+@@ -2,7 +2,7 @@ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import { createHash } from 'node:crypto';
+ import {
+-  existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, readdirSync,
++  existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, readdirSync, realpathSync,
+   rmSync, symlinkSync, writeFileSync,
+ } from 'node:fs';
+ import { tmpdir } from 'node:os';
+@@ -11,7 +11,12 @@ import { spawnSync } from 'node:child_process';
+ import { CONDITION_IDS, materializeCondition } from './conditions.mjs';
+ 
+ const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+-const ROOT_ENTRY = readFileSync(new URL('../../AGENTS.md', import.meta.url));
++// B/S fixtures must keep the frozen old root, even when this checkout contains C.
++const baselineEntry = spawnSync('git', ['show', '05120197073144c0f46b6fb30a192733d529cc4f:AGENTS.md'], {
++  cwd: new URL('../..', import.meta.url),
++});
++assert.equal(baselineEntry.status, 0, baselineEntry.stderr?.toString());
++const ROOT_ENTRY = baselineEntry.stdout;
+ const REQUIRED = [
+   'CONTEXT.md', '.claude/skill-os/generated/context-index.md',
+   '.claude/skill-os/generated/skill-catalog.md', '.claude/agents/plan-agent.md',
+@@ -31,7 +36,7 @@ const REQUIRED = [
+     'stop-integrity-failure.mjs', 'workflow-runner.mjs'].map(path => `.codex/${path}`),
+ ];
+ 
+-function fixture(t) {
++function fixture(t, rootEntry = ROOT_ENTRY) {
+   const base = mkdtempSync(join(tmpdir(), 'tri-condition-test-'));
+   t.after(() => rmSync(base, { recursive: true, force: true }));
+   const sourceRoot = join(base, 'source'); mkdirSync(sourceRoot);
+@@ -42,7 +47,7 @@ function fixture(t) {
+     else symlinkSync(bytes, join(sourceRoot, path));
+     records.push({ path, kind, bytes: Buffer.byteLength(bytes), sha256: digest(bytes) });
+   };
+-  add('AGENTS.md', ROOT_ENTRY);
++  add('AGENTS.md', rootEntry);
+   for (const path of REQUIRED) add(path, `Frozen domain/rule material: ${path}\n`);
+   add('.claude/skills/office/sample/SKILL.md', 'Domain owner uses stable keys.\n');
+   add('.claude/skills/sample', 'office/sample', 'symlink-text-not-target');
+@@ -75,7 +80,7 @@ function independentDigest(root, allowSourceLinks = false) {
+ 
+ test('B builds real frozen bytes, expands internal aliases and returns a replayable digest', async t => {
+   const f = fixture(t), result = await f.build('B');
+-  assert.deepEqual(CONDITION_IDS, ['B', 'T', 'S', 'I']);
++  assert.deepEqual(CONDITION_IDS.slice(0, 4), ['B', 'T', 'S', 'I']);
+   assert.deepEqual(readFileSync(join(result.root, 'AGENTS.md')), ROOT_ENTRY);
+   assert.deepEqual(readFileSync(join(result.root, '.claude/skills/sample/SKILL.md')),
+     readFileSync(join(f.sourceRoot, '.claude/skills/office/sample/SKILL.md')));
+@@ -125,6 +130,37 @@ test('T and I compile without opening any baseline manifest or exposing baseline
+   assert.equal(independent.complexity.units.conditionalHandoffMechanisms, 3);
+ });
+ 
++test('C copies its separately frozen candidate without simplifying it or changing B', async t => {
++  const old = fixture(t), candidateEntry = readFileSync(new URL('../../AGENTS.md', import.meta.url));
++  const candidate = fixture(t, candidateEntry);
++  const b = await old.build('B'), c = await candidate.build('C');
++  assert.deepEqual(CONDITION_IDS, ['B', 'T', 'S', 'I', 'C']);
++  assert.deepEqual(readFileSync(join(b.root, 'AGENTS.md')), ROOT_ENTRY);
++  assert.deepEqual(readFileSync(join(c.root, 'AGENTS.md')), candidateEntry);
++  assert.equal(c.id, 'C');
++  assert.equal(c.complexity.units.entryObligationPatches, 0);
++  assert.deepEqual(c.complexity.patches, []);
++  assert.equal(c.materialSha256, independentDigest(c.root));
++  for (const binding of c.sourceBindings) {
++    assert.equal(binding.sourceManifestSha256, digest(readFileSync(candidate.sourceManifestPath)));
++    assert.ok(binding.source.startsWith(realpathSync(candidate.sourceRoot) + '/'));
++    assert.equal(binding.copySha256, binding.sourceSha256);
++  }
++  assert.deepEqual(readFileSync(join(old.sourceRoot, 'AGENTS.md')), ROOT_ENTRY);
++  assert.deepEqual(readFileSync(join(candidate.sourceRoot, 'AGENTS.md')), candidateEntry);
++  assert.equal((await old.build('B', 'B-replayed')).materialSha256, b.materialSha256);
++});
++
++test('C rejects drift and a mismatched source manifest before creating output', async t => {
++  const f = fixture(t), other = fixture(t);
++  await assert.rejects(materializeCondition({ conditionId: 'C', sourceRoot: other.sourceRoot,
++    sourceManifestPath: f.sourceManifestPath, destination: join(f.base, 'wrong-source') }), { code: 'MANIFEST_SCOPE' });
++  assert.equal(existsSync(join(f.base, 'wrong-source')), false);
++  writeFileSync(join(f.sourceRoot, 'CONTEXT.md'), 'unreviewed candidate change');
++  await assert.rejects(f.build('C'), { code: 'SOURCE_DRIFT' });
++  assert.equal(existsSync(join(f.base, 'C')), false);
++});
++
+ test('excluded cases, answers, archive and evaluation files are neither opened nor copied', async t => {
+   const f = fixture(t);
+   // Deliberately absent: a builder that tries to read them must fail this test.
+@@ -134,14 +170,16 @@ test('excluded cases, answers, archive and evaluation files are neither opened n
+     '.claude/skill-os/fixtures.jsonl', 'scripts/answers.json',
+     '.claude/skill-os/developer-cases.json', '.claude/agents/private.md',
+     '.claude/observability/observations.yaml', '.claude/observability/scripts/other.py',
+-    'scripts/test-example.mjs', 'scripts/run-agent-context-ab.mjs']) {
++    'scripts/test-example.mjs', 'scripts/run-agent-context-ab.mjs',
++    'scripts/tri-system-eval/driver.mjs', 'scripts/tri-system-eval/conditions.mjs']) {
+     f.records.push({ path, kind: 'file', bytes: 6, sha256: digest('poison') });
+   }
+   f.save();
+-  const b = await f.build('B');
+-  for (const path of b.complexity.excludedSourcePaths) {
+-    assert.ok(!existsSync(join(b.root, path)));
+-    assert.ok(!b.allowedReadPaths.includes(path));
++  for (const result of [await f.build('B'), await f.build('C')]) {
++    for (const path of result.complexity.excludedSourcePaths) {
++      assert.ok(!existsSync(join(result.root, path)));
++      assert.ok(!result.allowedReadPaths.includes(path));
++    }
+   }
+ });
+ 
+diff --git a/scripts/tri-system-eval/driver.mjs b/scripts/tri-system-eval/driver.mjs
+index 8c3a12e..df76bea 100644
+--- a/scripts/tri-system-eval/driver.mjs
++++ b/scripts/tri-system-eval/driver.mjs
+@@ -27,7 +27,7 @@ const within = (root, path) => {
+   return rel === '' || (!rel.startsWith('..' + sep) && rel !== '..' && !isAbsolute(rel));
+ };
+ 
+-function readProbeRegistration(release, caseFile, sourceManifest) {
++function readProbeRegistration(release, caseFile, sourceManifest, traceProbeLimit) {
+   const ref = release.registration;
+   check(validText(ref?.path) && isAbsolute(ref.path) && typeof ref.sha256 === 'string'
+     && /^[a-f0-9]{64}$/.test(ref.sha256), 'PROBE_REGISTRATION_REQUIRED');
+@@ -38,7 +38,7 @@ function readProbeRegistration(release, caseFile, sourceManifest) {
+   const record = JSON.parse(bytes.toString('utf8'));
+   for (const [key, value] of Object.entries({schema_version: 1, kind: 'u007-capability-probe',
+     status: 'REGISTERED', issued_by: 'root-coordinator', pool: 'additional-capability',
+-    capability_probe_limit: release.native_trace ? 8 : release.entry.native_launch ? 7 : 6,
++    capability_probe_limit: release.native_trace ? traceProbeLimit : release.entry.native_launch ? 7 : 6,
+     probe_id: release.probe_id, run_id: release.run_id})) {
+     check(record?.[key] === value, `PROBE_REGISTRATION_MISMATCH:${key}`);
+   }
+@@ -157,7 +157,7 @@ export function createTrialRunner({spawnProcess = spawn, paths = modulePaths, cl
+     if (release.stage === 'probe') {
+       check(validText(release.probe_id), 'PROBE_ID_REQUIRED');
+     }
+-    check(['B', 'T', 'S', 'I'].includes(conditionId) && validText(caseId) && positive(trial), 'INVALID_RUN_ARGUMENTS');
++    check(['B', 'T', 'S', 'I', 'C'].includes(conditionId) && validText(caseId) && positive(trial), 'INVALID_RUN_ARGUMENTS');
+     check(validText(release.run_id) && /^[A-Za-z0-9_-]+$/.test(release.run_id), 'INVALID_RUN_ID');
+     check(release.entry?.transport === 'codex-app-server-stdio', 'INVALID_TRANSPORT');
+     const nativeLaunch = release.entry.native_launch;
+@@ -172,7 +172,7 @@ export function createTrialRunner({spawnProcess = spawn, paths = modulePaths, cl
+       check(release.native_command_permissions != null, 'NATIVE_TRACE_ISOLATION_REQUIRED');
+       check(typeof bindings?.native_trace_sha256 === 'string' && /^[a-f0-9]{64}$/.test(bindings.native_trace_sha256)
+         && bindings.native_trace_sha256 === sha(readFileSync(paths.nativeTrace)), 'NATIVE_TRACE_BINDING');
+-      if (release.stage === 'probe') check(manifest.budgets?.capability_driver_probes_max === 8, 'NATIVE_TRACE_CAPABILITY_BUDGET');
++      if (release.stage === 'probe') check([8, 10].includes(manifest.budgets?.capability_driver_probes_max), 'NATIVE_TRACE_CAPABILITY_BUDGET');
+     }
+     check(bindings && release.run?.case_id === caseId && release.run?.condition_id === conditionId
+       && release.run?.trial === trial, 'RELEASE_IDENTITY_MISMATCH');
+@@ -193,7 +193,8 @@ export function createTrialRunner({spawnProcess = spawn, paths = modulePaths, cl
+     const cap = manifest.budgets?.[matches[0].complexity];
+     check(cap && ['wall_seconds', 'tool_actions', 'observed_tokens'].every(k => positive(resources?.[k])
+       && positive(cap[k]) && resources[k] <= cap[k]), 'RELEASE_BUDGET_REQUIRED_OR_EXCEEDED');
+-    const registration = release.stage === 'probe' ? readProbeRegistration(release, caseFile, manifest.source_manifest) : null;
++    const registration = release.stage === 'probe'
++      ? readProbeRegistration(release, caseFile, manifest.source_manifest, manifest.budgets?.capability_driver_probes_max) : null;
+     if (release.stage !== 'probe') {
+       check(release.native_command_permissions?.effective_probe != null, 'NATIVE_EFFECTIVE_PROOF_REQUIRED');
+     }
+@@ -615,7 +616,7 @@ export function createTrialRunner({spawnProcess = spawn, paths = modulePaths, cl
+       }
+       check(bindings.cases_sha256 === sha(readFileSync(caseFile)), 'PRE_DISPATCH_CASE_DRIFT');
+       check(bindings.source_manifest_sha256 === sha(readFileSync(manifest.source_manifest)), 'PRE_DISPATCH_SOURCE_DRIFT');
+-      if (registration) readProbeRegistration(release, caseFile, manifest.source_manifest);
++      if (registration) readProbeRegistration(release, caseFile, manifest.source_manifest, manifest.budgets?.capability_driver_probes_max);
+       if (traceEnabled) check(bindings.native_trace_sha256 === sha(readFileSync(paths.nativeTrace)), 'NATIVE_TRACE_BINDING_DRIFT');
+       if (permissions) validateNativePermissions(release, condition.root, protectedPaths);
+       if (Date.now() >= report.deadline_ms) fail('ABSOLUTE_DEADLINE');
+diff --git a/scripts/tri-system-eval/driver.test.mjs b/scripts/tri-system-eval/driver.test.mjs
+index fc47872..85cfd2c 100644
+--- a/scripts/tri-system-eval/driver.test.mjs
++++ b/scripts/tri-system-eval/driver.test.mjs
+@@ -410,6 +410,53 @@ if (process.argv[2] === '--fake-server') {
+   const traceOp = (id, thread = 'thread-1', turn = 'turn-1') => ({key: `bundle:${thread}:${id}`,
+     bundle_id: 'offline-bundle', thread_id: thread, turn_id: turn, tool_call_id: id, tool_name: 'case_read',
+     requester: 'direct', start_seq: 1, end_seq: 2, status: 'completed', input_ref: null, result_ref: null});
++  test('U014 C preserves bound identity, native permissions, tools and fresh family evidence', async t => {
++    const f = fixture(t, 'child-fresh');
++    f.options.conditionId = 'C'; f.manifest.runtime_release.run.condition_id = 'C';
++    const r = await f.run();
++    assert.equal(r.status, 'COMPLETED'); assert.equal(r.condition.id, 'C');
++    assert.equal(r.invocation.permission_config.default_permissions, f.native.profile_id);
++    assert.deepEqual(r.engine_snapshot.failures, ['original dependency failure']);
++    assert.equal(r.interruptions.length, 2); assert.ok(r.interruptions.every(x => x.confirmed));
++    assert.equal(r.engine_snapshot.registrations.at(-1).threadId, 'thread-2');
++    const starts = outbound(r).filter(m => m.method === 'thread/start');
++    assert.equal(starts.length, 2);
++    assert.ok(starts.every(m => m.params.dynamicTools.length === 4 && m.params.permissions === f.native.profile_id));
++    assert.equal(r.tool_action_observability.whole_chain_coverage, 'UNKNOWN');
++  });
++  test('U014 trace probe caps eight and ten require exactly matching registration and retain proof gate', async t => {
++    for (const cap of [8, 10]) {
++      const f = permissionFixture(t, 'normal', {stage: 'probe', proof: false}), release = f.manifest.runtime_release;
++      release.native_trace = {enabled: true, schema_version: 1};
++      release.bindings.native_trace_sha256 = digest(readFileSync(filename));
++      f.manifest.budgets.capability_driver_probes_max = cap;
++      f.record.native_trace = structuredClone(release.native_trace); f.record.bindings = structuredClone(release.bindings);
++      f.record.capability_probe_limit = cap; f.saveRegistration();
++      f.state.traceSnapshot = ({traceRoot}) => ({version: 1, status: 'VALID', trace_root: traceRoot,
++        bundles: [{id: 'offline'}], threads: [], operations: [], issues: []});
++      const r = await f.run();
++      assert.equal(f.launches(), 1); assert.equal(r.stage, 'probe');
++      assert.equal(r.probe_registration.sha256, release.registration.sha256);
++      assert.equal(r.status, 'INVALID_RUN'); // Registration is not accepted native permission proof.
++      assert.equal(r.native_command_permissions.boundary_status, 'NATIVE_BOUNDARY_UNVERIFIED');
++    }
++  });
++  test('U014 trace probe rejects cap drift, unsupported caps and raised run resources before spawn', async t => {
++    for (const [manifestCap, registrationCap, raiseResources] of [
++      [8, 10], [10, 8], [10, 11], [9, 9], [11, 11], ['10', '10'], [null, 10], [10, 10, true],
++    ]) {
++      const f = permissionFixture(t, 'normal', {stage: 'probe', proof: false}), release = f.manifest.runtime_release;
++      release.native_trace = {enabled: true, schema_version: 1};
++      release.bindings.native_trace_sha256 = digest(readFileSync(filename));
++      f.manifest.budgets.capability_driver_probes_max = manifestCap;
++      if (raiseResources) release.resources.observed_tokens++;
++      f.record.native_trace = structuredClone(release.native_trace); f.record.bindings = structuredClone(release.bindings);
++      f.record.resources = structuredClone(release.resources); f.record.capability_probe_limit = registrationCap;
++      f.saveRegistration();
++      await assert.rejects(f.run(), /NATIVE_TRACE_CAPABILITY_BUDGET|PROBE_REGISTRATION_MISMATCH:capability_probe_limit|RELEASE_BUDGET_REQUIRED_OR_EXCEEDED/);
++      assert.equal(f.launches(), 0); assert.equal(existsSync(f.options.outputRoot), false);
++    }
++  });
+   test('W34 trace is opt-in, bound, isolated and finalized exactly once without reentry', async t => {
+     const old = fixture(t); await old.run(); assert.equal(old.state.polls, undefined);
+     const f = traceFixture(t, 'fresh'); f.state.traceDelay = 20;

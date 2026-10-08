@@ -1,0 +1,26 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {spawnSync} from 'node:child_process';
+const audit='/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health';
+const framework='/Users/luca/.codex/worktrees/hook-text-data/luca_gstack';
+const app='/Users/luca/Desktop/项目/muse';
+const version=process.argv[2]||'01';
+if(!['01','02'].includes(version))throw Error('invalid freeze version');
+const sha=b=>createHash('sha256').update(b).digest('hex');
+const run=(cwd,args)=>{const r=spawnSync('git',args,{cwd,encoding:'utf8',maxBuffer:8*1024*1024});if(r.status!==0)throw Error(r.stderr);return r.stdout;};
+const frameworkFiles=['.claude/skill-os/runtime/project-session.md','.codex/hooks.json','.codex/hook-source-integrity.mjs','README.md','scripts/codex-hook-health.mjs','scripts/install-codex-source-guard.mjs','scripts/source-guard-review.mjs','scripts/source-guard-test-fixture.mjs','scripts/test-codex-child-hook-integrity.mjs','scripts/test-codex-hook-health.mjs','scripts/test-codex-trust-hooks.mjs','scripts/test-controlled-change.mjs','scripts/test-hook-source-digests.mjs','scripts/test-prompt-attestation.mjs','scripts/test-source-guard-preserve.mjs'];
+const appFiles=['app/host-hook-ready.js','app/test-host-hook-ready.mjs'];
+const sets=[{root:framework,base:'54ef203b4dd77e23564d0cba22f773346d30dfec',files:frameworkFiles},{root:app,base:'0f63d4edb2c3df7096e12c6ccd6f1e7114975f8e',files:appFiles}];
+const inventory=sets.map((s,i)=>{
+ if(fs.realpathSync(s.root)!==s.root||run(s.root,['rev-parse','HEAD']).trim()!==s.base)throw Error('review baseline drift');
+ const diff=run(s.root,['diff',s.base,'--',...s.files]);
+ fs.writeFileSync(path.join(audit,`cache-final-${i===0?'framework':'app'}-${version}.patch`),diff);
+ return {...s,diff_sha256:sha(diff),files:s.files.map(relative=>{const file=path.join(s.root,relative);if(!fs.lstatSync(file).isFile())throw Error('invalid scope file');return {path:file,relative,sha256:sha(fs.readFileSync(file)),bytes:fs.statSync(file).size,tracked:run(s.root,['ls-files','--',relative]).trim()===relative};})};
+});
+const artifactPath=path.join(audit,`stable-install-review-final${Number(version)}.json`);
+const record={schema_version:1,kind:'hook-cache-final-file-set',sets:inventory,plan:{path:path.join(audit,'FOLLOWUP-PLAN.md'),sha256:sha(fs.readFileSync(path.join(audit,'FOLLOWUP-PLAN.md')))},hooks:{path:path.join(audit,'stable-hooks-r3.json'),sha256:sha(fs.readFileSync(path.join(audit,'stable-hooks-r3.json')))},install_review:{path:artifactPath,sha256:sha(fs.readFileSync(artifactPath))},pending_live:['Codex desktop native UserPromptSubmit after one-time legacy migration reload','Luca three-mode empty draft acceptance and lawful Sidecar settings repair']};
+const bytes=JSON.stringify(record,null,2)+'\n';
+const destination=path.join(audit,`CACHE-FINAL-SCOPE-${version}.json`);
+fs.writeFileSync(destination,bytes);
+console.log(JSON.stringify({scope:destination,scope_sha256:sha(bytes),artifact_sha256:record.install_review.sha256,files:inventory.reduce((n,s)=>n+s.files.length,0)}));

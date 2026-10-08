@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "source_sha256": "5e4322881c6004491d612eb02067164e2c28eefdfcf0eb9114d0e9088185892c",
+  "skill": "tech-spec",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "design_brief_handoff",
+          "prd_artifact"
+        ],
+        "optional": [
+          "ai_spec_artifact",
+          "architecture_brief"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "prd_artifact",
+          "design_brief_handoff"
+        ],
+        "optional": [
+          "prd_handoff"
+        ]
+      }
+    },
+    "notes": "上述 modes.required 列表仅适用于 input_mode=prd 的正常 PRD/Brief 分支；input_mode 与 standalone/workflow 正交。conversation_synthesis 以完整可核 source_register（path/sha256/section/register_sha256）、original_sources 和独立 source_must_ids 替换 PRD/Brief 输入，保留同等覆盖：Phase 5 IF/CMP/可执行测试。无 UI 的 D/STATE 有源 N/A，工程状态/错误仍须测试。缺模式/源表 NEEDS_CONTEXT，漂移/漏 MUST/未决 UI 停门；不能由缺 Brief 猜 CONV，历史可核普通 PRD 沿用。",
+    "quality_gates": [
+      "original_source_must_coverage_when_conversation_synthesis",
+      "brief_prd_end_to_end_gate_when_prd_mode",
+      "exact_current_sources",
+      "conflict_register",
+      "architecture_view",
+      "interface_contracts",
+      "traceability_matrix",
+      "design_mapping_coverage_when_prd_mode",
+      "coverage_gate"
+    ],
+    "output_path": "docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md",
+    "handoff_path": "docs/handoff/YYYY-MM-DD-<topic>-tech-spec-handoff.md"
+  }
+}

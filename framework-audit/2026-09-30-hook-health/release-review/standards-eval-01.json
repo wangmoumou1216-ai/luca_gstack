@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "hook-release-standards-20260930-01",
+  "subject": {
+    "skill": "code-review",
+    "topic": "hook-chain-release-standards",
+    "scene": "unknown",
+    "input_summary": "Independent NO_PIN Standards-only review of frozen42-file scope and candidate.patch; readonly runtime and in-memory negative probes.",
+    "output_paths": [
+      "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/release-review/standards-01.md"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 3,
+    "total": 6,
+    "findings": [
+      "Important: Python optimization removes activation integrity and concurrency assertions.",
+      "Important: health checker accepts registration with shell syntax errors.",
+      "UNKNOWN: full cross-harness runtime, protected installation and live-session closure not verified."
+    ]
+  }
+}

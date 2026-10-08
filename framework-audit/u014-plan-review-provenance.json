@@ -1,0 +1,16 @@
+{
+  "recorded_at": "2026-10-03T06:58:06.499797+00:00",
+  "plan_status": "REVIEWED_PROPOSAL",
+  "execution_started": false,
+  "production_adoption": "NOT_APPROVED",
+  "reviewer_agent_id": "01a1007d-ad0a-7df1-98ca-73a8c40f47e5",
+  "review_source": "/Users/luca/.codex/sessions/2026/10/03/rollout-2026-10-03T14-39-58-01a1007d-ad0a-7df1-98ca-73a8c40f47e5.jsonl",
+  "review_mode": "independent non-author, reused U013 evaluation context; cold spawn failed at thread limit",
+  "r1_input_sha256": "5c8cc404ad54bca9b2cad53f47ef1b4822d298a9ffcbad165106267d6ccc9930",
+  "r2_input_sha256": "aafe4581df4a1711de0cffa0d52c9c69832121bf5b9783317b48ae4412841796",
+  "final_plan_sha256": "ccb25b665fcee555008ab5c3b1b9428c315fbd78154a0d4e7c626a219427aa89",
+  "post_review_changes": "Two factual status/receipt sentences only; no method, budget, authority or criteria changes",
+  "r1_verdict": "PASS 5/5 plan quality",
+  "r2_verdict": "PASS 3/3 WARN delta",
+  "budget_status": "proposed, not released"
+}

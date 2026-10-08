@@ -1,0 +1,394 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+> **维护约定（2026-07-12，源 mattpocock changesets 叙事内核，MIT）：** skill/能力的生命周期
+> 变更（新增采纳/重命名/reframe/降级隐藏/删除）在本文件记一条「变更 + 为什么」（一行式）。
+> 与 adoption-log 互补：那边是采纳审计记录，这边是面向使用者的演进叙事。
+
+## [Unreleased]
+
+### Added（2026-10-03 · 有界事实采集模型分工）
+
+- 新增 `fact-collector`，只对授权范围内显式字段值、标识符和原文摘录经 MR-009 使用已批准的轻量模型；代码行为与条件解释、复杂探索、实现与综合继续使用主力模型，关键裁决保留独立高档审查。候选原文通过出处校验后仍由主力逐题核对并记录接受/拒收/接手，错误不以模型采用回执放行。为什么：让有限事实查找有可核验的轻量入口，同时保持用户主模型、推理强度、私有绑定及旧路由行为。
+
+### Fixed（2026-10-01 · Design Brief 独立红队闭环）
+
+- Design Brief 3.0.1 / Open Design 4.0.1：静态模板适配在冻结前使用最终binding的同一联合动作检查，拒绝重复目标及父子修改/保持冲突；同动作多来源/状态去重，合法待决冲突不授权执行。为什么：逐项动作可用不能证明联合范围兼容，不能把冲突推迟到冻结后。
+- reference_only运输结构化Packet时，原型附件引用必须是实际冻结事实ID，并在完整读回重核；可识别的坏结构化文档不降级，以JSON解码识别转义字段；散文示例不误判，旧自由Markdown保持显式未机器核验。为什么：工具运输方式不应改变证据来源追踪规则。独立红队原始FAIL、修复反例/变异与复审保留于framework-audit/2026-10-01-design-brief-convergence-redteam.md及completion审计。
+
+### Changed（2026-10-01 · Design Brief 三入口与模板语义收敛）
+
+- Design Brief 3.0：全流程已选方案、已有需求/口述、已有原型精修汇合于 OD 前的同一契约节点。为什么：已有需求与原型无需伪造PRD或重跑发散，模板选择/语义适配必须在事实冻结前解决；正式binding/TAC/adoption仍在冻结后。
+- 区分 design_source 生成追踪与 prd_end_to_end 工程追踪；同步 workflow、输入模式、preflight、OD 和生成视图。原型行为/保持范围进入唯一Packet，实际证据附件参与不可变字节/hash读回。新增非绑定适配校验与 refine 保业务DOM/脚本/全局CSS/资产的受限profile；机械通过仍须独立交互/视觉验收。研究与验证说明见 framework-audit/2026-10-01-design-brief-convergence.md。
+- 接通 auto 2.1、office短入口与 Orchestrator 的输入成熟度/选定路径恢复；tech-spec 1.0.3、task-plan 1.0.2 在 standalone 也核精确来源、上游PASS与 Brief prd_end_to_end，保留纯工程 synthesis 独立合同。为什么：注册短入口不足以改变旧编排默认，设计生成PASS不能被工程消费者误当完整PRD追踪。
+
+- 修复发布时双宿主门禁测试误用工作仓库活动提交控制：真实 adapter/hook 源在独立临时 Git 夹具中执行，保留27项行为检查和生产拒绝规则。为什么：测试会话不应继承提交授权或删除实际仓库固定会话状态；活动/非活动门禁差分及独立会审均通过。
+
+### Added / Changed（2026-10-01 · Matt38 来源内容适配，原生采用待验）
+
+- 新增 writing-workshop（beats/fragments/shape）、loop-me、issue-triage、setup-wizard 四个入口正文，分别承接选择后逐块写作、有限循环、问题诊断和人工选择安装路径；prototype 方法并入 html-prototype，决策问卷并入 research-kit，避免同义入口竞争。
+- 刷新 Matt 工程、研究与文档方法及 Plan/Orchestrator 的依赖和发布准备契约；code-review 委托 code-hygiene，writing-for-agents 持有通用写作方法；M03/M35 仍按 preservation 验收。个人 tdd/Claude teach 只准备候选，正式安装待另批。
+- 固定 38 来源 ID（30 采用/移植、7 不新增独立包、1 历史来源），按实际目录 Git 变更登记 watch pin，保留七月拒绝及旧对标历史；更新局部离线断言和候选清单，使后续验收可追溯。原生行为、能力增益、采用和发布均 PENDING，未据内容完成宣称已验证收益。
+
+### Added（2026-09-20 · Codex 通用模型路由接线，Claude 延后）
+
+- 启用唯一公共 `anchor / peak / light` 模型选择规则：根会话保持用户实际选择，Codex 原生 subagent 与 app-server workflow runner 按精确场景动态选择上下档；reasoning effort 保持独立，不再承担模型档位语义。新增受信 activation/evidence/critical-latch、错模型拒收、旧票与重启失效、私有0600模型绑定和对应行为/变异回归。仓库 hook 已授信，但当前旧 session 不热加载新增 SessionStart，须由新 Codex 根 session 完成最终活体验收；Claude adapter 按用户决定暂不启用，不宣称双端完成。
+
+### Fixed（2026-09-20 · Codex MultiAgent v2 模型路由别名）
+
+- fresh-session 活体测试发现 quality-gate 仍继承 anchor；根因是 Codex 0.155.1 把真实派发工具规范化为 `collaborationspawn_agent`，旧 matcher 只覆盖 API 展示名。现已在 hook 注册、native adapter 与回归门统一覆盖实测名并刷新 trust；该阶段先保持 H2 pending，等待后续真实采用证据。
+- 后续 fresh-session 已证明根 `gpt-5.6-sol`、quality-gate 子调用 `gpt-6-astra` 的真实动态选模。该活体进一步发现 `SubagentStop` 发生在 transcript 写入 `task_complete` 之前，旧 evidence check 因等待未来事件误拒正确结果；现改为绑定同 turn assistant item 与 hook `last_assistant_message`，并以错消息/错模型负例保持 fail-closed。最终 fresh-session 的 production state 已记录 invocation=`accepted`、`critical_failure=false`，Codex native H2 闭合。
+
+### Corrected（2026-09-20 · 原模板必须一比一复制）
+
+- 撤回四模板静态影子方案：新增原件逐字节副本及 copy 校验门，目录指向原件而不是简化重写；旧影子采用被拒绝。HTML/CSS/脚本/隐藏状态不删改，定位数据放旁车。原件局部适配、外置资源审计及独立回收校验已完成；惰性预览和字节一致性不冒充交互验收。
+
+### Removed（2026-09-20 · Muse Loop 退役）
+
+- 移除未使用的 Muse Loop 编排器、专属原型生成器及路由/状态/QA 豁免；旧入口明确拒绝调度。为什么：按用户选择减掉无用流程，保留独立需求筛选、逐 AC 原型验收和主体设计链，历史数据不删除。
+
+### Fixed（2026-09-20 · 模板设计链审查整改）
+
+- 以结构化冻结 Packet 的真实事实计算适用集，确定性生成 TAC 可读投影；补齐模板/位置判断依据、状态支持与消歧门，修复不可变合同、真实 DOM 和输出 inventory 校验。新增模板短指南位于 page-library/README.md。为什么：防止漏需求、错位修改及注释假锚点被旧机械 PASS 掩盖；本轮原件测试另经独立终审和浏览器验收，旧影子 live 验证仍不算证据。
+
+### Added（2026-09-18 · Open Design 模板 carrier V2 与模型路由解析核心）
+
+- Open Design 新增 `structural_carrier + single` 交接链：冻结 Packet、模板/模块 binding、TAC/hash、独立 stage/run/recover 授权、runtime 能力收据、输入输出隔离、读回与 preserve DOM 验证；`reference_only` 保持独立语义。为什么：让 OD 可验地基于不可变 HTML carrier 生成新的衍生产物，不再把截图参考冒充模板派生。
+- 页面库新增 `settings-lead-pool`、`customer-list-detail`、`crm-workbench-home`、`sales-record-list-detail` 四个 live structural carrier；原四模板 SHA 与安全静态影子源双向绑定，旧五页不替换、不删除。新增真实浏览器预览、严格 P0 静态闭包及 CI/verify 回归门。为什么：让 Luca/OD 能按稳定模块、状态和 add-slot 体验四类真实页面结构，同时隔离原捕获包的脚本、事件和临时节点 ID。
+- 新增 Codex `parser-only` 模型路由政策核心：对 anchor/peak 角色、7 类场景、调用绑定、运行时采用证据与关键失败 latch 做 fail-closed 解析，不改 effort，不声称尚未接线的自动派发可用。
+
+### Added（2026-09-17 · domain-modeling 条件原语）
+
+- 新增领域建模 canonical 与手动/语义/internal 入口：澄清术语重载、对象归属及关系边界，再返回原调用方，不强插 Flow 节点。为什么：已有零散移植机制无法独立触发；词汇持久化须真人定案与精确文件授权，不再无条件写 CONTEXT。Codex 验证进行中；Claude 活体/A-B 按用户要求暂缓，不声明双运行时通过。
+
+### Changed（2026-09-14 · 人工演进裁决与效果反馈）
+
+- 新增默认dry-run的 `scripts/evolution-feedback.mjs --input <review.json> [--apply]`：必须提供人工批准引用、精确采纳身份、原日志hash与证据；使用证据只能记unknown。追加反馈历史、同批幂等，保留原始采纳事实；锁及写前复检不冒充对非合作写者的原子CAS。
+- 按luca明确批准落实九月十二项裁决：旧能力退休/承接有据可查、机会归档与观察分开、S4暂停并保留yield、tracker剩余集成延后、gap标识保留原值规范化。Q4对标与10月2日原生能力对照仅登记待复盘，不伪称已执行；不修改Claude/Codex入口或下游项目。
+
+### Fixed（2026-09-14 · 传输诊断与行为证据复评）
+
+- Codex评估器按严格事件结构识别重连/协议回退诊断，须同一turn有后续答案且成功完成才免责，避免逐一枚举操作系统错误文案；失败turn、夹带字段与未知工具操作仍拒绝，Claude投影不变。
+- 新增显式 `--rescore` 离线复评：核对原文件SHA、源/新manifest、fixture/schema/context和原执行稳定性，重新解析原始事件，只写独立衍生结果。保留旧失败和原run ID，标记零新增模型调用，不把复评当新样本；减少为修评分器重复生成同一答案的成本。
+
+### Fixed（2026-09-14 · 会话认证锁恢复与命令数据误改）
+
+- 原生事件候选使用有界的最新32条队列，合成通知不再让后续真人提示因容量耗尽永远无法入队；跳过不可匹配候选不推进原生游标、不授予权限，真正的孤儿人类行仍须显式恢复。取消按非人类同文字提前清除候选的判据，避免误删尚未落盘的真人提示。
+- `deactivate` 对已关闭绑定及 NO_PIN 提供只降权恢复：验证来源身份、前缀与原生记录后重建 fence，清除旧绑定/事务；旧消息不能重放，新的权限仍须新真人输入。若旧提示在恢复后才落盘，可能需要落盘后再次显式恢复；来源损坏、不可定位、TURN_ACTIVE/SWITCH_ONLY 仍拒绝，不声称无条件自动恢复。
+- 作用域守卫统一识别引号、转义与操作符，保护明确的 echo/printf 字面量、Git 消息、搜索模式及 quoted cat/tee heredoc 的数据字节；真实路径、管道、展开和重定向仍受检查。Git `--` 后或 `--file` 的值不再被误当 `-m` 消息；静态单次赋值的框架内 cd 可解析，未知动态 cd 不放行。
+- 补齐 pending transcript 定位回退与 append-only 更正/原字节恢复；Claude/Codex 分别覆盖恢复、重放、来源损坏及候选队列行为。独立双轴审查和反例记录见 `framework-audit/2026-09-14-locks-standards-review.md`、`framework-audit/2026-09-14-locks-spec-review.md`。模型行为票、只读降级及演进人工裁决不混算为本次完成项。
+
+### Fixed（2026-09-11 · pre-commit 把 git 的索引变量漏给 verify.sh，按路径提交跑不通完整门）
+
+- 共享检出规定用 `git commit -- <路径>` 提交，而 git 此时给 pre-commit 注入的是**绝对路径**的临时索引 `GIT_INDEX_FILE`；`commit -a` 同样是绝对路径，链接 worktree 里的任何提交还会再加绝对路径的 `GIT_DIR`（2026-09-11 在临时仓里装探针实测；只有主检出的普通提交是相对的 `.git/index`）。`verify.sh` 继承这些变量后，`test-agent-context.mjs` 在 fixture 仓里执行的 `git add` 把条目写进了这次提交的索引，blob 却落在 fixture 自己的对象库里 → verify 94/0 通过后建树报 `invalid object`，只能退到 `FAST_COMMIT=1`，完整提交门在规定的提交方式下形同虚设。
+- 修在边界：`.githooks/pre-commit` 在密钥扫描（它要读本次提交的索引）之后、`exec bash scripts/verify.sh` 之前剥离位置类 `GIT_*`（清单与 `controlled-change.mjs` 一致）。没有逐个补 fixture 调用点：这类漏洞此前已按站点补过（`test-controlled-change.mjs`、`test-sync-real.mjs` 各自剥离），边界一行覆盖现有和以后的所有测试。
+- 新增 `scripts/test-pre-commit-env.mjs`（verify `G5c`）：按路径提交、`commit -a`、worktree 按路径提交、worktree 普通提交四个场景，每个都先用只转发变量的裸钩子证明 fixture 确实会泄漏，再验证真实 pre-commit 只提交预期改动、verify 收不到任何位置变量；另锁住密钥扫描仍读本次提交的索引。未修代码上 4 项转红；三个变异（保留 `GIT_DIR`、把剥离挪到扫描之前、去掉 verify）都按预测转红。
+- `test-controlled-change.mjs` 注释里"普通仓只注入相对的 GIT_INDEX_FILE""verify.sh 在每次 worktree 提交时都会走到"两句的前提被本次实测与修复改掉，已同步。
+
+### Fixed（2026-09-09 · 项目名边界判据：具名 /goal 消息绑不上项目）
+
+- `route-guard` 的具名项目匹配 `nameMatchesIn` 只检查 `indexOf` 的**第一处**出现，于是**词序决定路由**。实证：一条以「修掉 muse app 的 CLI 更新……」开头、后文才写「权威读序 1) muse 仓的 CLAUDE.md」的 /goal——第一处被 `normalize()` 删空白后连成 `museapp`，后界是 latin 延续、正确地不算命中，函数就此 `return false`，后面收边干净的 `muse 仓的` 根本没被看过 → `namedProject` 落空 → `classifyRoutingScope` 走 `mixed_ambiguous` → `NEEDS_CONTEXT`。用户拿不到 SWITCH_ONLY 事务，整条 /goal 绑不上项目。
+- 同一条判据上另有两个同源缺口，本轮按全集一并补齐：② `normalize()` 删空白使**空格不再是边界**（`muse app` → `museapp`），改为名字逐字拼 `\s*`、在保留空白的文本上匹配，空格恢复为边界；名字自带空格（`ai 宠物提示`）写空格与连写都照旧命中。③ 长名只查后界、不查前界，`amuse`、`luca-gstack-muse`（本仓真实备份 remote 名）会误绑 `muse`；①放开出现位置后该缺口暴露面变大，故同轮改为前后两界同一字符类。无分隔的粘连（`museapp` / `amusement` / `muse-loop`）仍然不命中。
+- `projectGate` 里与 `projectIdentityText` 逐字重复的第二份 searchText 实现合并为一处——本轮 ②③ 正是要求两处同步的那类改动。
+- `scripts/test-route-guard.mjs` 新增 7 条边界断言（236 → 243）；三个缺口逐一变异后只有对应断言转红（①→首处真粘连、②→`muse app` 唯一出现、③→`amuse` / `luca-gstack-muse`），无连带误杀；`test-hooks` 的 STICKY-011 词边界回归与 `scripts/verify.sh` 94/94 同时保持绿。
+
+### Fixed（2026-09-09 · office 向导加载边界收敛到真实调用）
+
+- `office` 共享契约原文是「处理 `/office` 命令时必须完整读取 `references/office-wizard.md`」。这句把「命令」当唯一判据，实际被读成「只要语境里出现 office/workflow 就该读向导文件」——v25 的 Codex F14 行为票即因越权读取该文件整体 FAIL（原始 FAIL 行按 R-7 第 1 条永久保留，不在原版本上重跑到通过）。
+- 边界改写为按**真实调用入口**裁决：Claude 的 `/office`、Codex 的 `$office`、或明确用自然语言要求进入/使用 office 向导时才读并执行；用户明确要求审查该文件本身时只读不执行；仅提及或审计 workflow / research choice / office 能力 / flow preservation 一律不得读。
+- `run-agent-context-ab.mjs` 升到 protocol 26 / `v26-office-wizard-invocation-boundary`；F14 自测新增精确 target 集断言：向导文件不得进入可达目标集，且「完整合法 trace + 一次未被调用的向导读取」必须判 FAIL 并留下 `read outside exact allowed target set` 的逐条 trace-policy 证据。
+- `check-agent-context.mjs` 的向导门改为**限定在 `## /office` 小节内、按句判定**：①小节内的提及计数（NFKC + 大小写折叠 + 去反引号空白，且不要求 `references/` 前缀）；②小节里每个写出该文件名的句子，必须在**提及之前**出现门控词（`才`/`若`/`不得`/`除非`/`仅`/`只有`），且提及之前不得出现全称量词（`无论`/`任何`/`一律`/`always` 等）——句子不可能既有条件又被全称量词覆盖。本条改了三版，前两版都被独立评审推翻：首版按措辞黑名单写，只拦得住它自己变异用例那一句；第二版按字面子串全文计数 + 全文存在性检查短语，于是**把 `若明确要求审查` 作为诱饵句种到文件别处，就能把真正那句改成无条件而检查照样通过**——正好复现了这道门要防的 F14 故障。现版在隔离副本实测 13/13 对抗性改写全拦（含诱饵替换、保留 `除非`/`才` 的无条件改写、把禁令改成许可、省略前缀、全角斜杠、大小写、markdown 链接、四种不同措辞的追加规则含英文），6/6 良性维护改写全过。
+- **本门的边界写在代码注释里，不夸大**：它是漂移检测器不是对抗边界——用零宽字符、组合符、西里尔同形字、markdown/HTML 拆分混淆文件名，或只用代词指代而不写路径，都能绕过，且刻意不去逐个补这些拼法；`.claude/hooks/` 里**没有任何运行时钩子**执行这条约束，精确目标集策略只在被授权的活体调用里生效（该预算当前已耗尽），两次活体调用之间这道散文门就是唯一的常设检查。诚实的结论是"严格优于 HEAD 那版"，不是"完备"。
+- `test-agent-context.mjs` 恢复**可证伪的分母**：`${n}/${n}` 是恒等式，删掉一条 mutation 也照样自洽（实测删一条仍 exit 0、自报 32/32）。改用 `EXPECTED_MUTATIONS` 常量后，删一条即 exit 1 报 `expected 36 mutation cases, ran 35`。同时补**十条**向导变异：丢 Codex 原生入口、丢自然语言入口、追加无条件规则、改写措辞的无条件规则、英文写法、无反引号且无义务动词、省略路径前缀、把既有合法句改成无条件、诱饵替换（真句被掏空而锚点短语种到别处）、保留门控词但用全称量词否定条件。mutation 总数 30 → 40，全部 proof-it-bites（HEAD 那版实跑 30 条，自报字符串写作「26/26 + CRM 4/4」，求和一致）。
+
+### Fixed（2026-09-09 · 原生事件识别器对齐真实运行时）
+
+- 原生事件认证在真机上对**两个 harness 全线失效**，Project Gate 因此无法绑定任何项目。三处识别器都是照着想象中的运行时写的，而全部断言只跑手写夹具，无一读过真实 transcript/rollout：
+  - Claude 真人 prompt 判据要求 `isMeta === false`，但 Claude Code 从不发这个字段（实测 2.1.233…2.1.266 共 15 版、924 份 transcript，0 次），324 条真人 prompt 全被判 `unknown` 硬失败。判据改为按真正承载来源的 `origin.kind` + `promptSource` 裁决，`isMeta` 缺失即「非 meta」——与本次改动的设计依据 `TRANSCRIPT-AUTH-EVIDENCE.md` 记的 `human / false-or-absent` 一致。非真人来源走白名单，白名单外仍 `unknown` fail closed。
+  - 带图片的 prompt（content 含 `image` part）被 `strictClaudeText` 判 `UNKNOWN_SCHEMA`。同一份设计依据要求「accept `type=text` 与 `type=image`，校验但不计入授权文本」，实现漏掉了后者；现按此恢复，未知 part 类型仍 fail closed，且无任何 text part 时新增拒绝。
+  - Codex 把注入的回合上下文（AGENTS.md、插件清单、环境前言）记成普通 user 消息，带合法 `msg_*` id 与相同 turn_id，扫描先撞上它 → 每个会话首回合必 `MISMATCH`。改为仅当记录**与候选不匹配且没有 UserMessage 完成事件**时按注入上下文跳过；匹配的记录仍走完整锚校验，`assertNoNewNativeUser` 保持不过滤（放宽它会让追加的原生 prompt 逃过撤销，IDENTITY-STATE-007 覆盖该方向）。
+- 新增 `scripts/test-native-schema-realism.mjs`：冻结真机上实际出现过的十种 user 行形状逐条断言归类，并直接拿 `~/.claude/projects` 与 `~/.codex/sessions` 的真实产物跑公开认证路径（缺文件则跳过，不假绿）。三处修复各自变异后仅对应一侧转红，互不掩盖。
+
+### Fixed（2026-09-09 · E3 原生事件身份与审查闭环）
+
+- 将共享 `boundary_id` 与原生 `event_id` 分离，候选队列、原生日志游标、消费账本及项目权限在同一事务中更新，避免同一 boundary 下真实消息被当成重放。
+- 首次认证改用 SessionStart 的输入前日志起点，禁止靠同文本历史尾部认领当前事件；缺少起点的历史会话须重新启动或恢复后再发送输入。Codex 适配层保留原生启动来源，compact 不得建立起点。
+- Stop 拒绝历史及当前重复回复文本造成的归属歧义；起点以前的 Claude cwd、Codex 多模态历史不再污染当前文本消息认证。加入跨 harness 负例、真实 hook 回放及三类变异验证。
+- Claude CLI 活体验证仍按用户豁免保持 UNKNOWN；本轮不部署、重启或修改持久 hook trust。
+
+### Changed（2026-09-04 · Claude/Codex 根契约轻量化）
+
+- 把 `CLAUDE.md` 与 `AGENTS.md` 从 45–56KB 常驻说明压缩为各自独立、低于 10KB 的 K1–K10
+  runtime adapter；条件细节改由 16 项一跳 manifest 按意图加载，低频 skill 由磁盘生成的 45 项
+  catalog 发现，旧 mega-appendix 退出运行时但保留为回滚证据。为什么：消除 Codex→Claude 根全文
+  依赖、重复事实与陈旧快照，同时保住 Project/Plan/Human Gate、NO_PIN、安全边界和六条无 hook
+  Static Fallback。新增 19 个 mutation 与双 Harness 14 个隔离场景各 5 次 A/B 的测试入口（含无
+  hooks/memory 根文件探针），并把 kernel/pointer/budget/projection/contradiction 门接入 verify、CI
+  与 commit-msg。P6 尚在真实双 Harness 校准与独立复审中，未完成验收、未发布。
+
+### Fixed（2026-09-03 · 检查发现问题全量收口）
+
+- 收窄 read-grant sidecar 检测：`apply_patch` 正文中的 `.claude/skills/office/*` 等普通路径示例不再被误拦，真实 sidecar 目标仍保持拒绝。
+- 修复外部技能 vetting registry 中 `redteam's` 引发的非法 YAML，并把 pin/vetting 两个 registry 纳入常规 YAML 门禁。
+- 新增单文件 handoff 写完即验入口和正反 fixture；公共协议与 `deepresearch` 在标记 DONE 前强制校验 `gate_result`、`criteria`、关键标题及产出路径。
+
+### Added（2026-09-03 · wait-what 中文对话重讲入口）
+
+- **项目 canonical `/wait-what` + Claude/Codex 双 loader + 显式路由 + 中文交互契约。**
+  保留 Matt 原版“上一条没讲明白就补上下文重讲”的极薄机制，但将用户可见说明和实际输出改为
+  自然中文；只允许显式调用，不创建产物、不改 workflow state，也不进入工程交付图。上游锁定
+  `mattpocock/skills@5c89081d4bbeb3d039a42093653f90bb698d780e`。
+
+### Added（2026-09-02 · to-tickets 发布入口）
+
+- **项目 canonical `/to-tickets` + Claude/Codex 双 loader + 显式路由 + engineering-delivery 可选发布边。**
+  为什么：用户明确要求把已吸收 tracer-bullet 拆卡机制的 `task-plan` 补成真正可调用的
+  Matt Skill。Luca 适配不重造任务真值：`task-plan` 仍独占拆解/断言/依赖与 gate，
+  `to-tickets` 只绑定其 SHA 后预览、授权、发布和读回校验；默认本地 `.scratch` 逐票文件，
+  外部 tracker 写入单独授权。上游锁定 `mattpocock/skills@321658273cb1`。
+
+### Added（2026-07-31 · 评审请求入口）
+
+- **routing-chain-check R4「评审请求」（三规则→四规则）+ route-guard 评审轴提示钉与 Gate 豁免
+  以及 ux_audit 撤四个零对象泛词 / code_hygiene 收对象绑定评审词 + code-hygiene 模式 D「改动评审」**
+  （luca 追问「我让你 review 时该不该命中框架 skill」）。为什么：实测 `评审代码`/`帮我评审一下
+  刚才那份计划` 高置信落 /ux-audit（强制截图 skill），泛 review 落 STOP 且零提示，框架自评审又被
+  Project Gate 兜底网吃掉；14 条评审纪律仅 2 条固化、其余靠记忆召回。**净效果是解绑不是约束**
+  （luca 同轮追加的设计约束「不得用框架约束模型自有能力」）：撤掉的硬映射多于新增，R4 明写
+  「资产索引非决策树、对不上时自建评审编排优于硬套」、证据标准标注「下限非上限」、并带
+  native_precedence 式退场条件。顺带修红线：Gate 豁免缺 `!named` 守卫（实测"清理一下 muse 里
+  scripts/ 的死代码"今天就在静默吞掉项目切换，SC-20260523-002）。test-route-guard +7 确定性用例
+  （逐条过变异测试）、semantic fixture +3（`review:dispatch` 形态）。三轮独立红队
+  （fable/opus/fable）1 BLOCKER + 11 MAJOR + 22 MINOR 全采纳。
+  **已知取舍（撤泛词的代价，如实记）**：① `评审一下这个页面`（不含"页面评审"连续子串）从
+  SINGLE 直达降级为 STOP + 提示钉，真页面评审多一跳语义判断；② 点名项目的框架自维护句
+  （"清理一下 muse 的 hook"）因补 `!named` 守卫从直达变成 PROJECT_SWITCH 提示，已在该分支加
+  "若是框架 session 不要 switch"的确定性提醒兜底。
+
+### Added（2026-07-23 · 对标自我成长 SOP 制度化）
+
+- **benchmark-registry.yaml（repo 级对标基线活登记）+ check_benchmark_drift（每日观察者）+
+  BENCHMARK-RUNBOOK「更新对标（窗口复审）」W①-W⑨ 一级节**（luca 指令：每次对标必录对方更新
+  日期+我们更新了什么，固化科学严谨的标准流程）。为什么：对标 commit 此前只冻结在
+  framework-audit/*/inventory.yaml（零消费者），「更新对标」只是无执行者的 inline 补注——
+  基线必须「机读活登记+确定性消费者」同时成立；流程教训（枚举穷尽断言/血统落点直读/need-first
+  三问门/FACT-INFERENCE-CLAIM 靶子/红队+fable 终审编排）自 07-23 mattpocock 窗口复审实证固化。
+
+### Changed（2026-07-23 · mattpocock 更新对标第二批）
+
+- **plan-agent 毕业判准加决策/执行类型闸；brainstorm Rule 3 事实源扩至工具；code-recon 加 churn
+  富化信号**（源 mattpocock/skills 391a2701→ed37663c 窗口对标，红队 R1-R4+fable 终审）。为什么：
+  R2 证实我方 fog 吸收把「决策」洗成执行专用 U-block（正是上游 decision-ticket 正名针对的混淆）；
+  Rule 3 事实源是静态闭枚举、漏「工具可当场确立的事实」；churn 是零行为风险的只读富化。同轮拒
+  batch-grill-me（痛点量级证伪+上游自己 A/B 后弃批轮）、to-questionnaire 记 gap 提案待裁、
+  plugin 渠道不切（护 pin+watcher 受控刷新）。全档：framework-audit/2026-07-23-mattpocock-update-consensus.md
+
+### Changed（2026-07-16 · B2 双仓合并终裁）
+
+- **单真值源 + 双检出取代双仓拓扑**（F6-04 终裁闭环）：muse 分支 merge 回 main（union 保双方全部
+  新增），此后 `main` 是唯一真值源；母版目录（框架/meta + 记忆权威 store）与 muse 目录（luca app
+  运行时）降为 main 的两个检出。为什么：同一修复两仓各打一遍复发两例、72h 双仓 57-59 框架 commit、
+  parity 网 41 文件/127 锚点纯人力维护（F5/F6 审计实锤）；fork 沙盒使命（muse-loop 隔离孵化）已随
+  其成熟完成。muse 产品线（muse-loop-orchestrate/req-triage/proto-gen/x-digest/proto-judge +
+  luca-open）随单分支全树可用。
+- **settings.json 三键统一进 tracked**：`MEMORY_ROOT` + `ROUTE_GUARD_HEAVY_SKILLS` 入 env 块
+  （两检出一致生效，根治 D2-1「muse-loop 计划门静默降级」面），hook 日志统一 `.log`。
+- **capability-parity 降级为仓内锚点自检**（S18，127 锚点护栏保留防误删）；新增 behind tripwire
+  （verify S23 + session-restore 软提醒）。`.gitattributes merge=ours` 与 `sync-upstream.sh` 退役
+  （单真值源后无跨分支 merge 语义）。风险实验纪律：分支/worktree + 备份 remote，不再开永久 fork。
+
+### Added
+
+- 外部 skill 上游漂移侦测 watcher（2026-07-15 skill 自进化 B1）：新真值 `external-skills/
+  installed-pins.yaml`（9 单元：8 skill 回填 watch_sha + superpowers 插件行）+ daily_governance
+  `check_upstream_drift`（digest「📦 上游漂移」节，propose-only 人裁走 FUSION 九步，watcher 永不
+  自动改 skill）——为什么：已装外部 skill 无人盯上游（superpowers 插件管理器静默 5.1.0→6.1.1
+  无人察觉 37 天是立项实证），且首批三件连装机 SHA 都没有。设计要点：比较键=path 域 commit
+  （6/8 单元来自天天动的 monorepo，repo HEAD 比较=永久假漂移）；ack_sha 静音字段（裁决"不采纳"
+  不复读告警）；plugin 检查纯本地零网络；7 天节流 marker 缓存结果供同窗口 digest 重写回放；
+  fail-open 全族（离线跳过/404 单列供应链信号/空结果判路径疑错/预算 45s 部分跳过）。上线即产
+  5 条真实信号（superpowers 版本漂移 + 四个 mattpocock 单元上游 07-13 动过）。FUSION 步⑨ 加
+  pins 更新义务（防 refresh 后忘更→永久假告警）；BENCHMARK-RUNBOOK 候选源补 vetting rejected
+  高分池（B2 零成本替代，自有 skill 对标信号消费入口）。回归钉 6 条（UpstreamDriftWatcherTests）。
+- 记忆决策通道三件套 + 拒绝动词（2026-07-15 记忆+自成长层评审）：consolidate 新增 `--reviewer`
+  （--set-stable/--reject 必填署名）、`--reject ID --reason`（写 rejected review + 同次可归档）、
+  set-stable 落 approved_stable 审计记录；digest「待你裁决」新增 awaiting_approval 桶渲染（放行/
+  拒绝双命令就地给出）——为什么：31 条 review 全 promoted 是结构必然（拒绝无机器动词、只能手工改
+  jsonl）、待批候选 0-14 天窗口对人完全不可见、人工闸门零留痕不可审计，三者叠加把晋升吞吐掐死
+  （13 天零晋升、21 条积压）。回归钉 test_memory_system MemoryReviewRound2026_07_15（含「digest
+  生成的命令必须过目标 argparse」契约钉——一键晋升命令带未定义 --reviewer 是同类命令级错误第二次）。
+- 检索中文分词 + 度量闭环接线（同评审）：tokenize 拉丁/CJK 分离 + 中文 bigram + 虚词过滤（旧
+  `[\w#-]+` 把整句中文吞成巨 token，整句 query 必然零命中，26 条 miss 尸检实证真实流量漏检 ~15%）；
+  同批调权重（同义组多命中折叠计一、bigram 半权、exact-phrase ≥2 字符、7 天内 recency 5→10）；
+  retrieval-log 增记检索参数 + source 打标（MEMORY_SEARCH_SOURCE=test 免污染，legacy 行排除出
+  决策统计——历史 158 条中 54% 是 e2e 测试流量）；--mattered 接线（CLAUDE.md 读取协议 + digest
+  「🔎 检索度量」节，ADR-0006 裁决从此有 owner）；reviews.jsonl/retrieval-log.jsonl 移出 gitignore
+  入库（审计轨迹不再单机孤本）。
+- eval-log BUILD-lite（同评审三台账裁决）：record_eval 触发从 orchestrator prose 迁入 quality-gate
+  agent 定义 §4b（确定性自落账 + fail-open）——为什么：prose 约定实证 2026-06-28 起失守（其后 3 个
+  quality-gate session 零记录），「有意冻结」是对既成断链的追认；run-log 维持 FREEZE（0 字节本身即
+  裁决票据）；retrieval 走修采集。record_eval 顺修 ROOT 默认 cwd→仓根 + 本地时区→UTC。
+- hooks 布线契约回归 SETTINGS-002（2026-07-14 hooks 层评审，S22 手法延伸）：settings.json 六 hook
+  挂对事件 + PreToolUse matcher 覆盖面 + fork HEAVY set 注入（条件化，两仓同文件）+ README §8 表
+  与真实布线一致；capability-parity 补 project-scope-guard/post-edit/session-end/test-hooks 四文件
+  锚点与 route-guard「命名即切换」锚——为什么：README 手写表把 project-scope-guard 写成 PostToolUse
+  （重定向必须在工具执行**前**，语义级误导）、session-end 写成 Stop，零机检漂移无人察觉；且三个
+  hook 文件此前完全不在 parity 锚点内，「命名即切换」漂移 8 天 S18 抓不到。
+
+### Fixed
+
+- 自成长闭环「异常→人看见」最后一公里四断点（2026-07-15 记忆+自成长层评审，先实证复现再修）：
+  ① check_loop_health 的 pending 积压检测只查权威库而捕获侧写在 fork（事故最可能发生的仓失明；
+  fork_home 参数 07-10 出生即悬空）——改查两仓并集 + spawn 显式传 GOVERNANCE_CALLER_ROOT；
+  ② 异常可见性三层串联断（skip 降频压制/预览 14 行截断/stdout 丢弃，最坏 8 天盲窗）——loop 检查
+  前移到降频判定前且异常构成写 digest 理由、标题行带异常计数、spawn stdout 接 governance.log；
+  ③ .checked 认领痕双语义掩蔽崩溃日——治理完成写结果 JSON 进 marker（空=崩溃痕）、方向一检测只认
+  非空、session-restore 对陈旧空 marker 提示补跑；④ 🌱 通知等"给人看的"信号全走 stderr 死信——迁
+  stdout 用户可见通道（test-hooks CONC-005 契约随行更新）。回归钉 2 条（fork 积压/空 marker）。
+- 记忆管道数据完整性三暗坑（同评审）：畸形 jsonl 行整文件重写静默蒸发（实证 22 行变 21 行零告警；
+  read_jsonl_with_raw 保留 (None, raw) 原样带走）；promoted-facts source 裸写含冒号毒化 YAML 严格
+  解析（yaml_scalar 引号化）；review_candidates --promote 把缺元数据候选自动写 rejected 终审并
+  静默归档（可补救状态改只 skip 不落 review）。另删 review_candidates 死代码 promote()（从未被
+  调用且已与主实现漂移：丢元数据/漏 source 字段/自带第二份 SF-sync 实现）。
+- Session 生命周期 hooks 五处真问题（2026-07-14 hooks 层评审，全部先实证复现再修）：①「命名即切换」
+  route-guard 实现 2026-07-06 起只落 fork，母版 hint 仍发「确认后执行」与母版 CLAUDE.md 自相矛盾
+  （补齐母版 + STICKY-008c 回归随行）；② Stop 链（session-sync）项目真值仍读共享软链——pin=projA
+  时拦截归因/checkpoint/topic 全指向软链的 projB（方案A 补全：pin 优先、失效 pin 回退不复活幽灵
+  目录，SYNC-PIN-001/002 回归）；③ MEMORY_ROOT 重定向下 fork session 写脏母版记忆无人提醒（前日
+  A11 WARN 即此症；改两仓都查并点名脏仓，SYNC-MEM-001 回归）；④ README §8 表两处布线张冠李戴（见
+  Added 条）；⑤ route-guard pin 绑定用裸子串——"amusement" 实证误绑 pin=muse（改与 projectGate 同源
+  的词边界匹配 nameMatchesIn，STICKY-011 回归）。另 project-scope-guard Bash 保守重写把字符串字面量
+  当路径位（本 session 三次实证 deny/静默改写 grep 模式）裁决为接受的安全侧权衡：不改重写逻辑，
+  deny 文案给出字面量误伤自救指引 + 头注补记。会咬证据链：新测试×母版旧状态按序精准红
+  （SETTINGS-002→STICKY-008c→SYNC-PIN-001），逐项修复逐项转绿。
+- Agent 编排体系能力升级（2026-07-14 编排层评审）：Plan Agent 三新增——块 0 前提门（先判「该不该解/
+  更小替代」+ kill-assumption，premise-first 两次纠正升格为结构化步骤）、增量重规划协议（gate 连败/
+  NEEDS_CONTEXT/前提翻车 → delta 只重规划受影响 U-block，U-ID 冻结照守，不推倒全案）、块 5 出门自检
+  （六条机械核对，散落 MUST 收拢成出门动作）；verify S22 agent 契约常驻回归（45 断言守护 OD-first
+  三处锚/六值状态枚举同步/触发边界/双重身份/orchestrator 路径映射逐行落盘/模型档快照；会咬证据：
+  故意退化恰好 1 条红 exit=1→还原绿）；daily_governance 增 eval-log 消费节（record_eval 台账此前
+  零读取，又一个写而不读的台账；fail-open、不改 digest 写入门槛）——为什么：编排层评审发现五份
+  agent 文件是手写散文互相引用、无机器守护跨文件契约，7 月路由大改三处漏同步三周无人察觉。
+- muse-loop-orchestrate 收编条件 2 豁免名单（SSOT-10 四处同步：plan-agent roster + CLAUDE.md +
+  AGENTS.md + HITL_ANCHOR 锚 `allow_standalone_override: false`）——为什么：符合
+  豁免三要件（多 subagent 编排是声明核心机制 + GATE-1 在 fan-out 前不可绕过），不收编则条件 2
+  对其恒真、复刻 /auto 当年 50-session 零使用的结构性成因；PLAN_CHECK 双保险保留（豁免只解条件 2，
+  其余 4 条件照常检查）。
+- 对标深评制度化为演进模式 2（BENCHMARK-RUNBOOK.md：目标取自 opportunities 池/高信号 hub，六步流程
+  复用 mattpocock 先例结构）+ scout 增 AdoptionReview phase（读 adoption-log 出 keep/watch/revert）+ digest 首节三件套强制（采纳复盘 / 上期 opportunities 逐条裁决 / addressed 满 90 天复核窗）——
+  为什么：深度评审实证 scout 主管线 APPROVED 转化率为 0、最高价值采纳全来自体系外对标（其 gap 是
+  对标反向创造的），且采纳复盘在首个到期周期即漏执行（adoption-log helped 全 unknown）。
+- 演进簿记确定性脚本 scripts/evolution-bookkeep.mjs（candidate-log 追加 + yield_stats/
+  zero_yield_streak 机械更新 + N=3 连续零录取剪枝告警；幂等守卫/--dry-run/--force，fixture 8 断言
+  实测）——为什么：propose-only 曾把安全簿记也推给人工（2026-07 漏追加 candidate-log 致跨月去重
+  失效）；红线精确化为「行为面零编辑，簿记走人触发脚本」。
+
+### Fixed（编排层）
+
+- Agent 编排体系六处真问题（2026-07-14 编排层评审）：plan-agent 设计产出路由整体 OD-first 重写
+  （原文 0 次提及 open-design、25 次提及已降级的 magicpath——规划器与执行面两套真值打架；Gap 2 改
+  OD daemon→MagicPath→html-prototype 三级降级检测）；preflight 检查表补 open-design/quick-research/
+  code-recon/code-hygiene 行 + 「未列出 skill 报 WARN」防新 skill 前置检查静默裸奔；quality-gate
+  品牌合规/Brief 合规触发补 open-design（OD 拉回的主产物恰好绕过两组检查）；WA 完成报告补
+  NEEDS_CONTEXT 状态（plan-agent 要求 WA 触发、WA 合同只有两值发不出——契约裂缝）；plan-agent
+  上游 tech-spec 硬门限定产品设计链任务（原字面覆盖一切任务被常态忽略，失信规则比没有更糟）；
+  orchestrator/work-agent-template 撤 frontmatter（行为模式文档/未填模板被注册为可 spawn subagent
+  的双重身份）。gate FAIL 状态回滚 IN_PROGRESS、2/3 文件触发边界对齐 CLAUDE.md、品牌色 grep -o
+  计数（-c 数行低估同行多次）一并修。
+- 母版 code-recon 整体缺失漂移（S22 首跑即咬到）：adoption-log 记了采纳、gaps-register 标了
+  addressed，但 skill 本体/CLAUDE.md 段落/routing 词条/model-routing/input-modes/office-wizard
+  六件套从未落母版——「装完就完不算数」红线在母版真实发生；以 fork 为准全量补齐，并纠正母版
+  model-routing 双仓注记（曾把 code-recon 误记为 fork 专属）。
+- 演进 scout 五处机制缺陷（2026-07-14 评审加固轮）：硬门改 default-deny（schema enum PASS/FAIL +
+  非规范串一律 FAIL——原 ==='FAIL' 判定可被 "FAIL (…)"/"UNKNOWN" 静默绕过）；redteam agent 未返回
+  由默认 stands 改保守 downgraded（2026-07 实证红队是唯一砍掉全部幸存者的决定层，静默失败≠无异议）；
+  评分权重按 reuse_mode 分档（port-pattern/adapt-idea 免 adoption/maintenance 重罚——历史最高价值
+  采纳全是小仓借想法，原权重令其结构性够不到 APPROVED 线）；candidate-log 永久拉黑改分级
+  （REJECTED 183 天 TTL 后可重浮、opportunities 永不拉黑——原机制与 digest「可重新提案」承诺直接
+  矛盾）；external-skill-scout 非冗余硬门改读 self-model 活真值（硬编码清单已漂移，缺 code-hygiene/
+  quick-research/muse-* 等 2026-06 后新增能力）。演进面文件同步登记 capability-parity 锚点，
+  顺带治愈母版 gaps-register 缺 GAP-brownfield-design-entry 的既有漂移。
+- Stop 提取增量重拦（session-sync：marker 记录裁决时计数基线，后续增量超阈值→再拦一次，拦前刷新
+  基线防循环，SESSION_SYNC_REARM=0 关断）——为什么：马拉松 session 首次裁决后 marker 曾使后续
+  实质工作零兑底（既不拦也不写 pending，实证靠用户点破），SC-20260713-001 经用户裁决落地。
+- 路由链路检查（routing-chain-check.md：dispatch 前三规则——R1 研究前置仅两裸奔点 brainstorm/
+  ux-brainstorm、R2 设计产出 OD-first 执行面、R3 端到端意图确认门 + Ask 纪律防双重打扰）——为什么：
+  用户指出单 skill 命中会坍缩链路意图；逐 skill 输入契约调查证实其余 skill 自带硬门禁，路由层只补
+  skill 管不到的 dispatch 前 junction；semantic fixture +5 度量（ask:/flow:od-design 形态）。
+- 语义路由契约（CLAUDE.md/AGENTS.md 通用反射：route-guard STOP/漏命中不豁免模型语义评估，甲类能力
+  按含义路由 + 乙类过程纪律显式排除）+ 路由命中率度量基建（eval_routing.py keyword 层回归门进
+  verify S20 / semantic 层 judge 工作单 / fixtures 按仓分叉）+ route-guard 多功能需求信号（已有项目
+  多功能口语需求 → PLAN_MODE，直呼优先不劫持斜杠命令）——为什么：用户实测"项目里自然语言描述需求
+  经常不命中 skill/流程"，深度评估判定真问题是"甲类语义路由的统一与可度量"；经 fable 两轮对抗审查
+  （4 独立审查官 20+ 发现全部实证修复/登记）后落地，golden 52 例 + keyword fixture 24 例守护。
+- mattpocock/skills 对标（51 单元全量深评，评估链在 muse fork framework-audit/mattpocock-benchmark-2026-07/）
+  首批落地：install codebase-design + resolving-merge-conflicts（routing 词条+FM-11 实测）、tdd 刷新
+  391a2701、新建 .claude/skill-os/skill-authoring.md（写 skill 手艺 doctrine）、code-hygiene v1.1.0
+  （双轴审查+护栏会咬条款）、diagnosing-bugs 四机制 port 进 systematic-debugging——为什么：对方在
+  工程纪律线（调试反馈环/竖切/写作元词汇）上有我方可验证缺席的机制，全部经红队+行为 A/B 后按 GATE-2
+  裁决落地；四个 gap 开启（skill-authoring=addressed / registration-sync / lightweight-research /
+  issue-tracker=open）
+
+## [0.2.1] - 2026-07-05
+
+### Added
+
+- 一条命令把本机的记忆和自进化状态推回 GitHub：跑 `bash scripts/sync.sh` 就能把 episodic 索引、语义事实、演进 digest、观察记录等自变更文件同步上去，干净时会直接告诉你"无需同步"。
+- 收尾更省心：session 结束时如果还有没推的记忆/演进状态，会看到一句 🔔 提醒你跑 `scripts/sync.sh`，不再需要自己记着。
+
+### Removed
+
+- 死代码清理（ADR-0001）：删除 orphan 脚本 `scripts/fix_long_lines.py`、`scripts/repair_backticks.py`；删除已废弃的 `.claude/hermes/` 目录（Procedural 记忆层已并入 semantic `domain:skill-rule`，不再委托 hermes）。
+
+### Fixed
+
+- 清理 `.claude/skills/office/SKILL.md` 与 `.agents/skills/office/SKILL.md` 中指向已删除 hermes 脚本的悬空引用、残留命令片段，并统一两侧"成长记录协议"小节的标题与触发列表。
+
+## [0.2.0] - 2026-05-17
+
+### Added
+
+**Phase 1-3（标准开发规范基础设施）**
+
+- Git 仓库、`.gitignore`、pre-commit 安全钩子（硬失败模式，内联 API key 扫描）
+- CI/CD 工作流（`.github/workflows/ci.yml`）：YAML 校验、Markdown 校验、Skill 完整性检查
+- Session 生命周期 hooks：SessionStart、UserPromptSubmit、PostToolUse、Stop
+- 项目文档：README、CHANGELOG、SECURITY、CONTRIBUTING、LICENSE
+- 验证脚本：`scripts/verify.sh`（26项）、`scripts/validate-skills.sh`
+- 架构决策记录：`docs/adr/ADR-001-skill-first-graph-optional.md`
+- Context 工程协议（CLAUDE.md）：Checkpoint 机制、懒加载原则、Agent context 预算
+
+**Phase 4（三层记忆系统）**
+
+- Episodic 记忆层：`memory/episodic/index.jsonl`（滚动索引）+ `append_episode.py`
+- Semantic 记忆层：`memory/semantic/promoted-facts.yaml`（Hermes-lite 管道）+ `propose_semantic.py`
+- Procedural 记忆层：委托 `.claude/hermes/promoted-rules.yaml`（零新增存储）
+- 统一懒加载入口：`memory/scripts/get_memory.py --summary / --layer / --domain / --skill`
+- session-restore.mjs 集成记忆摘要（SessionStart 自动加载）
+- session-sync.mjs 集成记忆写入提示（Stop 时提示记录当次 session）
+- 初始语义事实：5 条稳定 CRM/FxUI 事实预置
+
+**Agent 体系重设计**
+
+- Orchestrator v4.0：双模式（Free Task Mode + Skill Workflow Mode），Free Task Mode 支持任意复杂任务编排
+- Plan Agent v2.0：定位重梳理，明确"规划器"角色，输出是 Orchestrator Free Task Mode 的输入
+- Work Agent Template（`.claude/agents/work-agent-template.md`）：13 变量实例化，含 Input/Output Contract、执行协议、硬性约束、Done Criteria、Failure Protocol
+- Quality Gate v4.0：双模式（Free Task Mode 执行任意断言 + Skill Mode 审查 skill 产出），测试层与执行层正式分离
+
+## [0.1.0] - 2026-05-16
+
+### Added
+
+- luca_gstack Skill OS 初始版本
+- 核心 skill 体系：idea / brainstorm / deepresearch / ux-research / ux-brainstorm / design-brief / html-prototype / figma-layer / figma-demo / ux-audit
+- Skill 编排框架（Skill-first, Graph-optional 架构）
+- 可选 workflow graph（4 个场景路径：A/B/C/D）
+- HTML 原型母版（framework/）：list、detail-2col、detail-3col、form、home
+- 品牌 token 体系（brand-tokens.md）
+- 跨 session 长期记忆（CONTEXT.md）
+- Hermes 规则自成长机制（.claude/hermes/）
+- Observability 体系（.claude/observability/）

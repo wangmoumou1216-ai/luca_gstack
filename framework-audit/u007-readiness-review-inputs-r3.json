@@ -1,0 +1,126 @@
+{
+  "created_at": "2026-10-02T21:10:18.968389+00:00",
+  "scope": "J07 exact delta/probe-draft review; no model release",
+  "inputs": [
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-readiness-review-task-r3.md",
+      "bytes": 7722,
+      "sha256": "73847137a90eb46a7608c5ec11263772807614c284dce2dbbbf810366d8462fc"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-root-integration-r5.json",
+      "bytes": 4309,
+      "sha256": "5c0f67466637b74e95f337ca2a1dd922b7902c2bd688f6de63db18fc1ee6de50"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-r4-to-r5.diff",
+      "bytes": 8816,
+      "sha256": "73a7b57105a185c9a18d136f207892a5dd6525e8fad935fdb9e87b87e96859fb"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-w24-root-collection.json",
+      "bytes": 1695,
+      "sha256": "200f8df062c3e4f1270e7ac71232b75a27288c93c0f9048232c215ce5108d437"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-routing-active-rules-repair-report.md",
+      "bytes": 13817,
+      "sha256": "335d7da1fe3e22c47e37d2b0aec74c0a487ea44e4a67ea741552ed87ae264ed1"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest.json",
+      "bytes": 111376,
+      "sha256": "cbbf8d9cf338b8bbf2aa3434e500a9f83eb69f524018968a4d8b0d798b9c41b9"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json",
+      "bytes": 111858,
+      "sha256": "53cf8e61a3a1e0232ed3a3f638dc5698651fa0dad5d39f62629573ffc294f136"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-command-first-proposal.md",
+      "bytes": 4313,
+      "sha256": "5b214264b499f1b466d57011c248deb6e6109edd461ccbd6b97cf457d92a4841"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-preparation.json",
+      "bytes": 9234,
+      "sha256": "22bec755d910eed3f558b066393522a3a1f038bef1c5af9a7be2684db96ed63b"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-material-identity.json",
+      "bytes": 1438,
+      "sha256": "83814d4eb0069a297f5330f56f43fe0f57e43772baa937d8433b7c75adde392c"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-case-draft.json",
+      "bytes": 20460,
+      "sha256": "2be95e93736de424293e00aa9bed6647dfa565075c673fc5e2dd996c5032f516"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-registration-draft.json",
+      "bytes": 5813,
+      "sha256": "269bc6157fedc723b6098d207eba1b0185b6ebc25e781fd359348f43262ea212"
+    },
+    {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u007-p06-manifest-draft.json",
+      "bytes": 7142,
+      "sha256": "9c5a17bec2ade2e93594c482134703fb0e9ce0859ee1ea662901262f89674103"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.test.mjs",
+      "bytes": 50143,
+      "sha256": "9f0a32d28fb937224ab6aed5a00a31eb53f4d7ba031969c92f509af359bb97f2"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.test.mjs",
+      "bytes": 30229,
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.test.mjs",
+      "bytes": 22755,
+      "sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/integration.test.mjs",
+      "bytes": 32357,
+      "sha256": "fa583ca373a60d32e7172baec7690402e67e7e9d4ae3720a13a371dacabd3b57"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/conditions.mjs",
+      "bytes": 24895,
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/case-protocol.mjs",
+      "bytes": 31446,
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval/driver.mjs",
+      "bytes": 44384,
+      "sha256": "ce5372b72266a8c99edd2c1b0a91f555cf34e99e04033ff7918a9d022550659f"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-w24-active-rules-99bg5mty/green-rule-comparison.json",
+      "bytes": 52224,
+      "sha256": "5b07b9ed35c001e6634521ff337da65a57c387ca536b156476fe689056d4a2d2"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-w24-active-rules-99bg5mty/comparison-summary.json",
+      "bytes": 4607,
+      "sha256": "639f8da62032d1a5aa63db37f122c2af0a50783898e4cf7fdcd1c7bada649dab"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-w24-active-rules-99bg5mty/final-integrity.json",
+      "bytes": 652,
+      "sha256": "0942d9afaad2aa7e61f4712c2a36b57028f2ed04d6a092fd9dcf86c64210244f"
+    },
+    {
+      "path": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-w24-active-rules-99bg5mty/red-source-vs-r4.json",
+      "bytes": 2691,
+      "sha256": "096a05c532ab96117478c1f3d6f5f589467d73f09fc8bcf9e3d69a66a2023374"
+    }
+  ]
+}

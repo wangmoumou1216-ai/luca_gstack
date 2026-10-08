@@ -1,0 +1,13 @@
+{
+  "owner_thread": "01a0fcca-4899-79f3-9094-c9a9ea2bd186",
+  "owner_turn": "01a0ffa1-fff3-7062-b01c-b0ac8e5c1810",
+  "owner_turn_terminal": false,
+  "collection_time": "2026-10-03T02:50:09.116484+00:00",
+  "path": ".claude/skill-os/capability-parity.json",
+  "source": "/Users/luca/.codex/worktrees/8812/luca_gstack/.claude/skill-os/capability-parity.json",
+  "before_sha256": "3a243586557d3d5166eac9b6bf91219c3ea71656c84ba1e238639ac38f35e49f",
+  "candidate_sha256": "1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317",
+  "delta": "one historical literal anchor updated to current semantic routing hint; all other JSON values unchanged",
+  "runtime_code_changed": false,
+  "semantic_test_unchanged": true
+}

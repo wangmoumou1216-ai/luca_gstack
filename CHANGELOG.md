@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-08 · 路由与计划基线有限返修）
+
+- Plan 摘要与模式表统一要求所有 Supervisor/Hierarchical 实例获真实批准；严格 handoff 拒绝 UNKNOWN、非法或重复字段及注释、证据中的伪 PASS。为什么：避免说明与执行门不一致，以及文本伪装造成错误放行。
+- `--judge` 明确为路由标签审查，采用全部23项校准及上下文，拒绝空白输入、无效或退役目标；不把答案键比较当作实际 Agent 语义成绩。
+- `routing-plan-v1` 保留24 RP与3 PO，两臂采用相同公开提示和限制，注入实际 production hint，在隔离目录执行；PO 要求完整计划、来源单元、依赖和正反例断言，保留前版计划与未决偏好。验证为离线合同及变异回归；原 A1/A2/A3/U5 和原17项验收分母保留，完整原生验收仍未完成。
+
 ### Fixed（2026-10-08 · Agent 编排完成与委托合同）
 
 - PF 明确实际模式与输入；QG 区分 WA、主控和汇总证据。受管节点在独立验收、记录与当前真人门后由唯一父级提交，保留 standalone 和原宿主完成接口。为什么：避免先写 DONE 或缺输入造成错误放行与合法流程误阻。

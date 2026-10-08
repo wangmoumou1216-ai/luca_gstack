@@ -1,0 +1,26 @@
+[
+  {
+    "mutation": "complete contract",
+    "exit": 1,
+    "assertion_failure": true,
+    "tail": "tax: invalid registration passed health\n    \n    true !== false\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: false\n  actual: true\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/hook-release-mutation-249kkw7e/scripts/test-codex-hook-health.mjs:156:12)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 278.490459\n"
+  },
+  {
+    "mutation": "format validation",
+    "exit": 1,
+    "assertion_failure": true,
+    "tail": "ripts/probe.mjs: wrong format passed health\n    \n    true !== false\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: false\n  actual: true\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/hook-release-mutation-249kkw7e/scripts/test-codex-hook-health.mjs:175:12)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 323.73\n"
+  },
+  {
+    "mutation": "early return freeze",
+    "exit": 1,
+    "assertion_failure": true,
+    "tail": "\n  failureType: 'testCodeFailure'\n  error: 'registration-drift-trusted'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 0\n  actual: 0\n  operator: 'notStrictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/hook-release-mutation-249kkw7e/scripts/test-codex-trust-hooks.mjs:187:12)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1409.872083\n"
+  },
+  {
+    "mutation": "runtime capability",
+    "exit": 1,
+    "assertion_failure": true,
+    "tail": "  Expected values to be strictly equal:\n    \n    true !== false\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: false\n  actual: true\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/hook-release-mutation-249kkw7e/scripts/test-codex-hook-health.mjs:200:12)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 640.597334\n"
+  }
+]

@@ -1,0 +1,12 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 281a88a..f8f29c3 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -53,6 +53,7 @@ jobs:
+       - uses: actions/checkout@v5
+         with:
+           fetch-depth: 0 # G5 offline fixtures reconstruct two frozen historical trees.
++          persist-credentials: false # Diagnose-only safety rejects credential-bearing Git config.
+       - uses: actions/setup-node@v5
+         with:
+           # The protected hook loader uses node:module.registerHooks.

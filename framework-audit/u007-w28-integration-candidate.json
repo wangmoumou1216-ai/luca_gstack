@@ -1,0 +1,41 @@
+{
+  "prepared_at": "2026-10-02T22:24:43.981601+00:00",
+  "status": "TEMP_FROZEN_FOR_W29_NOT_ROOT_COLLECTION",
+  "module_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w28-frozen-candidate-lal_26gp",
+  "files": {
+    "case-protocol.mjs": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w28-frozen-candidate-lal_26gp/case-protocol.mjs",
+      "sha256": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8"
+    },
+    "case-protocol.test.mjs": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w28-frozen-candidate-lal_26gp/case-protocol.test.mjs",
+      "sha256": "b668c47cfb89cf92b820b3c46cc8574b71c555f2565963a10040fa7f33f966af"
+    },
+    "conditions.mjs": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w28-frozen-candidate-lal_26gp/conditions.mjs",
+      "sha256": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc"
+    },
+    "conditions.test.mjs": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w28-frozen-candidate-lal_26gp/conditions.test.mjs",
+      "sha256": "4decae0bac8a40d87cde6d67457cbdac0f55b89bfa1febac31d8ed7832258920"
+    },
+    "driver.mjs": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w28-frozen-candidate-lal_26gp/driver.mjs",
+      "sha256": "c6db8f7d4612db1ce764159b5f8630dd9eebb9882906d4f3c66c66059d16abe0"
+    },
+    "driver.test.mjs": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w28-frozen-candidate-lal_26gp/driver.test.mjs",
+      "sha256": "b85bc427ebd9d7b8a29e248ee0c3520db946ae42bb4a8047a8c68136c5ace90e"
+    },
+    "integration.test.mjs": {
+      "path": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u007-w28-frozen-candidate-lal_26gp/integration.test.mjs",
+      "sha256": "537ab63bf691b994f01768340caab4e242b31933495206be6783d93cbebeffc8"
+    }
+  },
+  "source_manifest": {
+    "path": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json",
+    "sha256": "53cf8e61a3a1e0232ed3a3f638dc5698651fa0dad5d39f62629573ffc294f136"
+  },
+  "author_test_claim": "6 targeted PASS, full module still in progress at snapshot",
+  "note": "R6 root unchanged. W29 uses its own test file; final report and independent review pending."
+}

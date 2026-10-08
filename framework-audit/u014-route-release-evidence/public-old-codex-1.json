@@ -1,0 +1,49 @@
+{
+  "argv": [
+    "node",
+    ".codex/host-launch-hook.mjs",
+    "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old/.claude/hooks/route-guard.mjs"
+  ],
+  "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old",
+  "env_overrides": {
+    "LUCA_PROJECTS_ROOT": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old/fixture-projects",
+    "MEMORY_ROOT": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old/fixture-memory",
+    "ROUTE_GUARD_DRY_RUN": "0",
+    "ROUTE_GUARD_PROJECTS": "fixture",
+    "ROUTE_GUARD_CURRENT_PROJECT": "fixture",
+    "ROUTE_GUARD_HEAVY_SKILLS": "",
+    "LUCA_NATIVE_HOOK_STRICT": "1"
+  },
+  "env_removed": [
+    "LUCA_ACTUAL_HARNESS",
+    "LUCA_HARNESS_ADAPTED",
+    "CLAUDE_PROJECT_DIR",
+    "CODEX_HOME",
+    "CODEX_SANDBOX",
+    "CODEX_SESSION_ID",
+    "NODE_OPTIONS",
+    "LUCA_CHILD_SOURCE_ROOT",
+    "LUCA_PROTECTED_CODE_ROOT",
+    "MUSE_HOST_LAUNCH_ID",
+    "MUSE_HOST_LAUNCH_HANDLE",
+    "MUSE_HOST_LAUNCH_ENDPOINT",
+    "MUSE_HOST_LAUNCH_NONCE",
+    "MUSE_HOST_RUN_ID",
+    "MUSE_OPEN_REQUEST_ID",
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE"
+  ],
+  "input": {
+    "prompt": "PRD是啥，规划一下",
+    "prompt_id": "protocol-field",
+    "cwd": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/old",
+    "hook_event_name": "UserPromptSubmit"
+  },
+  "started_at": "2026-10-03T08:05:54.095174+00:00",
+  "ended_at": "2026-10-03T08:05:54.235254+00:00",
+  "exit": 0,
+  "elapsed_seconds": 0.14,
+  "stdout": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-1.stdout",
+  "stderr": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/u014-routing-adoptable-i4y88s01/public-old-codex-1.stderr"
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "route-architecture-20260930-01",
+  "subject": {
+    "skill": "architecture",
+    "topic": "model-routing and NO_PIN delegation boundary",
+    "scene": "unknown",
+    "input_summary": "Independent preliminary assessment of role authority, effort preservation, unknown model ordering, proposed validated NO_PIN fast path, review independence, and minimal remediation.",
+    "output_paths": [
+      ".claude/skill-os/model-routing.yaml",
+      "scripts/model-route.mjs",
+      ".codex/model-route-hook.mjs",
+      ".claude/hooks/lib/codex-child-project.mjs",
+      ".claude/hooks/lib/project-substrate.mjs"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 3,
+    "total": 6,
+    "findings": [
+      "C1 FAIL: unscoped legacy dispatch prose conflicts with common v2 policy.",
+      "C4 UNKNOWN: proposed NO_PIN fast path is not implemented or behaviorally verified; validate NO_PIN and retain nested-child resolution.",
+      "C5 FAIL: critical reviews can retain producer history when the selected model equals anchor or a numeric fork is supplied.",
+      "Mutation verification incomplete: OS-temp fixture lacks .codex/model-routing-bindings.example.json."
+    ]
+  }
+}

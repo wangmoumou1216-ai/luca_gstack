@@ -1,0 +1,19 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "scripts/tri-system-eval/native-trace-integration.test.mjs",
+    "scripts/tri-system-eval/integration.test.mjs"
+  ],
+  "exit_code": 0,
+  "seconds": 45.467,
+  "hashes": {
+    "native-trace-integration.test.mjs": "a309fc9eb96b7bab117acbb7335f5b9f4dad94922c67970f6b74b61076585216",
+    "integration.test.mjs": "7815ed8008c9481b2acfc613c3ce7c7df08db5d5b36afd02ec865b1da9bf2d6f",
+    "native-trace.mjs": "afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce",
+    "driver.mjs": "9a704cd1a8076d3b061668481b83a99a398f88880bd18b1f41b32c00efb1028a",
+    "conditions.mjs": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+    "case-protocol.mjs": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8"
+  },
+  "tap_sha256": "7bf63fdb2d7947c4cd0975dc793d22420f69e8f2537b2ec61b2f9ad39a434e1e"
+}

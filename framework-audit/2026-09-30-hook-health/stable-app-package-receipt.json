@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "kind": "luca-hook-package-prepared",
+  "read_only": false,
+  "scope": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-hook-health/CACHE-FINAL-SCOPE-02.json",
+  "scope_sha256": "1eff6622a143d5f94ccbe8babaf2211a457d6d332d4e28e6d98b973e0f8bdd97",
+  "helper_sha256": "012c486b7d9711589a839a661eb75f07050a1940a1ae47c0d8c1b4ffb98deb25",
+  "reviewed_files": 17,
+  "heads": [
+    {
+      "root": "/Users/luca/.codex/worktrees/hook-text-data/luca_gstack",
+      "base": "54ef203b4dd77e23564d0cba22f773346d30dfec",
+      "head": "54ef203b4dd77e23564d0cba22f773346d30dfec"
+    },
+    {
+      "root": "/Users/luca/Desktop/项目/muse",
+      "base": "0f63d4edb2c3df7096e12c6ccd6f1e7114975f8e",
+      "head": "0f63d4edb2c3df7096e12c6ccd6f1e7114975f8e"
+    }
+  ],
+  "tooling": {
+    "entry": "/Users/luca/Desktop/项目/muse/app/node_modules/@electron/asar/lib/asar.js",
+    "version": "3.4.1",
+    "files": {
+      "/Users/luca/Desktop/项目/muse/app/node_modules/@electron/asar/package.json": "799229d16ba7b2c0fea30f45e4efd4b9c2392cd9aa7d3695030319ce5d7a04e1",
+      "/Users/luca/Desktop/项目/muse/app/node_modules/@electron/asar/lib/asar.js": "91e89e96324626b140f3e897dffaca6e3cbb1135c4192ce6ceaa0e84af4ba152",
+      "/Users/luca/Desktop/项目/muse/app/node_modules/@electron/asar/lib/disk.js": "849ea3eebaf945978a48ae1f08d429d235430f4f8cc94486d124755a7fa379bb",
+      "/Users/luca/Desktop/项目/muse/app/node_modules/@electron/asar/lib/filesystem.js": "4ed3f336af7d7906c374222c0a5d085ba91471eba9e2b55e700190fe3cfcc24b",
+      "/Users/luca/Desktop/项目/muse/app/node_modules/@electron/asar/lib/integrity.js": "107c43e596dd644d9896899e2be60465983b42e18ead2e3c7993fdcbee0c8764",
+      "/Users/luca/Desktop/项目/muse/app/node_modules/@electron/asar/lib/pickle.js": "771c59cf05e42ee55f5bf03cbabc84f86fd623dee1bd725f0602812637fa0867",
+      "/Users/luca/Desktop/项目/muse/app/node_modules/@electron/asar/lib/wrapped-fs.js": "601c3c2151986f62de3b7297e3630873a6924230852c7f36c0b172cdabf0a4de",
+      "/Users/luca/Desktop/项目/muse/app/macos-release.mjs": "441ace7dbc2cd6d0de8ece74d3aa6b0268f33be5e14afa5916970f36ee994658"
+    }
+  },
+  "installed_baseline": {
+    "app": "/Applications/luca.app",
+    "asar_sha256": "3398de2120ceafb32c821947f433fb8d15e135a42cef3333c7ce374a7e35e9d7",
+    "header_sha256": "b4346f8efde6d06687e83bc8f29d64da2c93701fa20f2061858abfccec3eb712",
+    "host_sha256": "d799f6716788f91b729fa45e2c03ca621a8c79f8d00e6a9c07de4667bb6faa01",
+    "info_sha256": "18149d71468222ea5b35aa2a5c8f63f72a83dddee3ecdab3c9298c0a2d0cb5d0",
+    "bundle_inventory_sha256": "69390e60d443bb1d9323473d03aaf94278d8955027d65acf9b4a4df287a41453",
+    "module_inventory_sha256": "6e44fa5571ce8edf69e927133528d04e5d3ea9ff0bd41e2c34d848ccbf7b308f",
+    "unpacked_sha256": "16d4a88a2431a808a77fb2d6afe15bd82c1b5f32700b9919f676cfb219d72176",
+    "sidecar": {
+      "path": "/Users/luca/.local/bin/codex-luca-aihub",
+      "sha256": "b2023c4fcfb51e231d4ff7e15f04eaeaf18d471723340bf929fbcb29abaff687",
+      "mode": 448
+    },
+    "signature_verified": true
+  },
+  "target_host_sha256": "e143d1eb07aa18b58e0cb607fdca442cebf158ccb65febcd143c36f68bbfdceb",
+  "prepare_requested": true,
+  "prepared": true,
+  "installed": false,
+  "temp_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-I3G4HG",
+  "app": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-I3G4HG/luca.app",
+  "comparison": {
+    "changed_modules": [
+      "host-hook-ready.js"
+    ],
+    "allowed_metadata_changes": [
+      {
+        "path": "node_modules/node-pty/node_modules/node-addon-api/nothing.c",
+        "reason": "official serializer normalizes empty blocks",
+        "before": {
+          "algorithm": "SHA256",
+          "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blockSize": 4194304,
+          "blocks": []
+        },
+        "after": {
+          "algorithm": "SHA256",
+          "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blockSize": 4194304,
+          "blocks": [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          ]
+        }
+      }
+    ],
+    "offsets_recomputed": true,
+    "modules_read_back": 441
+  },
+  "signature_changes": [
+    {
+      "path": "Contents/MacOS/luca",
+      "before_sha256": "693e57ab0b7e45fa1cfac753b0171e9d8e19a283e6504b28dddbd854a9cb367b",
+      "after_sha256": "ab5ac9700dc1a1f8bb3ddd6def640f2a71217d32b29d1f4c2b3fa81bfa356061",
+      "kind": "embedded signature only"
+    },
+    {
+      "path": "Contents/_CodeSignature/CodeResources",
+      "before_sha256": "6020dd14859c6390698787535f63351b83f0224e94538811ee97fe1b3f788bc1",
+      "after_sha256": "538a03ca0e214040dbf80df440b2077f126115e79f3e30caa847a1eebe278b8c",
+      "kind": "signature seal"
+    }
+  ],
+  "signature_verified": true,
+  "asar_sha256": "91b6a46872442dad92258db64bf59e532fa4a090eb274e8c66f77d62c366ae6e",
+  "header_sha256": "5e69c49a531ad6d4e69ab74781d9c612a4f11320ee9d81c32ba97f2669ba3fae",
+  "info_sha256": "932736576f7a8ab480a9306bccea944633065d93086ecd3bc29cdde68e1aa834",
+  "bundle_inventory_sha256": "7c0da35b836edec3401dfaac513848308a7e58f6f48d30b42b1e18ab87557302",
+  "unpacked_sha256": "16d4a88a2431a808a77fb2d6afe15bd82c1b5f32700b9919f676cfb219d72176",
+  "artifacts": {
+    "receipt": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-I3G4HG/receipt.json",
+    "baseline": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-I3G4HG/installed-baseline.json",
+    "candidate": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-I3G4HG/candidate-bundle-inventory.json",
+    "scope": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-I3G4HG/reviewed-scope.json",
+    "serializer_unpacked": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-hook-package-I3G4HG/candidate.asar.unpacked"
+  }
+}

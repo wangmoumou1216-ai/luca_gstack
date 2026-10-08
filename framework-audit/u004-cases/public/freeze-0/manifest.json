@@ -1,0 +1,74 @@
+{
+  "package": "u004-cases",
+  "schema_version": 1,
+  "freeze": "initial",
+  "frozen_at_utc": "2026-10-02T15:54:47.065303+00:00",
+  "source_task_sha256": "484d1b4863f181768c55496ed67bd95ad0218480a22ae6ee24afc7331ecaa3c9",
+  "counts": {
+    "development": 6,
+    "hidden": 12,
+    "development_simple": 2,
+    "development_heavy": 4,
+    "hidden_simple": 4,
+    "hidden_heavy": 8,
+    "formal_behavior_runs": 0
+  },
+  "files": [
+    {
+      "path": "private/hidden-cases.json",
+      "bytes": 305861,
+      "sha256": "7cfeaba878470e413d580795487bdb96a4ae6aed3d7c2ce1e26a85a069efa974"
+    },
+    {
+      "path": "public/README.md",
+      "bytes": 7818,
+      "sha256": "7b698e05573f84b1a3c6fa62de31b96a2f0b2909405edbdde33c6769129e028c"
+    },
+    {
+      "path": "public/coverage.md",
+      "bytes": 4544,
+      "sha256": "7dbfe3b8dd57e312a2e3d7bd4f0fdcdd50ad91a89f2301e6b0076e03d4655dab"
+    },
+    {
+      "path": "public/developer-cases.json",
+      "bytes": 151126,
+      "sha256": "021b286cbf7b9d679e1a45a5fcca750a55b788f2f034935434c351683caa1005"
+    }
+  ],
+  "self_excluded": {
+    "path": "public/manifest.json",
+    "reason": "A file cannot contain its own stable digest; SHA delivered separately."
+  },
+  "self_checks": {
+    "count_matrix": "PASS",
+    "unique_case_ids": "PASS",
+    "complexity_matrix": "PASS",
+    "mandatory_hidden_tags": "PASS",
+    "stop_continue_contrast": "PASS",
+    "events_have_fixed_driver_nodes_and_full_authority_fields": "PASS",
+    "every_event_node_listed_in_case_protocol": "PASS",
+    "material_bytes_and_sha256": "PASS",
+    "answer_and_structured_assertion_binding": "PASS",
+    "quality_targets_predeclared": "PASS",
+    "no_runtime_fact_regeneration": "PASS",
+    "hidden_operations_differ_from_development": "PASS",
+    "private_readback_matches_written_data": "PASS",
+    "private_content_not_emitted_to_tool_output": "PASS",
+    "public_exact_secret_leak_scan": "PASS",
+    "all_payload_files_listed": "PASS"
+  },
+  "qualification": "Construction/structural checks only. No candidate behavior, real driver injection, external tool, real host or human acceptance has been verified.",
+  "resources": {
+    "preparation_pool_slot": "W01 1/20",
+    "formal_runs": 0,
+    "extra_agents": 0,
+    "declared_budget_minutes": 45,
+    "declared_tool_action_limit": 90,
+    "observable_token_limit": 120000,
+    "actual_token_usage": "unavailable; no per-agent trustworthy meter exposed",
+    "generator_and_selfcheck_seconds": 0.01
+  },
+  "access_boundary": "Explicit no-read policy, not OS security. Custodian may read all. Coordinator and A/D candidates must not read private/; driver discloses one current case request and eligible materials, never answer or other hidden cases. Judge receives only the currently authorized blind review packet.",
+  "uncovered_use_ids": [],
+  "uncovered_scope_policy": "All real-world and runtime ranges listed in coverage.md remain protected; local synthetic coverage cannot authorize removal."
+}

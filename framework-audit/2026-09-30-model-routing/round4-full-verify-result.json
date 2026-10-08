@@ -1,0 +1,6 @@
+{
+  "fixture_root": "/private/tmp/luca-routing-full-gate-8hq7n9pg/release",
+  "command": "bash scripts/verify.sh --ci",
+  "exit": 1,
+  "log": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-09-30-model-routing/full-verify.log"
+}

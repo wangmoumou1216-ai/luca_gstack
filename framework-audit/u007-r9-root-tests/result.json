@@ -1,0 +1,24 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "scripts/tri-system-eval/native-trace-integration.test.mjs",
+    "scripts/tri-system-eval/integration.test.mjs"
+  ],
+  "exit_code": 1,
+  "seconds": 45.494,
+  "hashes": {
+    "native-trace-integration.test.mjs": "8aaa7f660df741a544c79471a4f0e52ab25940a8144bf3e2cb93a9cc04f6121b",
+    "integration.test.mjs": "7815ed8008c9481b2acfc613c3ce7c7df08db5d5b36afd02ec865b1da9bf2d6f",
+    "native-trace.mjs": "afcc6cb544c9f85319b8598284591f22a011302304ff886cce581a979da046ce",
+    "driver.mjs": "9a704cd1a8076d3b061668481b83a99a398f88880bd18b1f41b32c00efb1028a",
+    "conditions.mjs": "216d21cdb7d52b57914c8cdefa2a338f7ed62fe721546f61225ea10698be84bc",
+    "case-protocol.mjs": "ce9a1b6c40d435a34813538f27deca5468f5a9ee38f35c2a165dd0f9e84a86e8"
+  },
+  "tap_sha256": "bfad60873d4e25e8a6c2b0e2e72978520a24ea06a0e08605cc40f966c45bc62a",
+  "env": {
+    "U007_MODULE_ROOT": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval",
+    "U007_TRACE_MODULE_ROOT": "/Users/luca/.codex/worktrees/f351/luca_gstack/scripts/tri-system-eval",
+    "U007_SOURCE_MANIFEST": "/Users/luca/Desktop/luca_gstack/framework-audit/u002-source-manifest-active-rules-v1.json"
+  }
+}

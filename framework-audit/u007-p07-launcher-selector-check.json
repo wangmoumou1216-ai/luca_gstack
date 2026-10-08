@@ -1,0 +1,16 @@
+{
+  "status": "PASS_OFFLINE_SELECTOR_ONLY",
+  "launcher_sha256": "9b320a97314e041010df535fd826b42ccaa7aa800c147fc434a3470d5f276a86",
+  "checks": [
+    "Owned descendants including detached app-server group selected; unrelated process excluded",
+    "Reparented same PID/birth/group retained",
+    "Reused PID with different birth excluded",
+    "Changed group excluded"
+  ],
+  "processes_started": 0,
+  "signals_sent": 0,
+  "limitations": [
+    "Does not prove operating-system kill behavior or runtime descendant completeness.",
+    "Independent live process observation remains necessary."
+  ]
+}

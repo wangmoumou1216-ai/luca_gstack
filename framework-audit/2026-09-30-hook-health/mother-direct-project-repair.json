@@ -1,0 +1,11 @@
+{
+  "root": "/Users/luca/Desktop/luca_gstack",
+  "codexHome": "/Users/luca/.luca/codex/aihub-direct",
+  "oldTrust": null,
+  "method": "official config/batchWrite with expectedVersion",
+  "at": "2026-09-30T10:17:08.365Z",
+  "backup": "/Users/luca/.luca/codex/aihub-direct/config.toml.pre-mother-project-1790763428366",
+  "backupSha256": "cda812ca6f79fcf01ab8644abe8b7de43a2b5c39b831ad7450940bcff830e3a7",
+  "onlyExactProjectTrustChanged": true,
+  "newTrust": "trusted"
+}
