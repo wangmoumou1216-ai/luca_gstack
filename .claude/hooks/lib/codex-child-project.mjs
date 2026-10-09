@@ -9,6 +9,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { readActivation } from '../../../scripts/model-route-host.mjs';
+import { readHostLaunchSourceScope } from './event-attestation.mjs';
 import {
   PROJECTS_ROOT, activeProjectAuthority, attestPendingProjectEvent,
   readProjectState, validatedBindingForState, verifyProjectBinding,
@@ -237,6 +238,16 @@ export function revokeCodexChildProjectActivation({ gstackRoot, rootSessionId })
 }
 function sourceHome(gstackRoot, rootSessionId, codexHome) {
   const requested = String(codexHome || '');
+  // The App freezes this exact root source in its protected launch journal.
+  // Children inherit that grant through their receipt's root SID, never CODEX_HOME alone.
+  const scope = readHostLaunchSourceScope(gstackRoot, rootSessionId);
+  if (scope) {
+    const home = protectedDir(canonical(scope.sourceRoot.realpath, 'App Codex home'), 'App Codex home');
+    if (requested && canonical(requested, 'Codex home') !== home) {
+      fail('SOURCE_ROOT', 'Codex rollout source differs from the protected App grant');
+    }
+    return home;
+  }
   if (process.env.NODE_ENV === 'test' && process.env.LUCA_EVENT_ATTESTATION_TEST === '1'
       && process.env.LUCA_CHILD_PROJECT_TEST_CODEX_HOME) {
     const gstack = canonical(gstackRoot, 'fixture root');

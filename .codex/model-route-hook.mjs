@@ -105,7 +105,7 @@ function latchRouteFailure(payload, state, critical, error) {
 function ensureNativeActivation(payload, policy) {
   let state = readActivation({harness: 'codex', root_session_id: payload.session_id, state_root: STATE_ROOT});
   if (!state || state.status === 'paused') {
-    // Child association still supports the native default home only. Refuse a
+    // Recovery remains restricted to the native default home. Refuse a
     // provider recovery before writing activation rather than failing later.
     const nativeHome = realpathSync(resolvePath(homedir(), '.codex'));
     const scope = readHostLaunchSourceScope(ROOT, payload.session_id);

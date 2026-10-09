@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import {
-  appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync,
+  appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync,
   statSync, writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -190,6 +190,78 @@ try {
         projectsRoot: projects, childSessionId: childSid, cwd: gstack,
         codexHome: providerHome }), { code: 'SOURCE_ROOT' });
     } finally { writeFileSync(rootRollout, trusted); }
+  });
+  check('an App-attested provider home supports native child association without accepting ungranted homes', () => {
+    const hostFixture = realpathSync(mkdtempSync('/private/tmp/host-launch-child-project-'));
+    const gstack = join(hostFixture, 'gstack');
+    mkdirSync(join(gstack, '.claude'), { recursive: true });
+    const priorStore = process.env.LUCA_CHILD_PROJECT_STORE_ROOT;
+    process.env.LUCA_CHILD_PROJECT_STORE_ROOT = join(hostFixture, 'protected-store');
+    try {
+      const parent = `01${randomUUID().slice(2)}`, child = `01${randomUUID().slice(2)}`;
+      const turn = `turn-${randomUUID()}`, tool = `call_${randomUUID()}`;
+      const providerHome = join(hostFixture, 'app-codex-home');
+      const sessions = join(providerHome, 'sessions', '2026', '09', '28');
+      mkdirSync(providerHome, { mode: 0o700 });
+      mkdirSync(sessions, { recursive: true });
+      const launchId = randomUUID(), journal = join(gstack, '.claude', 'host-launch');
+      mkdirSync(journal, { mode: 0o700 });
+      const sourceStat = statSync(providerHome);
+      const grant = Buffer.from(line({ schemaVersion: 1, sessionId: parent, launchId,
+        provider: 'codex', cwd: gstack,
+        sourceRoot: { realpath: providerHome, dev: String(sourceStat.dev), ino: String(sourceStat.ino) } }));
+      const grantFile = join(journal, `${launchId}.source.json`);
+      writeFileSync(grantFile, grant, { mode: 0o600 });
+      const stateFile = join(gstack, '.claude', `.session-project-${parent}`);
+      writeFileSync(stateFile, line({ schema_version: 2, state: 'BOUND', session_id: parent,
+        binding: a, terminal: { tx: 'seed-switch', operation: 'switch', expected_epoch: 0,
+          turn_id: 'seed-turn', committed_at: '2026-09-28T00:00:00Z' },
+        host_launch_source: { launch_id: launchId, sha256: createHash('sha256').update(grant).digest('hex') } }));
+      initializeProjectEventFence({ gstackRoot: gstack, projectsRoot: projects,
+        sessionId: parent, harness: 'codex', cwd: gstack, codexHome: providerHome });
+      const rows = JSON.parse(JSON.stringify(rootRows)
+        .replaceAll(rootSid, parent).replaceAll(turnId, turn).replaceAll(toolUseId, tool)
+        .replaceAll(join(fixture, 'gstack'), gstack));
+      writeRows(join(sessions, `rollout-parent-${parent}.jsonl`), rows);
+      queueProjectEventCandidate({ gstackRoot: gstack, projectsRoot: projects,
+        sessionId: parent, boundaryId: turn, cwd: gstack, harness: 'codex',
+        prompt, intent: { kind: 'turn' } });
+      startActivation({ harness: 'codex', root_session_id: parent,
+        root_anchor: { model: 'fixture-model', source: 'fixture' },
+        release_digest: 'a'.repeat(64), state_root: stateRoot });
+      const options = { gstackRoot: gstack, projectsRoot: projects,
+        parentSessionId: parent, turnId: turn, toolUseId: tool,
+        agentType, taskName, cwd: gstack, codexHome: providerHome };
+      const prepared = prepareCodexChildProject(options);
+      assert.match(prepared.receiptDigest, /^[a-f0-9]{64}$/);
+      const bound = bindCodexChildProject({ ...options, agentId: child });
+      const childRecords = JSON.parse(JSON.stringify(childRows())
+        .replaceAll(rootSid, parent).replaceAll(childSid, child)
+        .replaceAll(join(fixture, 'gstack'), gstack));
+      writeRows(join(sessions, `rollout-child-${child}.jsonl`), childRecords);
+      const resolveChild = (home = providerHome) => resolveCodexChildProject({
+        gstackRoot: gstack, projectsRoot: projects, childSessionId: child, cwd: gstack, codexHome: home });
+      assert.equal(resolveChild().receiptDigest, bound.receiptDigest);
+      assert.equal(resolveChild().binding.project, 'projA');
+      assert.throws(() => resolveChild(codexHome), { code: 'SOURCE_ROOT' });
+      chmodSync(providerHome, 0o755);
+      assert.throws(resolveChild, { code: 'STORE_UNTRUSTED' });
+      chmodSync(providerHome, 0o700);
+      assert.equal(resolveChild().binding.project, 'projA');
+      writeFileSync(grantFile, Buffer.concat([grant, Buffer.from(' ')]));
+      assert.throws(resolveChild, { code: 'SOURCE_ROOT' });
+      writeFileSync(grantFile, grant);
+      const state = readFileSync(stateFile);
+      const ungranted = JSON.parse(state);
+      delete ungranted.host_launch_source;
+      writeFileSync(stateFile, line(ungranted));
+      assert.throws(resolveChild, { code: 'SOURCE_ROOT' });
+      writeFileSync(stateFile, state);
+      assert.equal(resolveChild().binding.project, 'projA');
+    } finally {
+      process.env.LUCA_CHILD_PROJECT_STORE_ROOT = priorStore;
+      rmSync(hostFixture, { recursive: true, force: true });
+    }
   });
   check('child cannot borrow an active parent turn for project selection', () => {
     const stateFile = join(gstack, '.claude', `.session-project-${rootSid}`);

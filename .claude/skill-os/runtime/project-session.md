@@ -25,12 +25,13 @@ ended root activation invalidates the delegation; a normal parent turn `Stop` do
 cannot use this association to call `project.sh switch/new` or make a human-only project decision.
 Missing or inconsistent lineage denies scoped paths. Claude sidechains need their own native
 identity check and do not gain a Codex association by sharing a session ID.
-This release verifies child lineage only from the owner-protected native `~/.codex`
-rollout source; writable provider homes such as `~/.luca/codex` are not association sources.
-Agent activation recovery uses the same default-home SID, workspace and current
-turn transcript, with locked CAS and critical obligations preserved. Native metadata
-owns SID, not filenames. Nondefault homes and workflow-runner retain existing gates.
-Active App Stop evidence may use its protected source grant without widening association.
+Child lineage accepts native `~/.codex` or the root's exact protected App Host Launch
+source: canonical, owner-only, digest/physical identity verified. `CODEX_HOME` alone
+never grants authority; native ancestry and frozen receipts must match. Descendants
+inherit root scope. Stop evidence may use this grant. Recovery requires the
+default-home SID, cwd and current turn, with locked CAS and critical obligations.
+Native metadata owns SID, not filenames; nondefault recovery and workflow-runner keep
+existing gates.
 Default `native-trust-v1` uses Codex exact command trust for the current canonical Git
 workspace; it does not freeze file bytes or require per-worktree source approval.
 Commands clear old loader variables and set `LUCA_NATIVE_HOOK_STRICT=1`; project,
