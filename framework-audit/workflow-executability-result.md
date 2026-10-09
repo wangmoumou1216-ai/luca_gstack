@@ -86,3 +86,7 @@
 现场还修复 runner 的 thread/start SandboxMode 枚举兼容，既有运行时回归 85/85。完整 verify 首轮 122 PASS/1 FAIL，失败为 OD SKILL 文件预算；重复合同改为强制读取 page-context §7 后已回到 45KiB 内。正常提交 hook 继续重验。
 
 独立 CLI 发布审查未产票：适配器强制 openai provider，绕过当前 codex_local_access 网关，官方端返回 401。用户明确要求 API 相关时跳过该验证并继续，发布审查如实记 SKIPPED_BY_USER；原独立票不改判，也不代表新 delta 获得复审。当前精确源与例外分别见 workflow-exec-release/release-scope.json、review-exception.json。Git 发布和日常目录同步以接续会话的实际操作回执为准。
+
+## 最终发布回执
+
+**DONE_WITH_CONCERNS**：源修复已通过正常 pre-commit 全量检查（123 PASS / 0 FAIL / 0 WARN），提交 `18daaaee247d1353ca174ec2d97d97b0920976e6` 已正常推送并快进到日常目录 `/Users/luca/Desktop/luca_gstack`。远端和日常目录准确版本读回一致，19/19 生产源哈希匹配；日常目录新跑批准绑定与组合行为/mutation 均通过，原日志哈希及空暂存区保持。详见 workflow-exec-release/publication-receipt.json。独立发布 CLI 审查按用户要求跳过，原产品/真实 OD 仍按上文范围未运行。

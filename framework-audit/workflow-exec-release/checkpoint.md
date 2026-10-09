@@ -1,11 +1,9 @@
-# Release checkpoint
+# Release checkpoint — DONE_WITH_CONCERNS
 
-NO_PIN framework. Branch codex/workflow-executability-release-20261009; baseline 5c4de8fb0f610684b7ef80e267674582f884c479. U004 integration complete. Final 19 production source identities are frozen in release-scope.json.
+NO_PIN framework. Source release 18daaaee247d1353ca174ec2d97d97b0920976e6. U004 integration, U005 local verification and U006 normal commit/push/daily ff-only synchronization are complete. Remote main and /Users/luca/Desktop/luca_gstack HEAD were read back at this exact commit; 19/19 production hashes match release-scope.json.
 
-U005 local behavior passed: composition/handoff/page-context/approval/design-routing; actual incident source browser regression 12/12; runner runtime 85/85. Initial full verify 122 PASS/1 FAIL at OD SKILL budget; repeated contract text shortened into mandatory page-context §7 read, 46064 bytes. Normal commit hook must re-run the complete gate.
+Normal pre-commit complete: PASS=123 FAIL=0 WARN=0 DELEGATED=1. Actual original source browser regression 12/12; runner runtime 85/85; daily fresh test-plan-approval and test-original-composition exit0 including click/state/keyboard/original-return and mutation cases. Daily original observations.jsonl hash preserved; original empty index remains empty. No source changes after gate.
 
-Independent release review SKIPPED_BY_USER after actual user instruction: AIHub-related provider mismatch may skip verification and proceed. Configuration probe confirms codex_local_access at local gateway; audit CLI forced openai and official Responses API returned 401. Raw failed invocations remain local; review-exception.json records actual waiver. Original independent review votes remain unchanged and are not extended to new bytes. No private provider/key/config changes.
+Independent release CLI review SKIPPED_BY_USER after verified provider mismatch: user's local codex_local_access gateway was bypassed by adapter forcing openai; official Responses endpoint returned 401. Failed invocations retained, no invented PASS. Original byte-bound review votes remain unchanged and are not extended to post-review delta. No API/provider/account configuration changed.
 
-U006 next: explicitly stage finite task source and audit evidence, normal commit with full hook, normal push HEAD:main, daily main ff-only, exact remote/daily SHA and behavior readback. Daily dirty observations.jsonl and originally empty index must be preserved. Source worktree 4614 remains unchanged. No active child agents.
-
-Resume: check source hashes in release-scope.json and current git status; continue first unfinished Git step only. Final report must retain external OD/product UI NOT_RUN and independent release review SKIPPED_BY_USER.
+publication-receipt.json records exact readback and limits. Live OD generation and original product full UI/visual acceptance remain NOT_RUN. Framework release scope is complete. Source root4614 remains untouched. No active child agents.

@@ -1,0 +1,27 @@
+{
+  "status": "DONE_WITH_CONCERNS",
+  "commit": "18daaaee247d1353ca174ec2d97d97b0920976e6",
+  "full_precommit": "PASS=123 FAIL=0 WARN=0 DELEGATED=1",
+  "source_identity": "19/19 exact",
+  "independent_review": "SKIPPED_BY_USER",
+  "published": true,
+  "daily_synced": true,
+  "evidence": {
+    "commit_stdout_sha256": "0001b9c26a89db583cea4b7f06cd3ffda4bd43d603ec592bd3e3a32f9409e858",
+    "commit_stderr_sha256": "9d9e64ec6de0990acb3750bc469dd427ab47e7b99f5083c1711c774bbbeddcb0"
+  },
+  "remote_main_observed": "18daaaee247d1353ca174ec2d97d97b0920976e6",
+  "daily_head_observed": "18daaaee247d1353ca174ec2d97d97b0920976e6",
+  "observed_at": "2026-10-09T09:56:33.901498+00:00",
+  "daily_regressions": {
+    "test-plan-approval": "PASS exit0",
+    "test-original-composition": "PASS exit0; six nav, state, keyboard, original return, mutation"
+  },
+  "daily_source_identity": "19/19 exact hashes",
+  "daily_user_work": "original observations.jsonl hash preserved; index empty",
+  "concerns": [
+    "independent release CLI review SKIPPED_BY_USER due provider mismatch",
+    "live OD/product UI acceptance NOT_RUN"
+  ],
+  "push_server_message": "Required Checks expected; server reported bypassed rule violations, accepted normal push. Full local precommit 123 PASS was completed."
+}
