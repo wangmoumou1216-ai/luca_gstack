@@ -1,0 +1,21 @@
+{
+  "plan_id": "ROUTING-EXPERIENCE-20261009-01",
+  "plan_path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/framework-audit/plans/2026-10-09-routing-experience-plan.md",
+  "plan_sha256": "4c6f3decca9be8f000ad0da33a419d5b8f8361a7ff054fb70c9de49b6e750248",
+  "scope": "NO_PIN/local-routing-experience",
+  "source_identity": "Git HEAD 8ec9b848fa874d2dff6c9d1fb95789808bd5d298",
+  "approved": true,
+  "effects": [
+    "local-edit",
+    "local-test",
+    "read-only-probe",
+    "evidence-write"
+  ],
+  "confirmed_at": "2026-10-09T06:42:08Z",
+  "confirmed_at_semantics": "confirmation observed and recorded by anchor; not a native receipt timestamp",
+  "confirmed_by": "user",
+  "source": "Current chat real human request_user_input_async reply",
+  "actual_answer": "确认计划，并允许本次对话确认替代收据，执行有限本地修订",
+  "native_receipt": false,
+  "explicit_exception": "This task only: real dialogue confirmation replaces unavailable native receipt; direct anchor local implementation, no automatic dispatch or permanent approval-rule change"
+}

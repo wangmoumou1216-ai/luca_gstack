@@ -1,0 +1,57 @@
+{
+  "kind": "dirty source byte identity, not just HEAD",
+  "project_identity": "NO_PIN",
+  "head": "8ec9b848fa874d2dff6c9d1fb95789808bd5d298",
+  "plan_sha256": "4c6f3decca9be8f000ad0da33a419d5b8f8361a7ff054fb70c9de49b6e750248",
+  "approved_scope_ref": {
+    "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/framework-audit/routing-experience-20261009/human-confirmation.json",
+    "sha256": "c018c6f9f1419730ff50091cd4bd70cdb59849300ec25300865f05e30737fbed"
+  },
+  "files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skill-os/routing-chain-check.md",
+      "sha256": "bc8c565f85618d61baf324aab5c31af091b30df8f942e3f05c2a847a17f0b878"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skill-os/runtime/workflow-mode.md",
+      "sha256": "1f65f46d35a62f5bc0081e3df8a737582bd1a036cf5cd380c40bae7b0c7e722e"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skills/office/SKILL.md",
+      "sha256": "ac77836565551f9356782c816b7477780d3ef86ff4c5013aa679b7e223a290ec"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/hooks/route-guard.mjs",
+      "sha256": "cccb4f01bbb73ecc91aca66a20aac9d92cdccac1294ef7a258db7821d44bfbef"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skill-os/agent-context-manifest.json",
+      "sha256": "2a8fa36091c046ff5ff647dfeb2e1d2915f290fed65761edd7e3de4200725995"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skill-os/generated/context-index.md",
+      "sha256": "d81c30441dc9646cec4c015368e21e1d40191d9a4e701fc5d59e119f8cd13294"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-routing-candidate-hints.mjs",
+      "sha256": "59067d2eef5445ea5099d44636980bab260b9d97ec0ae7258419e4d6535564b2"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-agent-context.mjs",
+      "sha256": "5b75b89e686ef09bf8e91bb6f3fbafb4e7281769f688810548b757a338b8cbc9"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-design-tool-routing.mjs",
+      "sha256": "3fa464ace8244112acf1430ea2811a0367bb0cff3d071a7c25c1d8940e401e47"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/memory/evals/routing/fixtures.jsonl",
+      "sha256": "6dd9aacebb6e5e4c09d67a20c1ad95693c8b970f4c499f5f25fac23a82359bf3"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-eval-routing-contract.mjs",
+      "sha256": "43578d1e815592813b60fac4875902582cf4ffb8017b91c81c2fc82681210eb1"
+    }
+  ],
+  "user_steering_ref": "user-scope-delta.md"
+}

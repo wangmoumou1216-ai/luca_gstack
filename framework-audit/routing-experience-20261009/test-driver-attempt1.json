@@ -1,0 +1,17 @@
+{
+  "status": "DRIVER_FAIL",
+  "reason": "Python Path / string formatting precedence in output preservation; underlying child assertion status not preserved, no result accepted",
+  "repair": "parenthesize filename interpolation before Path joining",
+  "affected": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6a",
+    "A6b",
+    "A7a",
+    "A7b"
+  ],
+  "rerun_required": true
+}

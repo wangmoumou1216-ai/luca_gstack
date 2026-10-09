@@ -1,0 +1,11 @@
+PASS OD default, user-selected alternatives, same-tool desktop recovery
+PASS graph consumers retain an explicit selection gate, not automatic fault dispatch
+PASS contract mutation: template lookup disconnected
+PASS contract mutation: input selects output tool
+PASS contract mutation: selected flow asked again
+PASS contract mutation: ambiguous flow auto-selected
+PASS mature entry, template discovery and flow-choice contracts (static, not native behaviour)
+PASS mutation: fault grants tool switch -> exact assertion fails -> original passes
+PASS mutation: choice guard removed -> exact assertion fails -> original passes
+PASS mutation: headless silently switches tool -> exact assertion fails -> original passes
+PASS mutation: independent capability removed -> exact assertion fails -> original passes

@@ -1,0 +1,1 @@
+PASS capability parity: anchors=133, shared-projections=48, delegated-projections=1

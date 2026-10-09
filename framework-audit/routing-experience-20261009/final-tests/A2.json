@@ -1,0 +1,26 @@
+{
+  "assert_id": "A2",
+  "argv": [
+    "node",
+    "scripts/test-agent-context.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "started_at": "2026-10-09T06:58:01.777421+00:00",
+  "ended_at": "2026-10-09T06:58:58.987602+00:00",
+  "exit_code": 0,
+  "evidence_refs": {
+    "stdout": {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/framework-audit/routing-experience-20261009/final-tests/A2.stdout.txt",
+      "sha256": "46d1f5563694feecae15f4fb81daf354880950792e1046eebfcc795072827599"
+    },
+    "stderr": {
+      "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/framework-audit/routing-experience-20261009/final-tests/A2.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "source_inventory": {
+    "path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/framework-audit/routing-experience-20261009/final-source-inventory.json",
+    "sha256": "6da487a21a8f9dbe631c07aaa8d1cb7d8952e68c15a3357cf044b2e8ca2962e6"
+  },
+  "driver_sha256": "7fc4c47be50a02deb1c705174169e77a9162ee22b1ed3e2f67af94d50df6a586"
+}

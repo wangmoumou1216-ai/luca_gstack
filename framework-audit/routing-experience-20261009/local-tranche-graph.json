@@ -1,0 +1,24 @@
+{
+  "plan_id": "ROUTING-EXPERIENCE-20261009-01",
+  "plan_sha256": "4c6f3decca9be8f000ad0da33a419d5b8f8361a7ff054fb70c9de49b6e750248",
+  "nodes": [
+    {
+      "id": "U-001",
+      "dependencies": []
+    },
+    {
+      "id": "U-002",
+      "dependencies": [
+        "U-001"
+      ]
+    },
+    {
+      "id": "U-003",
+      "dependencies": [
+        "U-002"
+      ]
+    }
+  ],
+  "external_dependencies": [],
+  "purpose": "Approved local U-001 through U-003 only; U-004 retained BLOCKED in full-graph, not deleted from required denominator"
+}

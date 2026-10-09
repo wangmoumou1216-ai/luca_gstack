@@ -1,0 +1,63 @@
+{
+  "user_request": "提交 推送 拉回本地",
+  "base": "8ec9b848fa874d2dff6c9d1fb95789808bd5d298",
+  "source_inventory_ref": "final-source-inventory.json",
+  "completed": "U001-U003 local implementation and independent 33/33 gate",
+  "retained_limit": "U004 native acceptance remains BLOCKED; publication is the latest explicit user request after this disclosure",
+  "remaining_order": [
+    "commit exact task changes and evidence with normal hooks",
+    "fast-forward push to origin/main",
+    "git pull --ff-only in primary checkout",
+    "verify commit equality and protected dirty index/worktree bytes"
+  ],
+  "primary_checkout": "/Users/luca/Desktop/luca_gstack",
+  "protected_dirty": [
+    {
+      "path": ".claude/hooks/lib/codex-child-project.mjs",
+      "status": "M ",
+      "working_sha256": "921110d5b26703c1aa2e69e58bb38ccdb89ed1f98e0182a6b377f3a64e47175d",
+      "index_sha256": "921110d5b26703c1aa2e69e58bb38ccdb89ed1f98e0182a6b377f3a64e47175d"
+    },
+    {
+      "path": ".claude/observability/observations.jsonl",
+      "status": " M",
+      "working_sha256": "a97f29090c6590c5077eb5c221d7d575830f17b294da57289e03971a7cbc5bff",
+      "index_sha256": "dca715d45b8073f9e9193a88e47a7b81b8268062aafe83940cbea3eb54efa9b5"
+    },
+    {
+      "path": ".claude/skill-os/runtime/project-session.md",
+      "status": "M ",
+      "working_sha256": "8b92a9b590209cc6f8424663be168d2d6ec2a6a95909c4220dd245a43380aa5d",
+      "index_sha256": "8b92a9b590209cc6f8424663be168d2d6ec2a6a95909c4220dd245a43380aa5d"
+    },
+    {
+      "path": ".codex/model-route-hook.mjs",
+      "status": "M ",
+      "working_sha256": "6c6bb94df55c5966e50aff1109d1104e731ca9a25f27a3d4fff9635fd778060a",
+      "index_sha256": "6c6bb94df55c5966e50aff1109d1104e731ca9a25f27a3d4fff9635fd778060a"
+    },
+    {
+      "path": "memory/evals/eval-log.jsonl",
+      "status": "M ",
+      "working_sha256": "6e776f6230cb956d0da2f80835106aeebe5bacba43666e063e67a62d8da9fb4a",
+      "index_sha256": "6e776f6230cb956d0da2f80835106aeebe5bacba43666e063e67a62d8da9fb4a"
+    },
+    {
+      "path": "scripts/test-codex-child-project.mjs",
+      "status": "M ",
+      "working_sha256": "f8ed0430e825cce1437b66dc1d1ac4315a695b085a3e1871758d9bf75395555b",
+      "index_sha256": "f8ed0430e825cce1437b66dc1d1ac4315a695b085a3e1871758d9bf75395555b"
+    }
+  ],
+  "unstaged_runtime_bookkeeping": [
+    ".claude/observability/observations.jsonl",
+    "memory/evals/eval-log.jsonl",
+    "memory/retrieval-log.jsonl",
+    "memory/semantic/.candidate-id.lock"
+  ],
+  "resume": [
+    "git status --short --branch",
+    "git log -1 --oneline",
+    "git -C /Users/luca/Desktop/luca_gstack status --short --branch"
+  ]
+}

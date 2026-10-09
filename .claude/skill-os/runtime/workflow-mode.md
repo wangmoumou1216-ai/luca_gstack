@@ -13,6 +13,16 @@ applying Workflow handoff gates, standalone overrides, or deciding that required
 Route discovery alone does not trigger selected input-view reads. If discovery reaches an R1/R2/R3
 recommendation graph read, consume this owner's graph boundary before that read.
 
+Workflow selection, ambiguous references and gate-reply continuity have one semantic owner:
+`.claude/skill-os/routing-chain-check.md` R3. Read it through EOF before asking for missing input or
+accepting a fresh skill candidate in those cases. A clear existing selection needs no second
+confirmation; input format and a short reply do not replace the full task or select an output tool.
+Apply the selected skill's actual entry/input contract; mature input does not require unselected
+upstream stages. This does not create persistent workflow state or widen project authority.
+Project identity checks do not imply a project picker. Respect the host interaction boundary in
+R3: this user's Codex app project-selection hook is disabled; Luca app owns the enabled picker.
+Do not restore the disabled hook or infer project authority from its absence.
+
 ## Healthy static-view path
 
 1. Resolve exactly one already-selected catalog skill key. Do not glob the generated directory or
@@ -52,8 +62,9 @@ read-only graph consultation; consume that owner completely before recommending 
 a design-output tool, or recommending a workflow. Graph consultation does not select or activate a
 Workflow, write workflow-state, or grant effects. Unrelated standalone invocation adds no graph read.
 
-Workflow execution graph reads begin only after the user has selected a Workflow or explicitly
-asked to continue one. Standalone invocation remains standalone, and a Workflow gate cannot block
+Workflow execution graph reads begin only after the user has selected a Workflow under R3,
+including a clear natural-language selection or continuation. A recommendation or unresolved
+reference is not selection. Standalone invocation remains standalone, and a Workflow gate cannot block
 it unless the same gate is independently a quality or safety gate.
 
 <!-- FILE_END: skill-os/runtime/workflow-mode.md -->

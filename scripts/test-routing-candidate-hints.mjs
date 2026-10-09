@@ -34,11 +34,22 @@ function run(prompt, harness, dryRun = false) {
 function assessment(out) {
   assert.match(out, /候选证据：SINGLE\/MULTI\/NONE\/PLAN_MODE 与分数均不覆盖语义判断/);
   assert.match(out, /先处理 Project Gate，再核验 Plan，最后接受 skill 路由/);
+  assert.match(out, /身份核验不等于选项目交互，尊重宿主已关闭的选择钩子/);
   assert.match(out, /按实际工作核验 .claude\/agents\/plan-agent.md 的五类触发条件、计数边界与有效豁免/);
   assert.match(out, /引用、否定或讨论计划不等于真实请求/);
   assert.match(out, /可能触发时先全文读取唯一 owner/);
   assert.match(out, /确认触发才产计划/);
   assert.doesNotMatch(out, /禁止直接路由到单个 skill|必须先[^\n]*输出 Phase|先主动询问用户选择哪个 skill|禁止自行判断/);
+}
+
+function continuity(out) {
+  assessment(out);
+  assert.match(out, /整体任务核验：承接当前真实会话的完整任务与已确认流程/);
+  assert.match(out, /短回复只更新所答字段/);
+  assert.match(out, /在索要输入或接受单 skill 候选前全文读取 .claude\/skill-os\/routing-chain-check.md R3/);
+  assert.match(out, /已有原型适配同时核 R2/);
+  assert.match(out, /引用、否定、审计不激活流程；缺可核验来源不猜选择/);
+  assert.doesNotMatch(out, /已自动选择流程|自动激活 Workflow|必须重新选择流程/);
 }
 
 function planCandidate(out) {
@@ -74,6 +85,25 @@ try {
     ]) {
       assert.equal(run(prompt, harness, true).decision, decision);
       assessment(run(prompt, harness));
+      passed++;
+    }
+    // Candidate output only: the downstream semantic choice is not graded here.
+    for (const [prompt, decision] of [
+      ['把这个html原型放到工作台模板，重新UI设计，走我的设计流程', 'SINGLE_SKILL'],
+      ['走我的设计流程，帮我把已有原型植入工作台模板', 'NONE'],
+      ['没有项目，叫UI设计工作台项目', 'NONE'],
+      ['不要走设计流程，只解释这个HTML原型', 'SINGLE_SKILL'],
+      ['他说“走设计流程”，请解释这句话', 'NONE'],
+      ['$design-brief，按我已选的设计流程继续', 'SINGLE_SKILL'],
+    ]) {
+      assert.equal(run(prompt, harness, true).decision, decision, 'continuity hint must not change lexical decisions');
+      continuity(run(prompt, harness));
+      passed++;
+    }
+    for (const prompt of ['就是这套', '设计流程是什么？']) {
+      assert.equal(run(prompt, harness, true).decision, 'NONE');
+      assert.doesNotMatch(run(prompt, harness), /整体任务核验|SINGLE 候选|MULTI 候选|已自动选择流程/,
+        'no-task lexical silence remains; continuity is carried by conversation and the conditional R3 owner, not fabricated hook state');
       passed++;
     }
     for (const prompt of ['帮我做一个PRD和HTML原型', '请分别整理会议纪要并写PRD']) {
@@ -136,6 +166,10 @@ try {
       '你必须先主动询问用户选择哪个 skill，禁止自行判断。', '帮我做一个PRD和HTML原型', multiCandidate],
     ['forced Plan from quotation', '确认触发才输出 Phase 分解计划，未触发则继续语义路由',
       '必须先输出 Phase 分解计划', '标题写成「先做个计划」', planCandidate],
+    ['continuity owner removed', '在索要输入或接受单 skill 候选前全文读取 .claude/skill-os/routing-chain-check.md R3',
+      '按词法候选直接执行', '没有项目，叫UI设计工作台项目', continuity],
+    ['gate reply replaces full task', '短回复只更新所答字段',
+      '短回复替换完整任务', '没有项目，叫UI设计工作台项目', continuity],
   ]) {
     assert.ok(original.includes(before), `mutation target missing: ${label}`);
     writeFileSync(hook, original.replace(before, after));

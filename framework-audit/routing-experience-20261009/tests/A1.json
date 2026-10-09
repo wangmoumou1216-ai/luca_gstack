@@ -1,0 +1,15 @@
+{
+  "assert_id": "A1",
+  "attempt": 3,
+  "argv": [
+    "node",
+    "scripts/test-routing-candidate-hints.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "started_at": "2026-10-09T06:54:59.091761+00:00",
+  "ended_at": "2026-10-09T06:55:06.276666+00:00",
+  "source_inventory_sha256": "6da487a21a8f9dbe631c07aaa8d1cb7d8952e68c15a3357cf044b2e8ca2962e6",
+  "exit_code": 0,
+  "stdout_sha256": "c00ac6c805d060f646741ec8b4dcca99f874b0d321ccd79f4064572f8acf3295",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

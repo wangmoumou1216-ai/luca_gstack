@@ -1,0 +1,15 @@
+{
+  "assert_id": "A3",
+  "attempt": 2,
+  "argv": [
+    "node",
+    "scripts/test-design-tool-routing.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "source_inventory_sha256": "625237b5f319b5dc3ae9f2ed73d670563b04a8b226a64925d49a654396991ed2",
+  "started_at": "2026-10-09T06:53:03.814778+00:00",
+  "ended_at": "2026-10-09T06:53:04.028192+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "d0d7f128ecdbd8c53e56a58acd72d97bd33187eeb1ea51b86689b54de1b0f41f",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

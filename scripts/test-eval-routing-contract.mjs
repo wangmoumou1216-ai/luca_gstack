@@ -65,7 +65,18 @@ try {
   const actualJudge = run(['--judge'], join(root, 'memory/evals/routing/fixtures.jsonl'));
   assert.equal(actualJudge.status, 0, actualJudge.stderr);
   const actualQueue = readFileSync(join(results, queueName), 'utf8').trim().split('\n').map((line) => JSON.parse(line));
-  assert.equal(actualQueue.length, 23);
+  const semantic = active.filter((row) => row.layer === 'semantic');
+  assert.equal(actualQueue.length, semantic.length, 'judge denominator must include every active semantic case');
+  assert.equal(new Set(actualQueue.map((row) => row.id)).size, semantic.length, 'every semantic case must appear exactly once');
+  for (const fixture of semantic) {
+    const queued = actualQueue.find((row) => row.id === fixture.id);
+    assert.ok(queued, fixture.id);
+    assert.equal(queued.context, fixture.context ?? '');
+    assert.equal(queued.expected_capability, undefined);
+    assert.equal(queued.note, undefined, 'author answer notes must remain outside blind input');
+  }
+  const continuityCases = active.filter((row) => row.id.startsWith('routing-experience-S'));
+  assert.equal(continuityCases.length, 24, 'all 24 reviewed routing experience cases must remain in the denominator');
   for (const expected of calibrated) {
     const actual = actualQueue.find((row) => row.id === expected.id);
     assert.equal(actual.context, expected.context);

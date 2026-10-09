@@ -45,9 +45,10 @@ python3 .claude/observability/scripts/get_rules.py office "*" 2>/dev/null || tru
 执行模式：
 - **Standalone mode**：用户直接点名某个 skill，或提供直接输入。只强制该 skill
   自己的输入和质量 gate。
-- **Workflow mode**：用户通过 `/office` 选择推荐流程，
-  或明确要求“继续流程/进入下一步”。此时检查上游 artifacts 和 handoff
-  gate。
+- **Workflow mode**：用户通过 office、直接调用或自然语言明确选择/继续可核验流程。
+  选择、指代歧义和跨轮门禁回复统一按 `.claude/skill-os/routing-chain-check.md` R3；
+  已选不重问，推荐不激活。按实际资料定位节点入口，再检查适用上游 artifacts 和 handoff gate，
+  不把未选上游强加给成熟输入。选择流程本身不构成 office 向导调用。
 
 实际执行 skill 且输入模式条件命中时，先完整读取
 `.claude/skill-os/runtime/workflow-mode.md`，再只读取所选 skill 的完整静态视图

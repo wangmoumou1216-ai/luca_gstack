@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "routing-experience-20261009-implementation-01",
+  "subject": {
+    "skill": "ROUTING-EXPERIENCE-20261009-implementation-review",
+    "topic": "routing-experience",
+    "scene": "unknown",
+    "input_summary": "独立终审冻结11文件。U001–U003有限实施：24项场景合同与9项独立重放断言全部PASS。U004：C5/C6 PASS；C1–C4真实行为及A8 UNKNOWN，24组合均无行为票。合并35/40，不表示完整交付。",
+    "output_paths": [
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skill-os/routing-chain-check.md",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skill-os/runtime/workflow-mode.md",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skills/office/SKILL.md",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/hooks/route-guard.mjs",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skill-os/agent-context-manifest.json",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skill-os/generated/context-index.md",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-routing-candidate-hints.mjs",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-agent-context.mjs",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-design-tool-routing.mjs",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/memory/evals/routing/fixtures.jsonl",
+      "/Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-eval-routing-contract.mjs"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 35,
+    "total": 40,
+    "findings": [
+      "UNKNOWN C1：完整任务跨轮续接尚无本次原生行为票；合同覆盖不代替行为。",
+      "UNKNOWN C2：已选不重问、歧义等待及非执行语境尚无本次原生行为票。",
+      "UNKNOWN C3：输入/工具分离及真实作用域边界尚无本次原生行为票。",
+      "UNKNOWN C4：成熟入口、standalone和交付范围的真实执行尚无本次原生行为票。",
+      "UNKNOWN A8：冻结24组合均NOT_RUN；认证、产品路径权限和driver/data/session绑定缺口保留。该required缺口阻断U004完整验收。",
+      "WARN：U001–U003有限实施33/33 PASS，无存活BLOCKER/MAJOR实施缺陷；A7b只证明共享投影，不证明双端行为parity。"
+    ]
+  }
+}

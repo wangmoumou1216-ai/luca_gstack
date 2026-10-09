@@ -1,0 +1,132 @@
+{
+  "unit": "U-001",
+  "kind": "author static contract mapping; not behaviour PASS",
+  "owner": "/Users/luca/.codex/worktrees/7ede/luca_gstack/.claude/skill-os/routing-chain-check.md",
+  "owner_sha256": "7ce4334bdd48968bb6a45beb19bd369655026ae587100718f700d531569a4918",
+  "required_ids": [
+    "S01",
+    "S02",
+    "S03",
+    "S04",
+    "S05",
+    "S06",
+    "S07",
+    "S08",
+    "S09",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "S15",
+    "S16",
+    "S17",
+    "S18",
+    "S19",
+    "S20",
+    "S21",
+    "S22",
+    "S23",
+    "S24"
+  ],
+  "mapping": [
+    {
+      "id": "S01",
+      "contract_location": "R2 mature prototype + R3 full intent"
+    },
+    {
+      "id": "S02",
+      "contract_location": "R3 gate-reply continuity"
+    },
+    {
+      "id": "S03",
+      "contract_location": "R2 valid adoption + R3 gate reply"
+    },
+    {
+      "id": "S04",
+      "contract_location": "R3 unique selected flow"
+    },
+    {
+      "id": "S05",
+      "contract_location": "R3 ambiguous reference"
+    },
+    {
+      "id": "S06",
+      "contract_location": "R3 result-only recommendation"
+    },
+    {
+      "id": "S07",
+      "contract_location": "R3 standalone + mature input"
+    },
+    {
+      "id": "S08",
+      "contract_location": "R3 input owner clarification"
+    },
+    {
+      "id": "S09",
+      "contract_location": "R3 non-execution table"
+    },
+    {
+      "id": "S10",
+      "contract_location": "R3 non-execution table"
+    },
+    {
+      "id": "S11",
+      "contract_location": "R3 negation"
+    },
+    {
+      "id": "S12",
+      "contract_location": "R3 quoted/attached instructions"
+    },
+    {
+      "id": "S13",
+      "contract_location": "R3 direct + flow"
+    },
+    {
+      "id": "S14",
+      "contract_location": "R3 standalone"
+    },
+    {
+      "id": "S15",
+      "contract_location": "R3 semantic synonyms + business-process object"
+    },
+    {
+      "id": "S16",
+      "contract_location": "R2 input/output tool boundary"
+    },
+    {
+      "id": "S17",
+      "contract_location": "R2 delegates applicable page-context + input-contract"
+    },
+    {
+      "id": "S18",
+      "contract_location": "R2 no-reference branch"
+    },
+    {
+      "id": "S19",
+      "contract_location": "R3 multiple intents + Plan"
+    },
+    {
+      "id": "S20",
+      "contract_location": "R3 switch/source/isolation"
+    },
+    {
+      "id": "S21",
+      "contract_location": "R3 domain-neutral selection + unchanged R1/R5"
+    },
+    {
+      "id": "S22",
+      "contract_location": "R3 real response / text fallback"
+    },
+    {
+      "id": "S23",
+      "contract_location": "R3 cancellation/replacement"
+    },
+    {
+      "id": "S24",
+      "contract_location": "unchanged R2 fault does not grant switch"
+    }
+  ],
+  "immediate_gate": "PASS: mappings and readable owners; no future U003 dependency",
+  "remaining": "independent contract review and native functional coverage not yet run"
+}

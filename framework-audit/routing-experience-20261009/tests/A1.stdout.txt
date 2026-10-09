@@ -1,0 +1,7 @@
+PASS claude production candidate, Plan, review and hard-boundary checks
+PASS codex production candidate, Plan, review and hard-boundary checks
+PASS mutation rejected: forced MULTI choice
+PASS mutation rejected: forced Plan from quotation
+PASS mutation rejected: continuity owner removed
+PASS mutation rejected: gate reply replaces full task
+PASS routing candidate production hints 66 checks; downstream semantics remain for native-agent evaluation

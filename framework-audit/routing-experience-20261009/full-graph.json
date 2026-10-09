@@ -1,0 +1,35 @@
+{
+  "plan_id": "ROUTING-EXPERIENCE-20261009-01",
+  "plan_sha256": "4c6f3decca9be8f000ad0da33a419d5b8f8361a7ff054fb70c9de49b6e750248",
+  "nodes": [
+    {
+      "id": "U-001",
+      "dependencies": []
+    },
+    {
+      "id": "U-002",
+      "dependencies": [
+        "U-001"
+      ]
+    },
+    {
+      "id": "U-003",
+      "dependencies": [
+        "U-002"
+      ]
+    },
+    {
+      "id": "U-004",
+      "dependencies": [
+        "U-003"
+      ]
+    }
+  ],
+  "external_dependencies": [
+    {
+      "node_id": "U-004",
+      "source_ref": "plan#3.1-native-readiness-and-product-authority",
+      "status": "UNKNOWN"
+    }
+  ]
+}

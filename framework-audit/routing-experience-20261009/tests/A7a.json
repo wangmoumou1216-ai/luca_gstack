@@ -1,0 +1,16 @@
+{
+  "assert_id": "A7a",
+  "attempt": 2,
+  "argv": [
+    "node",
+    "--check",
+    ".claude/hooks/route-guard.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "source_inventory_sha256": "625237b5f319b5dc3ae9f2ed73d670563b04a8b226a64925d49a654396991ed2",
+  "started_at": "2026-10-09T06:53:03.956963+00:00",
+  "ended_at": "2026-10-09T06:53:04.028233+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

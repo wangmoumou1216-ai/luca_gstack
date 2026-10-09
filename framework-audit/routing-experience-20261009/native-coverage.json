@@ -1,0 +1,244 @@
+{
+  "kind": "required native coverage gaps, not a TEST receipt",
+  "unit": "U004",
+  "status": "BLOCKED",
+  "required_denominator": 24,
+  "actual_behaviour_passed": 0,
+  "doctor_evidence": "Current chat tool sessions 36445 (Claude auth fail), 65948 (Codex cat + final response); before implementation, readiness only",
+  "rows": [
+    {
+      "case": "S01",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed",
+        "Current NO_PIN grant excludes actual product-project create/switch/read and external prototype fetch"
+      ]
+    },
+    {
+      "case": "S02",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed",
+        "Current NO_PIN grant excludes actual product-project create/switch/read and external prototype fetch"
+      ]
+    },
+    {
+      "case": "S03",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed",
+        "Current NO_PIN grant excludes actual product-project create/switch/read and external prototype fetch"
+      ]
+    },
+    {
+      "case": "S04",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed"
+      ]
+    },
+    {
+      "case": "S05",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed"
+      ]
+    },
+    {
+      "case": "S09",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed"
+      ]
+    },
+    {
+      "case": "S11",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed"
+      ]
+    },
+    {
+      "case": "S12",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed"
+      ]
+    },
+    {
+      "case": "S14",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed"
+      ]
+    },
+    {
+      "case": "S16",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed"
+      ]
+    },
+    {
+      "case": "S20",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed"
+      ]
+    },
+    {
+      "case": "S22",
+      "harness": "claude",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Actual doctor exit 1 before inference: OAuth session expired and could not be refreshed"
+      ]
+    },
+    {
+      "case": "S01",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Current NO_PIN grant excludes actual product-project create/switch/read and external prototype fetch"
+      ]
+    },
+    {
+      "case": "S02",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Current NO_PIN grant excludes actual product-project create/switch/read and external prototype fetch"
+      ]
+    },
+    {
+      "case": "S03",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture",
+        "Current NO_PIN grant excludes actual product-project create/switch/read and external prototype fetch"
+      ]
+    },
+    {
+      "case": "S04",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture"
+      ]
+    },
+    {
+      "case": "S05",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture"
+      ]
+    },
+    {
+      "case": "S09",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture"
+      ]
+    },
+    {
+      "case": "S11",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture"
+      ]
+    },
+    {
+      "case": "S12",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture"
+      ]
+    },
+    {
+      "case": "S14",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture"
+      ]
+    },
+    {
+      "case": "S16",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture"
+      ]
+    },
+    {
+      "case": "S20",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture"
+      ]
+    },
+    {
+      "case": "S22",
+      "harness": "codex",
+      "status": "UNKNOWN",
+      "operation_status": "NOT_RUN",
+      "prerequisites": [
+        "Full native driver/data/session/evidence binding not frozen; label fixture is not a native execution fixture"
+      ]
+    }
+  ]
+}

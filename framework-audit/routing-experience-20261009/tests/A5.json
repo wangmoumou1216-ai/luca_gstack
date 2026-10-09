@@ -1,0 +1,16 @@
+{
+  "assert_id": "A5",
+  "attempt": 2,
+  "argv": [
+    "python3",
+    "memory/scripts/eval_routing.py",
+    "--keyword-only"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "source_inventory_sha256": "625237b5f319b5dc3ae9f2ed73d670563b04a8b226a64925d49a654396991ed2",
+  "started_at": "2026-10-09T06:53:03.873393+00:00",
+  "ended_at": "2026-10-09T06:53:12.400923+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "ab5e8c82b46bb8333eb8c07c0de6679ab9fcaeafc11b23bcb0ab21f9eb5f28b5",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -49,7 +49,7 @@ function run(dir) {
   return spawnSync(process.execPath, [CHECKER, '--root', dir], { encoding: 'utf8' });
 }
 
-const EXPECTED_MUTATIONS = 117;
+const EXPECTED_MUTATIONS = 119;
 let mutationCount = 0;
 function mutate(name, edit, expected) {
   const dir = fixture();
@@ -83,9 +83,46 @@ const junctionEntry = manifestEntries.find(entry => entry.id === 'routing-juncti
 assert.ok(junctionEntry, 'non-review junctions must be discoverable');
 assert.deepEqual(junctionEntry.runtime, ['claude', 'codex']);
 assert.ok(['R1', 'R2', 'R3', 'R5'].every(rule => junctionEntry.condition.includes(rule)));
+function verifyContinuityPointer(entry) {
+  assert.equal(entry.target, '.claude/skill-os/routing-chain-check.md');
+  assert.equal(entry.read_to_end, true);
+  assert.match(entry.condition, /workflow is selected, continued, ambiguously referenced/,
+    'selection and ambiguity must reach R3');
+  assert.match(entry.condition, /short gate reply with a continuing full task/,
+    'short replies must retain the full task');
+  assert.match(entry.load_before, /^asking for missing input or accepting a fresh skill candidate/,
+    'R3 must load before input questions or new candidate acceptance');
+  assert.match(entry.fallback, /neither lexical candidates nor graph reads select a workflow or grant effects/);
+}
+verifyContinuityPointer(junctionEntry);
 assert.match(manifestEntries.find(entry => entry.id === 'review-contract').load_before,
   /mapping the review object/, 'R4 must load before capability mapping');
 console.log('PASS non-review recommendation branches and earlier review-object deadline are projected');
+
+// Even a fresh projection cannot rescue a weakened semantic condition/deadline.
+// These are static pointer checks, not downstream agent behaviour tests.
+for (const [label, field, value] of [
+  ['flow continuity disappears from a freshly generated index', 'condition',
+    'R1 research; R2 output; R3 end-to-end recommendation; R5 preset mention'],
+  ['flow owner waits until after input collection', 'load_before',
+    'after input collection; recommending research first, choosing a design-output tool, recommending a workflow, interpreting preset selection'],
+]) {
+  const dir = fixture();
+  try {
+    const manifestPath = join(dir, '.claude/skill-os/agent-context-manifest.json');
+    const data = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    data.entries.find(entry => entry.id === 'routing-junction')[field] = value;
+    writeFileSync(manifestPath, JSON.stringify(data));
+    const generated = spawnSync('python3', ['-c',
+      "import runpy,sys; from pathlib import Path; b=runpy.run_path(sys.argv[1]); Path(sys.argv[2]).write_text(b['render_context_index']())",
+      join(dir, 'scripts/build-agent-context.py'), join(dir, contextIndexPath)], { encoding: 'utf8' });
+    assert.equal(generated.status, 0, generated.stderr);
+    const rows = JSON.parse(readFileSync(join(dir, contextIndexPath), 'utf8').match(/```json\n([\s\S]*?)\n```/)[1]);
+    assert.throws(() => verifyContinuityPointer(rows.find(entry => entry.id === 'routing-junction')), undefined, label);
+    mutationCount++;
+    console.log(`PASS mutation: ${label}`);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+}
 
 function changeIndex(dir, edit) {
   const path = join(dir, contextIndexPath);

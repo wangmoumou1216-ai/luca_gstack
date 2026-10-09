@@ -1218,8 +1218,9 @@ function decisionToHints(decision) {
   if (!hints.length && !review) return hints;
   const lexical = ['SINGLE_SKILL', 'MULTI_SKILL', 'NONE', 'PLAN_MODE', 'PLAN_CHECK'].includes(decision.decision);
   const assessment = lexical ? [
-    '[route-guard] 候选证据：SINGLE/MULTI/NONE/PLAN_MODE 与分数均不覆盖语义判断。先处理 Project Gate，再核验 Plan，最后接受 skill 路由；无词法命中仍按语义 fallback 判断。',
+    '[route-guard] 候选证据：SINGLE/MULTI/NONE/PLAN_MODE 与分数均不覆盖语义判断。先处理 Project Gate，再核验 Plan，最后接受 skill 路由；身份核验不等于选项目交互，尊重宿主已关闭的选择钩子；无词法命中仍按语义 fallback 判断。',
     '[route-guard] Plan 核验：按实际工作核验 .claude/agents/plan-agent.md 的五类触发条件、计数边界与有效豁免。引用、否定或讨论计划不等于真实请求；可能触发时先全文读取唯一 owner，确认触发才产计划。',
+    '[route-guard] 整体任务核验：承接当前真实会话的完整任务与已确认流程；项目/模板/工具等短回复只更新所答字段。选择/续接或指代歧义时，在索要输入或接受单 skill 候选前全文读取 .claude/skill-os/routing-chain-check.md R3；已有原型适配同时核 R2。引用、否定、审计不激活流程；缺可核验来源不猜选择。',
   ] : [];
   return [...(review ? [review] : []), ...assessment, ...hints];
 }

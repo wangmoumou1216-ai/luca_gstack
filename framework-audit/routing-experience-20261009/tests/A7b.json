@@ -1,0 +1,15 @@
+{
+  "assert_id": "A7b",
+  "attempt": 2,
+  "argv": [
+    "node",
+    "scripts/check-capability-parity.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "source_inventory_sha256": "625237b5f319b5dc3ae9f2ed73d670563b04a8b226a64925d49a654396991ed2",
+  "started_at": "2026-10-09T06:53:03.966333+00:00",
+  "ended_at": "2026-10-09T06:53:07.339710+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "885a77a33b70a3b2d7a5170747f1a9deee86400d68992f3d3ca474246cec0ff7",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
