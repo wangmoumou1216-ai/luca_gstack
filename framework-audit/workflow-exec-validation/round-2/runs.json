@@ -1,0 +1,41 @@
+[
+  {
+    "command": "node scripts/test-original-composition.mjs",
+    "pid": 10558,
+    "cwd": "/Users/luca/.codex/worktrees/4614/luca_gstack",
+    "started_at": "2026-10-09T08:12:25.234078+00:00",
+    "ended_at": "2026-10-09T08:12:30.064116+00:00",
+    "exit_code": 0,
+    "stdout": "test-original-composition.stdout",
+    "stderr": "test-original-composition.stderr",
+    "stdout_sha256": "f12d01c38899c82807e12838208cadf30e7f68872ccdc7b2b93a30deae36ff23",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_unchanged": true
+  },
+  {
+    "command": "node scripts/test-original-copy-handoff.mjs",
+    "pid": 10678,
+    "cwd": "/Users/luca/.codex/worktrees/4614/luca_gstack",
+    "started_at": "2026-10-09T08:12:30.065155+00:00",
+    "ended_at": "2026-10-09T08:12:34.066926+00:00",
+    "exit_code": 0,
+    "stdout": "test-original-copy-handoff.stdout",
+    "stderr": "test-original-copy-handoff.stderr",
+    "stdout_sha256": "6e47d35eb46526b2c4f784446814583720b2c963db6662c3fd76bbb3a9da5681",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_unchanged": true
+  },
+  {
+    "command": "git diff --check",
+    "pid": 10786,
+    "cwd": "/Users/luca/.codex/worktrees/4614/luca_gstack",
+    "started_at": "2026-10-09T08:12:34.067967+00:00",
+    "ended_at": "2026-10-09T08:12:34.096259+00:00",
+    "exit_code": 0,
+    "stdout": "diff.stdout",
+    "stderr": "diff.stderr",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_unchanged": true
+  }
+]

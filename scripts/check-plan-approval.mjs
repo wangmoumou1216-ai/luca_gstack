@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// Binding validation only. A caller-authored record is not evidence of consent.
+// The controlling agent must verify actual user approval under Plan's human gate.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
@@ -46,10 +48,16 @@ assert.equal(approval.scope, values.get('--scope'), 'approval scope does not mat
 assert.ok(Array.isArray(approval.effects) && approval.effects.length > 0, 'approval.effects must be non-empty');
 assert.equal(new Set(approval.effects).size, approval.effects.length, 'approval.effects must not contain duplicates');
 for (const effect of effects) assert.ok(approval.effects.includes(effect), `approval does not cover effect: ${effect}`);
-assert.ok(typeof approval.confirmed_at === 'string' && !Number.isNaN(Date.parse(approval.confirmed_at)), 'approval.confirmed_at must be an ISO timestamp');
-assert.equal(approval.confirmed_by, 'user', 'approval.confirmed_by must identify a real user confirmation');
+assert.ok(approval.effects.every(effect => typeof effect === 'string' && effect.trim()), 'approval.effects must contain non-empty strings');
+const confirmedAt = Date.parse(approval.confirmed_at);
+assert.ok(typeof approval.confirmed_at === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(approval.confirmed_at)
+  && Number.isFinite(confirmedAt) && new Date(confirmedAt).toISOString() === approval.confirmed_at.replace(/(?<=:\d{2})Z$/, '.000Z'), 'approval.confirmed_at must be a valid UTC ISO timestamp');
+assert.ok(confirmedAt <= Date.now(), 'approval.confirmed_at must not be in the future');
+assert.equal(approval.confirmed_by, 'user', 'approval.confirmed_by must declare user; this label does not authenticate a user');
 console.log(JSON.stringify({
-  status: 'PASS',
+  status: 'BINDING_VALID',
+  authorization: 'NOT_VERIFIED',
+  required_evidence: 'actual scope-matched user confirmation, verified by the controlling agent; unattended dispatch requires a trusted approval adapter',
   plan_id: approval.plan_id,
   plan_path: planRealpath,
   plan_sha256: sha,

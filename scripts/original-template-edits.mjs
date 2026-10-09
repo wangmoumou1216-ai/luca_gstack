@@ -3,6 +3,7 @@ import { chromium } from 'playwright';
 import { resolveAssetClosure } from './carrier-asset-profile.mjs';
 import { parseCarrierDom } from './carrier-dom.mjs';
 import { inspectOriginalResources } from './original-template-resources.mjs';
+import { COMPOSITION_PROFILE, prepareBehaviorBindings, removeBoundBehavior } from './original-composition.mjs';
 
 const sha = b => createHash('sha256').update(b).digest('hex');
 const fail = (code, message) => { throw Object.assign(new Error(message), { code }); };
@@ -58,7 +59,13 @@ function annotatedSlice(html, tokens, marker, start, end) {
   }
   return value + html.slice(cursor, end);
 }
-function validateActions(actions, { allowPreserveOnly = false } = {}) {
+export function resolveOriginalProfile(actions, requested) {
+  const inferred = actions?.some(a => a.action === 'refine') ? 'original-ui-refinement-v1' : 'original-preserving-v1';
+  if (requested !== undefined && ![inferred, COMPOSITION_PROFILE].includes(requested)) fail('ORIGINAL_PROFILE_INVALID', 'Profile must match the action set or explicitly select original composition');
+  return requested ?? inferred;
+}
+function validateActions(actions, { allowPreserveOnly = false, executionProfile } = {}) {
+  const profile = resolveOriginalProfile(actions, executionProfile);
   if (!Array.isArray(actions) || !actions.length || actions.length > 32) fail('ORIGINAL_ACTIONS_REQUIRED', 'One to 32 explicit source actions required');
   const ids = new Set();
   for (const action of actions) {
@@ -72,7 +79,7 @@ function validateActions(actions, { allowPreserveOnly = false } = {}) {
     } else if (loc.kind !== 'element-path' || Object.keys(loc).sort().join(',') !== 'indices,kind' || !path(loc.indices)) fail('ORIGINAL_LOCATOR_INVALID', 'Only an exact original element path is accepted');
   }
   if (!allowPreserveOnly && actions.every(a => a.action === 'preserve')) fail('ORIGINAL_NO_CHANGE', 'A derivative needs an actual change');
-  if (actions.some(a => a.action === 'refine') && actions.some(a => !['refine', 'preserve'].includes(a.action))) fail('ORIGINAL_REFINEMENT_PROFILE', 'UI refinement permits only refine and preserve; functional edits require a separate contract');
+  if (profile !== COMPOSITION_PROFILE && actions.some(a => a.action === 'refine') && actions.some(a => !['refine', 'preserve'].includes(a.action))) fail('ORIGINAL_REFINEMENT_PROFILE', 'UI refinement permits only refine and preserve; functional edits require a separate contract');
 }
 
 // Retain source spelling and every nonvisual byte. Only entire class/style
@@ -191,7 +198,7 @@ async function verifyRefinementInPage(page, html, action, range, replacement) {
 }
 
 export async function locateOriginalEditRanges(base, actions, options = {}) {
-  const html = text(base); validateActions(actions, { allowPreserveOnly: options.allowPreserveOnly === true }); const tokens = tokensOf(html);
+  const html = text(base); validateActions(actions, { allowPreserveOnly: options.allowPreserveOnly === true, executionProfile: options.executionProfile }); const tokens = tokensOf(html);
   const marker = `data-luca-internal-${randomBytes(12).toString('hex')}`;
   return session(options, async page => {
     const { ranges } = await prepareInPage(page, html, actions, tokens, marker);
@@ -199,8 +206,13 @@ export async function locateOriginalEditRanges(base, actions, options = {}) {
   });
 }
 
-export async function verifyOriginalEditedOutput({ base, output, actions, edits }, options = {}) {
-  const html = text(base), actual = text(output); validateActions(actions);
+export async function verifyOriginalEditedOutput({ base, output, actions, edits, executionProfile, behaviorBindings }, options = {}) {
+  const html = text(base); text(output);
+  const profile = resolveOriginalProfile(actions, executionProfile), composed = profile === COMPOSITION_PROFILE;
+  if (!composed && behaviorBindings !== undefined) fail('ORIGINAL_PROFILE_INVALID', 'Behavior bindings require explicit composition');
+  if (composed) prepareBehaviorBindings(behaviorBindings, { actions });
+  const editedOutput = composed ? removeBoundBehavior(output, behaviorBindings) : output;
+  const actual = text(editedOutput); validateActions(actions, { executionProfile: profile, allowPreserveOnly: composed });
   const changing = actions.filter(a => a.action !== 'preserve');
   if (!Array.isArray(edits) || edits.length !== changing.length || new Set(edits.map(x => x.action_id)).size !== edits.length) fail('ORIGINAL_EDIT_SET', 'Exactly one edit for every modifying action required');
   for (const edit of edits) {
@@ -227,13 +239,21 @@ export async function verifyOriginalEditedOutput({ base, output, actions, edits 
       return { ...range, from: action.action === 'add' ? range.closeStart : range.openEnd, to: range.closeStart, replacement: edit.html };
     }).sort((a, b) => a.from - b.from);
     let expected = '', markedAfter = '', cursor = 0;
-    for (const item of substitutions) { expected += html.slice(cursor, item.from) + item.replacement; markedAfter += annotatedSlice(html, tokens, marker, cursor, item.from) + item.replacement; cursor = item.to; }
+    for (const item of substitutions) {
+      expected += html.slice(cursor, item.from) + item.replacement;
+      let markedReplacement = item.replacement;
+      if (actions.find(a => a.action_id === item.action_id).action === 'refine') {
+        const opening = tokensOf(item.replacement).find(t => !t.closing);
+        markedReplacement = item.replacement.slice(0, opening.nameEnd) + ` ${marker}="${item.token_id}"` + item.replacement.slice(opening.nameEnd);
+      }
+      markedAfter += annotatedSlice(html, tokens, marker, cursor, item.from) + markedReplacement; cursor = item.to;
+    }
     expected += html.slice(cursor); markedAfter += annotatedSlice(html, tokens, marker, cursor, html.length);
-    if (actual !== expected || !output.equals(Buffer.from(expected))) fail('ORIGINAL_OUTSIDE_EDIT_CHANGED', 'Output is not the original bytes plus only the declared local edits');
-    if (output.equals(base)) fail('ORIGINAL_NO_CHANGE', 'Copying the original without a real edit is not a derivative');
+    if (actual !== expected || !editedOutput.equals(Buffer.from(expected))) fail('ORIGINAL_OUTSIDE_EDIT_CHANGED', 'Output is not the original bytes plus only the declared local edits');
+    if (!composed && output.equals(base)) fail('ORIGINAL_NO_CHANGE', 'Copying the original without a real edit is not a derivative');
     const scriptsAndStyles = value => { const ts = tokensOf(value); return ts.filter(t => !t.closing && ['script', 'style'].includes(t.name)).map(t => { const end = ts[t.id + 1]; return value.slice(t.start, end.end); }); };
     if (JSON.stringify(scriptsAndStyles(actual)) !== JSON.stringify(scriptsAndStyles(html))) fail('ORIGINAL_ACTIVE_CONTENT_CHANGED', 'Original scripts and styles must remain byte-identical');
-    if (actions.some(a => a.action === 'refine')) {
+    if (!composed && actions.some(a => a.action === 'refine')) {
       // Each complete replacement has already passed byte and contextual DOM
       // equivalence. Preserve actions and all non-target bytes remain exact.
       return { status: 'PASS', profile: 'original-ui-refinement-v1', input_sha256: sha(base), output_sha256: sha(output), unchanged_outside_targets: true, business_dom_preserved: true, original_scripts_styles_preserved: true, source_executed: false, semantic_acceptance: 'PENDING_INDEPENDENT_REVIEW' };
@@ -257,6 +277,13 @@ export async function verifyOriginalEditedOutput({ base, output, actions, edits 
         const left = all(a).filter(n => n.getAttribute(marker) === id), right = all(b).filter(n => n.getAttribute(marker) === id);
         if (left.length !== 1 || (action.action === 'remove' ? right.length !== 0 : right.length !== 1)) return { ok: false, reason: 'target identity changed or escaped' };
         if (action.action === 'preserve') { if (!equal(withoutMarkers(left[0]), withoutMarkers(right[0]))) return { ok: false, reason: 'preserve changed' }; continue; }
+        if (action.action === 'refine') {
+          // Exact nonvisual bytes and contextual DOM were checked above. Mask
+          // this entire disjoint scope so other structural edits still get QA.
+          left[0].replaceWith(a.createComment(`refine:${id}`));
+          right[0].replaceWith(b.createComment(`refine:${id}`));
+          continue;
+        }
         if (action.action === 'remove') left[0].remove();
         else {
           if (equal(withoutMarkers(left[0]), withoutMarkers(right[0]))) return { ok: false, reason: 'no actual DOM change' };
@@ -268,6 +295,8 @@ export async function verifyOriginalEditedOutput({ base, output, actions, edits 
       return { ok: equal(a, b), reason: 'outside DOM must match after masking authorized edits, including hidden template content' };
     }, { before: marked, after: markedAfter, marker, actions, ranges });
     if (!dom.ok) fail('ORIGINAL_DOM_SCOPE_VIOLATION', dom.reason);
-    return { status: 'PASS', input_sha256: sha(base), output_sha256: sha(output), unchanged_outside_targets: true, original_scripts_styles_preserved: true, source_executed: false, semantic_acceptance: 'PENDING_INDEPENDENT_REVIEW' };
+    return { status: 'PASS', profile, input_sha256: sha(base), output_sha256: sha(output),
+      ...(composed ? { unchanged_outside_contract: true, bound_behavior_sha256: behaviorBindings.map(b => sha(b.bytes)), behavior_acceptance: 'PENDING_INDEPENDENT_REVIEW' } : { unchanged_outside_targets: true }),
+      original_scripts_styles_preserved: true, source_executed: false, semantic_acceptance: 'PENDING_INDEPENDENT_REVIEW' };
   });
 }

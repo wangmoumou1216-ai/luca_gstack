@@ -60,7 +60,14 @@ tasks retain their existing contract.
    ready work is queued in stable U-ID order; it does not authorize concurrent implementers.
    Present the compiled task-plan SHA, baseline, exact U-ID list, path/effect scope, and assertions
    for human confirmation. Only an explicit approval bound to those bytes makes the U-IDs approved.
-6. Before handing off, run scripts/check-plan-approval.mjs, scripts/check-plan-identity.mjs and scripts/check-plan-graph.mjs with the exact plan, approval, identity, graph, scope, source identity, every first effect and --require-no-external-blockers. A failed check keeps the plan out of execution. Read `.claude/agents/orchestrator.md` through EOF and hand it the same approved plan. Only that
+6. Before handing off, follow Plan Agent's human approval gate: verify the actual post-plan user message,
+   exact payload/effects and absence of revocation. Reuse unchanged valid approval; a caller-written
+   JSON or an attested message without consent is insufficient. Run scripts/check-plan-approval.mjs,
+   scripts/check-plan-identity.mjs and scripts/check-plan-graph.mjs with the exact plan, approval,
+   identity, graph, scope, source identity, every first effect and --require-no-external-blockers.
+   `BINDING_VALID` / `authorization=NOT_VERIFIED` validates record consistency only. A failed check or
+   unavailable actual approval evidence keeps the plan out of execution; unattended dispatch also
+   requires a trusted approval adapter. Read `.claude/agents/orchestrator.md` through EOF and hand it the same approved plan. Only that
    owner executes the approved U-IDs. Unexpected failures and
    real Git conflicts remain exception loops under the original U-ID authority. Finish with the
    canonical code-review path; commit or push only behind its separate human gate.

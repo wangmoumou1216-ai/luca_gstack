@@ -1,0 +1,11 @@
+PASS composition draft: mixed actions/planned extension, all sources/states retained, unknowns rejected, execution stays false
+PASS simulated codex composition prepare/stage/run/recover integrity; no live OD or native consent claim
+PASS simulated claude composition prepare/stage/run/recover integrity; no live OD or native consent claim
+PASS NAV-1: click -> exactly one matching panel visible
+PASS NAV-2: click -> exactly one matching panel visible
+PASS NAV-3: click -> exactly one matching panel visible
+PASS NAV-4: click -> exactly one matching panel visible
+PASS NAV-5: click -> exactly one matching panel visible
+PASS NAV-6: click -> exactly one matching panel visible
+PASS STATE-RETAIN, KEYBOARD, ORIGINAL-NAV/search, RUNTIME-ERRORS
+PASS mutations: missing bridge (static integrity PASS, behavior FAIL), wrong navigation mapping (behavior FAIL), changed frozen bytes (integrity FAIL); original preserved

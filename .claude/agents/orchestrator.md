@@ -56,7 +56,7 @@ Plan Agent → 计划 → Orchestrator Free Task Mode → 结果
 `implement` 进入 Free Task Mode 时，只接收 Plan Agent `implement compile` 产出的 canonical plan：
 其中必须有最终 gated task-plan 的 exact path+SHA-256、repo baseline、无 placeholder 的 exact U-ID
 集合、Files/Verification，以及单列的 Git/external effects，并有用户对同一 payload 的明确批准。
-启动前必须分别通过 scripts/check-plan-approval.mjs、scripts/check-plan-identity.mjs 和 scripts/check-plan-graph.mjs 的组合检查；调用必须传入本次计划的精确绝对 path、plan_id、scope、source identity、即将执行的每个 effect 和 --require-no-external-blockers。任何身份、批准或拓扑检查失败都必须拒绝首次派发并返回 PLANNED/NEEDS_CONTEXT。随后回算 task-plan SHA 与 baseline；任一漂移、旧计划 authority、空/占位 U-ID 都必须拒绝并返回
+启动前按 Plan Agent「批准门」核实际用户确认来源及未撤回状态，再分别运行 scripts/check-plan-approval.mjs、scripts/check-plan-identity.mjs 和 scripts/check-plan-graph.mjs；调用必须传入本次计划的精确绝对 path、plan_id、scope、source identity、即将执行的每个 effect 和 --require-no-external-blockers。approval checker 的 BINDING_VALID / authorization=NOT_VERIFIED 只证明记录一致，不替代真人证据，也不是无人值守派发许可。任何身份、真实批准、绑定或拓扑检查失败都必须拒绝首次派发并返回 PLANNED/NEEDS_CONTEXT。随后回算 task-plan SHA 与 baseline；任一漂移、旧计划 authority、空/占位 U-ID 都必须拒绝并返回
 重编译。engineering-delivery preset 或 optional graph 只能说明路由选择，不能替代批准或扩大 scope。
 
 执行严格限制在 approved U-ID 的 scope。unexpected failure/regression 进入 `diagnosing-bugs` 的

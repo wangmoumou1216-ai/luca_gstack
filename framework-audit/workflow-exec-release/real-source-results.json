@@ -1,0 +1,234 @@
+{
+  "status": "PASS",
+  "scope": "NO_PIN framework real-source regression",
+  "run_id": "057d4f95-a73a-4891-83bb-399aae3bcd29",
+  "started_at": "2026-10-09T09:34:02.704Z",
+  "ended_at": "2026-10-09T09:34:05.026Z",
+  "manifest_sha256": "50f834a61f5bacbe81616db9317e11dd4f23d0cd93ed4542205589df250abc27",
+  "source_assert_ids": [
+    "REAL-SOURCE-TRANSPORT",
+    "REAL-NAV-1",
+    "REAL-NAV-2",
+    "REAL-NAV-3",
+    "REAL-NAV-4",
+    "REAL-NAV-5",
+    "REAL-NAV-6",
+    "REAL-SEARCH-STATE",
+    "REAL-SETTINGS",
+    "REAL-KEYBOARD",
+    "REAL-ORIGINAL-RETURN",
+    "REAL-RUNTIME"
+  ],
+  "verified_instance": {
+    "before": {
+      "observed_at": "2026-10-09T09:34:03.794Z",
+      "instance_id": "057d4f95-a73a-4891-83bb-399aae3bcd29",
+      "pid": 53664,
+      "alive": true,
+      "url": "http://real-source.test/",
+      "response_sha256": "57717a92bf07afedaabd8608d43e6490d72e4957378eb1cb53a5044c2ad25e7a",
+      "source_sha256": "068f140011273ddadaa8b4c90f824814c20309b0a5b537ea9c41f180f75e4b5c",
+      "template_sha256": "7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5",
+      "behavior_sha256": "bd91c418a374d1c6290389decf429502decff94654b5fc1e959dd089364d29bf",
+      "menu_count": 6,
+      "errors": [],
+      "requests": []
+    },
+    "after": {
+      "observed_at": "2026-10-09T09:34:04.961Z",
+      "instance_id": "057d4f95-a73a-4891-83bb-399aae3bcd29",
+      "pid": 53664,
+      "alive": true,
+      "url": "http://real-source.test/",
+      "response_sha256": "57717a92bf07afedaabd8608d43e6490d72e4957378eb1cb53a5044c2ad25e7a",
+      "source_sha256": "068f140011273ddadaa8b4c90f824814c20309b0a5b537ea9c41f180f75e4b5c",
+      "template_sha256": "7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5",
+      "behavior_sha256": "bd91c418a374d1c6290389decf429502decff94654b5fc1e959dd089364d29bf",
+      "menu_count": 6,
+      "errors": [],
+      "requests": []
+    }
+  },
+  "driver_revision": {
+    "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-regression.mjs",
+    "sha256": "f0493b0f21acdea7e54f1a06a39640807682cb5596b07140c39cbdce55ed34f1"
+  },
+  "operations": [
+    {
+      "argv": [
+        "/Users/luca/.hermes/node/bin/node",
+        "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-regression.mjs"
+      ],
+      "cwd": "/Users/luca/.codex/worktrees/4841/luca_gstack",
+      "started_at": "2026-10-09T09:34:02.704Z",
+      "ended_at": "2026-10-09T09:34:04.961Z",
+      "exit_code": 0,
+      "source_assert_ids": [
+        "REAL-SOURCE-TRANSPORT",
+        "REAL-NAV-1",
+        "REAL-NAV-2",
+        "REAL-NAV-3",
+        "REAL-NAV-4",
+        "REAL-NAV-5",
+        "REAL-NAV-6",
+        "REAL-SEARCH-STATE",
+        "REAL-SETTINGS",
+        "REAL-KEYBOARD",
+        "REAL-ORIGINAL-RETURN",
+        "REAL-RUNTIME"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-composition.html",
+      "sha256": "57717a92bf07afedaabd8608d43e6490d72e4957378eb1cb53a5044c2ad25e7a"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-adapter.js",
+      "sha256": "bd91c418a374d1c6290389decf429502decff94654b5fc1e959dd089364d29bf"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-composition.png",
+      "sha256": "5640d67a06992a127c140371825d3518710fb82fa222568b9f7e0b128e44e825"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-before.json",
+      "sha256": "f2090fb3875b9b331e341db5f6714d1de9b4a01ad574a42635f5e926a874d71e"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-after.json",
+      "sha256": "39995826184c04584ce3bf71c8ca7fd92d2fa466f7e4e30cf1b652000c462081"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-manifest.json",
+      "sha256": "50f834a61f5bacbe81616db9317e11dd4f23d0cd93ed4542205589df250abc27"
+    }
+  ],
+  "cleanup_result": {
+    "context_closed": true,
+    "owned_server_closed": true,
+    "remaining_owned_resources": [],
+    "post_cleanup_readback": "all retained files read and hashed"
+  },
+  "remaining_gaps": [],
+  "source_sha256": "068f140011273ddadaa8b4c90f824814c20309b0a5b537ea9c41f180f75e4b5c",
+  "template_sha256": "7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5",
+  "output_sha256": "57717a92bf07afedaabd8608d43e6490d72e4957378eb1cb53a5044c2ad25e7a",
+  "adapter_sha256": "bd91c418a374d1c6290389decf429502decff94654b5fc1e959dd089364d29bf",
+  "driver_sha256": "f0493b0f21acdea7e54f1a06a39640807682cb5596b07140c39cbdce55ed34f1",
+  "results": [
+    {
+      "id": "REAL-SOURCE-TRANSPORT",
+      "status": "PASS",
+      "actual": {
+        "bundle_hash": "b682fde4191af1a3beaa758b7570df69b2c7dc399e3cb2789999f0e80955cef7",
+        "external_run": "NOT_RUN"
+      },
+      "observed_at": "2026-10-09T09:34:03.654Z"
+    },
+    {
+      "id": "REAL-NAV-1",
+      "status": "PASS",
+      "actual": {
+        "key": "distribution",
+        "title": "标讯分配工作台",
+        "cards": 2,
+        "ai_action": true
+      },
+      "observed_at": "2026-10-09T09:34:04.029Z"
+    },
+    {
+      "id": "REAL-NAV-2",
+      "status": "PASS",
+      "actual": {
+        "key": "battle",
+        "title": "投标作战工作台",
+        "cards": 4,
+        "ai_action": true
+      },
+      "observed_at": "2026-10-09T09:34:04.130Z"
+    },
+    {
+      "id": "REAL-NAV-3",
+      "status": "PASS",
+      "actual": {
+        "key": "review",
+        "title": "投标复盘工作台",
+        "cards": 4,
+        "ai_action": true
+      },
+      "observed_at": "2026-10-09T09:34:04.205Z"
+    },
+    {
+      "id": "REAL-NAV-4",
+      "status": "PASS",
+      "actual": {
+        "key": "customer",
+        "title": "客户标讯洞察",
+        "cards": 23,
+        "ai_action": true
+      },
+      "observed_at": "2026-10-09T09:34:04.295Z"
+    },
+    {
+      "id": "REAL-NAV-5",
+      "status": "PASS",
+      "actual": {
+        "key": "competitor",
+        "title": "竞对标讯洞察",
+        "cards": 12,
+        "ai_action": true
+      },
+      "observed_at": "2026-10-09T09:34:04.369Z"
+    },
+    {
+      "id": "REAL-NAV-6",
+      "status": "PASS",
+      "actual": {
+        "key": "partner",
+        "title": "伙伴标讯洞察",
+        "cards": 10,
+        "ai_action": true
+      },
+      "observed_at": "2026-10-09T09:34:04.446Z"
+    },
+    {
+      "id": "REAL-SEARCH-STATE",
+      "status": "PASS",
+      "actual": "filtered source rows and field retained across CRM navigation",
+      "observed_at": "2026-10-09T09:34:04.513Z"
+    },
+    {
+      "id": "REAL-SETTINGS",
+      "status": "PASS",
+      "actual": "source settings retained",
+      "observed_at": "2026-10-09T09:34:04.891Z"
+    },
+    {
+      "id": "REAL-KEYBOARD",
+      "status": "PASS",
+      "actual": "Enter activates real business workspace",
+      "observed_at": "2026-10-09T09:34:04.902Z"
+    },
+    {
+      "id": "REAL-ORIGINAL-RETURN",
+      "status": "PASS",
+      "actual": "original CRM menu/content restored",
+      "observed_at": "2026-10-09T09:34:04.929Z"
+    },
+    {
+      "id": "REAL-RUNTIME",
+      "status": "PASS",
+      "actual": "no page errors or external network",
+      "observed_at": "2026-10-09T09:34:04.930Z"
+    }
+  ],
+  "errors": [],
+  "requests": [],
+  "not_run": [
+    "live OD",
+    "UI redesign",
+    "original product acceptance"
+  ]
+}

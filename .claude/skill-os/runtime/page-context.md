@@ -73,7 +73,7 @@ CLI 为 `node scripts/page-context.mjs adaptation-draft --record <草稿.json> -
 静态定位使用真实module/slot/region ID；原件使用实际inert索引scope/locator/label，含隐藏template。
 原件动作按scope/locator/action去重后联合核对范围兼容性，重复来源/状态不构造重复动作，不同动作/重叠保持区不能报告ready；另过实际源字节范围/禁止目标/void兼容门：void add/modify拒绝，refine允许经原件专用检查。静态carrier动作按action/target去重后，以正式binding的同一module/slot图联合检查重复目标与祖先重叠；合法冲突只能记needs_context，不存在或非法目标仍拒绝。草稿preserve-only只验证定位，不授予最终无变化衍生。静态state_support必须证明位置支持；原件目录状态名不是交互证明，依据须设计/用户复核。
 validator校验原文、全量source/state覆盖、实际源/定位、允许动作及已知状态支持；不会证明语义判断或原交互。
-ready不能含未知/不支持、低置信或替代位置；refine不得与结构动作混用同一profile；返回ADAPTATION_READY仍 `binding_allowed=false`、
+ready不能含未知/不支持、低置信或替代位置。两个旧profile中refine不得与结构动作混用；已授权的植入+精修可显式选择 `execution_profile: original-composition-v1`，原件判断以 `state_status: extension` 标明有来源的待实现状态，不能写成原件已有支持。该选择只解除组合动作的草稿冲突；返回ADAPTATION_READY仍 `binding_allowed=false`、
 `execution_allowed=false`。closed schema不接受frozen_packet/adoption/TAC/bundle hash，草稿不是最终binding。
 输入、模板或位置变更时草稿失效，Brief修订后重新适配。草稿旁车不进入Packet；Packet保留语义位置/保持事实。
 
@@ -227,11 +227,28 @@ import {
 // {action_id, action, scope, locator, source_ids, confidence, rationale, alternatives}
 // scope/locator 复制实际原件索引的位置记录；source_ids 引用完整冻结 Packet。
 const draft = await prepareOriginalCopyHandoff({
-  pageId, packetBody, target: {tool:'od', projectId}, handoffId, actions, prototypeEvidence
+  pageId, packetBody, target: {tool:'od', projectId}, handoffId, actions, prototypeEvidence,
+  // 仅明确需要组合业务接入时传入；旧调用不变：
+  executionProfile: 'original-composition-v1', behaviorBindings
 });
 ```
 
 原型证据使用可选 `prototypeEvidence`（safe相对path、media_type、purpose、既有source_ids、实际Buffer bytes）；helper纳入不可变manifest及全量读回。附件不是需求事实、不执行HTML、不以路径代替运输，source_ids来自冻结Packet。
+
+**能力与代码准备。** 用户确认的原型植入与视觉改造一并继承；先分别核语义位置、现有状态/计划扩展和实际 connector 能力。
+旧静态/精修能力不足不等于换模板或删行为。选择组合时，既有主控在获准的本地准备范围内盘点实际原型，
+保留源业务实现并编写必要的导航/挂载适配，映射每项源事实和 AC。冻结前按 `code-hygiene` Mode D 对
+精确代码完成独立审查，来源不明、审查未过或必须替换原脚本/新资源闭包时保持 NEEDS_CONTEXT。
+`behaviorBindings` 每项仅含 `{id, source_ids, source_ref, mount_action_id, acceptance_ids, bytes}`：
+`bytes` 为实际 UTF-8 classic JavaScript Buffer；其余为既有来源、精确来源引用、声明的 add/modify/preserve
+动作 ID 和完整行为验收 ID。helper 自算 hash、以 `input/behavior/<id>.js` 冻结进不可变 inventory。
+这些字段不是批准或审查凭据；主控必须核真实来源、审查和已有用户范围，不能由模型自填 ID/hash 自证合法。
+最多八项/总计 1 MiB，不支持模块 import 或未运输资源。原代码中的计算式网络/DOM副作用不能由静态
+闭包检查证明安全：独立审查须核实际效果，隔离浏览器验证记录异常请求、弹窗与运行错误；不把 mount/hash 当沙箱。
+
+设计草稿的 `ADAPTATION_READY` 只说明有完整适配判断，组合返回行为仍待绑定/审查；导出合同也不是执行许可。
+完整代码绑定、已支持profile/connector、真人采用和各外部操作授权依次满足后才执行。未知 connector 可保存草稿，
+依赖它的执行 BLOCKED；不得把未知说成已可生成。原型事实、状态、保持项的验收分母不能因此缩小。
 
 1. **逐项匹配**：对每个事实核对原件用途、实际节点和状态作用域，保留原文与理由。`confidence=high`
    只表示有依据且无未决替代位置，不是概率；`alternatives` 非空或存在未决需求就停在澄清。
@@ -242,10 +259,13 @@ const draft = await prepareOriginalCopyHandoff({
    不能静默漏资源或重写 URL。资源扫描只证明静态闭包，不代表脚本已经执行或交互已验收。
 3. **局部动作**：add 向真实节点内部末尾追加片段；modify 仅替换节点内部；remove 删除完整节点；
    preserve 不写编辑。refine 使用 original-ui-refinement-v1，edit.html为目标完整outerHTML；该profile只能refine+preserve，只准节点内class/style有效变化，业务DOM/行为属性、脚本、全局CSS及所有资产保持。混合结构变更、无效/空白变化、越界、新资产均拒绝，视觉和交互验收仍PENDING。原件隐藏 `<template>` 的内部位置必须带完整作用域路径，不能当普通可见DOM猜测。
+   `original-composition-v1` 显式允许同一原件基线内互不重叠的结构动作和 refine；各自保持原有验证，新增行为另按冻结 bindings 验证。无需把前阶段衍生品重新登记成原件，也不假设第二阶段自动读取衍生基线。
    目标重叠、歧义、不可证明的原始字节边界、void元素属性修改、文档头/脚本/样式目标均拒绝。
 4. **保留原件**：原输入永不重排/格式化；输出必须保持未授权区域所有字节，原脚本/样式也逐字节保持。
-   新片段使用受限静态HTML，不能偷加脚本、事件、外部资源、文档控制或模板。需求确需这些能力时
-   明示限制并另审精确范围，绝不以删除原交互或改写整页来绕过。
+   新片段仍使用受限静态HTML，不能偷加脚本、事件、外部资源、文档控制或模板。组合profile仅允许
+   把已冻结 behavior 文件按绑定顺序逐字节嵌入显式 `</body>` 前：每项为换行加
+   `<script data-luca-behavior="ID">CODE</script>`，最后再加一个换行。使用 `appendBoundBehavior` 可生成
+   精确拼接；生成端不得补写或改动代码。仍不支持的修改明示限制，不以删除交互或重写整页绕过。
 5. **OD 产出**：要求 OD 用代码读取完整原件，仅按上述节点局部修改，输出 `output/index.html`，并用
    `JSON.stringify` 写 `output/implementation-manifest.json`：
    `{"schema_version":1,"edits":[{"action_id":"C-01","html":"新增或替换的片段"}]}`。
@@ -256,7 +276,9 @@ const draft = await prepareOriginalCopyHandoff({
    全字节读回；原件 v1 仅支持 headless 路径，以本轮 `OD_RUN_AUTHORIZED` 收据和成功 run 读回进入 recover。
    桌面报告无法证明不存在后续取消的 headless 尝试，`reportOriginalGeneration` 明确拒绝，旧的裸 `STAGED`
    或历史 `USER_GENERATION_REPORTED` 收据也不能授权/执行 recover；再由 `recoverOriginalOutput` 校验实际输出、编辑声明、项目inventory、
-   原生DOM与原件差异。
+   原生DOM与原件差异。组合回收从 immutable contract 恢复 behavior bindings，验证插入位置/顺序/字节，
+   去除该唯一增补后继续同一原件局部编辑检查；不信输出清单自报的脚本许可。新增/缺失/改动行为文件、
+   未绑定脚本、原脚本/保持区漂移均拒绝，代码本身不会在机械校验时执行。
 7. **完成门**：机械 PASS 只证明改动范围与来源保真，语义仍 PENDING。实际浏览器检查本轮全部需求、
    原有关键交互与相关状态后，才能报告本轮已验收；不把一个局部样例外推成所有模板/状态都验证过。
 

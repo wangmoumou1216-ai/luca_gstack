@@ -1,0 +1,206 @@
+[
+  {
+    "line": 639,
+    "source": "/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-21-11-01a11f89-7cbf-7641-8e5d-dbd5440ec29e.jsonl",
+    "sha256": "c36beddaebc4bd8c7565ed98f797efa6f771ddcdff0e149dee95a1651c07dac9",
+    "event": {
+      "timestamp": "2026-10-09T07:51:51.442Z",
+      "ordinal": 638,
+      "type": "response_item",
+      "payload": {
+        "type": "custom_tool_call_output",
+        "id": "ctco_01a11fa5-a392-7f53-b4e6-ac5f5a279120",
+        "call_id": "call_e30d0bb733bf4c6c85a4d431e3a0dc4d",
+        "output": [
+          {
+            "type": "input_text",
+            "text": "Script completed\nWall time 1.6 seconds\nOutput:\n"
+          },
+          {
+            "type": "input_text",
+            "text": "{}"
+          },
+          {
+            "type": "input_text",
+            "text": "{\"status\":\"fulfilled\",\"value\":{\"chunk_id\":\"f14895\",\"wall_time_seconds\":0.347451916,\"exit_code\":0,\"original_token_count\":32,\"output\":\"PASS plan binding: exact path/SHA/scope/effects and valid past timestamp; fabricated records remain authorization NOT_VERIFIED\\n\"}}"
+          },
+          {
+            "type": "input_text",
+            "text": "{\"status\":\"fulfilled\",\"value\":{\"chunk_id\":\"fffca6\",\"wall_time_seconds\":0.000007667,\"exit_code\":0,\"original_token_count\":45,\"output\":\"agent-contracts: 137/137 断言通过（OD-first/状态枚举/边界/双重身份/路径映射/公共模型路由/能力锚/判决记录分权/绝对工作根与取消边界）\\n\"}}"
+          }
+        ],
+        "internal_chat_message_metadata_passthrough": {
+          "turn_id": "01a11f96-e788-75d3-9320-fe3b5f4242bd",
+          "create_time": 1791532311.442072
+        }
+      },
+      "metadata": {
+        "client_authored": false,
+        "fallback_token_limit_override": 12000
+      }
+    }
+  },
+  {
+    "line": 657,
+    "source": "/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-21-11-01a11f89-7cbf-7641-8e5d-dbd5440ec29e.jsonl",
+    "sha256": "a34a781086bd00864a672e965692b22e92b31d6a1882f9c3658e5c07943db1ee",
+    "event": {
+      "timestamp": "2026-10-09T07:52:51.371Z",
+      "ordinal": 656,
+      "type": "response_item",
+      "payload": {
+        "type": "custom_tool_call",
+        "id": "ctc_003c11034cdb808d016ac89d342fb0819ba1186dc5188efcc2",
+        "status": "completed",
+        "call_id": "call_7a45a3ed457c405e96454a72d99480b4",
+        "name": "exec",
+        "input": "text(await tools.apply_patch(\"*** Begin Patch\\n*** Add File: /Users/luca/.codex/worktrees/4614/luca_gstack/scripts/original-composition.mjs\\n+import { parse as parseJavaScript } from 'acorn';\\n+import { parse as parseHtml } from 'parse5';\\n+import { sha256Bytes, fileRecord } from './carrier-asset-profile.mjs';\\n+\\n+export const COMPOSITION_PROFILE = 'original-composition-v1';\\n+const fail = (message) => { throw Object.assign(new Error(message), { code: 'ORIGINAL_BEHAVIOR_INVALID' }); };\\n+const token = value => typeof value === 'string' && /^[A-Za-z][\\\\w.-]{0,79}$/.test(value);\\n+const nonempty = value => typeof value === 'string' && value.trim().length > 0;\\n+const uniqueStrings = value => Array.isArray(value) && value.length > 0 && value.length <= 64\\n+  && value.every(nonempty) && new Set(value).size === value.length;\\n+\\n+// These checks establish a closed transport format, not code safety, consent or\\n+// a runtime sandbox. The caller reviews exact code before freezing this input.\\n+export function prepareBehaviorBindings(bindings, { actions, factIds } = {}) {\\n+  if (!Array.isArray(bindings) || !bindings.length || bindings.length > 8) fail('Composition needs one to eight explicit behavior bindings');\\n+  const ids = new Set();\\n+  const files = [], records = [];\\n+  let total = 0;\\n+  for (const binding of bindings) {\\n+    const keys = ['id', 'source_ids', 'source_ref', 'mount_action_id', 'acceptance_ids', 'bytes'];\\n+    if (!binding || Object.keys(binding).length !== keys.length || !keys.every(k => Object.hasOwn(binding, k))\\n+      || !token(binding.id) || ids.has(binding.id) || !nonempty(binding.source_ref)\\n+      || !token(binding.mount_action_id) || !uniqueStrings(binding.source_ids) || !uniqueStrings(binding.acceptance_ids)\\n+      || !Buffer.isBuffer(binding.bytes) || !binding.bytes.length || binding.bytes.length > 512 * 1024) fail('Closed, unique, source-bound behavior bytes and acceptance IDs required');\\n+    ids.add(binding.id); total += binding.bytes.length;\\n+    if (total > 1024 * 1024) fail('Behavior closure exceeds 1 MiB');\\n+    if (actions && !actions.some(a => a.action_id === binding.mount_action_id && ['add', 'modify', 'preserve'].includes(a.action))) fail('Behavior mount must bind a declared original action');\\n+    if (factIds && binding.source_ids.some(id => !factIds.includes(id))) fail('Behavior cites an unknown frozen source ID');\\n+    const code = binding.bytes.toString('utf8');\\n+    if (!Buffer.from(code).equals(binding.bytes) || /<\\\\/script\\\\b|<!--|-->/i.test(code)) fail('Classic script bytes must be UTF-8 without HTML parser control sequences');\\n+    let tree;\\n+    try { tree = parseJavaScript(code, { ecmaVersion: 'latest', sourceType: 'script' }); }\\n+    catch { fail('Self-contained classic JavaScript required'); }\\n+    const visit = node => {\\n+      if (!node || typeof node !== 'object') return;\\n+      if (node.type === 'ImportExpression') fail('External module closures are unsupported');\\n+      for (const value of Object.values(node)) if (Array.isArray(value)) value.forEach(visit); else if (value && typeof value === 'object') visit(value);\\n+    };\\n+    visit(tree);\\n+    const path = `input/behavior/${binding.id}.js`;\\n+    const { bytes, ...mapping } = binding;\\n+    records.push({ ...mapping, path, sha256: sha256Bytes(bytes), byte_length: bytes.length });\\n+    files.push({ ...fileRecord(path, 'text/javascript; charset=utf-8', bytes), bytes: Buffer.from(bytes) });\\n+  }\\n+  return { records, files };\\n+}\\n+\\n+export function restoreBehaviorBindings(records, files, options) {\\n+  if (!Array.isArray(records)) fail('Frozen behavior records required');\\n+  const bindings = records.map(record => {\\n+    if (!record || Object.keys(record).sort().join(',') !== 'acceptance_ids,byte_length,id,mount_action_id,path,sha256,source_ids,source_ref') fail('Frozen behavior record schema changed');\\n+    const file = files.find(file => file.path === record.path);\\n+    if (!file || !Buffer.isBuffer(file.bytes) || record.path !== `input/behavior/${record.id}.js`\\n+      || file.bytes.length !== record.byte_length || sha256Bytes(file.bytes) !== record.sha256) fail('Frozen behavior file missing or changed');\\n+    const { path, sha256, byte_length, ...mapping } = record;\\n+    return { ...mapping, bytes: file.bytes };\\n+  });\\n+  prepareBehaviorBindings(bindings, options);\\n+  return bindings;\\n+}\\n+\\n+function bodyEnd(html) {\\n+  const doc = parseHtml(html, { sourceCodeLocationInfo: true });\\n+  const body = doc.childNodes.find(node => node.tagName === 'html')?.childNodes.find(node => node.tagName === 'body');\\n+  const offset = body?.sourceCodeLocation?.endTag?.startOffset;\\n+  if (!Number.isInteger(offset)) fail('Composition requires an explicit original body end tag');\\n+  return offset;\\n+}\\n+function extension(bindings) {\\n+  prepareBehaviorBindings(bindings);\\n+  return bindings.map(binding => `\\\\n<script data-luca-behavior=\\\"${binding.id}\\\">${binding.bytes.toString('utf8')}</script>`).join('') + '\\\\n';\\n+}\\n+\\n+export function appendBoundBehavior(output, bindings) {\\n+  const html = output.toString('utf8'), at = bodyEnd(html);\\n+  return Buffer.from(html.slice(0, at) + extension(bindings) + html.slice(at));\\n+}\\n+\\n+export function removeBoundBehavior(output, bindings) {\\n+  const html = output.toString('utf8'), at = bodyEnd(html), suffix = extension(bindings);\\n+  if (html.slice(at - suffix.length, at) !== suffix) fail('Output must embed every exact frozen behavior once, in order, at the body-end seam');\\n+  return Buffer.from(html.slice(0, at - suffix.length) + html.slice(at));\\n+}\\n*** End Patch\"));\n",
+        "internal_chat_message_metadata_passthrough": {
+          "turn_id": "01a11f96-e788-75d3-9320-fe3b5f4242bd",
+          "create_time": 1791532340.1935403
+        }
+      }
+    }
+  },
+  {
+    "line": 685,
+    "source": "/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-21-11-01a11f89-7cbf-7641-8e5d-dbd5440ec29e.jsonl",
+    "sha256": "2b2f44d2db9ead8defc667f0d98609544ff8b2dc3a0890211981e32d397c4326",
+    "event": {
+      "timestamp": "2026-10-09T07:54:59.247Z",
+      "ordinal": 684,
+      "type": "response_item",
+      "payload": {
+        "type": "custom_tool_call_output",
+        "id": "ctco_01a11fa8-812f-7b53-8f16-852724473b2b",
+        "call_id": "call_be4781b8417c4d8aafa36f901bea6a54",
+        "output": [
+          {
+            "type": "input_text",
+            "text": "Script completed\nWall time 2.1 seconds\nOutput:\n"
+          },
+          {
+            "type": "input_text",
+            "text": "{}"
+          },
+          {
+            "type": "input_text",
+            "text": "{\"chunk_id\":\"362719\",\"wall_time_seconds\":1.002185583,\"session_id\":87981,\"original_token_count\":391,\"output\":\"543:  const composition = record.execution_profile === 'original-composition-v1';\\n544:  if (composition && !page.original_copy) fail('ORIGINAL_PROFILE_INVALID', 'Composition is opt-in for registered originals only');\\n549:  if (mixedRefine && !composition && record.decision === 'ready') fail('ORIGINAL_REFINEMENT_PROFILE', 'Refinement cannot mix structural actions within one executable profile');\\n550:  let unresolved = mixedRefine && !composition;\\n586:    const plannedExtension = composition && judgment.state_status === 'extension';\\n587:    if (judgment.state_status === 'extension' && !composition) fail('ORIGINAL_PROFILE_INVALID', 'Planned behavior extensions require explicit original composition');\\n616:  return { schema_version: 1, mode: 'adaptation_draft', status: record.decision === 'ready' ? 'ADAPTATION_READY' : record.decision === 'needs_context' ? 'NEEDS_CONTEXT' : 'REFERENCE_ONLY', source_revision_sha256: revision, binding_allowed: false, execution_allowed: false, ...(composition ? { execution_profile: record.execution_profile, behavior_acceptance: 'PENDING_SOURCE_BINDING_AND_REVIEW' } : {}), semantic_verification: 'model-reviewed-not-machine-proven', execution_path: page.original_copy ? 'original_adapter' : page.carrier_eligible ? 'structural_carrier' : 'reference_only', reason: record.reason };\\nPASS: catalog CLI validates source hash and exact region anchors\\nPASS: lexical reasons, explicit empty result and sixth-page extension without route edits\\nPASS: confirmed page/region, explicit no-reference branches, pending and stale guards\\n\"}"
+          },
+          {
+            "type": "input_text",
+            "text": "{\"chunk_id\":\"fb5f2b\",\"wall_time_seconds\":0.000005542,\"exit_code\":0,\"original_token_count\":65,\"output\":\"PASS: original functional and UI-only contracts preserve legacy authorization; actual prototype bytes and closed evidence metadata travel in immutable scope; forged IDs, evidence tampering/omission, mixed profiles, stale authority and canceled runs rejected\\n\"}"
+          }
+        ],
+        "internal_chat_message_metadata_passthrough": {
+          "turn_id": "01a11f96-e788-75d3-9320-fe3b5f4242bd",
+          "create_time": 1791532499.247168
+        }
+      },
+      "metadata": {
+        "client_authored": false,
+        "fallback_token_limit_override": 12000
+      }
+    }
+  },
+  {
+    "line": 702,
+    "source": "/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-21-11-01a11f89-7cbf-7641-8e5d-dbd5440ec29e.jsonl",
+    "sha256": "b460ccf1f9166e43100792eb1ee492db500ba030e5f3bf77ec6ecab95f51a131",
+    "event": {
+      "timestamp": "2026-10-09T07:57:01.848Z",
+      "ordinal": 701,
+      "type": "response_item",
+      "payload": {
+        "type": "custom_tool_call_output",
+        "id": "ctco_01a11faa-6018-7c50-b149-3ce01aed9368",
+        "call_id": "call_9fe52cd75f1d4fbbb4323556e81fe8ca",
+        "output": [
+          {
+            "type": "input_text",
+            "text": "Script completed\nWall time 0.6 seconds\nOutput:\n"
+          },
+          {
+            "type": "input_text",
+            "text": "{\"chunk_id\":\"b0ecab\",\"wall_time_seconds\":0.000014334,\"exit_code\":0,\"original_token_count\":196,\"output\":\"PASS simulated codex composition prepare/stage/run/recover integrity; no live OD or native consent claim\\nPASS simulated claude composition prepare/stage/run/recover integrity; no live OD or native consent claim\\nPASS NAV-1: click -> exactly one matching panel visible\\nPASS NAV-2: click -> exactly one matching panel visible\\nPASS NAV-3: click -> exactly one matching panel visible\\nPASS NAV-4: click -> exactly one matching panel visible\\nPASS NAV-5: click -> exactly one matching panel visible\\nPASS NAV-6: click -> exactly one matching panel visible\\nPASS STATE-RETAIN, KEYBOARD, ORIGINAL-NAV/search, RUNTIME-ERRORS\\nPASS mutations: missing bridge (static integrity PASS, behavior FAIL), wrong navigation mapping (behavior FAIL), changed frozen bytes (integrity FAIL); original preserved\\n\"}"
+          },
+          {
+            "type": "input_text",
+            "text": "{\"chunk_id\":\"38af97\",\"wall_time_seconds\":0.000008542,\"exit_code\":0,\"original_token_count\":768,\"output\":\"PASS: zoom/scroll conversion and screenshot mutation PASS -> STALE_SCREENSHOT/BOX_BOUNDS -> PASS\\nPASS: real source containment -> forged filters/pagination rejected -> restored confirmed\\nPASS: old five references preserved; six original copies use the original adapter, not rewritten carriers\\nNOT RUN: original desktop source audit (use --audit-originals)\\nPASS: early adaptation validates full source/state evidence, ambiguity, unsupported capability and stale revisions without freezing/adopting\\nPASS static draft joint gate: same module modify/preserve -> CARRIER_ACTION_TARGET_REUSED\\nPASS static draft joint gate: parent modify/child preserve -> CARRIER_ACTION_OVERLAP\\nPASS static draft joint gate: slot add/ancestor preserve -> CARRIER_ACTION_OVERLAP\\nPASS static draft joint gate: same module distinct changes -> CARRIER_ACTION_TARGET_REUSED\\nPASS: static adaptation retains NEEDS_CONTEXT conflicts, rejects illegal targets, deduplicates source/states, permits sibling slots and early preserve-only; final binding still requires change\\nPASS: model judgments need real Packet/catalog/target evidence; uncertainty, ambiguous locations and unsupported states fail closed\\nPASS: v2 carrier contracts bind frozen inputs, source identity, module graph, lifecycle and registered-anchor invariants\\nPASS: heading container, void elements, missing ancestor, equal-node and reversed containment\\nPASS mutation: schema version -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: wrong scope -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: retired ID -> PAGE_ID_REUSED -> restored PASS\\nPASS mutation: duplicate page ID -> PAGE_ID_REUSED -> restored PASS\\nPASS mutation: duplicate region ID -> REGION_ID_REUSED -> restored PASS\\nPASS mutation: missing parent -> REGION_PARENT -> restored PASS\\nPASS mutation: parent cycle -> REGION_CYCLE -> restored PASS\\nPASS mutation: missing anchor -> REGION_ANCHOR -> restored PASS\\nPASS mutation: anchor selector injection -> REGION_ANCHOR -> restored PASS\\nPASS mutation: heading ancestor bound -1 -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: heading ancestor bound 1.5 -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: heading ancestor bound 5 -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: source hash -> SOURCE_HASH -> restored PASS\\nPASS mutation: source boundary ../outside.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary framework/../../outside.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary framework/../docs/private.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary /etc/passwd -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary docs/private.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary framework\\\\list.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary .claude/workflow-state.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source symlink -> SOURCE_SYMLINK -> restored PASS\\nPASS: project display paths and fake anchors refused; original sources restored\\nPASS: heading anchor exactness and ambiguity guard restored\\n\"}"
+          }
+        ],
+        "internal_chat_message_metadata_passthrough": {
+          "turn_id": "01a11f96-e788-75d3-9320-fe3b5f4242bd",
+          "create_time": 1791532621.848456
+        }
+      },
+      "metadata": {
+        "client_authored": false,
+        "fallback_token_limit_override": 12000
+      }
+    }
+  },
+  {
+    "line": 739,
+    "source": "/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-21-11-01a11f89-7cbf-7641-8e5d-dbd5440ec29e.jsonl",
+    "sha256": "20dd7362160d8f685e5c0965a86b0ef5817dd7147c32d24f2b0cf6309d501540",
+    "event": {
+      "timestamp": "2026-10-09T07:58:17.855Z",
+      "ordinal": 738,
+      "type": "response_item",
+      "payload": {
+        "type": "custom_tool_call_output",
+        "id": "ctco_01a11fab-88ff-7621-9c52-681a5a5f7433",
+        "call_id": "call_483a6206dcbc4ff2a98b2ea00ba0e5de",
+        "output": [
+          {
+            "type": "input_text",
+            "text": "Script completed\nWall time 1.2 seconds\nOutput:\n"
+          },
+          {
+            "type": "input_text",
+            "text": "{\"chunk_id\":\"3cbb24\",\"wall_time_seconds\":0.000010667,\"exit_code\":0,\"original_token_count\":228,\"output\":\"PASS composition draft: mixed actions/planned extension, all sources/states retained, unknowns rejected, execution stays false\\nPASS simulated codex composition prepare/stage/run/recover integrity; no live OD or native consent claim\\nPASS simulated claude composition prepare/stage/run/recover integrity; no live OD or native consent claim\\nPASS NAV-1: click -> exactly one matching panel visible\\nPASS NAV-2: click -> exactly one matching panel visible\\nPASS NAV-3: click -> exactly one matching panel visible\\nPASS NAV-4: click -> exactly one matching panel visible\\nPASS NAV-5: click -> exactly one matching panel visible\\nPASS NAV-6: click -> exactly one matching panel visible\\nPASS STATE-RETAIN, KEYBOARD, ORIGINAL-NAV/search, RUNTIME-ERRORS\\nPASS mutations: missing bridge (static integrity PASS, behavior FAIL), wrong navigation mapping (behavior FAIL), changed frozen bytes (integrity FAIL); original preserved\\n\"}"
+          },
+          {
+            "type": "input_text",
+            "text": "{\"chunk_id\":\"82c609\",\"wall_time_seconds\":0.000008375,\"exit_code\":0,\"original_token_count\":768,\"output\":\"PASS: zoom/scroll conversion and screenshot mutation PASS -> STALE_SCREENSHOT/BOX_BOUNDS -> PASS\\nPASS: real source containment -> forged filters/pagination rejected -> restored confirmed\\nPASS: old five references preserved; six original copies use the original adapter, not rewritten carriers\\nNOT RUN: original desktop source audit (use --audit-originals)\\nPASS: early adaptation validates full source/state evidence, ambiguity, unsupported capability and stale revisions without freezing/adopting\\nPASS static draft joint gate: same module modify/preserve -> CARRIER_ACTION_TARGET_REUSED\\nPASS static draft joint gate: parent modify/child preserve -> CARRIER_ACTION_OVERLAP\\nPASS static draft joint gate: slot add/ancestor preserve -> CARRIER_ACTION_OVERLAP\\nPASS static draft joint gate: same module distinct changes -> CARRIER_ACTION_TARGET_REUSED\\nPASS: static adaptation retains NEEDS_CONTEXT conflicts, rejects illegal targets, deduplicates source/states, permits sibling slots and early preserve-only; final binding still requires change\\nPASS: model judgments need real Packet/catalog/target evidence; uncertainty, ambiguous locations and unsupported states fail closed\\nPASS: v2 carrier contracts bind frozen inputs, source identity, module graph, lifecycle and registered-anchor invariants\\nPASS: heading container, void elements, missing ancestor, equal-node and reversed containment\\nPASS mutation: schema version -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: wrong scope -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: retired ID -> PAGE_ID_REUSED -> restored PASS\\nPASS mutation: duplicate page ID -> PAGE_ID_REUSED -> restored PASS\\nPASS mutation: duplicate region ID -> REGION_ID_REUSED -> restored PASS\\nPASS mutation: missing parent -> REGION_PARENT -> restored PASS\\nPASS mutation: parent cycle -> REGION_CYCLE -> restored PASS\\nPASS mutation: missing anchor -> REGION_ANCHOR -> restored PASS\\nPASS mutation: anchor selector injection -> REGION_ANCHOR -> restored PASS\\nPASS mutation: heading ancestor bound -1 -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: heading ancestor bound 1.5 -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: heading ancestor bound 5 -> SCHEMA_INVALID -> restored PASS\\nPASS mutation: source hash -> SOURCE_HASH -> restored PASS\\nPASS mutation: source boundary ../outside.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary framework/../../outside.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary framework/../docs/private.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary /etc/passwd -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary docs/private.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary framework\\\\list.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source boundary .claude/workflow-state.html -> SOURCE_SCOPE -> restored PASS\\nPASS mutation: source symlink -> SOURCE_SYMLINK -> restored PASS\\nPASS: project display paths and fake anchors refused; original sources restored\\nPASS: heading anchor exactness and ambiguity guard restored\\n\"}"
+          },
+          {
+            "type": "input_text",
+            "text": "{\"chunk_id\":\"458477\",\"wall_time_seconds\":0.000008333,\"exit_code\":0,\"original_token_count\":650,\"output\":\"scripts/check-ci-contract.mjs:16:  'node scripts/test-original-copy-handoff.mjs',\\nscripts/verify.sh:253:check S14g \\\"原件保真交接/编辑回收、九页预览与静态分支隔离\\\" \\\"npm run test:page-context-preview --silent && npm run test:original-adapter --silent\\\"\\nscripts/verify.sh:278:check S62 \\\"原件回收授权、取消、漂移与桌面拒绝 fixture\\\" \\\"node scripts/test-original-copy-handoff.mjs\\\"\\n.github/workflows/ci.yml:105:          node scripts/test-original-copy-handoff.mjs\\n.github/workflows/ci.yml:174:        run: npm run test:page-context-preview && npm run test:original-adapter\\n\\n调用 `recoverCarrierOutput` 前后必须重验全部 immutable inputs、绑定的 Packet/TAC/carrier/bundle hashes、\\n精确 output inventory 和全项目 content-hash inventory。carrier `single` 的 `output/index.html` 必须是\\n新、非空、通过输出 asset closure 的文件；有非-`preserve` TAC action 时它必须与 `base-template.html`\\n字节不同。任何额外 HTML、candidate、未知文件、输入/输出重叠、逃逸资源、base 改名/复制、锚点或\\npreserve 不变量失败都 `BLOCKED`，保留证据但绝不自动删除。`implementation-manifest.json` 只是\\n不可信辅助信息，不能单独证明生成或语义完成。\\n\\n机械验证必须使用与 immutable TAC/模块合同一致的数据；真实 DOM 中的目标、动作变化与非授权\\n结构保持均需通过，注释/空白差异不算实施动作。output 的路径、字节数、hash 必须与完整\\npost-inventory 一致。仅调用方填写的 `module_traces: PASS` 不是实施证据；独立语义验收仍逐项检查\\n实际页面中的需求、状态、AC 与操作结果。\\n\\noriginal_copy v1 仅支持 headless 路径：保留本轮 `OD_RUN_AUTHORIZED` 收据与成功 run 读回，再使用\\n`authorizeOriginalOperation(recover)` 和异步 `recoverOriginalOutput`。桌面报告缺少独立尝试历史，\\n不能排除后续取消的 headless run；`reportOriginalGeneration` 明确拒绝，裸 `STAGED` 与历史\\n`USER_GENERATION_REPORTED` 均不能 recover。除实际\\n`output/index.html`，还要读回 `output/implementation-manifest.json` 的局部编辑声明。声明不是证据本身：\\n验证器重算原件中的真实节点范围，核对实际HTML恰为原始字节加这些编辑，并以原生DOM验证没有解析越界。\\n原脚本/样式保持逐字节一致。只有附带成功终态的 headless run 才能按成功运行回收；取消/未完成的输出\\n保留为证据，不直接宣称成功。界面语义与原交互保留仍需独立浏览器验收。\\n\\n\"}"
+          }
+        ],
+        "internal_chat_message_metadata_passthrough": {
+          "turn_id": "01a11f96-e788-75d3-9320-fe3b5f4242bd",
+          "create_time": 1791532697.855716
+        }
+      },
+      "metadata": {
+        "client_authored": false,
+        "fallback_token_limit_override": 12000
+      }
+    }
+  },
+  {
+    "line": 743,
+    "source": "/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-21-11-01a11f89-7cbf-7641-8e5d-dbd5440ec29e.jsonl",
+    "sha256": "8c130dba70eaa983488800341c284dd8b745dcbb51e07d9ed63d8730aa59372d",
+    "event": {
+      "timestamp": "2026-10-09T07:59:26.188Z",
+      "ordinal": 742,
+      "type": "response_item",
+      "payload": {
+        "type": "custom_tool_call",
+        "id": "ctc_003c11034cdb808d016ac89ea27b3c819b9b30b1c59d458041",
+        "status": "completed",
+        "call_id": "call_4027850980764344b0ed0b1bf9449007",
+        "name": "exec",
+        "input": "text(await tools.apply_patch(\"*** Begin Patch\\n*** Update File: /Users/luca/.codex/worktrees/4614/luca_gstack/.claude/skill-os/runtime/page-context.md\\n@@\\n-ready不能含未知/不支持、低置信或替代位置；refine不得与结构动作混用同一profile；返回ADAPTATION_READY仍 `binding_allowed=false`、\\n+ready不能含未知/不支持、低置信或替代位置。两个旧profile中refine不得与结构动作混用；已授权的植入+精修可显式选择 `execution_profile: original-composition-v1`，原件判断以 `state_status: extension` 标明有来源的待实现状态，不能写成原件已有支持。该选择只解除组合动作的草稿冲突；返回ADAPTATION_READY仍 `binding_allowed=false`、\\n@@\\n-  pageId, packetBody, target: {tool:'od', projectId}, handoffId, actions, prototypeEvidence\\n+  pageId, packetBody, target: {tool:'od', projectId}, handoffId, actions, prototypeEvidence,\\n+  // 仅明确需要组合业务接入时传入；旧调用不变：\\n+  executionProfile: 'original-composition-v1', behaviorBindings\\n@@\\n 原型证据使用可选 `prototypeEvidence`（safe相对path、media_type、purpose、既有source_ids、实际Buffer bytes）；helper纳入不可变manifest及全量读回。附件不是需求事实、不执行HTML、不以路径代替运输，source_ids来自冻结Packet。\\n+\\n+**能力与代码准备。** 用户确认的原型植入与视觉改造一并继承；先分别核语义位置、现有状态/计划扩展和实际 connector 能力。\\n+旧静态/精修能力不足不等于换模板或删行为。选择组合时，既有主控在获准的本地准备范围内盘点实际原型，\\n+保留源业务实现并编写必要的导航/挂载适配，映射每项源事实和 AC。冻结前按 `code-hygiene` Mode D 对\\n+精确代码完成独立审查，来源不明、审查未过或必须替换原脚本/新资源闭包时保持 NEEDS_CONTEXT。\\n+`behaviorBindings` 每项仅含 `{id, source_ids, source_ref, mount_action_id, acceptance_ids, bytes}`：\\n+`bytes` 为实际 UTF-8 classic JavaScript Buffer；其余为既有来源、精确来源引用、声明的 add/modify/preserve\\n+动作 ID 和完整行为验收 ID。helper 自算 hash、以 `input/behavior/<id>.js` 冻结进不可变 inventory。\\n+这些字段不是批准或审查凭据；主控必须核真实来源、审查和已有用户范围，不能由模型自填 ID/hash 自证合法。\\n+最多八项/总计 1 MiB，不支持模块 import 或未运输资源。原代码中的计算式网络/DOM副作用不能由静态\\n+闭包检查证明安全：独立审查须核实际效果，隔离浏览器验证记录异常请求、弹窗与运行错误；不把 mount/hash 当沙箱。\\n+\\n+设计草稿的 `ADAPTATION_READY` 只说明有完整适配判断，组合返回行为仍待绑定/审查；导出合同也不是执行许可。\\n+完整代码绑定、已支持profile/connector、真人采用和各外部操作授权依次满足后才执行。未知 connector 可保存草稿，\\n+依赖它的执行 BLOCKED；不得把未知说成已可生成。原型事实、状态、保持项的验收分母不能因此缩小。\\n@@\\n    preserve 不写编辑。refine 使用 original-ui-refinement-v1，edit.html为目标完整outerHTML；该profile只能refine+preserve，只准节点内class/style有效变化，业务DOM/行为属性、脚本、全局CSS及所有资产保持。混合结构变更、无效/空白变化、越界、新资产均拒绝，视觉和交互验收仍PENDING。原件隐藏 `<template>` 的内部位置必须带完整作用域路径，不能当普通可见DOM猜测。\\n+   `original-composition-v1` 显式允许同一原件基线内互不重叠的结构动作和 refine；各自保持原有验证，新增行为另按冻结 bindings 验证。无需把前阶段衍生品重新登记成原件，也不假设第二阶段自动读取衍生基线。\\n@@\\n-   新片段使用受限静态HTML，不能偷加脚本、事件、外部资源、文档控制或模板。需求确需这些能力时\\n-   明示限制并另审精确范围，绝不以删除原交互或改写整页来绕过。\\n+   新片段仍使用受限静态HTML，不能偷加脚本、事件、外部资源、文档控制或模板。组合profile仅允许\\n+   把已冻结 behavior 文件按绑定顺序逐字节嵌入显式 `</body>` 前：每项为换行加\\n+   `<script data-luca-behavior=\\\"ID\\\">CODE</script>`，最后再加一个换行。使用 `appendBoundBehavior` 可生成\\n+   精确拼接；生成端不得补写或改动代码。仍不支持的修改明示限制，不以删除交互或重写整页绕过。\\n@@\\n-   原生DOM与原件差异。\\n+   原生DOM与原件差异。组合回收从 immutable contract 恢复 behavior bindings，验证插入位置/顺序/字节，\\n+   去除该唯一增补后继续同一原件局部编辑检查；不信输出清单自报的脚本许可。新增/缺失/改动行为文件、\\n+   未绑定脚本、原脚本/保持区漂移均拒绝，代码本身不会在机械校验时执行。\\n*** Update File: /Users/luca/.codex/worktrees/4614/luca_gstack/.claude/skills/office/design-brief/references/input-contract.md\\n@@\\n-保留两项意图，分别核结构与精修合同的能力，不能混用同一执行profile。\\n+保留两项意图，分别核结构、精修及交互接入能力；两个旧profile保持独立，明确需要组合时按 page-context §7 的 original-composition-v1，不用纯refine合同冒充业务接入。\\n@@\\n-脚本/全局CSS/资产保持，禁止冒充空格修改。需要结构与样式混合或新增行为时返回原范围确认，\\n-不自动扩大 refine。静态carrier精修另要求可判定子集中的有效inline CSS声明变化（class-only拒绝）；同一变更style内原样未知声明仅豁免font-family/box-shadow，其余未知声明默认可能覆盖并拒绝。原件用inert浏览器检查合法声明/类token，两者都不证明实际像素/行为。原件与 static carrier 使用各自适配器，不改变原件资格字段绕过安全。\\n+脚本/全局CSS/资产保持，禁止冒充空格修改。需要结构与样式混合或新增行为时，继承用户已明确的\\n+植入范围，按 page-context §7 检查组合profile、代码来源/独立审查和真实执行能力；只有新增或含混\\n+范围才补确认，不自动扩大 refine。结构与精修可在同一受控组合产物中分别验收，不假设两个旧路径\\n+自动传递衍生基线。静态carrier精修另要求可判定子集中的有效inline CSS声明变化（class-only拒绝）；同一变更style内原样未知声明仅豁免font-family/box-shadow，其余未知声明默认可能覆盖并拒绝。原件用inert浏览器检查合法声明/类token，两者都不证明实际像素/行为。原件与 static carrier 使用各自适配器，不改变原件资格字段绕过安全。\\n@@\\n 草稿与正文可以在冻结前迭代；正式 binding/TAC只在冻结后指向完整事实。\\n+组合草稿可将有来源的新增状态标为 extension；ADAPTATION_READY仍不授绑定/执行权。主控在实际\\n+获准准备范围内提供并独立审查精确行为实现，再形成绑定代码字节的执行合同。代码未就绪或 connector\\n+未知时保留具体缺口，不把静态定位/完整字段当作交互可用，也不阻断不依赖它的需求盘点。\\n*** Update File: /Users/luca/.codex/worktrees/4614/luca_gstack/.claude/skills/office/open-design/SKILL.md\\n@@\\n-精修用 original-ui-refinement-v1：refine+preserve、完整outerHTML、仅有效class/style改变，业务DOM/脚本/全局CSS/资产保持；嵌入仍add/modify独立合同，不混用。原型证据通过prototypeEvidence实际bytes/hash/既有source_ids进入不可变inventory，正文已含完整保持事实，附件不执行。\\n+精修用 original-ui-refinement-v1：refine+preserve、完整outerHTML、仅有效class/style改变，业务DOM/脚本/全局CSS/资产保持。用户已要求业务植入+精修时，按 page-context §7 显式选择 original-composition-v1：先核精确行为代码来源及独立审查，再冻结 behaviorBindings；同一基线内分别验结构、视觉和绑定代码。未绑定代码不得由 OD 生成端补写，draft ready 不等于执行就绪。原型证据通过prototypeEvidence实际bytes/hash/既有source_ids进入不可变inventory，正文已含完整保持事实，附件不执行。\\n@@\\n-original-preserving-v1 或 original-ui-refinement-v1，不套普通静态默认 profile。\\n+original-preserving-v1、original-ui-refinement-v1 或显式 original-composition-v1，不套普通静态默认 profile。\\n@@\\n-原脚本/样式保持逐字节一致。只有附带成功终态的 headless run 才能按成功运行回收；取消/未完成的输出\\n+原脚本/样式保持逐字节一致。composition 的新增行为只来自 immutable contract：读取完整 input/behavior 文件，按 §7 精确嵌入；回收重核全量文件、代码字节/位置/顺序再验证其余局部编辑，绝不按输出自报脚本许可放行。hash 与源码局部范围不是 JS 沙箱，实际运行副作用与全部业务/视觉仍需独立验收。只有附带成功终态的 headless run 才能按成功运行回收；取消/未完成的输出\\n*** Update File: /Users/luca/.codex/worktrees/4614/luca_gstack/package.json\\n@@\\n-    \\\"test:original-adapter\\\": \\\"node scripts/test-original-template-index.mjs && node scripts/test-original-template-edits.mjs && node scripts/test-original-copy-handoff.mjs && node scripts/test-original-real-templates.mjs\\\",\\n+    \\\"test:original-adapter\\\": \\\"node scripts/test-original-template-index.mjs && node scripts/test-original-template-edits.mjs && node scripts/test-original-copy-handoff.mjs && node scripts/test-original-composition.mjs && node scripts/test-original-real-templates.mjs\\\",\\n*** End Patch\"));\n",
+        "internal_chat_message_metadata_passthrough": {
+          "turn_id": "01a11f96-e788-75d3-9320-fe3b5f4242bd",
+          "create_time": 1791532706.4859324
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,154 @@
+
+═══════════════════════════════════════
+  luca_gstack 框架健康检查（NO_PIN）
+═══════════════════════════════════════
+
+[ 环境预检 ]
+  ✓ P0a: required tools available (bash/git/node/npm/python3)
+  ✓ P0b: Node runtime satisfies package engine (>=20)
+  ✓ P0c: repository/worktree identity and explicit mode (local; deployment=/Users/luca/Desktop/luca_gstack)
+  ✓ P0d: OS temporary directory is writable
+  ✓ P0e: candidate-local Playwright matches package-lock
+  ✓ P0f: cached Chromium launches and closes without installation
+
+[ Git 基础设施 ]
+  ✓ G1: Git 仓库已初始化
+  ✓ G2: hooks 路径配置正确
+  ✓ G3: .gitignore 覆盖 .DS_Store
+  ✓ G4: .gitignore 覆盖 .env
+  ✓ G5: pre-commit 存在且可执行
+  ✓ G5b: commit-msg 验值 hook 存在且可执行（claude5-unhobble C6）
+  ✓ G5c: pre-commit 不把 git 注入的仓库位置变量交给 verify.sh（fixture 写不进本次提交）
+
+[ 标准文档 ]
+  ✓ D1: README.md 存在
+  ✓ D2: CHANGELOG.md 存在
+  ✓ D3: SECURITY.md 存在
+  ✓ D4: CONTRIBUTING.md 存在
+  ✓ D5: LICENSE 存在
+
+[ Claude Code 配置 ]
+  ✓ C1: settings.json 有 SessionStart hook
+  ✓ C2: settings.json 有 UserPromptSubmit hook
+  ✓ C3: settings.json 有 PostToolUse hook
+  ✓ C4: settings.json 有 Stop hook
+  ✓ C5: session-restore.mjs 语法合法
+  ✓ C6: route-guard.mjs 语法合法
+  ✓ C7: post-edit.mjs 语法合法
+  ✓ C8: session-sync.mjs 语法合法
+  ✓ C9: 双 root K1-K10 / pointer / Static Fallback / discovery 门
+  ✓ C10: agent-context mutation proof-it-bites
+  ✓ C10b: A/B evaluator counterexamples / successful read / EOF
+  ✓ C11: Claude hooks 运行时副作用测试通过
+  ✓ C12: settings.json 有 PreToolUse hook（会话级项目隔离）
+  ✓ C13: project-scope-guard.mjs 语法合法
+  ✓ C14: 会话级项目隔离回归通过（重定向/deny/跨session/fail-open）
+  ✓ C15: session-end.mjs 语法合法
+  ✓ C16: self-model 与磁盘一致（audit F4-05）
+  ✓ C17: workflow-state 事务、并发与真实调用块失败传播
+  ✓ C18: redteam 判据挂载表完整且引用路径全部存在
+  ✓ C19: 场景覆盖表结构自洽（SSOT对账+豁免声明双确认+三不规则形态）
+  ✓ C20: 项目绑定+原生事件权限回归通过（attestation/CAS/lease/replay/new/legacy migration）
+  ✓ C21: 项目门禁 v3.4 selection/receipt/concurrency 回归通过
+  ✓ C22: 项目门禁 v3.4 controlled 授权与恢复回归通过
+  ✓ C23: 宿主项目/session只读投影回归通过
+  ✓ C24: 项目门禁 v3.4 Claude/Codex 双宿主行为回归通过
+  ✓ C25: 项目门禁 v3.4 A01/A04/A05/A09 mutation proof-it-bites
+  ✓ C26: Host Launch broker/claim/source/control-plane 回归通过
+  ✓ C27: Hook health, source preservation, exact trust, and journal migration
+
+[ Skill 体系 ]
+  ✓ S1: CLAUDE.md 存在且非空
+  ✓ S3: skill-os 目录存在
+  ✓ S4: office skill 目录存在
+  ✓ S5: validate-skills.sh 通过
+  ✓ S6: auto/SKILL.md 存在且含 FILE_END 标记
+  ✓ S8: work-agent-template 含 DONE_CRITERIA 守卫
+  ✓ S9: route golden tests 通过
+  ✓ S20: 甲类路由命中率 keyword 层回归门（明细: python3 memory/scripts/eval_routing.py --keyword-only）
+  ✓ S10: routing map 覆盖 + skill 单一真相源一致性检查通过
+  ✓ S19: 治理轨道登记面同步（REG-1/2/3）
+  ✓ S11: project routing dry-run 通过
+  ✓ S12: memory 精细检索/写入门禁测试通过
+  ✓ S13: memory stable facts 健康检查通过
+  ✓ S14: quality gate 框架合同检查通过（NO_PIN）
+  ✓ S14b: quality gate 作用域隔离/精确 handoff/已验证项目扫描会咬
+  ✓ S14c: 退休设计入口拒绝且通用路径保留（真实 guard mutation）
+  ✓ S14d: 设计交接导入/授权/读回回归与真实 guard mutation
+  ✓ S14e: 退役设计约束不从活动规则/记忆回流（含恢复旧数据反证）
+  ✓ S14f: 页面库身份、原件逐字节复制、载体闭包与决策门负例
+  ✓ S14g: 原件保真交接/编辑回收、九页预览与静态分支隔离
+  ✓ S15: coding discipline 合同检查通过
+  ✓ S17: Loop 退役不可调度且独立能力/共享 QA 保留（含 mutation）
+  ✓ S18: 能力锚点自检（capability anchors，防误删关键小节）
+  ✓ S40: 跨 harness 语义 projection proof-it-bites（delegation/obligation/order）
+  ✓ S41: controlled-change schema/controller/guard 全量回归
+  ✓ S42: 六项集成冻结 source manifest tuple 可复现
+  ✓ S43: engineering-delivery 七项 owner/trigger/loader/flow 回归
+  ✓ S44: 六项集成终态 receipt 与三路同 SHA 评审闭合
+  ✓ S46: wait-what 中文化/显式调用/零副作用契约
+  ✓ S47: handoff 生成时 gate_result/criteria/标题契约会咬
+  ✓ S48: writing-for-agents 来源/边界/路由/双 harness 契约
+  ✓ S49: 双 harness 条件加载 canary（相关命中、无关不加载）
+  ✓ S50: Matt38 离线 fixture 与 synthetic oracle 合同
+  ✓ S51: motion-polish 注册/消费者指针与真实交付 CLI 反例
+  ✓ S52: 精确原型交付/读界限/完整闭包与六 guard mutation
+  ✓ S53: 实际 HTML 动态过程与连续性 guard RED/GREEN
+  ✓ S54: 当前实例 driver/data/cleanup receipt 实际契约
+  ✓ S55: 原分母切片/读回/measurement receipt 实际契约
+  ✓ S56: 文档断言真实失败/工具错误退出码契约
+  ✓ S57: 原型说明数据/生成范围/合并/完整包回归
+  ✓ S58: 原型说明实际 Chromium CI 子集
+  ✓ S59: 原型说明入口/注册/真实消费者合同
+  ✓ S60: 实际交付 HTML 与共享运行时一致、重绑取消/保存双浏览器回归
+  ✓ S61: 设计草稿独立审查、档位、交互位置与工程来源合同
+  ✓ S62: 原件回收授权、取消、漂移与桌面拒绝 fixture
+  ✓ S45: 六项集成 runtime candidate manifest denominator/blob 闭合（对发布提交求证）
+  ✓ S31: 旧 mega-appendix 已退出 runtime context
+  ✓ S32: CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2；locale 无关定界）
+  ✓ S33: model-routing 单真值源 + 双 root 薄指针
+  ✓ S33b: 候选原文出处检查与内容验收边界
+  ✓ S30: harness 检测 + Codex 存活性 registry（强制动词安全默认 + 全 skill 定档自洽）
+  ↪ S34/S10: Claude 回归子集由本轮 C11 与 S30 覆盖 (DELEGATED)
+  ✓ S34: Codex 接线静态自检（--static 跳过活体探针；此前为孤儿脚本无人调用）
+  ✓ S35: observability 写入并发与崩溃恢复回归
+  ✓ S36: quality-gate verdict 与 recorder 权限分离回归
+  ✓ S37: CI 阻断覆盖与稳定 gatherer 合同
+  ✓ S38: CI 合同 proof-it-bites（缺关键门必须失败）
+  ✓ S39: Framework HTML 历史债务基线 proof-it-bites
+  ✓ S21: 演进裁决核心回归（default-deny/权重分档/redteam兜底）
+  ✓ S21b: 人工效果反馈（证据/幂等/原始事实保护）
+  ✓ S21c: scout 完整分母、目标身份、nullable与异常隔离
+  ✓ S21d: 演进簿记完整消费、来源块与拒绝零写
+  ✓ S22: Agent 编排契约回归（OD-first/状态枚举/双重身份/路径映射）
+  ✓ S22b: Codex workflow runner 离线契约回归
+  ✓ S22c: 固定WORK_ROOT与排队/在途取消运行时回归
+  ✓ S24: skill-os YAML 语法合法（含外部技能 pin/vetting registry）
+  ✓ S25: luca-open --url shim 回归（协议守卫/唯一路径/文件模式不回归）
+  ✓ S26: 记忆根解析跨语言 parity + 裂脑判别器（JS↔py 同 {path,mode}；FAIL-SAFE）
+  ✓ S26b: 记忆同步跟随 tracking upstream 且覆盖全部已跟踪账本
+  ✓ S29: 独立 root parity（K1-K10/预算/指针/harness 差异）
+  ✓ S28: 项目身份单一裁决（4 marker 站点 canonical 一致 + JS↔py parity；嵌套/override）
+  ✓ S27: MEMORY_STANDALONE 未泄漏进 tracked settings.json（opt-in 防泄漏门）
+  ✓ S23: 单真值源同步（不落后 tracking 分支）
+
+[ CI/CD 基础设施 ]
+  ✓ I1: CI workflow 存在
+  ✓ I2: PR 模板存在
+  ✓ I3: bug_report 模板存在
+
+[ Framework HTML 只读参考资产 ]
+  ✓ F1: list-page.html 存在
+  ✓ F2: detail-page-2col.html 存在
+  ✓ F3: home-page.html 存在
+  ✓ F4: detail-page-3col.html 存在
+  ✓ F5: form-page.html 存在
+  ✓ F6: shared-head.html 历史共享资产保留
+  ✓ B1: CLAUDE.md 与 AGENTS.md 各 ≤ 11KiB
+  ✗ B2: 无 office SKILL.md 超 45KB（context-budget 回归守护）
+
+═══════════════════════════════════════
+  结果: PASS=122  FAIL=1  WARN=0  DELEGATED=1
+═══════════════════════════════════════
+
+❌ 检查未通过，请修复上述 ✗ 项目。

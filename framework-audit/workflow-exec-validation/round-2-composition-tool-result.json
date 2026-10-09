@@ -1,0 +1,7 @@
+{
+  "chunk_id": "008f3f",
+  "wall_time_seconds": 0.000007625,
+  "exit_code": 1,
+  "original_token_count": 138,
+  "output": "PASS composition draft: mixed actions/planned extension, all sources/states retained, unknowns rejected, execution stays false\nnode:internal/modules/run_main:123\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Readable transported contract must carry the same complete instructions\n    at file:///Users/luca/.codex/worktrees/4614/luca_gstack/scripts/test-original-composition.mjs:115:10 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v22.23.1\n"
+}

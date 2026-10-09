@@ -181,6 +181,8 @@ try {
   assert.equal(adaptationResult.execution_allowed, false);
   assert.equal('frozen_packet' in adaptationResult, false);
   await assert.rejects(validateAdaptationDraft(carrierCatalog, adaptation, { root }), { code: 'DESIGN_SOURCE_REQUIRED' });
+  await assert.rejects(validateAdaptationDraft(carrierCatalog, { ...adaptation, execution_profile: 'original-composition-v1' }, { root, sourceItems }), { code: 'ORIGINAL_PROFILE_INVALID' });
+  await assert.rejects(validateAdaptationDraft(carrierCatalog, { ...adaptation, judgments: [{ ...adaptation.judgments[0], state_status: 'extension' }] }, { root, sourceItems }), { code: 'ORIGINAL_PROFILE_INVALID' });
   for (const [change, code] of [
     [draft => { draft.source_revision_sha256 = '0'.repeat(64); }, 'STALE_ADAPTATION_SOURCE'],
     [draft => { draft.catalog_sha256 = '0'.repeat(64); }, 'STALE_MATCH_CATALOG'],

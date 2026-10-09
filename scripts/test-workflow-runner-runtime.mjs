@@ -81,6 +81,9 @@ if (mode === 'hang') {
     if (msg.method === 'initialize') return send({id:msg.id,result:{userAgent:'fake-app-server'}});
     if (msg.method === 'initialized') return;
     if (msg.method === 'thread/start') {
+      if (!['read-only','workspace-write','danger-full-access'].includes(msg.params.sandbox)) {
+        return send({id:msg.id,error:{code:-32602,message:'Invalid thread/start SandboxMode'}});
+      }
       const adopted = mode === 'wrong-model' ? 'gpt-5.6-luna' : msg.params.model;
       return send({id:msg.id,result:{model:adopted,modelProvider:'openai',approvalPolicy:'never',
         sandbox:{type:msg.params.sandbox},thread:{id:threadId,model:adopted}}});
@@ -291,6 +294,7 @@ schema_discovery_type_ok:{type:'boolean'},sources:{type:'array',items:{type:'obj
     const thread = calls.find(call => call.method === 'thread/start')?.params || {};
     const turn = calls.find(call => call.method === 'turn/start')?.params || {};
     ok('I1 thread cwd is scratch, never repository root', /agent-cwd/.test(thread.cwd || '') && thread.cwd !== ROOT);
+    ok('I1b thread/start uses the protocol SandboxMode enum', thread.sandbox === 'workspace-write');
     ok('I2 turn sandbox writes only scratch', turn.sandboxPolicy?.type === 'workspaceWrite'
       && turn.sandboxPolicy?.writableRoots?.length === 1 && /agent-cwd/.test(turn.sandboxPolicy.writableRoots[0]));
     ok('I3 network is explicit for workspace-write', turn.sandboxPolicy?.networkAccess === true);

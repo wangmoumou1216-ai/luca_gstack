@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "project_identity": {
+    "project": "NO_PIN",
+    "fixture_id": "original-incident-regression"
+  },
+  "source_revision": {
+    "source_sha256": "068f140011273ddadaa8b4c90f824814c20309b0a5b537ea9c41f180f75e4b5c",
+    "template_sha256": "7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5",
+    "output_sha256": "57717a92bf07afedaabd8608d43e6490d72e4957378eb1cb53a5044c2ad25e7a"
+  },
+  "approved_scope_ref": {
+    "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-executability-release-plan.md",
+    "sha256": "6ed3c2ef60cf83faccfbc752dba03402541a3dcc5b3070bd8efce96f2e44f986"
+  },
+  "surface": {
+    "url": "http://real-source.test/",
+    "browser": "149.0.7827.55",
+    "headless": true
+  },
+  "instance_probe": {
+    "pid": 53664,
+    "instance_id": "057d4f95-a73a-4891-83bb-399aae3bcd29"
+  },
+  "launch": {
+    "argv": [
+      "chromium.launchServer",
+      {
+        "headless": true
+      }
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/4841/luca_gstack"
+  },
+  "drive": {
+    "driver_ref": {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-regression.mjs",
+      "sha256": "f0493b0f21acdea7e54f1a06a39640807682cb5596b07140c39cbdce55ed34f1"
+    },
+    "argv": [
+      "/Users/luca/.hermes/node/bin/node",
+      "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release/real-source-regression.mjs"
+    ]
+  },
+  "test_data": {
+    "seed_ref": {
+      "path": "/private/tmp/workbuddy-marketing-AI.html",
+      "sha256": "068f140011273ddadaa8b4c90f824814c20309b0a5b537ea9c41f180f75e4b5c"
+    },
+    "data_root": "isolated ephemeral Playwright context; no production data"
+  },
+  "coverage": [
+    {
+      "feature": "REAL-SOURCE-TRANSPORT",
+      "entry": "prepareOriginalCopyHandoff",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-SOURCE-TRANSPORT"
+      ]
+    },
+    {
+      "feature": "REAL-NAV-1",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-NAV-1"
+      ]
+    },
+    {
+      "feature": "REAL-NAV-2",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-NAV-2"
+      ]
+    },
+    {
+      "feature": "REAL-NAV-3",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-NAV-3"
+      ]
+    },
+    {
+      "feature": "REAL-NAV-4",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-NAV-4"
+      ]
+    },
+    {
+      "feature": "REAL-NAV-5",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-NAV-5"
+      ]
+    },
+    {
+      "feature": "REAL-NAV-6",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-NAV-6"
+      ]
+    },
+    {
+      "feature": "REAL-SEARCH-STATE",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-SEARCH-STATE"
+      ]
+    },
+    {
+      "feature": "REAL-SETTINGS",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-SETTINGS"
+      ]
+    },
+    {
+      "feature": "REAL-KEYBOARD",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-KEYBOARD"
+      ]
+    },
+    {
+      "feature": "REAL-ORIGINAL-RETURN",
+      "entry": "CRM menu/source UI",
+      "state": "assertion result",
+      "assert_ids": [
+        "REAL-ORIGINAL-RETURN"
+      ]
+    },
+    {
+      "feature": "REAL-RUNTIME",
+      "entry": "CRM menu/source UI",
+      "state": "runtime-error-and-network-state",
+      "assert_ids": [
+        "REAL-RUNTIME"
+      ]
+    }
+  ],
+  "evidence_location": "/Users/luca/.codex/worktrees/4841/luca_gstack/framework-audit/workflow-exec-release",
+  "cleanup": {
+    "owned_resources": [
+      {
+        "kind": "process",
+        "pid": 53664
+      },
+      {
+        "kind": "browser-context",
+        "instance_id": "057d4f95-a73a-4891-83bb-399aae3bcd29"
+      }
+    ],
+    "preserve_evidence": true
+  }
+}

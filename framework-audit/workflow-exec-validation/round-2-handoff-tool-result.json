@@ -1,0 +1,7 @@
+{
+  "chunk_id": "321852",
+  "wall_time_seconds": 0.000007291,
+  "exit_code": 0,
+  "original_token_count": 65,
+  "output": "PASS: original functional and UI-only contracts preserve legacy authorization; actual prototype bytes and closed evidence metadata travel in immutable scope; forged IDs, evidence tampering/omission, mixed profiles, stale authority and canceled runs rejected\n"
+}

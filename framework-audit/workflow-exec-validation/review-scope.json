@@ -1,0 +1,80 @@
+{
+  "work_root": "/Users/luca/.codex/worktrees/4614/luca_gstack",
+  "baseline": "8ec9b848fa874d2dff6c9d1fb95789808bd5d298",
+  "diff_command": "git diff HEAD -- <FILE_SET>; git diff --no-index /dev/null <explicit added files>",
+  "diff_sha256": "c83d369635439bfb884d8e5a41a5b9cba47741a7d12fdd938d266be093ee3b71",
+  "files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/.claude/agents/orchestrator.md",
+      "sha256": "f44d895cb474fdc55a93fa085c2a996feb855acccb28f645406f4d9a752f4337"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/.claude/agents/plan-agent.md",
+      "sha256": "8bdbe6debb64155bddae6f12821b2f488dcbf73ded15f8bbbe3522992df3e8f1"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/.claude/skill-os/page-library/schema.json",
+      "sha256": "df09b13ea6e3d23959d1c2e9e83d4fca890b6c7d10cecb8a767a9765bf13c202"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/.claude/skill-os/runtime/page-context.md",
+      "sha256": "0b05e15b46538dcf9c9b31f205d01f4f9c3586cc9bc133a1f531eb4c7197c844"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/.claude/skills/office/design-brief/references/input-contract.md",
+      "sha256": "cf3c668ef3d71c58d0c71253e30e48ab99be69e545052dbb2806925eecefbcfb"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/.claude/skills/office/implement/SKILL.md",
+      "sha256": "bf15d223d356179a21e3573ada58e628a6a4edd5c48c0d5f710bd33686df1d0e"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/.claude/skills/office/open-design/SKILL.md",
+      "sha256": "ea9d8f4b09ba3aa1b1159025ba3fd4394d0b856bce7c13d551812f2834a10082"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/package.json",
+      "sha256": "6469028c9bce2adb0bd0998c3a131ac6f5d0795f0c2bc7c0806153709290da5d"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/scripts/check-agent-contracts.mjs",
+      "sha256": "90bbd1d917256b2bb9b2178f8554b5da10942805600e1dffe5538a67bd7fc606"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/scripts/check-plan-approval.mjs",
+      "sha256": "3bd69a31ca2fc3ee346a019b04c8ce103147fb00ee89f044b77d87380a76b05f"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/scripts/original-composition.mjs",
+      "sha256": "41ff72230226e6e4e14a1d0da0fb61ac2e276c17a5b3b10601c6fa19c03cc144"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/scripts/original-copy-handoff.mjs",
+      "sha256": "035d00f128cf5327cb3ef5c441c872fc7bcafdb25564fe04c4369efc369e253d"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/scripts/original-template-edits.mjs",
+      "sha256": "efa16e0a74b8de95e8a825e915e56192f13b3fcc38a575b924698d717f0b3d8b"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/scripts/page-context.mjs",
+      "sha256": "8d4a3f284a99d6a84ed595f6802fa4b211169422afddc7f135e3a249c007582a"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/scripts/test-original-composition.mjs",
+      "sha256": "47debff5eac745c43883155cd88e9b248b47b67419cd2563b23a19ae9e4f32d8"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/scripts/test-page-context.mjs",
+      "sha256": "a59671f3a40b8d2cf17395fd62bebe45995a4c4a8557d5a7f43ff046ab4638b5"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/scripts/test-plan-approval.mjs",
+      "sha256": "69fc8bcf9027d828b0e6c478c9da04257e3e7982a1a57a165d5fc6739aa88a0f"
+    }
+  ],
+  "spec": {
+    "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/framework-audit/workflow-executability-plan.md",
+    "sha256": "3841a36f97531be0ddb9211ff4756da25ed9e63ad632abcbfdad49671e6bfe78"
+  }
+}

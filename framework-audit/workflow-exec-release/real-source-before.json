@@ -1,0 +1,14 @@
+{
+  "observed_at": "2026-10-09T09:34:03.794Z",
+  "instance_id": "057d4f95-a73a-4891-83bb-399aae3bcd29",
+  "pid": 53664,
+  "alive": true,
+  "url": "http://real-source.test/",
+  "response_sha256": "57717a92bf07afedaabd8608d43e6490d72e4957378eb1cb53a5044c2ad25e7a",
+  "source_sha256": "068f140011273ddadaa8b4c90f824814c20309b0a5b537ea9c41f180f75e4b5c",
+  "template_sha256": "7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5",
+  "behavior_sha256": "bd91c418a374d1c6290389decf429502decff94654b5fc1e959dd089364d29bf",
+  "menu_count": 6,
+  "errors": [],
+  "requests": []
+}

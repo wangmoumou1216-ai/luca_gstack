@@ -1,0 +1,21 @@
+{
+  "status": "SKIPPED_BY_USER",
+  "authorized_by": "这个是什么问题，跟我用了aihub的api相关吗，如果相关，就不要验证了，走下一个流程",
+  "confirmed_cause": {
+    "configured_provider": "codex_local_access",
+    "configured_base_url": "http://localhost:59779/v1",
+    "audit_adapter_provider": "openai",
+    "actual_failed_endpoint": "https://api.openai.com/v1/responses",
+    "http_status": 401
+  },
+  "scope": "current release independent CLI Standards/Spec review only",
+  "retained": "previous failed invocations and original byte-bound review votes",
+  "not_waived": [
+    "full local normal commit hook",
+    "real-source browser regression",
+    "source identity",
+    "daily dirty preservation",
+    "normal non-force Git publication"
+  ],
+  "no_fake_pass": true
+}

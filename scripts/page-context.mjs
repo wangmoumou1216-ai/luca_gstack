@@ -540,12 +540,14 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
   const facts = new Map(sourceItems.map(item => [item.id, item]));
   if (record.reviewed_source_ids.length !== facts.size || record.reviewed_source_ids.some(id => !facts.has(id))) fail('ADAPTATION_SOURCE_COVERAGE', 'Review every current source item, including preserve constraints');
   const source = await readPageSource(page, { root });
+  const composition = record.execution_profile === 'original-composition-v1';
+  if (composition && !page.original_copy) fail('ORIGINAL_PROFILE_INVALID', 'Composition is opt-in for registered originals only');
   const pairs = new Set();
   const originalActions = new Map();
   const staticActions = new Map();
   const mixedRefine = record.judgments.some(item => item.action === 'refine') && record.judgments.some(item => !['refine', 'preserve'].includes(item.action));
-  if (mixedRefine && record.decision === 'ready') fail('ORIGINAL_REFINEMENT_PROFILE', 'Refinement cannot mix structural actions within one executable profile');
-  let unresolved = mixedRefine;
+  if (mixedRefine && !composition && record.decision === 'ready') fail('ORIGINAL_REFINEMENT_PROFILE', 'Refinement cannot mix structural actions within one executable profile');
+  let unresolved = mixedRefine && !composition;
   for (const judgment of record.judgments) {
     const fact = facts.get(judgment.source_id);
     if (!fact || fact.text !== judgment.excerpt || !fact.required_states.includes(judgment.state_id)) fail('ADAPTATION_SOURCE_EVIDENCE', 'Use the complete source text and an applicable state');
@@ -581,7 +583,9 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
         if (!staticActions.has(actionKey)) staticActions.set(actionKey, { action_id: `DRAFT-${staticActions.size + 1}`, action: judgment.action, [judgment.action === 'add' ? 'slot_id' : 'module_id']: judgment.location.target_id });
       }
     }
-    unresolved ||= judgment.confidence !== 'high' || judgment.alternatives.length > 0 || judgment.state_status !== 'supported';
+    const plannedExtension = composition && judgment.state_status === 'extension';
+    if (judgment.state_status === 'extension' && !composition) fail('ORIGINAL_PROFILE_INVALID', 'Planned behavior extensions require explicit original composition');
+    unresolved ||= judgment.confidence !== 'high' || judgment.alternatives.length > 0 || (!plannedExtension && judgment.state_status !== 'supported');
   }
   if (sourceItems.some(item => item.required_states.some(state => !pairs.has(`${item.id}:${state}`)))) fail('ADAPTATION_SOURCE_COVERAGE', 'Every source item and applicable state needs a placement/conflict judgment');
   if (page.original_copy) {
@@ -590,7 +594,7 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
       // Multiple source/state judgments can describe one action. Distinct
       // actions must remain distinct, so conflicting or nested ranges cannot
       // report ready merely because each position exists in isolation.
-      await locateOriginalEditRanges(source.bytes, [...originalActions.values()], { browser, allowPreserveOnly: true });
+      await locateOriginalEditRanges(source.bytes, [...originalActions.values()], { browser, allowPreserveOnly: true, executionProfile: record.execution_profile });
     } catch (error) {
       if (record.decision === 'ready' || !['ORIGINAL_ACTION_OVERLAP', 'ORIGINAL_REFINEMENT_PROFILE', 'ORIGINAL_ACTIONS_REQUIRED'].includes(error.code)) throw error;
       unresolved = true;
@@ -609,7 +613,7 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
 
   if (record.decision === 'ready' && unresolved) fail('MATCH_AMBIGUOUS', 'Resolve unknown states, uncertain positions, and alternatives before ready');
   if (record.decision === 'reference_only' && record.judgments.some(item => item.confidence !== 'no_match' || item.alternatives.length)) fail('MATCH_DECISION_CONFLICT', 'Reference-only cannot hide unresolved template adoption');
-  return { schema_version: 1, mode: 'adaptation_draft', status: record.decision === 'ready' ? 'ADAPTATION_READY' : record.decision === 'needs_context' ? 'NEEDS_CONTEXT' : 'REFERENCE_ONLY', source_revision_sha256: revision, binding_allowed: false, execution_allowed: false, semantic_verification: 'model-reviewed-not-machine-proven', execution_path: page.original_copy ? 'original_adapter' : page.carrier_eligible ? 'structural_carrier' : 'reference_only', reason: record.reason };
+  return { schema_version: 1, mode: 'adaptation_draft', status: record.decision === 'ready' ? 'ADAPTATION_READY' : record.decision === 'needs_context' ? 'NEEDS_CONTEXT' : 'REFERENCE_ONLY', source_revision_sha256: revision, binding_allowed: false, execution_allowed: false, ...(composition ? { execution_profile: record.execution_profile, behavior_acceptance: 'PENDING_SOURCE_BINDING_AND_REVIEW' } : {}), semantic_verification: 'model-reviewed-not-machine-proven', execution_path: page.original_copy ? 'original_adapter' : page.carrier_eligible ? 'structural_carrier' : 'reference_only', reason: record.reason };
 }
 
 export async function validateCarrierBindingDraft(catalog, record, { root = repoRoot, packetBody } = {}) {

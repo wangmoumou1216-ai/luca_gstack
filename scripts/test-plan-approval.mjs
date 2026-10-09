@@ -18,7 +18,7 @@ writeFileSync(plan, '# Exact plan\n\nplan_id: plan-test-approval-001\n');
 const sha = () => createHash('sha256').update(readFileSync(plan)).digest('hex');
 const valid = () => ({ approved: true, plan_id: planId, plan_path: plan, plan_sha256: sha(), scope, effects, confirmed_at: '2026-10-07T00:00:00Z', confirmed_by: 'user' });
 function run(payload, extra = []) { writeFileSync(approval, JSON.stringify(payload)); return spawnSync(process.execPath, ['scripts/check-plan-approval.mjs', '--plan', plan, '--approval', approval, '--plan-id', planId, '--scope', scope, ...effects.flatMap((x) => ['--effect', x]), ...extra], { cwd: root, encoding: 'utf8' }); }
-function pass(payload) { const result = run(payload); assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /"status":"PASS"/); }
+function pass(payload) { const result = run(payload); assert.equal(result.status, 0, result.stderr); const binding = JSON.parse(result.stdout); assert.equal(binding.status, 'BINDING_VALID'); assert.equal(binding.authorization, 'NOT_VERIFIED'); assert.ok(binding.required_evidence); }
 function fail(payload, pattern) { const result = run(payload); assert.equal(result.status, 1, result.stderr); assert.match(result.stderr, pattern); }
 try {
   pass(valid());
@@ -27,9 +27,15 @@ try {
   fail({ ...valid(), effects: ['write:framework-audit'] }, /git:commit/);
   fail({ ...valid(), confirmed_by: 'agent' }, /confirmed_by/);
   fail({ ...valid(), approved: false }, /approved/);
+  // Even this caller-fabricated fixture can prove only consistency, never consent.
+  pass({ ...valid(), confirmed_at: new Date(Date.now() - 1000).toISOString() });
+  fail({ ...valid(), confirmed_at: '2099-01-01T00:00:00Z' }, /future/);
+  fail({ ...valid(), confirmed_at: '2026-02-30T00:00:00Z' }, /valid UTC ISO/);
+  fail({ ...valid(), confirmed_at: '2026-10-07' }, /valid UTC ISO/);
+  fail({ ...valid(), effects: [...effects, null] }, /non-empty strings/);
   symlinkSync(plan, planLink);
   const linked = spawnSync(process.execPath, ['scripts/check-plan-approval.mjs', '--plan', planLink, '--approval', approval, '--plan-id', planId, '--scope', scope, ...effects.flatMap((x) => ['--effect', x])], { cwd: root, encoding: 'utf8' });
   assert.equal(linked.status, 1);
   assert.match(linked.stderr, /canonical regular file/);
-  console.log('PASS plan approval: exact path, SHA, scope, effects, timestamp and user confirmation');
+  console.log('PASS plan binding: exact path/SHA/scope/effects and valid past timestamp; fabricated records remain authorization NOT_VERIFIED');
 } finally { rmSync(dir, { recursive: true, force: true }); }

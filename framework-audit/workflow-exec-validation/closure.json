@@ -1,0 +1,105 @@
+{
+  "checked_at": "2026-10-09T08:24:16.581390+00:00",
+  "status": "DONE_WITH_CONCERNS",
+  "local_required_gates": "CLOSED",
+  "scope_path": "/Users/luca/.codex/worktrees/4614/luca_gstack/framework-audit/workflow-exec-validation/round-2/review-scope.json",
+  "scope_sha256": "ceca8f5ae869b6d97d3de419c8b9126dbd140a7bc8b2b4bd3d913d2ea54f53f7",
+  "diff_sha256": "d5675e680dd2822a51679c3cc9c3fc7c5369b266a0b608059897a7eb4b15848f",
+  "source_file_count": 17,
+  "source_and_spec_unchanged": true,
+  "original_sha256": "7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5",
+  "raw_reviews": [
+    {
+      "eval_run_id": "workflow-exec-standards-20261009-02",
+      "raw_verdict": {
+        "status": "PASS",
+        "passed": 5,
+        "total": 5,
+        "findings": []
+      },
+      "envelope_path": "/Users/luca/.codex/worktrees/4614/luca_gstack/framework-audit/workflow-exec-validation/reviews/workflow-exec-standards-20261009-02.json",
+      "envelope_file_sha256": "767133b6694088649e31a82d31b988239787e141c32386a4f9f20b9a9a7ca00e",
+      "source": {
+        "path": "/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-21-11-01a11f89-7cbf-7641-8e5d-dbd5440ec29e.jsonl",
+        "line": 1019,
+        "event_sha256": "3a68ad40f43d9e7199cbfc40b943657be67c2bd4df6a9d5ad1efa63ed3a7b3e1",
+        "author": "/root/standards_final",
+        "message_id": "amsg_01a11fbd-e042-7ec2-812b-fed6a470735d"
+      }
+    },
+    {
+      "eval_run_id": "workflow-exec-spec-20261009-02",
+      "raw_verdict": {
+        "status": "FAIL",
+        "passed": 10,
+        "total": 11,
+        "findings": [
+          "UNKNOWN A6: artifact identities, local technical evidence and supplied other-axis accepted metadata verified; parent must verify this same Spec invocation's actual completed/accepted provenance before final closure. No implementation finding or source repair required."
+        ]
+      },
+      "envelope_path": "/Users/luca/.codex/worktrees/4614/luca_gstack/framework-audit/workflow-exec-validation/reviews/workflow-exec-spec-20261009-02.json",
+      "envelope_file_sha256": "298f2e6989f947f4cec60476018d2aa03cb3180debd0015518ff6378f8f437b4",
+      "source": {
+        "path": "/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-21-11-01a11f89-7cbf-7641-8e5d-dbd5440ec29e.jsonl",
+        "line": 1102,
+        "event_sha256": "16820b5755eccddbe5573cf6cbfa81847ef0146c3a407ded6bf514874e669160",
+        "author": "/root/spec_final",
+        "message_id": "amsg_01a11fc2-2ce7-7092-bd97-6b20dd476ada"
+      }
+    }
+  ],
+  "parent_owned_A6": {
+    "status": "VERIFIED",
+    "note": "Spec raw FAIL 10/11 retained; only UNKNOWN is this invocation completion/acceptance. Parent observed the real final messages, verified source event hashes, native same-invocation accepted status and both final artifact identities. No expert vote is relabeled.",
+    "native_evidence": [
+      {
+        "invocation_id": "c0e9b2f4-929e-435c-aeab-126000c0b341",
+        "status": "accepted",
+        "input_sha": "2898140e9e410dffded01ff2a2ba186eea4ae3154ab53ee8d7a5f72b38e53bc0",
+        "requested_role": "peak",
+        "route_harness": "codex-native",
+        "external_identity": {
+          "tool_use_id": "call_8cf147855e824950919138136612cbeb",
+          "agent_type": "quality-gate",
+          "agent_id": "01a11fbb-ef16-7d00-8963-033622e88a90"
+        },
+        "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T16-16-12-01a11fbb-ef16-7d00-8963-033622e88a90.jsonl:01a11fbb-ef7b-7591-8517-d2bac7304f31"
+      },
+      {
+        "invocation_id": "5b8aa965-462b-4127-9e35-4b3b1fd69b33",
+        "status": "accepted",
+        "input_sha": "1c5ef8aa1cb6f3e00d65efe058dba088de40fb06eb581e7b365a73b1562961fa",
+        "requested_role": "peak",
+        "route_harness": "codex-native",
+        "external_identity": {
+          "tool_use_id": "call_bfd0f321138040498d41822f9b3146a6",
+          "agent_type": "quality-gate",
+          "agent_id": "01a11fbe-8a19-7bf2-8818-2ead0fc26509"
+        },
+        "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T16-19-03-01a11fbe-8a19-7bf2-8818-2ead0fc26509.jsonl:01a11fbe-8a99-7bb1-8e76-56d2f39596e5"
+      }
+    ],
+    "snapshot_sha256": "2855bc72e54411d0c31094a488f33b132307e49a097191f4a4894455cc2fa5fb"
+  },
+  "execution_logs": [
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/framework-audit/workflow-exec-validation/runs.json",
+      "sha256": "faab0375922dde901d10be298c843c45a7f398651e38df81acb8f1dd7902aade",
+      "success_count": 12,
+      "all_log_hashes_verified": true
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4614/luca_gstack/framework-audit/workflow-exec-validation/round-2/runs.json",
+      "sha256": "30bfe282974aa3b3be121a6f1efa9af3e3fa52f8a39125f1e3747aa2d8f8a4f3",
+      "success_count": 3,
+      "all_log_hashes_verified": true
+    }
+  ],
+  "not_run": [
+    "live OD generation/recovery",
+    "live Luca/Codex host integration",
+    "live Claude/Codex native human-approval parity",
+    "original product six business modules and visual acceptance"
+  ],
+  "publication": "NOT_PERFORMED"
+}

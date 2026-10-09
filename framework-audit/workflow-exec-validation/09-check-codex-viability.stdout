@@ -1,0 +1,4 @@
+PASS 覆盖: registry 覆盖全部 47 个 skill
+PASS 覆盖: registry 无幽灵条目（skill 已删但档还在）
+
+=== check-codex-viability summary: PASS=49 FAIL=0（47 skills）===

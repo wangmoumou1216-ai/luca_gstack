@@ -476,7 +476,7 @@ function runCodex(prompt, schema, phaseName) {
           modelProvider: 'openai',
           cwd: AGENT_CWD,
           ephemeral: true,
-          sandbox: SANDBOX === 'workspace-write' ? 'workspaceWrite' : 'readOnly',
+          sandbox: SANDBOX,
           approvalPolicy: 'never',
           allowProviderModelFallback: false,
         });

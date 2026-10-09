@@ -105,9 +105,8 @@ page adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完
 按 page-context original-copy 门核验 base-template 与原件逐字节一致（含 CSS、脚本、资源、隐藏状态）；
 无原样适配能力即停，禁止以简化影子页冒充模板。复制不授权重设视觉/交互；用户要求保持的样式、结构、行为
 不得被 structural profile 或外部 DS 默认覆盖。
-页面含 `original_copy` 时，使用 `scripts/original-copy-handoff.mjs` 的原件路径（参数及动作规则见
-page-context §7），不调用只支持静态重排的 carrier helper。该路径保留整份原件，并逐字节验证局部差异。
-精修用 original-ui-refinement-v1：refine+preserve、完整outerHTML、仅有效class/style改变，业务DOM/脚本/全局CSS/资产保持；嵌入仍add/modify独立合同，不混用。原型证据通过prototypeEvidence实际bytes/hash/既有source_ids进入不可变inventory，正文已含完整保持事实，附件不执行。
+original_copy 使用 scripts/original-copy-handoff.mjs，完整读取 page-context §7，不调用静态 carrier helper。
+精修用 original-ui-refinement-v1；业务植入+精修显式用 original-composition-v1。§7 的动作、代码独立审查、behaviorBindings 冻结及验收合同均适用；draft ready 不代表执行就绪。prototypeEvidence 的 bytes/hash/source_ids 进入不可变 inventory，附件不执行。
 reference_only带实际结构化Packet时也核对附件source_ids存在，并在导出/fresh/readback重核；按Brief output-templates的文档声明边界识别结构化正文，识别后格式损坏不得降级。自由Markdown中的字段示例不算声明；无可机读索引时显式unverified-source-index，须设计/用户核对来源，不宣称机器完整覆盖。
 当前原件适配器只支持自包含 HTML；若原 CSP 未阻断的外置 CSS/JS/图片/字体依赖没有经审计后一并运输，
 组包必须以 `ORIGINAL_ASSETS_REQUIRED` 停住，不能只上传 HTML 或改写依赖来宣称原件完整。
@@ -183,7 +182,7 @@ carrier output profile；`candidate_set` 未另获人类决定不得切换。Cod
 页面采用确认不替代这些权限。已有准确授权不反复索取。
 
 **2d. carrier profile（独立于设计系统）：** original_copy v1 先核 Phase 0 能力门，采用
-original-preserving-v1 或 original-ui-refinement-v1，不套普通静态默认 profile。
+original-preserving-v1、original-ui-refinement-v1 或显式 original-composition-v1，不套普通静态默认 profile。
 普通 carrier 必须执行 Phase 1「设计系统」的 structural/visual 边界：默认/已确认
 `structural_carrier + single`；visual 必须有用户明确选择及 viewport、截图基线、允许差异阈值。
 每轮 adoption/TAC hash 仍确认相同 profile，不得按 OD 输出偷换。
@@ -298,7 +297,7 @@ original_copy v1 仅支持 headless 路径：保留本轮 `OD_RUN_AUTHORIZED` �
 `USER_GENERATION_REPORTED` 均不能 recover。除实际
 `output/index.html`，还要读回 `output/implementation-manifest.json` 的局部编辑声明。声明不是证据本身：
 验证器重算原件中的真实节点范围，核对实际HTML恰为原始字节加这些编辑，并以原生DOM验证没有解析越界。
-原脚本/样式保持逐字节一致。只有附带成功终态的 headless run 才能按成功运行回收；取消/未完成的输出
+原脚本/样式保持逐字节一致。composition 按 page-context §7 核 immutable behavior 的完整字节/位置/顺序；hash 不证明 JS 隔离或业务验收。只有附带成功终态的 headless run 才能按成功运行回收；取消/未完成的输出
 保留为证据，不直接宣称成功。界面语义与原交互保留仍需独立浏览器验收。
 
 `observeCarrierOutput` 可把指定 root 的实际新产物标为 `GENERATED_OBSERVED`，但 provenance 必须诚实：

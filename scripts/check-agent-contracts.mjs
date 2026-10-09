@@ -111,6 +111,12 @@ t('Plan 摘要要求所有 Supervisor/Hierarchical 实例批准',
   /需要用户确认: 是（任意 Supervisor \/ Hierarchical，包括单阶段及嵌套实例）/.test(plan));
 t('Supervisor 模式表保留单阶段与嵌套批准要求',
   /^\| \*\*Supervisor\*\* \|[^\n]*\| \*\*必须，包括单阶段及嵌套实例\*\* \|$/m.test(plan));
+t('批准绑定检查不伪装真人授权，三个消费者保持一致',
+  [plan, orch, implement].every(body => body.includes('BINDING_VALID') && body.includes('authorization=NOT_VERIFIED')));
+t('批准缺口只阻断依赖它的自动分支，保留模式适用边界',
+  plan.includes('Sequential/Parallel 不因使用依赖图额外索取批准票')
+  && plan.includes('缺少自动可信批准适配器只阻断依赖它的无人值守派发')
+  && plan.includes('同一已确认 payload 无变化时复用') && plan.includes('后续撤回'));
 t('preflight 含未列出 WARN 规则', pre.includes('无专属检查行'));
 t('preflight 明确 TURN_CLOSED 仍保留有效 binding', pre.includes('`TURN_CLOSED` + 有效 binding 是已绑定状态'));
 t('preflight 不得把 TURN_CLOSED 单独判成失败', pre.includes('不得仅因 `TURN_CLOSED` 判 FAIL'));

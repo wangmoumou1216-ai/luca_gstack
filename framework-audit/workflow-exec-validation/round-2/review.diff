@@ -1,0 +1,880 @@
+diff --git a/.claude/agents/orchestrator.md b/.claude/agents/orchestrator.md
+index 989c8e6..5e42b56 100644
+--- a/.claude/agents/orchestrator.md
++++ b/.claude/agents/orchestrator.md
+@@ -56,7 +56,7 @@ Plan Agent → 计划 → Orchestrator Free Task Mode → 结果
+ `implement` 进入 Free Task Mode 时，只接收 Plan Agent `implement compile` 产出的 canonical plan：
+ 其中必须有最终 gated task-plan 的 exact path+SHA-256、repo baseline、无 placeholder 的 exact U-ID
+ 集合、Files/Verification，以及单列的 Git/external effects，并有用户对同一 payload 的明确批准。
+-启动前必须分别通过 scripts/check-plan-approval.mjs、scripts/check-plan-identity.mjs 和 scripts/check-plan-graph.mjs 的组合检查；调用必须传入本次计划的精确绝对 path、plan_id、scope、source identity、即将执行的每个 effect 和 --require-no-external-blockers。任何身份、批准或拓扑检查失败都必须拒绝首次派发并返回 PLANNED/NEEDS_CONTEXT。随后回算 task-plan SHA 与 baseline；任一漂移、旧计划 authority、空/占位 U-ID 都必须拒绝并返回
++启动前按 Plan Agent「批准门」核实际用户确认来源及未撤回状态，再分别运行 scripts/check-plan-approval.mjs、scripts/check-plan-identity.mjs 和 scripts/check-plan-graph.mjs；调用必须传入本次计划的精确绝对 path、plan_id、scope、source identity、即将执行的每个 effect 和 --require-no-external-blockers。approval checker 的 BINDING_VALID / authorization=NOT_VERIFIED 只证明记录一致，不替代真人证据，也不是无人值守派发许可。任何身份、真实批准、绑定或拓扑检查失败都必须拒绝首次派发并返回 PLANNED/NEEDS_CONTEXT。随后回算 task-plan SHA 与 baseline；任一漂移、旧计划 authority、空/占位 U-ID 都必须拒绝并返回
+ 重编译。engineering-delivery preset 或 optional graph 只能说明路由选择，不能替代批准或扩大 scope。
+ 
+ 执行严格限制在 approved U-ID 的 scope。unexpected failure/regression 进入 `diagnosing-bugs` 的
+diff --git a/.claude/agents/plan-agent.md b/.claude/agents/plan-agent.md
+index fde435d..bf429a3 100644
+--- a/.claude/agents/plan-agent.md
++++ b/.claude/agents/plan-agent.md
+@@ -420,11 +420,13 @@ Wave 3（U003+U005 完成后）: [U006]      ← 最终汇聚节点
+ 拓扑检查，直到没有残环。只要存在残环、未知依赖、自环、空图或未通过的外部依赖，就不能发布
+ 可执行 Wave，也不能把任一节点标为 ready。
+ 可执行图的机械检查使用：
+-首次派发或 effect 前，调用方必须分别运行 `scripts/check-plan-approval.mjs`、
+-`scripts/check-plan-identity.mjs` 和 `scripts/check-plan-graph.mjs`，并传入同一份精确计划、批准票、身份票、
+-依赖图、scope、source identity、effect 和 `--require-no-external-blockers`。这些检查器只验证既有票据和图，
+-不创建授权；任何子检查失败都必须保持 PLANNED 或 NEEDS_CONTEXT。当前仓库没有可信的 native approval
+-receipt primitive，因此不能把普通 JSON 检查结果当作用户授权，也不得在没有该能力时接入首次派发。
++使用可执行依赖图时，首次派发或 effect 前核 `scripts/check-plan-identity.mjs` 和
++`scripts/check-plan-graph.mjs` 的同一精确计划、身份、scope、source identity 与
++`--require-no-external-blockers`；失败保持 PLANNED 或 NEEDS_CONTEXT。批准是否必需按下文
++「批准门」及所选入口合同判断；Sequential/Parallel 不因使用依赖图额外索取批准票。
++需要确认的入口还须按批准门核真实用户证据及 `scripts/check-plan-approval.mjs` 的绑定结果。
++普通 JSON 不创建授权；缺少自动可信批准适配器只阻断依赖它的无人值守派发，不阻断无需确认的
++准备动作或主控已经核实真人批准、范围匹配的执行。
+ `node scripts/check-plan-graph.mjs --graph <精确JSON路径>`。输入必须包含 `plan_id`、与计划 SHA 绑定的 `plan_sha256`、非空
+ `nodes[{id,dependencies}]` 和独立的 `external_dependencies[{node_id,source_ref,status}]`；外部
+ 依赖只有 `status: PASS` 才解除阻塞。检查器只返回拓扑顺序、层级、残环和阻塞外部依赖，不返回
+@@ -596,10 +598,18 @@ fan-out 或首次不可逆 effect 之前取得真实用户确认。确认必须
+ `plan_sha256`、scope、effect 范围和确认时间；任一字段变化都使旧确认失效。计划输出、handoff、
+ 质量检查和增量重规划不会产生执行授权。没有 scope-matched 确认时只能保持 `PLANNED`，不得
+ 派发 Work Agent、写项目文件、提交、推送或执行外部操作。
+-批准票据在首次 effect 前用以下检查器核验；调用方必须传入本次计划的精确绝对路径、稳定
++主控从当前可信会话或宿主核验的原生用户消息核对：用户看到了当前计划及 effect 范围，之后明确
++同意该范围，且没有后续撤回。保留原消息引用和展示/确认顺序；同一已确认 payload 无变化时复用，
++不重复提问。对话中仅有预先泛称「开始」、同伴消息、模型自报或另一计划的批准均不能替代该证据。
++若主控不能访问/核实来源，保持 NEEDS_CONTEXT；无人值守执行必须由可信适配器核源，当前无此
++适配器时该分支 BLOCKED。原生事件真实性也不自动证明它同意了这份计划。
++
++批准记录在首次 effect 前用以下检查器核验绑定；调用方必须传入本次计划的精确绝对路径、稳定
+ `plan_id`、scope 和每个即将执行的 effect：
+ `node scripts/check-plan-approval.mjs --plan <absolute-plan> --approval <absolute-approval.json> --plan-id <id> --scope <scope> --effect <effect>`。
+-检查器只验证票据与计划身份、范围和时间的绑定，不创建授权；任何字段不匹配均保持 `PLANNED`。
++检查器只验证记录与计划身份、范围和有效历史时间的绑定，返回 `BINDING_VALID` 与
++`authorization=NOT_VERIFIED`；退出 0、`confirmed_by=user` 或文件 hash 都不证明真人批准。
++必须同时满足上面的真实来源核验；任何字段不匹配均保持 `PLANNED`。不得将检查器改作派发许可。
+ 恢复已有计划前另用身份检查器核对 `plan_id`、精确路径、`plan_sha256`、scope 和 source identity：
+ `node scripts/check-plan-identity.mjs --plan <absolute-plan> --identity <absolute-identity.json> --plan-id <id> --scope <scope> --source-identity <source>`。
+ 路径或内容变化返回失败并保持 `NEEDS_CONTEXT`，不能按最新文件替代。
+diff --git a/.claude/skill-os/page-library/schema.json b/.claude/skill-os/page-library/schema.json
+index dc170b2..b1f71a3 100644
+--- a/.claude/skill-os/page-library/schema.json
++++ b/.claude/skill-os/page-library/schema.json
+@@ -328,6 +328,7 @@
+         "state_status": {
+           "enum": [
+             "supported",
++            "extension",
+             "unsupported",
+             "unknown"
+           ]
+@@ -365,6 +366,7 @@
+         "judgments"
+       ],
+       "properties": {
++        "execution_profile": { "const": "original-composition-v1" },
+         "schema_version": {
+           "const": 1
+         },
+diff --git a/.claude/skill-os/runtime/page-context.md b/.claude/skill-os/runtime/page-context.md
+index f8c093b..8293cc7 100644
+--- a/.claude/skill-os/runtime/page-context.md
++++ b/.claude/skill-os/runtime/page-context.md
+@@ -73,7 +73,7 @@ CLI 为 `node scripts/page-context.mjs adaptation-draft --record <草稿.json> -
+ 静态定位使用真实module/slot/region ID；原件使用实际inert索引scope/locator/label，含隐藏template。
+ 原件动作按scope/locator/action去重后联合核对范围兼容性，重复来源/状态不构造重复动作，不同动作/重叠保持区不能报告ready；另过实际源字节范围/禁止目标/void兼容门：void add/modify拒绝，refine允许经原件专用检查。静态carrier动作按action/target去重后，以正式binding的同一module/slot图联合检查重复目标与祖先重叠；合法冲突只能记needs_context，不存在或非法目标仍拒绝。草稿preserve-only只验证定位，不授予最终无变化衍生。静态state_support必须证明位置支持；原件目录状态名不是交互证明，依据须设计/用户复核。
+ validator校验原文、全量source/state覆盖、实际源/定位、允许动作及已知状态支持；不会证明语义判断或原交互。
+-ready不能含未知/不支持、低置信或替代位置；refine不得与结构动作混用同一profile；返回ADAPTATION_READY仍 `binding_allowed=false`、
++ready不能含未知/不支持、低置信或替代位置。两个旧profile中refine不得与结构动作混用；已授权的植入+精修可显式选择 `execution_profile: original-composition-v1`，原件判断以 `state_status: extension` 标明有来源的待实现状态，不能写成原件已有支持。该选择只解除组合动作的草稿冲突；返回ADAPTATION_READY仍 `binding_allowed=false`、
+ `execution_allowed=false`。closed schema不接受frozen_packet/adoption/TAC/bundle hash，草稿不是最终binding。
+ 输入、模板或位置变更时草稿失效，Brief修订后重新适配。草稿旁车不进入Packet；Packet保留语义位置/保持事实。
+ 
+@@ -227,12 +227,29 @@ import {
+ // {action_id, action, scope, locator, source_ids, confidence, rationale, alternatives}
+ // scope/locator 复制实际原件索引的位置记录；source_ids 引用完整冻结 Packet。
+ const draft = await prepareOriginalCopyHandoff({
+-  pageId, packetBody, target: {tool:'od', projectId}, handoffId, actions, prototypeEvidence
++  pageId, packetBody, target: {tool:'od', projectId}, handoffId, actions, prototypeEvidence,
++  // 仅明确需要组合业务接入时传入；旧调用不变：
++  executionProfile: 'original-composition-v1', behaviorBindings
+ });
+ ```
+ 
+ 原型证据使用可选 `prototypeEvidence`（safe相对path、media_type、purpose、既有source_ids、实际Buffer bytes）；helper纳入不可变manifest及全量读回。附件不是需求事实、不执行HTML、不以路径代替运输，source_ids来自冻结Packet。
+ 
++**能力与代码准备。** 用户确认的原型植入与视觉改造一并继承；先分别核语义位置、现有状态/计划扩展和实际 connector 能力。
++旧静态/精修能力不足不等于换模板或删行为。选择组合时，既有主控在获准的本地准备范围内盘点实际原型，
++保留源业务实现并编写必要的导航/挂载适配，映射每项源事实和 AC。冻结前按 `code-hygiene` Mode D 对
++精确代码完成独立审查，来源不明、审查未过或必须替换原脚本/新资源闭包时保持 NEEDS_CONTEXT。
++`behaviorBindings` 每项仅含 `{id, source_ids, source_ref, mount_action_id, acceptance_ids, bytes}`：
++`bytes` 为实际 UTF-8 classic JavaScript Buffer；其余为既有来源、精确来源引用、声明的 add/modify/preserve
++动作 ID 和完整行为验收 ID。helper 自算 hash、以 `input/behavior/<id>.js` 冻结进不可变 inventory。
++这些字段不是批准或审查凭据；主控必须核真实来源、审查和已有用户范围，不能由模型自填 ID/hash 自证合法。
++最多八项/总计 1 MiB，不支持模块 import 或未运输资源。原代码中的计算式网络/DOM副作用不能由静态
++闭包检查证明安全：独立审查须核实际效果，隔离浏览器验证记录异常请求、弹窗与运行错误；不把 mount/hash 当沙箱。
++
++设计草稿的 `ADAPTATION_READY` 只说明有完整适配判断，组合返回行为仍待绑定/审查；导出合同也不是执行许可。
++完整代码绑定、已支持profile/connector、真人采用和各外部操作授权依次满足后才执行。未知 connector 可保存草稿，
++依赖它的执行 BLOCKED；不得把未知说成已可生成。原型事实、状态、保持项的验收分母不能因此缩小。
++
+ 1. **逐项匹配**：对每个事实核对原件用途、实际节点和状态作用域，保留原文与理由。`confidence=high`
+    只表示有依据且无未决替代位置，不是概率；`alternatives` 非空或存在未决需求就停在澄清。
+ 2. **原件组包**：helper 从正式原件副本读取完整字节，而非接受调用方另写的 base。冻结 Packet
+@@ -242,10 +259,13 @@ const draft = await prepareOriginalCopyHandoff({
+    不能静默漏资源或重写 URL。资源扫描只证明静态闭包，不代表脚本已经执行或交互已验收。
+ 3. **局部动作**：add 向真实节点内部末尾追加片段；modify 仅替换节点内部；remove 删除完整节点；
+    preserve 不写编辑。refine 使用 original-ui-refinement-v1，edit.html为目标完整outerHTML；该profile只能refine+preserve，只准节点内class/style有效变化，业务DOM/行为属性、脚本、全局CSS及所有资产保持。混合结构变更、无效/空白变化、越界、新资产均拒绝，视觉和交互验收仍PENDING。原件隐藏 `<template>` 的内部位置必须带完整作用域路径，不能当普通可见DOM猜测。
++   `original-composition-v1` 显式允许同一原件基线内互不重叠的结构动作和 refine；各自保持原有验证，新增行为另按冻结 bindings 验证。无需把前阶段衍生品重新登记成原件，也不假设第二阶段自动读取衍生基线。
+    目标重叠、歧义、不可证明的原始字节边界、void元素属性修改、文档头/脚本/样式目标均拒绝。
+ 4. **保留原件**：原输入永不重排/格式化；输出必须保持未授权区域所有字节，原脚本/样式也逐字节保持。
+-   新片段使用受限静态HTML，不能偷加脚本、事件、外部资源、文档控制或模板。需求确需这些能力时
+-   明示限制并另审精确范围，绝不以删除原交互或改写整页来绕过。
++   新片段仍使用受限静态HTML，不能偷加脚本、事件、外部资源、文档控制或模板。组合profile仅允许
++   把已冻结 behavior 文件按绑定顺序逐字节嵌入显式 `</body>` 前：每项为换行加
++   `<script data-luca-behavior="ID">CODE</script>`，最后再加一个换行。使用 `appendBoundBehavior` 可生成
++   精确拼接；生成端不得补写或改动代码。仍不支持的修改明示限制，不以删除交互或重写整页绕过。
+ 5. **OD 产出**：要求 OD 用代码读取完整原件，仅按上述节点局部修改，输出 `output/index.html`，并用
+    `JSON.stringify` 写 `output/implementation-manifest.json`：
+    `{"schema_version":1,"edits":[{"action_id":"C-01","html":"新增或替换的片段"}]}`。
+@@ -256,7 +276,9 @@ const draft = await prepareOriginalCopyHandoff({
+    全字节读回；原件 v1 仅支持 headless 路径，以本轮 `OD_RUN_AUTHORIZED` 收据和成功 run 读回进入 recover。
+    桌面报告无法证明不存在后续取消的 headless 尝试，`reportOriginalGeneration` 明确拒绝，旧的裸 `STAGED`
+    或历史 `USER_GENERATION_REPORTED` 收据也不能授权/执行 recover；再由 `recoverOriginalOutput` 校验实际输出、编辑声明、项目inventory、
+-   原生DOM与原件差异。
++   原生DOM与原件差异。组合回收从 immutable contract 恢复 behavior bindings，验证插入位置/顺序/字节，
++   去除该唯一增补后继续同一原件局部编辑检查；不信输出清单自报的脚本许可。新增/缺失/改动行为文件、
++   未绑定脚本、原脚本/保持区漂移均拒绝，代码本身不会在机械校验时执行。
+ 7. **完成门**：机械 PASS 只证明改动范围与来源保真，语义仍 PENDING。实际浏览器检查本轮全部需求、
+    原有关键交互与相关状态后，才能报告本轮已验收；不把一个局部样例外推成所有模板/状态都验证过。
+ 
+diff --git a/.claude/skills/office/design-brief/references/input-contract.md b/.claude/skills/office/design-brief/references/input-contract.md
+index d0abdbc..f0295cd 100644
+--- a/.claude/skills/office/design-brief/references/input-contract.md
++++ b/.claude/skills/office/design-brief/references/input-contract.md
+@@ -21,7 +21,7 @@ Packet 结构由 output-templates/carrier-packet 拥有；这里不重复维护
+ 不能凭转写错误猜实体。复述核对只针对真实歧义，不让用户逐条重复清楚的需求。
+ 只有实际逐字文本可标“完整原话”；转译/归一化摘要须标明，不能补成不存在的引语。
+ 仅美化不授权植入：无明确嵌入来源时，不把add/modify提升为MUST；用户明确要求植入再美化时，
+-保留两项意图，分别核结构与精修合同的能力，不能混用同一执行profile。
++保留两项意图，分别核结构、精修及交互接入能力；两个旧profile保持独立，明确需要组合时按 page-context §7 的 original-composition-v1，不用纯refine合同冒充业务接入。
+ 
+ 来源索引按完整事实分解：
+ | ID | 精确来源/原文 | 类型 | 依据状态 | 本轮级别/范围 | D/STATE/位置 | AC/下游 | 结果 |
+@@ -69,8 +69,10 @@ traceable_delivery = 实际 PRD 全链追踪；design_generation = 当前设计
+ 两者都被明确授权时，按阶段分别写可变/不可变/须确认：结构阶段只允许已授权植入的结构范围，
+ 精修阶段才是仅视觉变化。不得用全包“只可改视觉”否定植入MUST，也不得因植入授权扩展精修范围。
+ 初版 refine 只允许 refine + preserve，真实节点内 class/style 有效变化；业务 DOM/行为属性/
+-脚本/全局CSS/资产保持，禁止冒充空格修改。需要结构与样式混合或新增行为时返回原范围确认，
+-不自动扩大 refine。静态carrier精修另要求可判定子集中的有效inline CSS声明变化（class-only拒绝）；同一变更style内原样未知声明仅豁免font-family/box-shadow，其余未知声明默认可能覆盖并拒绝。原件用inert浏览器检查合法声明/类token，两者都不证明实际像素/行为。原件与 static carrier 使用各自适配器，不改变原件资格字段绕过安全。
++脚本/全局CSS/资产保持，禁止冒充空格修改。需要结构与样式混合或新增行为时，继承用户已明确的
++植入范围，按 page-context §7 检查组合profile、代码来源/独立审查和真实执行能力；只有新增或含混
++范围才补确认，不自动扩大 refine。结构与精修可在同一受控组合产物中分别验收，不假设两个旧路径
++自动传递衍生基线。静态carrier精修另要求可判定子集中的有效inline CSS声明变化（class-only拒绝）；同一变更style内原样未知声明仅豁免font-family/box-shadow，其余未知声明默认可能覆盖并拒绝。原件用inert浏览器检查合法声明/类token，两者都不证明实际像素/行为。原件与 static carrier 使用各自适配器，不改变原件资格字段绕过安全。
+ 
+ ## 4. 模板与执行能力冲突
+ 
+@@ -84,6 +86,9 @@ traceable_delivery = 实际 PRD 全链追踪；design_generation = 当前设计
+ | 仅 connector 不支持 | 契约可保存，执行 BLOCKED；不伪造执行/保真/上传证据 |
+ 
+ 草稿与正文可以在冻结前迭代；正式 binding/TAC只在冻结后指向完整事实。
++组合草稿可将有来源的新增状态标为 extension；ADAPTATION_READY仍不授绑定/执行权。主控在实际
++获准准备范围内提供并独立审查精确行为实现，再形成绑定代码字节的执行合同。代码未就绪或 connector
++未知时保留具体缺口，不把静态定位/完整字段当作交互可用，也不阻断不依赖它的需求盘点。
+ 模板选择确认与 bundle采用不同；有效选择可重用，不能让用户重述，但新bundle不能伪造确认。
+ 
+ ## 5. 生成与验收
+diff --git a/.claude/skills/office/implement/SKILL.md b/.claude/skills/office/implement/SKILL.md
+index cd6a332..da380b2 100644
+--- a/.claude/skills/office/implement/SKILL.md
++++ b/.claude/skills/office/implement/SKILL.md
+@@ -60,7 +60,14 @@ tasks retain their existing contract.
+    ready work is queued in stable U-ID order; it does not authorize concurrent implementers.
+    Present the compiled task-plan SHA, baseline, exact U-ID list, path/effect scope, and assertions
+    for human confirmation. Only an explicit approval bound to those bytes makes the U-IDs approved.
+-6. Before handing off, run scripts/check-plan-approval.mjs, scripts/check-plan-identity.mjs and scripts/check-plan-graph.mjs with the exact plan, approval, identity, graph, scope, source identity, every first effect and --require-no-external-blockers. A failed check keeps the plan out of execution. Read `.claude/agents/orchestrator.md` through EOF and hand it the same approved plan. Only that
++6. Before handing off, follow Plan Agent's human approval gate: verify the actual post-plan user message,
++   exact payload/effects and absence of revocation. Reuse unchanged valid approval; a caller-written
++   JSON or an attested message without consent is insufficient. Run scripts/check-plan-approval.mjs,
++   scripts/check-plan-identity.mjs and scripts/check-plan-graph.mjs with the exact plan, approval,
++   identity, graph, scope, source identity, every first effect and --require-no-external-blockers.
++   `BINDING_VALID` / `authorization=NOT_VERIFIED` validates record consistency only. A failed check or
++   unavailable actual approval evidence keeps the plan out of execution; unattended dispatch also
++   requires a trusted approval adapter. Read `.claude/agents/orchestrator.md` through EOF and hand it the same approved plan. Only that
+    owner executes the approved U-IDs. Unexpected failures and
+    real Git conflicts remain exception loops under the original U-ID authority. Finish with the
+    canonical code-review path; commit or push only behind its separate human gate.
+diff --git a/.claude/skills/office/open-design/SKILL.md b/.claude/skills/office/open-design/SKILL.md
+index a67a951..a6049f8 100644
+--- a/.claude/skills/office/open-design/SKILL.md
++++ b/.claude/skills/office/open-design/SKILL.md
+@@ -107,7 +107,7 @@ page adoption、module binding、TAC、Packet 字段或 OD 写入依据。先完
+ 不得被 structural profile 或外部 DS 默认覆盖。
+ 页面含 `original_copy` 时，使用 `scripts/original-copy-handoff.mjs` 的原件路径（参数及动作规则见
+ page-context §7），不调用只支持静态重排的 carrier helper。该路径保留整份原件，并逐字节验证局部差异。
+-精修用 original-ui-refinement-v1：refine+preserve、完整outerHTML、仅有效class/style改变，业务DOM/脚本/全局CSS/资产保持；嵌入仍add/modify独立合同，不混用。原型证据通过prototypeEvidence实际bytes/hash/既有source_ids进入不可变inventory，正文已含完整保持事实，附件不执行。
++精修用 original-ui-refinement-v1：refine+preserve、完整outerHTML、仅有效class/style改变，业务DOM/脚本/全局CSS/资产保持。用户已要求业务植入+精修时，按 page-context §7 显式选择 original-composition-v1：先核精确行为代码来源及独立审查，再冻结 behaviorBindings；同一基线内分别验结构、视觉和绑定代码。未绑定代码不得由 OD 生成端补写，draft ready 不等于执行就绪。原型证据通过prototypeEvidence实际bytes/hash/既有source_ids进入不可变inventory，正文已含完整保持事实，附件不执行。
+ reference_only带实际结构化Packet时也核对附件source_ids存在，并在导出/fresh/readback重核；按Brief output-templates的文档声明边界识别结构化正文，识别后格式损坏不得降级。自由Markdown中的字段示例不算声明；无可机读索引时显式unverified-source-index，须设计/用户核对来源，不宣称机器完整覆盖。
+ 当前原件适配器只支持自包含 HTML；若原 CSP 未阻断的外置 CSS/JS/图片/字体依赖没有经审计后一并运输，
+ 组包必须以 `ORIGINAL_ASSETS_REQUIRED` 停住，不能只上传 HTML 或改写依赖来宣称原件完整。
+@@ -183,7 +183,7 @@ carrier output profile；`candidate_set` 未另获人类决定不得切换。Cod
+ 页面采用确认不替代这些权限。已有准确授权不反复索取。
+ 
+ **2d. carrier profile（独立于设计系统）：** original_copy v1 先核 Phase 0 能力门，采用
+-original-preserving-v1 或 original-ui-refinement-v1，不套普通静态默认 profile。
++original-preserving-v1、original-ui-refinement-v1 或显式 original-composition-v1，不套普通静态默认 profile。
+ 普通 carrier 必须执行 Phase 1「设计系统」的 structural/visual 边界：默认/已确认
+ `structural_carrier + single`；visual 必须有用户明确选择及 viewport、截图基线、允许差异阈值。
+ 每轮 adoption/TAC hash 仍确认相同 profile，不得按 OD 输出偷换。
+@@ -298,7 +298,7 @@ original_copy v1 仅支持 headless 路径：保留本轮 `OD_RUN_AUTHORIZED` 
+ `USER_GENERATION_REPORTED` 均不能 recover。除实际
+ `output/index.html`，还要读回 `output/implementation-manifest.json` 的局部编辑声明。声明不是证据本身：
+ 验证器重算原件中的真实节点范围，核对实际HTML恰为原始字节加这些编辑，并以原生DOM验证没有解析越界。
+-原脚本/样式保持逐字节一致。只有附带成功终态的 headless run 才能按成功运行回收；取消/未完成的输出
++原脚本/样式保持逐字节一致。composition 的新增行为只来自 immutable contract：读取完整 input/behavior 文件，按 §7 精确嵌入；回收重核全量文件、代码字节/位置/顺序再验证其余局部编辑，绝不按输出自报脚本许可放行。hash 与源码局部范围不是 JS 沙箱，实际运行副作用与全部业务/视觉仍需独立验收。只有附带成功终态的 headless run 才能按成功运行回收；取消/未完成的输出
+ 保留为证据，不直接宣称成功。界面语义与原交互保留仍需独立浏览器验收。
+ 
+ `observeCarrierOutput` 可把指定 root 的实际新产物标为 `GENERATED_OBSERVED`，但 provenance 必须诚实：
+diff --git a/package.json b/package.json
+index ce86f66..0b7175a 100644
+--- a/package.json
++++ b/package.json
+@@ -62,7 +62,7 @@
+     "test:page-context": "node scripts/test-page-context.mjs --mutation",
+     "test:template-flow": "node scripts/test-template-flow.mjs",
+     "test:template-copy": "node scripts/test-template-copy.mjs",
+-    "test:original-adapter": "node scripts/test-original-template-index.mjs && node scripts/test-original-template-edits.mjs && node scripts/test-original-copy-handoff.mjs && node scripts/test-original-real-templates.mjs",
++    "test:original-adapter": "node scripts/test-original-template-index.mjs && node scripts/test-original-template-edits.mjs && node scripts/test-original-copy-handoff.mjs && node scripts/test-original-composition.mjs && node scripts/test-original-real-templates.mjs",
+     "test:page-context-preview": "node scripts/test-page-context-preview.mjs",
+     "test:carrier-asset-profile": "node scripts/test-carrier-asset-profile.mjs",
+     "test:design-context-retirement": "python3 scripts/test-design-context-retirement.py",
+diff --git a/scripts/check-agent-contracts.mjs b/scripts/check-agent-contracts.mjs
+index b255720..27ccf15 100644
+--- a/scripts/check-agent-contracts.mjs
++++ b/scripts/check-agent-contracts.mjs
+@@ -111,6 +111,12 @@ t('Plan 摘要要求所有 Supervisor/Hierarchical 实例批准',
+   /需要用户确认: 是（任意 Supervisor \/ Hierarchical，包括单阶段及嵌套实例）/.test(plan));
+ t('Supervisor 模式表保留单阶段与嵌套批准要求',
+   /^\| \*\*Supervisor\*\* \|[^\n]*\| \*\*必须，包括单阶段及嵌套实例\*\* \|$/m.test(plan));
++t('批准绑定检查不伪装真人授权，三个消费者保持一致',
++  [plan, orch, implement].every(body => body.includes('BINDING_VALID') && body.includes('authorization=NOT_VERIFIED')));
++t('批准缺口只阻断依赖它的自动分支，保留模式适用边界',
++  plan.includes('Sequential/Parallel 不因使用依赖图额外索取批准票')
++  && plan.includes('缺少自动可信批准适配器只阻断依赖它的无人值守派发')
++  && plan.includes('同一已确认 payload 无变化时复用') && plan.includes('后续撤回'));
+ t('preflight 含未列出 WARN 规则', pre.includes('无专属检查行'));
+ t('preflight 明确 TURN_CLOSED 仍保留有效 binding', pre.includes('`TURN_CLOSED` + 有效 binding 是已绑定状态'));
+ t('preflight 不得把 TURN_CLOSED 单独判成失败', pre.includes('不得仅因 `TURN_CLOSED` 判 FAIL'));
+diff --git a/scripts/check-plan-approval.mjs b/scripts/check-plan-approval.mjs
+index a1a8821..b0398d8 100644
+--- a/scripts/check-plan-approval.mjs
++++ b/scripts/check-plan-approval.mjs
+@@ -1,4 +1,6 @@
+ #!/usr/bin/env node
++// Binding validation only. A caller-authored record is not evidence of consent.
++// The controlling agent must verify actual user approval under Plan's human gate.
+ import assert from 'node:assert/strict';
+ import { createHash } from 'node:crypto';
+ import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
+@@ -46,10 +48,16 @@ assert.equal(approval.scope, values.get('--scope'), 'approval scope does not mat
+ assert.ok(Array.isArray(approval.effects) && approval.effects.length > 0, 'approval.effects must be non-empty');
+ assert.equal(new Set(approval.effects).size, approval.effects.length, 'approval.effects must not contain duplicates');
+ for (const effect of effects) assert.ok(approval.effects.includes(effect), `approval does not cover effect: ${effect}`);
+-assert.ok(typeof approval.confirmed_at === 'string' && !Number.isNaN(Date.parse(approval.confirmed_at)), 'approval.confirmed_at must be an ISO timestamp');
+-assert.equal(approval.confirmed_by, 'user', 'approval.confirmed_by must identify a real user confirmation');
++assert.ok(approval.effects.every(effect => typeof effect === 'string' && effect.trim()), 'approval.effects must contain non-empty strings');
++const confirmedAt = Date.parse(approval.confirmed_at);
++assert.ok(typeof approval.confirmed_at === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(approval.confirmed_at)
++  && Number.isFinite(confirmedAt) && new Date(confirmedAt).toISOString() === approval.confirmed_at.replace(/(?<=:\d{2})Z$/, '.000Z'), 'approval.confirmed_at must be a valid UTC ISO timestamp');
++assert.ok(confirmedAt <= Date.now(), 'approval.confirmed_at must not be in the future');
++assert.equal(approval.confirmed_by, 'user', 'approval.confirmed_by must declare user; this label does not authenticate a user');
+ console.log(JSON.stringify({
+-  status: 'PASS',
++  status: 'BINDING_VALID',
++  authorization: 'NOT_VERIFIED',
++  required_evidence: 'actual scope-matched user confirmation, verified by the controlling agent; unattended dispatch requires a trusted approval adapter',
+   plan_id: approval.plan_id,
+   plan_path: planRealpath,
+   plan_sha256: sha,
+diff --git a/scripts/original-copy-handoff.mjs b/scripts/original-copy-handoff.mjs
+index 8563529..9d2687f 100644
+--- a/scripts/original-copy-handoff.mjs
++++ b/scripts/original-copy-handoff.mjs
+@@ -5,7 +5,8 @@ import { isDeepStrictEqual } from 'node:util';
+ import { canonicalJson, canonicalManifestHash, fileRecord, parseCanonicalJson, sha256Bytes, validateInertStorageReceipt } from './carrier-asset-profile.mjs';
+ import { verifyTemplateCopies, verifyCopyBytes } from './template-copy.mjs';
+ import { inspectCarrierPacket } from './carrier-packet.mjs';
+-import { locateOriginalEditRanges, verifyOriginalEditedOutput } from './original-template-edits.mjs';
++import { locateOriginalEditRanges, verifyOriginalEditedOutput, resolveOriginalProfile } from './original-template-edits.mjs';
++import { COMPOSITION_PROFILE, prepareBehaviorBindings, restoreBehaviorBindings, appendBoundBehavior } from './original-composition.mjs';
+ import { inspectOriginalResources } from './original-template-resources.mjs';
+ import { authorizeScopedOperation, verifyScopedStageReadback, verifyScopedOutputReadback, preparePrototypeEvidence, verifyPrototypeEvidence } from './design-flow-handoff.mjs';
+ 
+@@ -25,7 +26,7 @@ function assertOriginalConfirmation(bundle, manifest) {
+   return adoption;
+ }
+ 
+-export async function prepareOriginalCopyHandoff({ pageId, packetBody, target, handoffId, actions, prototypeEvidence }, { root = defaultRoot, browser } = {}) {
++export async function prepareOriginalCopyHandoff({ pageId, packetBody, target, handoffId, actions, prototypeEvidence, executionProfile, behaviorBindings }, { root = defaultRoot, browser } = {}) {
+   if (!safeId(handoffId) || target?.tool !== 'od' || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(target.projectId ?? '')) fail('ORIGINAL_TARGET_INVALID', 'Exact project and fresh safe handoff ID required');
+   await verifyTemplateCopies({ root });
+   const sourceManifest = JSON.parse(await readFile(resolve(root, '.claude/skill-os/page-library/source-manifest.json'), 'utf8'));
+@@ -42,17 +43,22 @@ export async function prepareOriginalCopyHandoff({ pageId, packetBody, target, h
+     if (action.confidence !== 'high' || !nonempty(action.rationale) || !Array.isArray(action.alternatives) || action.alternatives.length) fail('ORIGINAL_NEEDS_CONTEXT', 'Resolve semantic or location ambiguity before preparing a carrier');
+   }
+   if ([...facts.keys()].some(id => !scoped.has(id) && !actions.some(a => a.source_ids.includes(id)))) fail('ORIGINAL_FACT_COVERAGE', 'Every Packet fact must have a disposition; do not shrink the denominator');
+-  const ranges = await locateOriginalEditRanges(base, actions.map(locateAction), { browser });
+-  const profile = actions.some(action => action.action === 'refine') ? 'original-ui-refinement-v1' : 'original-preserving-v1';
++  const profile = resolveOriginalProfile(actions, executionProfile);
++  if (profile !== COMPOSITION_PROFILE && behaviorBindings !== undefined) fail('ORIGINAL_PROFILE_INVALID', 'Behavior inputs require explicit composition');
++  const behavior = profile === COMPOSITION_PROFILE ? prepareBehaviorBindings(behaviorBindings, { actions, factIds: [...facts.keys()].filter(id => !scoped.has(id)) }) : null;
++  if (behavior) appendBoundBehavior(base, behaviorBindings); // prove the source has the exact supported insertion seam, without executing it
++  const ranges = await locateOriginalEditRanges(base, actions.map(locateAction), { browser, executionProfile: profile, allowPreserveOnly: Boolean(behavior) });
+   const prototype = preparePrototypeEvidence(prototypeEvidence, { factIds: [...facts.keys()], sourceIndexVerified: true });
+   const contract = {
+     schema_version: 1, profile, page_id: pageId,
+     source_sha256: entry.raw_sha256, source_bytes: entry.raw_bytes,
+     source_packet_sha256: packet.source_packet_sha256, applicability: packet.applicability,
+     actions, original_locations: ranges.targets, resource_audit: resourceAudit,
++    ...(behavior ? { behavior_bindings: behavior.records } : {}),
+     coverage: packet.facts.map(f => ({ id: f.id, action_ids: actions.filter(a => a.source_ids.includes(f.id)).map(a => a.action_id), scopes: packet.scopes.filter(s => s.source_ids.includes(f.id)) })),
+     output: { entry: 'output/index.html', edits: 'output/implementation-manifest.json', edits_schema: '{"schema_version":1,"edits":[{"action_id":"...","html":"..."}]}', policy: profile === 'original-ui-refinement-v1' ? 'Refine uses the complete target outerHTML and changes only valid class/style attributes within that exact original scope; preserve has no edit. All business DOM, text, behavior attributes, comments, non-target bytes, original scripts/global styles and resources remain unchanged. New functionality, executable code and assets require a separate reviewed contract. Prototype attachments are inert evidence; frozen facts remain the sole requirement authority.' : 'add appends inside the target; modify replaces its inner HTML; remove deletes its whole node; preserve has no edit. All other bytes/scripts/styles stay unchanged. New executable code or assets require another reviewed contract.' }
+   };
++  if (behavior) contract.output.policy = 'Use original-composition-v1 on one original baseline. add appends edit.html inside the target; modify replaces only its inner HTML; remove deletes the whole target node and requires empty edit.html; preserve has no edit. refine uses the complete target outerHTML and changes only meaningful valid class/style attributes within that disjoint scope, preserving business DOM, text, behavior attributes and comments. Each non-preserve action needs exactly one {action_id,html} edit in output/implementation-manifest.json. Generated fragments remain static; every byte outside the declared edits and behavior insertion stays unchanged, including original scripts/global CSS. After edits, append each frozen input/behavior/<id>.js verbatim, in binding order, as a classic <script data-luca-behavior="<id>">CODE</script> immediately before the explicit </body>, with one newline before each script and one after the last. No additional script, inline event, resource or code change is authorized by output. Binding hashes prove integrity, not user approval, code review, runtime containment or behavior. Full source/acceptance coverage, independent exact-code review and subsequent browser/visual acceptance remain required.';
+   const namespace = `handoffs/${handoffId}`;
+   const files = [
+     file('input/base-template.html', base, 'text/html; charset=utf-8'),
+@@ -61,6 +67,7 @@ export async function prepareOriginalCopyHandoff({ pageId, packetBody, target, h
+     file('control/original-adaptation.md', Buffer.from('# Original template adaptation\n\nUse the complete unchanged original input. Source copy is not a rewrite.\n\n```json\n' + canonicalJson(contract) + '\n```\n\n## Complete frozen facts\n' + packet.facts.map(f => `${JSON.stringify(f.id)}: ${JSON.stringify(f.text)}`).join('\n') + '\n'), 'text/markdown; charset=utf-8')
+   ];
+   files.push(...prototype.files);
++  if (behavior) files.push(...behavior.files);
+   const records = files.map(({ bytes, ...rest }) => ({ ...rest, bytes: bytes.length }));
+   const manifest = { schema_version: 3, bundle_kind: 'carrier', carrier_profile: profile, target: { tool: 'od', projectId: target.projectId }, handoff_id: handoffId, namespace, page_id: pageId, original_sha256: entry.raw_sha256, source_packet_sha256: packet.source_packet_sha256, tac_sha256: hash(json(contract)), input_root: 'input', output_root: 'output', output_profile: 'single', immutable_files: records, ...(prototype.records.length ? { prototype_evidence: prototype.records } : {}) };
+   manifest.handoff_bundle_hash = canonicalManifestHash(manifest, records);
+@@ -71,7 +78,7 @@ export async function prepareOriginalCopyHandoff({ pageId, packetBody, target, h
+ }
+ 
+ function assertOriginalBundle(bundle) {
+-  if (bundle?.status !== 'EXPORTED' || bundle.schema_version !== 3 || bundle.bundle_kind !== 'carrier' || !['original-preserving-v1', 'original-ui-refinement-v1'].includes(bundle.carrier_profile) || !Array.isArray(bundle.files) || bundle.files.length < 5) fail('ORIGINAL_BUNDLE_INVALID', 'Expected an immutable original-preserving or original UI-refinement bundle');
++  if (bundle?.status !== 'EXPORTED' || bundle.schema_version !== 3 || bundle.bundle_kind !== 'carrier' || !['original-preserving-v1', 'original-ui-refinement-v1', COMPOSITION_PROFILE].includes(bundle.carrier_profile) || !Array.isArray(bundle.files) || bundle.files.length < 5) fail('ORIGINAL_BUNDLE_INVALID', 'Expected an immutable supported original bundle');
+   const expected = ['input/base-template.html', 'control/brief.md', 'control/original-adaptation.json', 'control/original-adaptation.md'];
+   if (!isDeepStrictEqual(bundle.files.slice(0, 4).map(f => f.path), expected) || bundle.files.at(-1)?.path !== 'control/handoff-manifest.json' || new Set(bundle.files.map(f => f.path)).size !== bundle.files.length) fail('ORIGINAL_BUNDLE_CHANGED', 'Exact original input/control file set and unique evidence paths required');
+   for (const item of bundle.files) if (!Buffer.isBuffer(item.bytes) || hash(item.bytes) !== item.sha256) fail('ORIGINAL_BUNDLE_CHANGED', 'Immutable file changed');
+@@ -82,12 +89,14 @@ function assertOriginalBundle(bundle) {
+   const records = bundle.files.slice(0, -1).map(({ bytes, ...rest }) => ({ ...rest, bytes: bytes.length }));
+   if (canonicalManifestHash(manifest, records) !== bundle.handoff_bundle_hash || manifest.handoff_bundle_hash !== bundle.handoff_bundle_hash || !isDeepStrictEqual(manifest.immutable_files, records) || !isDeepStrictEqual(manifest.target, bundle.target) || manifest.handoff_id !== bundle.handoff_id || manifest.namespace !== bundle.namespace || bundle.namespace !== `handoffs/${bundle.handoff_id}` || manifest.carrier_profile !== bundle.carrier_profile) fail('ORIGINAL_BUNDLE_CHANGED', 'Original scope/manifest changed');
+   const contract = parseCanonicalJson(get('control/original-adaptation.json'));
+-  if (!shape(contract, ['schema_version', 'profile', 'page_id', 'source_sha256', 'source_bytes', 'source_packet_sha256', 'applicability', 'actions', 'original_locations', 'resource_audit', 'coverage', 'output']) || contract.schema_version !== 1 || !Array.isArray(contract.actions) || !contract.actions.length || contract.actions.some(action => !shape(action, ['action_id', 'action', 'scope', 'locator', 'source_ids', 'confidence', 'rationale', 'alternatives']) || !['add', 'modify', 'remove', 'preserve', 'refine'].includes(action.action)) || (contract.profile === 'original-ui-refinement-v1' && contract.actions.some(action => !['refine', 'preserve'].includes(action.action))) || !shape(contract.output, ['entry', 'edits', 'edits_schema', 'policy']) || contract.output.entry !== 'output/index.html' || contract.output.edits !== 'output/implementation-manifest.json') fail('ORIGINAL_BUNDLE_CHANGED', 'Original contract and UI-only action profile must remain closed and version-bound');
++  const composed = contract.profile === COMPOSITION_PROFILE;
++  if (!shape(contract, ['schema_version', 'profile', 'page_id', 'source_sha256', 'source_bytes', 'source_packet_sha256', 'applicability', 'actions', 'original_locations', 'resource_audit', 'coverage', 'output', ...(composed ? ['behavior_bindings'] : [])]) || contract.schema_version !== 1 || !Array.isArray(contract.actions) || !contract.actions.length || contract.actions.some(action => !shape(action, ['action_id', 'action', 'scope', 'locator', 'source_ids', 'confidence', 'rationale', 'alternatives']) || !['add', 'modify', 'remove', 'preserve', 'refine'].includes(action.action)) || (contract.profile === 'original-ui-refinement-v1' && contract.actions.some(action => !['refine', 'preserve'].includes(action.action))) || !shape(contract.output, ['entry', 'edits', 'edits_schema', 'policy']) || contract.output.entry !== 'output/index.html' || contract.output.edits !== 'output/implementation-manifest.json') fail('ORIGINAL_BUNDLE_CHANGED', 'Original contract and action profile must remain closed and version-bound');
+   const packet = inspectCarrierPacket(get('control/brief.md').toString('utf8'));
+   verifyPrototypeEvidence(bundle.files.slice(0, -1), manifest.prototype_evidence, { factIds: packet.facts.map(fact => fact.id), sourceIndexVerified: true });
+-  if (bundle.files.length !== 5 + (manifest.prototype_evidence?.length ? manifest.prototype_evidence.length + 1 : 0) || contract.profile !== manifest.carrier_profile || (contract.actions.some(action => action.action === 'refine') ? 'original-ui-refinement-v1' : 'original-preserving-v1') !== contract.profile || hash(get('input/base-template.html')) !== manifest.original_sha256 || hash(get('control/brief.md')) !== manifest.source_packet_sha256 || hash(get('control/original-adaptation.json')) !== manifest.tac_sha256 || contract.source_sha256 !== manifest.original_sha256 || contract.source_packet_sha256 !== manifest.source_packet_sha256) fail('ORIGINAL_BUNDLE_CHANGED', 'Original/Packet/contract/evidence identity changed');
++  const behaviorBindings = composed ? restoreBehaviorBindings(contract.behavior_bindings, bundle.files, { actions: contract.actions, factIds: packet.facts.filter(f => !packet.scopes.some(s => s.source_ids.includes(f.id))).map(f => f.id) }) : undefined;
++  if (bundle.files.length !== 5 + (manifest.prototype_evidence?.length ? manifest.prototype_evidence.length + 1 : 0) + (behaviorBindings?.length ?? 0) || contract.profile !== manifest.carrier_profile || resolveOriginalProfile(contract.actions, contract.profile) !== contract.profile || hash(get('input/base-template.html')) !== manifest.original_sha256 || hash(get('control/brief.md')) !== manifest.source_packet_sha256 || hash(get('control/original-adaptation.json')) !== manifest.tac_sha256 || contract.source_sha256 !== manifest.original_sha256 || contract.source_packet_sha256 !== manifest.source_packet_sha256) fail('ORIGINAL_BUNDLE_CHANGED', 'Original/Packet/contract/evidence identity changed');
+   if (Object.hasOwn(bundle, 'confirmation')) assertOriginalConfirmation(bundle, manifest);
+-  return { manifest, contract, get };
++  return { manifest, contract, get, behaviorBindings };
+ }
+ 
+ export function confirmOriginalCopyHandoff(bundle, adoption) {
+@@ -125,7 +134,7 @@ export function reportOriginalGeneration(bundle, staged, report) {
+   fail('ORIGINAL_DESKTOP_UNSUPPORTED', 'Original v1 desktop generation cannot establish current-attempt provenance; use a fresh authorized headless run');
+ }
+ export async function recoverOriginalOutput(bundle, staged, readback, authorization, options = {}) {
+-  const { manifest, contract, get } = assertOriginalBundle(bundle);
++  const { manifest, contract, get, behaviorBindings } = assertOriginalBundle(bundle);
+   assertOriginalConfirmation(bundle, manifest);
+   if (!sameReceipt(bundle, staged) || staged.status !== 'OD_RUN_AUTHORIZED' || !sameReceipt(bundle, authorization) || !isDeepStrictEqual(authorization.scope, ['recover'])) fail('ORIGINAL_RECOVER_AUTHORITY', 'Independent exact recover authority and headless generation evidence required');
+   if (!nonempty(readback.run?.run_id) || readback.run.handoff_id !== bundle.handoff_id || !/^[a-f0-9]{64}$/.test(readback.run.prompt_hash ?? '') || readback.run.prompt_hash !== staged.prompt_hash || readback.run.status !== 'succeeded') fail('ORIGINAL_RUN_NOT_SUCCEEDED', 'Do not turn an unfinished/canceled run into successful headless acceptance; keep its artifact as evidence');
+@@ -133,6 +142,6 @@ export async function recoverOriginalOutput(bundle, staged, readback, authorizat
+   const output = outputs.find(f => f.path.endsWith('/output/index.html')).bytes;
+   const declared = parseCanonicalJson(outputs.find(f => f.path.endsWith('/output/implementation-manifest.json')).bytes);
+   if (!shape(declared, ['schema_version', 'edits']) || declared.schema_version !== 1) fail('ORIGINAL_EDIT_SET', 'Output edit manifest is untrusted and must use the closed schema');
+-  const validation = await verifyOriginalEditedOutput({ base: get('input/base-template.html'), output, actions: contract.actions.map(locateAction), edits: declared.edits }, options);
++  const validation = await verifyOriginalEditedOutput({ base: get('input/base-template.html'), output, actions: contract.actions.map(locateAction), edits: declared.edits, executionProfile: contract.profile, behaviorBindings }, options);
+   return { status: 'RECOVERED', bundle_kind: 'carrier', carrier_profile: bundle.carrier_profile, project_id: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, original_sha256: manifest.original_sha256, handoff_bundle_hash: bundle.handoff_bundle_hash, output_sha256: hash(output), output_bytes: output.length, mechanical_validation: validation, provenance: 'od_run_observed', semantic_acceptance: 'PENDING_INDEPENDENT_REVIEW' };
+ }
+diff --git a/scripts/original-template-edits.mjs b/scripts/original-template-edits.mjs
+index 0d48f5c..5477c8a 100644
+--- a/scripts/original-template-edits.mjs
++++ b/scripts/original-template-edits.mjs
+@@ -3,6 +3,7 @@ import { chromium } from 'playwright';
+ import { resolveAssetClosure } from './carrier-asset-profile.mjs';
+ import { parseCarrierDom } from './carrier-dom.mjs';
+ import { inspectOriginalResources } from './original-template-resources.mjs';
++import { COMPOSITION_PROFILE, prepareBehaviorBindings, removeBoundBehavior } from './original-composition.mjs';
+ 
+ const sha = b => createHash('sha256').update(b).digest('hex');
+ const fail = (code, message) => { throw Object.assign(new Error(message), { code }); };
+@@ -58,7 +59,13 @@ function annotatedSlice(html, tokens, marker, start, end) {
+   }
+   return value + html.slice(cursor, end);
+ }
+-function validateActions(actions, { allowPreserveOnly = false } = {}) {
++export function resolveOriginalProfile(actions, requested) {
++  const inferred = actions?.some(a => a.action === 'refine') ? 'original-ui-refinement-v1' : 'original-preserving-v1';
++  if (requested !== undefined && ![inferred, COMPOSITION_PROFILE].includes(requested)) fail('ORIGINAL_PROFILE_INVALID', 'Profile must match the action set or explicitly select original composition');
++  return requested ?? inferred;
++}
++function validateActions(actions, { allowPreserveOnly = false, executionProfile } = {}) {
++  const profile = resolveOriginalProfile(actions, executionProfile);
+   if (!Array.isArray(actions) || !actions.length || actions.length > 32) fail('ORIGINAL_ACTIONS_REQUIRED', 'One to 32 explicit source actions required');
+   const ids = new Set();
+   for (const action of actions) {
+@@ -72,7 +79,7 @@ function validateActions(actions, { allowPreserveOnly = false } = {}) {
+     } else if (loc.kind !== 'element-path' || Object.keys(loc).sort().join(',') !== 'indices,kind' || !path(loc.indices)) fail('ORIGINAL_LOCATOR_INVALID', 'Only an exact original element path is accepted');
+   }
+   if (!allowPreserveOnly && actions.every(a => a.action === 'preserve')) fail('ORIGINAL_NO_CHANGE', 'A derivative needs an actual change');
+-  if (actions.some(a => a.action === 'refine') && actions.some(a => !['refine', 'preserve'].includes(a.action))) fail('ORIGINAL_REFINEMENT_PROFILE', 'UI refinement permits only refine and preserve; functional edits require a separate contract');
++  if (profile !== COMPOSITION_PROFILE && actions.some(a => a.action === 'refine') && actions.some(a => !['refine', 'preserve'].includes(a.action))) fail('ORIGINAL_REFINEMENT_PROFILE', 'UI refinement permits only refine and preserve; functional edits require a separate contract');
+ }
+ 
+ // Retain source spelling and every nonvisual byte. Only entire class/style
+@@ -191,7 +198,7 @@ async function verifyRefinementInPage(page, html, action, range, replacement) {
+ }
+ 
+ export async function locateOriginalEditRanges(base, actions, options = {}) {
+-  const html = text(base); validateActions(actions, { allowPreserveOnly: options.allowPreserveOnly === true }); const tokens = tokensOf(html);
++  const html = text(base); validateActions(actions, { allowPreserveOnly: options.allowPreserveOnly === true, executionProfile: options.executionProfile }); const tokens = tokensOf(html);
+   const marker = `data-luca-internal-${randomBytes(12).toString('hex')}`;
+   return session(options, async page => {
+     const { ranges } = await prepareInPage(page, html, actions, tokens, marker);
+@@ -199,8 +206,13 @@ export async function locateOriginalEditRanges(base, actions, options = {}) {
+   });
+ }
+ 
+-export async function verifyOriginalEditedOutput({ base, output, actions, edits }, options = {}) {
+-  const html = text(base), actual = text(output); validateActions(actions);
++export async function verifyOriginalEditedOutput({ base, output, actions, edits, executionProfile, behaviorBindings }, options = {}) {
++  const html = text(base); text(output);
++  const profile = resolveOriginalProfile(actions, executionProfile), composed = profile === COMPOSITION_PROFILE;
++  if (!composed && behaviorBindings !== undefined) fail('ORIGINAL_PROFILE_INVALID', 'Behavior bindings require explicit composition');
++  if (composed) prepareBehaviorBindings(behaviorBindings, { actions });
++  const editedOutput = composed ? removeBoundBehavior(output, behaviorBindings) : output;
++  const actual = text(editedOutput); validateActions(actions, { executionProfile: profile, allowPreserveOnly: composed });
+   const changing = actions.filter(a => a.action !== 'preserve');
+   if (!Array.isArray(edits) || edits.length !== changing.length || new Set(edits.map(x => x.action_id)).size !== edits.length) fail('ORIGINAL_EDIT_SET', 'Exactly one edit for every modifying action required');
+   for (const edit of edits) {
+@@ -227,13 +239,21 @@ export async function verifyOriginalEditedOutput({ base, output, actions, edits
+       return { ...range, from: action.action === 'add' ? range.closeStart : range.openEnd, to: range.closeStart, replacement: edit.html };
+     }).sort((a, b) => a.from - b.from);
+     let expected = '', markedAfter = '', cursor = 0;
+-    for (const item of substitutions) { expected += html.slice(cursor, item.from) + item.replacement; markedAfter += annotatedSlice(html, tokens, marker, cursor, item.from) + item.replacement; cursor = item.to; }
++    for (const item of substitutions) {
++      expected += html.slice(cursor, item.from) + item.replacement;
++      let markedReplacement = item.replacement;
++      if (actions.find(a => a.action_id === item.action_id).action === 'refine') {
++        const opening = tokensOf(item.replacement).find(t => !t.closing);
++        markedReplacement = item.replacement.slice(0, opening.nameEnd) + ` ${marker}="${item.token_id}"` + item.replacement.slice(opening.nameEnd);
++      }
++      markedAfter += annotatedSlice(html, tokens, marker, cursor, item.from) + markedReplacement; cursor = item.to;
++    }
+     expected += html.slice(cursor); markedAfter += annotatedSlice(html, tokens, marker, cursor, html.length);
+-    if (actual !== expected || !output.equals(Buffer.from(expected))) fail('ORIGINAL_OUTSIDE_EDIT_CHANGED', 'Output is not the original bytes plus only the declared local edits');
+-    if (output.equals(base)) fail('ORIGINAL_NO_CHANGE', 'Copying the original without a real edit is not a derivative');
++    if (actual !== expected || !editedOutput.equals(Buffer.from(expected))) fail('ORIGINAL_OUTSIDE_EDIT_CHANGED', 'Output is not the original bytes plus only the declared local edits');
++    if (!composed && output.equals(base)) fail('ORIGINAL_NO_CHANGE', 'Copying the original without a real edit is not a derivative');
+     const scriptsAndStyles = value => { const ts = tokensOf(value); return ts.filter(t => !t.closing && ['script', 'style'].includes(t.name)).map(t => { const end = ts[t.id + 1]; return value.slice(t.start, end.end); }); };
+     if (JSON.stringify(scriptsAndStyles(actual)) !== JSON.stringify(scriptsAndStyles(html))) fail('ORIGINAL_ACTIVE_CONTENT_CHANGED', 'Original scripts and styles must remain byte-identical');
+-    if (actions.some(a => a.action === 'refine')) {
++    if (!composed && actions.some(a => a.action === 'refine')) {
+       // Each complete replacement has already passed byte and contextual DOM
+       // equivalence. Preserve actions and all non-target bytes remain exact.
+       return { status: 'PASS', profile: 'original-ui-refinement-v1', input_sha256: sha(base), output_sha256: sha(output), unchanged_outside_targets: true, business_dom_preserved: true, original_scripts_styles_preserved: true, source_executed: false, semantic_acceptance: 'PENDING_INDEPENDENT_REVIEW' };
+@@ -257,6 +277,13 @@ export async function verifyOriginalEditedOutput({ base, output, actions, edits
+         const left = all(a).filter(n => n.getAttribute(marker) === id), right = all(b).filter(n => n.getAttribute(marker) === id);
+         if (left.length !== 1 || (action.action === 'remove' ? right.length !== 0 : right.length !== 1)) return { ok: false, reason: 'target identity changed or escaped' };
+         if (action.action === 'preserve') { if (!equal(withoutMarkers(left[0]), withoutMarkers(right[0]))) return { ok: false, reason: 'preserve changed' }; continue; }
++        if (action.action === 'refine') {
++          // Exact nonvisual bytes and contextual DOM were checked above. Mask
++          // this entire disjoint scope so other structural edits still get QA.
++          left[0].replaceWith(a.createComment(`refine:${id}`));
++          right[0].replaceWith(b.createComment(`refine:${id}`));
++          continue;
++        }
+         if (action.action === 'remove') left[0].remove();
+         else {
+           if (equal(withoutMarkers(left[0]), withoutMarkers(right[0]))) return { ok: false, reason: 'no actual DOM change' };
+@@ -268,6 +295,8 @@ export async function verifyOriginalEditedOutput({ base, output, actions, edits
+       return { ok: equal(a, b), reason: 'outside DOM must match after masking authorized edits, including hidden template content' };
+     }, { before: marked, after: markedAfter, marker, actions, ranges });
+     if (!dom.ok) fail('ORIGINAL_DOM_SCOPE_VIOLATION', dom.reason);
+-    return { status: 'PASS', input_sha256: sha(base), output_sha256: sha(output), unchanged_outside_targets: true, original_scripts_styles_preserved: true, source_executed: false, semantic_acceptance: 'PENDING_INDEPENDENT_REVIEW' };
++    return { status: 'PASS', profile, input_sha256: sha(base), output_sha256: sha(output),
++      ...(composed ? { unchanged_outside_contract: true, bound_behavior_sha256: behaviorBindings.map(b => sha(b.bytes)), behavior_acceptance: 'PENDING_INDEPENDENT_REVIEW' } : { unchanged_outside_targets: true }),
++      original_scripts_styles_preserved: true, source_executed: false, semantic_acceptance: 'PENDING_INDEPENDENT_REVIEW' };
+   });
+ }
+diff --git a/scripts/page-context.mjs b/scripts/page-context.mjs
+index 01cb7c9..50eebf5 100644
+--- a/scripts/page-context.mjs
++++ b/scripts/page-context.mjs
+@@ -540,12 +540,14 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
+   const facts = new Map(sourceItems.map(item => [item.id, item]));
+   if (record.reviewed_source_ids.length !== facts.size || record.reviewed_source_ids.some(id => !facts.has(id))) fail('ADAPTATION_SOURCE_COVERAGE', 'Review every current source item, including preserve constraints');
+   const source = await readPageSource(page, { root });
++  const composition = record.execution_profile === 'original-composition-v1';
++  if (composition && !page.original_copy) fail('ORIGINAL_PROFILE_INVALID', 'Composition is opt-in for registered originals only');
+   const pairs = new Set();
+   const originalActions = new Map();
+   const staticActions = new Map();
+   const mixedRefine = record.judgments.some(item => item.action === 'refine') && record.judgments.some(item => !['refine', 'preserve'].includes(item.action));
+-  if (mixedRefine && record.decision === 'ready') fail('ORIGINAL_REFINEMENT_PROFILE', 'Refinement cannot mix structural actions within one executable profile');
+-  let unresolved = mixedRefine;
++  if (mixedRefine && !composition && record.decision === 'ready') fail('ORIGINAL_REFINEMENT_PROFILE', 'Refinement cannot mix structural actions within one executable profile');
++  let unresolved = mixedRefine && !composition;
+   for (const judgment of record.judgments) {
+     const fact = facts.get(judgment.source_id);
+     if (!fact || fact.text !== judgment.excerpt || !fact.required_states.includes(judgment.state_id)) fail('ADAPTATION_SOURCE_EVIDENCE', 'Use the complete source text and an applicable state');
+@@ -581,7 +583,9 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
+         if (!staticActions.has(actionKey)) staticActions.set(actionKey, { action_id: `DRAFT-${staticActions.size + 1}`, action: judgment.action, [judgment.action === 'add' ? 'slot_id' : 'module_id']: judgment.location.target_id });
+       }
+     }
+-    unresolved ||= judgment.confidence !== 'high' || judgment.alternatives.length > 0 || judgment.state_status !== 'supported';
++    const plannedExtension = composition && judgment.state_status === 'extension';
++    if (judgment.state_status === 'extension' && !composition) fail('ORIGINAL_PROFILE_INVALID', 'Planned behavior extensions require explicit original composition');
++    unresolved ||= judgment.confidence !== 'high' || judgment.alternatives.length > 0 || (!plannedExtension && judgment.state_status !== 'supported');
+   }
+   if (sourceItems.some(item => item.required_states.some(state => !pairs.has(`${item.id}:${state}`)))) fail('ADAPTATION_SOURCE_COVERAGE', 'Every source item and applicable state needs a placement/conflict judgment');
+   if (page.original_copy) {
+@@ -590,7 +594,7 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
+       // Multiple source/state judgments can describe one action. Distinct
+       // actions must remain distinct, so conflicting or nested ranges cannot
+       // report ready merely because each position exists in isolation.
+-      await locateOriginalEditRanges(source.bytes, [...originalActions.values()], { browser, allowPreserveOnly: true });
++      await locateOriginalEditRanges(source.bytes, [...originalActions.values()], { browser, allowPreserveOnly: true, executionProfile: record.execution_profile });
+     } catch (error) {
+       if (record.decision === 'ready' || !['ORIGINAL_ACTION_OVERLAP', 'ORIGINAL_REFINEMENT_PROFILE', 'ORIGINAL_ACTIONS_REQUIRED'].includes(error.code)) throw error;
+       unresolved = true;
+@@ -609,7 +613,7 @@ export async function validateAdaptationDraft(catalog, record, { root = repoRoot
+ 
+   if (record.decision === 'ready' && unresolved) fail('MATCH_AMBIGUOUS', 'Resolve unknown states, uncertain positions, and alternatives before ready');
+   if (record.decision === 'reference_only' && record.judgments.some(item => item.confidence !== 'no_match' || item.alternatives.length)) fail('MATCH_DECISION_CONFLICT', 'Reference-only cannot hide unresolved template adoption');
+-  return { schema_version: 1, mode: 'adaptation_draft', status: record.decision === 'ready' ? 'ADAPTATION_READY' : record.decision === 'needs_context' ? 'NEEDS_CONTEXT' : 'REFERENCE_ONLY', source_revision_sha256: revision, binding_allowed: false, execution_allowed: false, semantic_verification: 'model-reviewed-not-machine-proven', execution_path: page.original_copy ? 'original_adapter' : page.carrier_eligible ? 'structural_carrier' : 'reference_only', reason: record.reason };
++  return { schema_version: 1, mode: 'adaptation_draft', status: record.decision === 'ready' ? 'ADAPTATION_READY' : record.decision === 'needs_context' ? 'NEEDS_CONTEXT' : 'REFERENCE_ONLY', source_revision_sha256: revision, binding_allowed: false, execution_allowed: false, ...(composition ? { execution_profile: record.execution_profile, behavior_acceptance: 'PENDING_SOURCE_BINDING_AND_REVIEW' } : {}), semantic_verification: 'model-reviewed-not-machine-proven', execution_path: page.original_copy ? 'original_adapter' : page.carrier_eligible ? 'structural_carrier' : 'reference_only', reason: record.reason };
+ }
+ 
+ export async function validateCarrierBindingDraft(catalog, record, { root = repoRoot, packetBody } = {}) {
+diff --git a/scripts/test-page-context.mjs b/scripts/test-page-context.mjs
+index b5df2da..222ec0e 100644
+--- a/scripts/test-page-context.mjs
++++ b/scripts/test-page-context.mjs
+@@ -181,6 +181,8 @@ try {
+   assert.equal(adaptationResult.execution_allowed, false);
+   assert.equal('frozen_packet' in adaptationResult, false);
+   await assert.rejects(validateAdaptationDraft(carrierCatalog, adaptation, { root }), { code: 'DESIGN_SOURCE_REQUIRED' });
++  await assert.rejects(validateAdaptationDraft(carrierCatalog, { ...adaptation, execution_profile: 'original-composition-v1' }, { root, sourceItems }), { code: 'ORIGINAL_PROFILE_INVALID' });
++  await assert.rejects(validateAdaptationDraft(carrierCatalog, { ...adaptation, judgments: [{ ...adaptation.judgments[0], state_status: 'extension' }] }, { root, sourceItems }), { code: 'ORIGINAL_PROFILE_INVALID' });
+   for (const [change, code] of [
+     [draft => { draft.source_revision_sha256 = '0'.repeat(64); }, 'STALE_ADAPTATION_SOURCE'],
+     [draft => { draft.catalog_sha256 = '0'.repeat(64); }, 'STALE_MATCH_CATALOG'],
+diff --git a/scripts/test-plan-approval.mjs b/scripts/test-plan-approval.mjs
+index 7b9354a..63caa3b 100644
+--- a/scripts/test-plan-approval.mjs
++++ b/scripts/test-plan-approval.mjs
+@@ -18,7 +18,7 @@ writeFileSync(plan, '# Exact plan\n\nplan_id: plan-test-approval-001\n');
+ const sha = () => createHash('sha256').update(readFileSync(plan)).digest('hex');
+ const valid = () => ({ approved: true, plan_id: planId, plan_path: plan, plan_sha256: sha(), scope, effects, confirmed_at: '2026-10-07T00:00:00Z', confirmed_by: 'user' });
+ function run(payload, extra = []) { writeFileSync(approval, JSON.stringify(payload)); return spawnSync(process.execPath, ['scripts/check-plan-approval.mjs', '--plan', plan, '--approval', approval, '--plan-id', planId, '--scope', scope, ...effects.flatMap((x) => ['--effect', x]), ...extra], { cwd: root, encoding: 'utf8' }); }
+-function pass(payload) { const result = run(payload); assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /"status":"PASS"/); }
++function pass(payload) { const result = run(payload); assert.equal(result.status, 0, result.stderr); const binding = JSON.parse(result.stdout); assert.equal(binding.status, 'BINDING_VALID'); assert.equal(binding.authorization, 'NOT_VERIFIED'); assert.ok(binding.required_evidence); }
+ function fail(payload, pattern) { const result = run(payload); assert.equal(result.status, 1, result.stderr); assert.match(result.stderr, pattern); }
+ try {
+   pass(valid());
+@@ -27,9 +27,15 @@ try {
+   fail({ ...valid(), effects: ['write:framework-audit'] }, /git:commit/);
+   fail({ ...valid(), confirmed_by: 'agent' }, /confirmed_by/);
+   fail({ ...valid(), approved: false }, /approved/);
++  // Even this caller-fabricated fixture can prove only consistency, never consent.
++  pass({ ...valid(), confirmed_at: new Date(Date.now() - 1000).toISOString() });
++  fail({ ...valid(), confirmed_at: '2099-01-01T00:00:00Z' }, /future/);
++  fail({ ...valid(), confirmed_at: '2026-02-30T00:00:00Z' }, /valid UTC ISO/);
++  fail({ ...valid(), confirmed_at: '2026-10-07' }, /valid UTC ISO/);
++  fail({ ...valid(), effects: [...effects, null] }, /non-empty strings/);
+   symlinkSync(plan, planLink);
+   const linked = spawnSync(process.execPath, ['scripts/check-plan-approval.mjs', '--plan', planLink, '--approval', approval, '--plan-id', planId, '--scope', scope, ...effects.flatMap((x) => ['--effect', x])], { cwd: root, encoding: 'utf8' });
+   assert.equal(linked.status, 1);
+   assert.match(linked.stderr, /canonical regular file/);
+-  console.log('PASS plan approval: exact path, SHA, scope, effects, timestamp and user confirmation');
++  console.log('PASS plan binding: exact path/SHA/scope/effects and valid past timestamp; fabricated records remain authorization NOT_VERIFIED');
+ } finally { rmSync(dir, { recursive: true, force: true }); }
+diff --git a/scripts/original-composition.mjs b/scripts/original-composition.mjs
+new file mode 100644
+index 0000000..b9b55c8
+--- /dev/null
++++ b/scripts/original-composition.mjs
+@@ -0,0 +1,83 @@
++import { parse as parseJavaScript } from 'acorn';
++import { parse as parseHtml } from 'parse5';
++import { sha256Bytes, fileRecord } from './carrier-asset-profile.mjs';
++
++export const COMPOSITION_PROFILE = 'original-composition-v1';
++const fail = (message) => { throw Object.assign(new Error(message), { code: 'ORIGINAL_BEHAVIOR_INVALID' }); };
++const token = value => typeof value === 'string' && /^[A-Za-z][\w.-]{0,79}$/.test(value);
++const nonempty = value => typeof value === 'string' && value.trim().length > 0;
++const uniqueStrings = value => Array.isArray(value) && value.length > 0 && value.length <= 64
++  && value.every(nonempty) && new Set(value).size === value.length;
++
++// These checks establish a closed transport format, not code safety, consent or
++// a runtime sandbox. The caller reviews exact code before freezing this input.
++export function prepareBehaviorBindings(bindings, { actions, factIds } = {}) {
++  if (!Array.isArray(bindings) || !bindings.length || bindings.length > 8) fail('Composition needs one to eight explicit behavior bindings');
++  const ids = new Set();
++  const files = [], records = [];
++  let total = 0;
++  for (const binding of bindings) {
++    const keys = ['id', 'source_ids', 'source_ref', 'mount_action_id', 'acceptance_ids', 'bytes'];
++    if (!binding || Object.keys(binding).length !== keys.length || !keys.every(k => Object.hasOwn(binding, k))
++      || !token(binding.id) || ids.has(binding.id) || !nonempty(binding.source_ref)
++      || !token(binding.mount_action_id) || !uniqueStrings(binding.source_ids) || !uniqueStrings(binding.acceptance_ids)
++      || !Buffer.isBuffer(binding.bytes) || !binding.bytes.length || binding.bytes.length > 512 * 1024) fail('Closed, unique, source-bound behavior bytes and acceptance IDs required');
++    ids.add(binding.id); total += binding.bytes.length;
++    if (total > 1024 * 1024) fail('Behavior closure exceeds 1 MiB');
++    if (actions && !actions.some(a => a.action_id === binding.mount_action_id && ['add', 'modify', 'preserve'].includes(a.action))) fail('Behavior mount must bind a declared original action');
++    if (factIds && binding.source_ids.some(id => !factIds.includes(id))) fail('Behavior cites an unknown frozen source ID');
++    const code = binding.bytes.toString('utf8');
++    if (!Buffer.from(code).equals(binding.bytes) || /\0|<\/script\b|<!--|-->/i.test(code)) fail('Classic script bytes must be UTF-8 without HTML parser control sequences');
++    let tree;
++    try { tree = parseJavaScript(code, { ecmaVersion: 'latest', sourceType: 'script' }); }
++    catch { fail('Self-contained classic JavaScript required'); }
++    const visit = node => {
++      if (!node || typeof node !== 'object') return;
++      if (node.type === 'ImportExpression') fail('External module closures are unsupported');
++      for (const value of Object.values(node)) if (Array.isArray(value)) value.forEach(visit); else if (value && typeof value === 'object') visit(value);
++    };
++    visit(tree);
++    const path = `input/behavior/${binding.id}.js`;
++    const { bytes, ...mapping } = binding;
++    records.push({ ...mapping, path, sha256: sha256Bytes(bytes), byte_length: bytes.length });
++    files.push({ ...fileRecord(path, 'text/javascript; charset=utf-8', bytes), bytes: Buffer.from(bytes) });
++  }
++  return { records, files };
++}
++
++export function restoreBehaviorBindings(records, files, options) {
++  if (!Array.isArray(records)) fail('Frozen behavior records required');
++  const bindings = records.map(record => {
++    if (!record || Object.keys(record).sort().join(',') !== 'acceptance_ids,byte_length,id,mount_action_id,path,sha256,source_ids,source_ref') fail('Frozen behavior record schema changed');
++    const file = files.find(file => file.path === record.path);
++    if (!file || !Buffer.isBuffer(file.bytes) || record.path !== `input/behavior/${record.id}.js`
++      || file.bytes.length !== record.byte_length || sha256Bytes(file.bytes) !== record.sha256) fail('Frozen behavior file missing or changed');
++    const { path, sha256, byte_length, ...mapping } = record;
++    return { ...mapping, bytes: file.bytes };
++  });
++  prepareBehaviorBindings(bindings, options);
++  return bindings;
++}
++
++function bodyEnd(html) {
++  const doc = parseHtml(html, { sourceCodeLocationInfo: true });
++  const body = doc.childNodes.find(node => node.tagName === 'html')?.childNodes.find(node => node.tagName === 'body');
++  const offset = body?.sourceCodeLocation?.endTag?.startOffset;
++  if (!Number.isInteger(offset)) fail('Composition requires an explicit original body end tag');
++  return offset;
++}
++function extension(bindings) {
++  prepareBehaviorBindings(bindings);
++  return bindings.map(binding => `\n<script data-luca-behavior="${binding.id}">${binding.bytes.toString('utf8')}</script>`).join('') + '\n';
++}
++
++export function appendBoundBehavior(output, bindings) {
++  const html = output.toString('utf8'), at = bodyEnd(html);
++  return Buffer.from(html.slice(0, at) + extension(bindings) + html.slice(at));
++}
++
++export function removeBoundBehavior(output, bindings) {
++  const html = output.toString('utf8'), at = bodyEnd(html), suffix = extension(bindings);
++  if (html.slice(at - suffix.length, at) !== suffix) fail('Output must embed every exact frozen behavior once, in order, at the body-end seam');
++  return Buffer.from(html.slice(0, at - suffix.length) + html.slice(at));
++}
+diff --git a/scripts/test-original-composition.mjs b/scripts/test-original-composition.mjs
+new file mode 100644
+index 0000000..503c065
+--- /dev/null
++++ b/scripts/test-original-composition.mjs
+@@ -0,0 +1,185 @@
++import assert from 'node:assert/strict';
++import { readFile } from 'node:fs/promises';
++import { chromium } from 'playwright';
++import { canonicalJson, sha256Bytes as hash } from './carrier-asset-profile.mjs';
++import { createCarrierPacket } from './carrier-packet.mjs';
++import { locateOriginalEditRanges, verifyOriginalEditedOutput } from './original-template-edits.mjs';
++import { appendBoundBehavior, prepareBehaviorBindings } from './original-composition.mjs';
++import { prepareOriginalCopyHandoff, confirmOriginalCopyHandoff, verifyOriginalStage, authorizeOriginalOperation, recoverOriginalOutput } from './original-copy-handoff.mjs';
++import { loadCatalog, computeCatalogHash, computeDesignSourceRevision, validateAdaptationDraft } from './page-context.mjs';
++import { locateOriginalNode } from './original-template-index.mjs';
++
++// NO_PIN framework fixture. Real registered original; synthetic business modules
++// and simulated OD transport/authority. No external service or real grant used.
++const base = await readFile(new URL('../.claude/skill-os/page-library/sources/originals/crm-workbench-home.html', import.meta.url));
++assert.equal(hash(base), '7a30a15978929ede4177e213f1090cb4d3860e5b2ef33509434cfff7879631e5');
++const executionProfile = 'original-composition-v1';
++const common = { scope: [], confidence: 'high', rationale: 'Exact registered original fixture location.', alternatives: [] };
++const action = (id, kind, target, source_ids) => ({ ...common, action_id: id, action: kind, locator: { kind: 'attribute', name: 'id', value: target }, source_ids });
++const navIds = Array.from({ length: 6 }, (_, i) => `NAV-${i + 1}`);
++const actions = [action('NAV', 'add', 'crmMenuList', navIds), action('MOUNT', 'add', 'workspaceCard', ['STATE-RETAIN', 'KEYBOARD']), action('VIS', 'refine', 'activeTab', ['VISUAL']), action('KEEP', 'preserve', 'agentPanel', ['ORIGINAL-NAV'])];
++const packetBody = createCarrierPacket({ schema_version: 1, packet_kind: 'design-generation', items: [...navIds, 'STATE-RETAIN', 'KEYBOARD', 'VISUAL', 'ORIGINAL-NAV'].map(id => ({ source_kind: 'decision', id, text: `Synthetic framework acceptance ${id}; preserve other original behavior.` })), scopes: [] });
++const bridge = Buffer.from(`(() => {
++  const menu = document.getElementById('crmMenuList');
++  const mount = document.getElementById('workspaceCard');
++  const group = document.getElementById('fixture-workspaces');
++  const original = [...mount.children].filter(node => node !== group);
++  menu.addEventListener('click', event => {
++    const button = event.target.closest('.crm-menu-item');
++    if (!button) return;
++    group.hidden = !button.dataset.fixtureRoute;
++    original.forEach(node => { node.hidden = !group.hidden; });
++    group.querySelectorAll('[data-fixture-panel]').forEach(panel => {
++      panel.hidden = panel.dataset.fixturePanel !== button.dataset.fixtureRoute;
++    });
++  });
++  group.addEventListener('click', event => {
++    if (event.target.matches('[data-fixture-increment]')) {
++      const output = event.target.nextElementSibling;
++      output.textContent = String(Number(output.textContent) + 1);
++    }
++  });
++})();`);
++const binding = { id: 'fixture-bridge', source_ids: [...navIds, 'STATE-RETAIN', 'KEYBOARD'], source_ref: 'scripts/test-original-composition.mjs: synthetic source and integration fixture, not product code', mount_action_id: 'MOUNT', acceptance_ids: [...navIds, 'STATE-RETAIN', 'KEYBOARD', 'ORIGINAL-NAV'], bytes: bridge };
++const behaviorBindings = [binding];
++const browser = await chromium.launch({ headless: true });
++try {
++  const catalog = await loadCatalog(), page = catalog.pages.find(p => p.page_id === 'crm-workbench-home');
++  const sourceItems = [{ id: 'DRAFT-NAV', text: 'Add six business modules to this original.', required_states: ['fixture-extension'] }, { id: 'DRAFT-VIS', text: 'Refine the existing title without changing its behavior.', required_states: [page.states[0]] }];
++  const judgments = [];
++  for (const [index, target] of ['MOUNT', 'VIS'].entries()) {
++    const act = actions.find(a => a.action_id === target), source = sourceItems[index];
++    const located = await locateOriginalNode(base, { source_sha256: hash(base), scope: act.scope, locator: act.locator }, { browser });
++    judgments.push({ source_id: source.id, excerpt: source.text, state_id: source.required_states[0], action: act.action, location: { scope: act.scope, locator: act.locator, label: located.node.label }, purpose_excerpt: page.intent, location_evidence: 'Actual original unique location.', state_evidence: index ? 'Existing title state retained.' : 'Explicitly planned fixture integration; code and behavior acceptance still pending.', state_status: index ? 'supported' : 'extension', confidence: 'high', alternatives: [] });
++  }
++  const draft = { schema_version: 1, mode: 'adaptation_draft', source_revision_sha256: computeDesignSourceRevision(sourceItems), catalog_sha256: computeCatalogHash(catalog), page_id: page.page_id, source_hash: page.source_hash, execution_profile: executionProfile, decision: 'ready', reason: 'Source-bound planned composition, not executable authority.', reviewed_source_ids: sourceItems.map(s => s.id), judgments };
++  const ready = await validateAdaptationDraft(catalog, draft, { sourceItems, browser });
++  assert.equal(ready.status, 'ADAPTATION_READY'); assert.equal(ready.execution_allowed, false); assert.equal(ready.binding_allowed, false);
++  assert.equal(ready.behavior_acceptance, 'PENDING_SOURCE_BINDING_AND_REVIEW');
++  const { execution_profile, ...legacyDraft } = draft;
++  await assert.rejects(validateAdaptationDraft(catalog, legacyDraft, { sourceItems, browser }), { code: 'ORIGINAL_REFINEMENT_PROFILE' });
++  for (const [change, code] of [[d => { d.judgments[0].state_status = 'unknown'; }, 'MATCH_AMBIGUOUS'], [d => { d.judgments[0].confidence = 'uncertain'; }, 'MATCH_AMBIGUOUS'], [d => { d.judgments.pop(); }, 'ADAPTATION_SOURCE_COVERAGE'], [d => { d.source_hash = '0'.repeat(64); }, 'STALE_ADAPTATION_TEMPLATE']]) {
++    const changed = structuredClone(draft); change(changed);
++    await assert.rejects(validateAdaptationDraft(catalog, changed, { sourceItems, browser }), { code });
++  }
++  console.log('PASS composition draft: mixed actions/planned extension, all sources/states retained, unknowns rejected, execution stays false');
++  const locations = (await locateOriginalEditRanges(base, actions.map(({ action_id, action, scope, locator }) => ({ action_id, action, scope, locator })), { browser, executionProfile })).targets;
++  const nav = navIds.map((_, i) => `<li><button type="button" class="crm-menu-item" data-menu="Fixture ${i + 1}" data-fixture-route="${i + 1}">Fixture ${i + 1}</button></li>`).join('');
++  const panels = `<div id="fixture-workspaces" hidden>${navIds.map((_, i) => `<section data-fixture-panel="${i + 1}" hidden><h2>Module ${i + 1}</h2><input aria-label="Field ${i + 1}"><button type="button" data-fixture-increment>Increment</button><output>0</output></section>`).join('')}</div>`;
++  const vis = locations.find(r => r.action_id === 'VIS');
++  const visual = base.toString().slice(vis.start, vis.end).replace('id="activeTab"', 'id="activeTab" style="padding:12px"');
++  const edits = [{ action_id: 'NAV', html: nav }, { action_id: 'MOUNT', html: panels }, { action_id: 'VIS', html: visual }];
++  const build = chosen => {
++    let text = base.toString();
++    for (const edit of [...chosen].sort((a, b) => locations.find(r => r.action_id === b.action_id).start - locations.find(r => r.action_id === a.action_id).start)) {
++      const range = locations.find(r => r.action_id === edit.action_id), refine = edit.action_id === 'VIS';
++      const from = refine ? range.start : range.closeStart, to = refine ? range.end : range.closeStart;
++      text = text.slice(0, from) + edit.html + text.slice(to);
++    }
++    return Buffer.from(text);
++  };
++  const structural = build(edits), output = appendBoundBehavior(structural, behaviorBindings);
++  const plainActions = actions.map(({ action_id, action, scope, locator }) => ({ action_id, action, scope, locator }));
++  const verify = (candidate = output, extra = {}) => verifyOriginalEditedOutput({ base, output: candidate, actions: plainActions, edits, executionProfile, behaviorBindings, ...extra }, { browser });
++  const validation = await verify();
++  assert.equal(validation.profile, executionProfile);
++  assert.equal(validation.original_scripts_styles_preserved, true);
++  assert.equal(validation.source_executed, false);
++  assert.equal(validation.behavior_acceptance, 'PENDING_INDEPENDENT_REVIEW');
++  await assert.rejects(verify(output, { executionProfile: undefined }), { code: 'ORIGINAL_PROFILE_INVALID' });
++  await assert.rejects(verify(output, { behaviorBindings: undefined }), { code: 'ORIGINAL_BEHAVIOR_INVALID' });
++  await assert.rejects(verify(Buffer.from(output.toString().replace('Number(output.textContent) + 1', 'Number(output.textContent) + 2'))), { code: 'ORIGINAL_BEHAVIOR_INVALID' });
++  await assert.rejects(verify(Buffer.from(output.toString().replace('const STORAGE_KEY =', 'const CHANGED_STORAGE_KEY ='))), { code: 'ORIGINAL_OUTSIDE_EDIT_CHANGED' });
++  await assert.rejects(verify(Buffer.from(output.toString().replace('</body>', '<script>window.unbound=true</script></body>'))), { code: 'ORIGINAL_BEHAVIOR_INVALID' });
++  for (const fragment of ['<button onclick="window.unbound=true">Bad</button>', '<script>window.unbound=true</script>']) {
++    const unsafe = edits.map(e => e.action_id === 'MOUNT' ? { ...e, html: fragment } : e);
++    await assert.rejects(verify(appendBoundBehavior(build(unsafe), behaviorBindings), { edits: unsafe }), { code: 'ACTIVE_CONTENT_FORBIDDEN' });
++  }
++  const external = edits.map(e => e.action_id === 'MOUNT' ? { ...e, html: '<img src="https://example.invalid/asset.png">' } : e);
++  await assert.rejects(verify(appendBoundBehavior(build(external), behaviorBindings), { edits: external }), { code: 'ORIGINAL_ASSETS_REQUIRED' });
++  const paragraph = Buffer.from('<html><body><p id="edit">Before</p><aside>Keep</aside></body></html>');
++  const paragraphAction = [{ action_id: 'MOUNT', action: 'modify', scope: [], locator: { kind: 'attribute', name: 'id', value: 'edit' } }];
++  await assert.rejects(verifyOriginalEditedOutput({ base: paragraph, output: appendBoundBehavior(Buffer.from(paragraph.toString().replace('Before', '<figure>escape</figure>')), behaviorBindings), actions: paragraphAction, edits: [{ action_id: 'MOUNT', html: '<figure>escape</figure>' }], executionProfile, behaviorBindings }, { browser }), { code: 'ORIGINAL_DOM_SCOPE_VIOLATION' });
++  for (const bytes of [Buffer.from('import("https://example.invalid/module.js")'), Buffer.from('import x from "./module.js"'), Buffer.from('"</script>"'), Buffer.from('const = invalid')]) assert.throws(() => prepareBehaviorBindings([{ ...binding, bytes }]), { code: 'ORIGINAL_BEHAVIOR_INVALID' });
++  assert.throws(() => prepareBehaviorBindings([{ ...binding, mount_action_id: 'UNKNOWN' }], { actions }), { code: 'ORIGINAL_BEHAVIOR_INVALID' });
++  assert.throws(() => prepareBehaviorBindings([{ ...binding, source_ids: ['UNKNOWN'] }], { factIds: navIds }), { code: 'ORIGINAL_BEHAVIOR_INVALID' });
++
++  const args = { pageId: 'crm-workbench-home', packetBody, target: { tool: 'od', projectId: 'composition-fixture' }, handoffId: 'six-menu-fixture', actions, executionProfile, behaviorBindings };
++  const bundle = await prepareOriginalCopyHandoff(args, { browser });
++  assert.equal(bundle.carrier_profile, executionProfile);
++  const manifest = JSON.parse(bundle.files.at(-1).bytes);
++  // The generated tool sees the transported contract, not our local helper
++  // implementation. Guard the missing instructions independently of DOM tests.
++  const contract = JSON.parse(bundle.files.find(f => f.path === 'control/original-adaptation.json').bytes);
++  for (const required of [/add appends edit\.html inside/, /modify replaces only its inner HTML/, /remove deletes the whole target node and requires empty edit\.html/, /preserve has no edit/, /refine uses the complete target outerHTML/, /only meaningful valid class\/style/, /Each non-preserve action needs exactly one/]) assert.match(contract.output.policy, required);
++  const readableContract = bundle.files.find(f => f.path === 'control/original-adaptation.md').bytes.toString();
++  assert.equal(JSON.parse(readableContract.match(/```json\n([\s\S]*?)\n```/)[1]).output.policy, contract.output.policy, 'Readable transported contract must carry the same complete instructions');
++  assert.equal(bundle.files.find(f => f.path === 'input/behavior/fixture-bridge.js').sha256, hash(bridge));
++  await assert.rejects(prepareOriginalCopyHandoff({ ...args, executionProfile: 'invented-profile' }, { browser }), { code: 'ORIGINAL_PROFILE_INVALID' });
++  await assert.rejects(prepareOriginalCopyHandoff({ ...args, behaviorBindings: [{ ...binding, source_ids: ['UNKNOWN'] }] }, { browser }), { code: 'ORIGINAL_BEHAVIOR_INVALID' });
++  const confirmed = confirmOriginalCopyHandoff(bundle, { actor: 'user', evidence: 'SIMULATED fixture-only; not real authority', confirmed_at: '2026-10-09T00:00:00Z', handoff_bundle_hash: bundle.handoff_bundle_hash, original_sha256: hash(base), tac_sha256: manifest.tac_sha256 });
++  const files = bundle.files.map(f => ({ path: `${bundle.namespace}/${f.path}`, bytes: f.bytes }));
++  const staged = verifyOriginalStage(confirmed, { tool: 'od', projectId: bundle.target.projectId, namespace: bundle.namespace, readRef: 'SIMULATED fixture readback', files, pre_inventory: [], post_inventory: files });
++  const extra = [{ path: `${bundle.namespace}/output/index.html`, bytes: output }, { path: `${bundle.namespace}/output/implementation-manifest.json`, bytes: Buffer.from(canonicalJson({ schema_version: 1, edits })) }];
++  for (const runtime of ['codex', 'claude']) {
++    const capabilityReceipt = { version: 1, kind: 'od-handoff-capability', status: 'PASS', runtime, receipt_ref: 'SIMULATED fixture', tool: 'od', project_id: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, output_profile: 'single', operations: ['stage', 'run', 'recover'] };
++    const grant = { tool: 'od', projectId: bundle.target.projectId, handoff_id: bundle.handoff_id, namespace: bundle.namespace, handoff_bundle_hash: bundle.handoff_bundle_hash, output_profile: 'single', messageRef: 'SIMULATED fixture', capabilityReceipt };
++    const run = authorizeOriginalOperation(confirmed, { ...grant, run: true, prompt_hash: hash(Buffer.from('fixture prompt')) }, 'run', { runtime, staged });
++    const recovery = authorizeOriginalOperation(confirmed, { ...grant, recover: true }, 'recover', { runtime, staged: run });
++    const readback = { tool: 'od', projectId: bundle.target.projectId, namespace: bundle.namespace, readRef: 'SIMULATED generated bytes', files: [...files, ...extra], post_inventory: [...files, ...extra], run: { run_id: `fixture-${runtime}`, handoff_id: bundle.handoff_id, prompt_hash: run.prompt_hash, status: 'succeeded' } };
++    const recovered = await recoverOriginalOutput(confirmed, run, readback, recovery, { browser });
++    assert.equal(recovered.mechanical_validation.profile, executionProfile);
++    assert.equal(recovered.semantic_acceptance, 'PENDING_INDEPENDENT_REVIEW');
++    await assert.rejects(recoverOriginalOutput(confirmed, run, { ...readback, run: { ...readback.run, status: 'canceled' } }, recovery, { browser }), { code: 'ORIGINAL_RUN_NOT_SUCCEEDED' });
++    await assert.rejects(recoverOriginalOutput(confirmed, run, { ...readback, files: readback.files.filter(f => !f.path.endsWith('/input/behavior/fixture-bridge.js')) }, recovery, { browser }));
++    console.log(`PASS simulated ${runtime} composition prepare/stage/run/recover integrity; no live OD or native consent claim`);
++  }
++
++  const drive = async (html, task) => {
++    const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
++    const requests = [], errors = [];
++    await context.route('**/*', route => {
++      if (route.request().url() === 'http://composition-fixture.test/') return route.fulfill({ contentType: 'text/html', body: html });
++      requests.push(route.request().url()); return route.abort();
++    });
++    const page = await context.newPage();
++    page.on('pageerror', e => errors.push(e.message));
++    context.on('page', p => { if (p !== page) errors.push('unexpected popup'); });
++    try { await page.goto('http://composition-fixture.test/'); await task(page); assert.deepEqual(requests, []); assert.deepEqual(errors, []); }
++    finally { await context.close(); }
++  };
++  const selected = async (page, id) => {
++    await page.locator(`[data-fixture-route="${id}"]`).click();
++    assert.equal(await page.locator(`[data-fixture-panel="${id}"]`).isVisible(), true, `NAV-${id}`);
++    assert.equal(await page.locator('[data-fixture-panel]:visible').count(), 1);
++  };
++  await drive(output, async page => {
++    const originalMenu = page.locator('.crm-menu-item').filter({ hasNot: page.locator('[data-fixture-route]') }).first();
++    const originalName = await originalMenu.getAttribute('data-menu');
++    assert.equal(await page.locator('#activeTab').textContent(), originalName);
++    for (let id = 1; id <= 6; id++) { await selected(page, id); console.log(`PASS NAV-${id}: click -> exactly one matching panel visible`); }
++    await selected(page, 1);
++    await page.getByRole('textbox', { name: 'Field 1', exact: true }).fill('retained value');
++    await page.locator('[data-fixture-panel="1"] button').click();
++    await selected(page, 6); await selected(page, 1);
++    assert.equal(await page.getByRole('textbox', { name: 'Field 1', exact: true }).inputValue(), 'retained value');
++    assert.equal(await page.locator('[data-fixture-panel="1"] output').textContent(), '1');
++    await page.locator('[data-fixture-route="2"]').focus(); await page.keyboard.press('Enter');
++    assert.equal(await page.locator('[data-fixture-panel="2"]').isVisible(), true);
++    await page.locator('#crmSearch').fill('Fixture 3');
++    assert.equal(await page.locator('[data-fixture-route="1"]').isVisible(), false);
++    assert.equal(await page.locator('[data-fixture-route="3"]').isVisible(), true);
++    await page.locator('#crmSearch').fill('');
++    await originalMenu.click();
++    assert.equal(await page.locator('#activeTab').textContent(), originalName);
++    assert.equal(await page.locator('#fixture-workspaces').isVisible(), false);
++    console.log('PASS STATE-RETAIN, KEYBOARD, ORIGINAL-NAV/search, RUNTIME-ERRORS');
++  });
++  const staticEdits = edits.filter(e => e.action_id !== 'VIS'), staticOutput = build(staticEdits);
++  assert.equal((await verifyOriginalEditedOutput({ base, output: staticOutput, actions: plainActions.filter(a => a.action_id !== 'VIS'), edits: staticEdits }, { browser })).status, 'PASS');
++  await assert.rejects(drive(staticOutput, page => selected(page, 1)), /NAV-1/);
++  const wrong = [{ ...binding, bytes: Buffer.from(bridge.toString().replace('panel.dataset.fixturePanel !== button.dataset.fixtureRoute', 'panel.dataset.fixturePanel !== "2"')) }];
++  await assert.rejects(drive(appendBoundBehavior(structural, wrong), page => selected(page, 1)), /NAV-1/);
++  assert.ok((await readFile(new URL('../.claude/skill-os/page-library/sources/originals/crm-workbench-home.html', import.meta.url))).equals(base));
++  console.log('PASS mutations: missing bridge (static integrity PASS, behavior FAIL), wrong navigation mapping (behavior FAIL), changed frozen bytes (integrity FAIL); original preserved');
++} finally { await browser.close(); }

@@ -420,11 +420,13 @@ Wave 3（U003+U005 完成后）: [U006]      ← 最终汇聚节点
 拓扑检查，直到没有残环。只要存在残环、未知依赖、自环、空图或未通过的外部依赖，就不能发布
 可执行 Wave，也不能把任一节点标为 ready。
 可执行图的机械检查使用：
-首次派发或 effect 前，调用方必须分别运行 `scripts/check-plan-approval.mjs`、
-`scripts/check-plan-identity.mjs` 和 `scripts/check-plan-graph.mjs`，并传入同一份精确计划、批准票、身份票、
-依赖图、scope、source identity、effect 和 `--require-no-external-blockers`。这些检查器只验证既有票据和图，
-不创建授权；任何子检查失败都必须保持 PLANNED 或 NEEDS_CONTEXT。当前仓库没有可信的 native approval
-receipt primitive，因此不能把普通 JSON 检查结果当作用户授权，也不得在没有该能力时接入首次派发。
+使用可执行依赖图时，首次派发或 effect 前核 `scripts/check-plan-identity.mjs` 和
+`scripts/check-plan-graph.mjs` 的同一精确计划、身份、scope、source identity 与
+`--require-no-external-blockers`；失败保持 PLANNED 或 NEEDS_CONTEXT。批准是否必需按下文
+「批准门」及所选入口合同判断；Sequential/Parallel 不因使用依赖图额外索取批准票。
+需要确认的入口还须按批准门核真实用户证据及 `scripts/check-plan-approval.mjs` 的绑定结果。
+普通 JSON 不创建授权；缺少自动可信批准适配器只阻断依赖它的无人值守派发，不阻断无需确认的
+准备动作或主控已经核实真人批准、范围匹配的执行。
 `node scripts/check-plan-graph.mjs --graph <精确JSON路径>`。输入必须包含 `plan_id`、与计划 SHA 绑定的 `plan_sha256`、非空
 `nodes[{id,dependencies}]` 和独立的 `external_dependencies[{node_id,source_ref,status}]`；外部
 依赖只有 `status: PASS` 才解除阻塞。检查器只返回拓扑顺序、层级、残环和阻塞外部依赖，不返回
@@ -596,10 +598,18 @@ fan-out 或首次不可逆 effect 之前取得真实用户确认。确认必须�
 `plan_sha256`、scope、effect 范围和确认时间；任一字段变化都使旧确认失效。计划输出、handoff、
 质量检查和增量重规划不会产生执行授权。没有 scope-matched 确认时只能保持 `PLANNED`，不得
 派发 Work Agent、写项目文件、提交、推送或执行外部操作。
-批准票据在首次 effect 前用以下检查器核验；调用方必须传入本次计划的精确绝对路径、稳定
+主控从当前可信会话或宿主核验的原生用户消息核对：用户看到了当前计划及 effect 范围，之后明确
+同意该范围，且没有后续撤回。保留原消息引用和展示/确认顺序；同一已确认 payload 无变化时复用，
+不重复提问。对话中仅有预先泛称「开始」、同伴消息、模型自报或另一计划的批准均不能替代该证据。
+若主控不能访问/核实来源，保持 NEEDS_CONTEXT；无人值守执行必须由可信适配器核源，当前无此
+适配器时该分支 BLOCKED。原生事件真实性也不自动证明它同意了这份计划。
+
+批准记录在首次 effect 前用以下检查器核验绑定；调用方必须传入本次计划的精确绝对路径、稳定
 `plan_id`、scope 和每个即将执行的 effect：
 `node scripts/check-plan-approval.mjs --plan <absolute-plan> --approval <absolute-approval.json> --plan-id <id> --scope <scope> --effect <effect>`。
-检查器只验证票据与计划身份、范围和时间的绑定，不创建授权；任何字段不匹配均保持 `PLANNED`。
+检查器只验证记录与计划身份、范围和有效历史时间的绑定，返回 `BINDING_VALID` 与
+`authorization=NOT_VERIFIED`；退出 0、`confirmed_by=user` 或文件 hash 都不证明真人批准。
+必须同时满足上面的真实来源核验；任何字段不匹配均保持 `PLANNED`。不得将检查器改作派发许可。
 恢复已有计划前另用身份检查器核对 `plan_id`、精确路径、`plan_sha256`、scope 和 source identity：
 `node scripts/check-plan-identity.mjs --plan <absolute-plan> --identity <absolute-identity.json> --plan-id <id> --scope <scope> --source-identity <source>`。
 路径或内容变化返回失败并保持 `NEEDS_CONTEXT`，不能按最新文件替代。

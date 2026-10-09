@@ -1,0 +1,84 @@
+{
+  "baseline": "5c4de8fb0f610684b7ef80e267674582f884c479",
+  "source_files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/.claude/agents/orchestrator.md",
+      "sha256": "49a6e09665db163c5a42b7974a05a4651ff2a1592211d5fa846ebea22747a0c1"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/.claude/agents/plan-agent.md",
+      "sha256": "8bdbe6debb64155bddae6f12821b2f488dcbf73ded15f8bbbe3522992df3e8f1"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/.claude/skill-os/page-library/schema.json",
+      "sha256": "df09b13ea6e3d23959d1c2e9e83d4fca890b6c7d10cecb8a767a9765bf13c202"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/.claude/skill-os/runtime/page-context.md",
+      "sha256": "0b05e15b46538dcf9c9b31f205d01f4f9c3586cc9bc133a1f531eb4c7197c844"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/.claude/skills/office/design-brief/references/input-contract.md",
+      "sha256": "cf3c668ef3d71c58d0c71253e30e48ab99be69e545052dbb2806925eecefbcfb"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/.claude/skills/office/implement/SKILL.md",
+      "sha256": "bf15d223d356179a21e3573ada58e628a6a4edd5c48c0d5f710bd33686df1d0e"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/.claude/skills/office/open-design/SKILL.md",
+      "sha256": "39d1d9e9ef7115b966eb606b0b3f7961b0ed5e55b61185ea842e5f9224bc7ea0"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/package.json",
+      "sha256": "6469028c9bce2adb0bd0998c3a131ac6f5d0795f0c2bc7c0806153709290da5d"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/check-agent-contracts.mjs",
+      "sha256": "90bbd1d917256b2bb9b2178f8554b5da10942805600e1dffe5538a67bd7fc606"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/check-plan-approval.mjs",
+      "sha256": "3bd69a31ca2fc3ee346a019b04c8ce103147fb00ee89f044b77d87380a76b05f"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/original-composition.mjs",
+      "sha256": "41ff72230226e6e4e14a1d0da0fb61ac2e276c17a5b3b10601c6fa19c03cc144"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/original-copy-handoff.mjs",
+      "sha256": "401100349ed0d752b8974f32a7803e5ba9c37dc89263d64ed81cb25c7305d159"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/original-template-edits.mjs",
+      "sha256": "efa16e0a74b8de95e8a825e915e56192f13b3fcc38a575b924698d717f0b3d8b"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/page-context.mjs",
+      "sha256": "8d4a3f284a99d6a84ed595f6802fa4b211169422afddc7f135e3a249c007582a"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/test-original-composition.mjs",
+      "sha256": "6eebb533e1d5b00014b04d5356e68ed70b16dedadb4fa70f49fea4e2d6d7bad6"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/test-page-context.mjs",
+      "sha256": "a59671f3a40b8d2cf17395fd62bebe45995a4c4a8557d5a7f43ff046ab4638b5"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/test-plan-approval.mjs",
+      "sha256": "69fc8bcf9027d828b0e6c478c9da04257e3e7982a1a57a165d5fc6739aa88a0f"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/.codex/workflow-runner.mjs",
+      "sha256": "ac3afd7584a60dfd36a214f8f0c80c9da68d6eabcb0f61b5078656c2bc9afd87"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/4841/luca_gstack/scripts/test-workflow-runner-runtime.mjs",
+      "sha256": "39a0a4d15fb8bd81810b0860dec0adedbed6dce0fbd83781be3fcd6591e7d8d8"
+    }
+  ],
+  "local_behavior": "real-source 12/12; runner 85/85; static/mutation design routing final PASS",
+  "independent_release_review": "SKIPPED_BY_USER",
+  "original_reviews": "raw original votes remain unchanged; no vote claimed for post-review delta"
+}

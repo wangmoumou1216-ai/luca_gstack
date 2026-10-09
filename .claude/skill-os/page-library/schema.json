@@ -328,6 +328,7 @@
         "state_status": {
           "enum": [
             "supported",
+            "extension",
             "unsupported",
             "unknown"
           ]
@@ -365,6 +366,7 @@
         "judgments"
       ],
       "properties": {
+        "execution_profile": { "const": "original-composition-v1" },
         "schema_version": {
           "const": 1
         },
