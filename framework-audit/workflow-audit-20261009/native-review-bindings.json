@@ -1,0 +1,149 @@
+{
+  "note": "Actual host accepted review invocations; task_id/agent_id and transcript evidence bind original votes. Not native product workflow success.",
+  "invocations": [
+    {
+      "invocation_id": "bfb7d65a-9c60-49d7-be5d-64391e5ded4a",
+      "route_id": "7e9e4ebc-20b5-4d47-bff8-eabb8186c8d9",
+      "task_id": "native:01a11f51-6ff3-7780-bfb3-8999471fc6a8:call_411144e93e364da6a72670a1b6661637",
+      "input_sha": "f29120357e419249bf4dc26bc8236a2a506bf2d2db5496385a9cbb5c72574ead",
+      "requested_role": "peak",
+      "route_harness": "codex-native",
+      "critical": true,
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_411144e93e364da6a72670a1b6661637",
+        "agent_type": "quality-gate",
+        "agent_id": "01a11f52-e52f-7200-938c-26a7efcafe90"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T14-21-28-01a11f52-e52f-7200-938c-26a7efcafe90.jsonl:01a11f52-e596-7d51-9f3c-640999b3c6b0"
+    },
+    {
+      "invocation_id": "4ed2a307-4265-4ba2-a510-c14ef40e7199",
+      "route_id": "3f1a38f4-c970-4d07-9ab6-26a42701ac2f",
+      "task_id": "native:01a11f51-6ff3-7780-bfb3-8999471fc6a8:call_9d830ec92dc74f629e7a1e909ce02080",
+      "input_sha": "22165e1bc44d65a095008ce937c1f44db60fba8623b4c4d0d96db0614718086d",
+      "requested_role": "peak",
+      "route_harness": "codex-native",
+      "critical": true,
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_9d830ec92dc74f629e7a1e909ce02080",
+        "agent_type": "quality-gate",
+        "agent_id": "01a11f54-c07f-7c30-9ecf-452b054385b8"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T14-23-30-01a11f54-c07f-7c30-9ecf-452b054385b8.jsonl:01a11f54-c0e1-7182-b49d-a191b5b7162e"
+    },
+    {
+      "invocation_id": "dc0d0fb2-c072-44b0-bd39-ee6bdfdc33e6",
+      "route_id": "fdc8896e-e601-421a-81f5-d02fcbf426f4",
+      "task_id": "native:01a11f51-6ff3-7780-bfb3-8999471fc6a8:call_e188f43563aa4d91ae5961390a353580",
+      "input_sha": "9f8661647ff877b9675468087b89c1584112977f403b3ddcbaadbe3a3a354260",
+      "requested_role": "peak",
+      "route_harness": "codex-native",
+      "critical": true,
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_e188f43563aa4d91ae5961390a353580",
+        "agent_type": "quality-gate",
+        "agent_id": "01a11f5a-07a2-72d1-bac3-4536a924306f"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T14-29-16-01a11f5a-07a2-72d1-bac3-4536a924306f.jsonl:01a11f5a-0805-73c3-af56-2c1f3ef5f446"
+    },
+    {
+      "invocation_id": "d60e19b2-e6d1-45f1-b3d1-ace80cd40fd5",
+      "route_id": "76c49536-05a9-44f6-8a47-0661265318b1",
+      "task_id": "native:01a11f51-6ff3-7780-bfb3-8999471fc6a8:call_49aa35b7c762450883313c82a3d0d573",
+      "input_sha": "4f99d2e3fe6d9574450d7d5e13c0afc612bcd354448974f4508f8bcb0b844de4",
+      "requested_role": "peak",
+      "route_harness": "codex-native",
+      "critical": true,
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_49aa35b7c762450883313c82a3d0d573",
+        "agent_type": "quality-gate",
+        "agent_id": "01a11f73-4f24-7000-a53a-fe639e5cd0fe"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T14-56-53-01a11f73-4f24-7000-a53a-fe639e5cd0fe.jsonl:01a11f73-4f8c-7ae1-85cf-bee443add972"
+    },
+    {
+      "invocation_id": "94f0902c-f619-489c-b1c3-deed3cf0fb9c",
+      "route_id": "16a1ec86-bd4d-43ff-acfe-f00e7e5197fd",
+      "task_id": "native:01a11f93-f273-73d0-a664-4d2e8c5c8913:call_bc4cd72ca4824ee2aa55d854a6cdb87a",
+      "input_sha": "6929586fc588283db33a8b1453c159e1a14880d50e719b772e1d53d9b5ebe5ef",
+      "requested_role": "peak",
+      "route_harness": "codex-native",
+      "critical": true,
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_bc4cd72ca4824ee2aa55d854a6cdb87a",
+        "agent_type": "quality-gate",
+        "agent_id": "01a11f95-dd9f-7d71-9ff6-73fc748f8c51"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-34-37-01a11f95-dd9f-7d71-9ff6-73fc748f8c51.jsonl:01a11f95-de01-76b2-a8a2-761f09825704"
+    },
+    {
+      "invocation_id": "f995fe54-6546-4795-a236-9d4b0b5e7047",
+      "route_id": "fabe9395-12fd-4786-bd62-ac3c254c8968",
+      "task_id": "native:01a11f93-f273-73d0-a664-4d2e8c5c8913:call_b18cf14a733f4d72bf6697017cd8437b",
+      "input_sha": "ab9288696d2d36c1e00b404f72737cab57f61f2f2c2de48e414b860c38c15266",
+      "requested_role": "peak",
+      "route_harness": "codex-native",
+      "critical": true,
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_b18cf14a733f4d72bf6697017cd8437b",
+        "agent_type": "quality-gate",
+        "agent_id": "01a11f98-b047-7650-85ba-4ec806aa50d7"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-37-42-01a11f98-b047-7650-85ba-4ec806aa50d7.jsonl:01a11f98-b0fb-7d32-8028-76c18c6bd7e0"
+    },
+    {
+      "invocation_id": "194a1300-1430-47de-aaf1-8bae8bb333b0",
+      "route_id": "16d9857b-9306-49a6-958b-c93e27156745",
+      "task_id": "native:01a11f93-f273-73d0-a664-4d2e8c5c8913:call_05d63ab3b2ab4d7fbe04e69140ab196f",
+      "input_sha": "5dfd514b3d8c012f073572882cff0481ea8cc7d6d22e83b652884ff1ea48b3cc",
+      "requested_role": "peak",
+      "route_harness": "codex-native",
+      "critical": true,
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_05d63ab3b2ab4d7fbe04e69140ab196f",
+        "agent_type": "quality-gate",
+        "agent_id": "01a11fa1-3b77-78d2-a1c8-894a707b7809"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T15-47-02-01a11fa1-3b77-78d2-a1c8-894a707b7809.jsonl:01a11fa1-3be3-77c2-9485-82ead60541c2"
+    },
+    {
+      "invocation_id": "3ea8440b-b871-423f-b0c3-802a18b76260",
+      "route_id": "d4f9b67e-8356-4c00-a536-48209224a036",
+      "task_id": "native:01a11f93-f273-73d0-a664-4d2e8c5c8913:call_025a6171075a4a5b988717e5c621533f",
+      "input_sha": "0ada08c5e48e1a6e68583a3581d3e49cce23ac8e3bf46cc0762e21eecececda2",
+      "requested_role": "peak",
+      "route_harness": "codex-native",
+      "critical": true,
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_025a6171075a4a5b988717e5c621533f",
+        "agent_type": "quality-gate",
+        "agent_id": "01a11fb2-3856-71b2-b835-d386ebc151bb"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T16-05-35-01a11fb2-3856-71b2-b835-d386ebc151bb.jsonl:01a11fb2-38b9-7ba2-ade7-91aab34d4af9"
+    },
+    {
+      "invocation_id": "50e11ac3-3f37-4e23-ba0f-602ea082aba2",
+      "route_id": "a9464f79-cc75-4d55-a22b-8a9826aba4e6",
+      "task_id": "native:01a11f93-f273-73d0-a664-4d2e8c5c8913:call_04c47177802646faac6983255a1f0811",
+      "input_sha": "a2821fdd37ea908f2c3cf476f475facbf7893cf4041cf4aa3744c48fbc7b6f94",
+      "requested_role": "peak",
+      "route_harness": "codex-native",
+      "critical": true,
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_04c47177802646faac6983255a1f0811",
+        "agent_type": "quality-gate",
+        "agent_id": "01a11fb8-a4d6-7a71-b2aa-506087b088a6"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/09/rollout-2026-10-09T16-12-36-01a11fb8-a4d6-7a71-b2aa-506087b088a6.jsonl:01a11fb8-a53d-7282-8503-7b92c59f842e"
+    }
+  ]
+}

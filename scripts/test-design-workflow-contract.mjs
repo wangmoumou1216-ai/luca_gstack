@@ -13,6 +13,9 @@ for (let i = 0; i < args.length; i++) {
   root = resolve(args[++i]);
 }
 const paths = {
+  orchestrator: '.claude/agents/orchestrator.md',
+  graph: '.claude/skill-os/optional-workflow-graph.yaml',
+  researchKit: '.claude/skills/office/research-kit/SKILL.md',
   brainstorm: '.claude/skills/office/brainstorm/SKILL.md',
   ux: '.claude/skills/office/ux-brainstorm/SKILL.md',
   prdReview: '.claude/skills/office/brainstorm/references/adversarial-review.md',
@@ -238,6 +241,23 @@ check('OD metadata source hash current', () => assert.equal(JSON.parse(sources.o
 check('adapter existing desktop hard refusal preserved', () => has(section(sources.original, 'export function reportOriginalGeneration', 'export async function recoverOriginalOutput'), /ORIGINAL_DESKTOP_UNSUPPORTED/));
 check('adapter existing successful exact run prerequisite preserved', () => has(sources.original, /readback[.]run[.]status !== 'succeeded'.*ORIGINAL_RUN_NOT_SUCCEEDED/));
 
+// Shared workflow boundary regression: static contracts, not native recovery evidence.
+check('resume loop includes last IN_PROGRESS without PENDING', () => has(sources.orchestrator, /WHILE 本次选定路径有 IN_PROGRESS 或 PENDING/));
+check('resume gates before successors and no repeated external effects', () => {
+  has(sources.orchestrator, /只有完成门未闭合时直接续 3.4d/);
+  has(sources.orchestrator, /有待续前置或依赖失败\/未知时，不派发其后继/);
+  has(sources.orchestrator, /不重跑 3.4c 的产物生成\/外部效果/);
+});
+check('historical nodes do not choose workflow', () => has(sources.orchestrator, /历史 workflow-state.*本身不激活流程/));
+check('engineering recommendation requires actual TS sources', () => {
+  has(sources.graph, /仅在 tech-spec 输入就绪时推荐整链.*正式 PRD\/Brief/s);
+  has(sources.graph, /conversation_synthesis.*完整 source_register/);
+  has(sources.graph, /只有代码\/改进意图.*实际需求 owner.*不自动生成 PRD\/CONV/s);
+});
+check('all research kit modes use actual shared handoff threshold', () => {
+  has(sources.researchKit, /runtime-estimate=12000.*standalone 终端交付也必须写 handoff/);
+  lacks(sources.researchKit, /standalone 终端交付免写|按 lightweight 豁免 DONE 合法/);
+});
 for (const [key, path] of Object.entries(paths)) check(`source stable ${path}`, () => assert.equal(sha(readFileSync(resolve(root, path), 'utf8')), hashes[path]));
 process.stdout.write(`RESULT ${passed}/${total} PASS; STATIC_ONLY_NOT_NATIVE\n`);
 process.exitCode = passed === total ? 0 : 1;

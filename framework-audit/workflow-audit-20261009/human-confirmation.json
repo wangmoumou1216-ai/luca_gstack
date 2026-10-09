@@ -1,0 +1,23 @@
+{
+  "plan_id": "WORKFLOW-AUDIT-20261009-01",
+  "plan_path": "/Users/luca/.codex/worktrees/7ede/luca_gstack/framework-audit/plans/2026-10-09-workflow-audit-plan.md",
+  "plan_sha256": "66bce40a3223786ef68e88ec65367caecfc23624031eab476b1b360a43ddda36",
+  "scope": "NO_PIN-framework-workflow-audit",
+  "source_identity": "user-workflow-audit-20261009",
+  "approved": true,
+  "effects": [
+    "local-edit",
+    "local-test",
+    "evidence-write",
+    "read-only-review",
+    "commit",
+    "push",
+    "pull-ff-only"
+  ],
+  "confirmed_at": "2026-10-09T07:55:11.437241+00:00",
+  "confirmed_at_semantics": "anchor recording time; not native receipt timestamp",
+  "confirmed_by": "user",
+  "actual_answer": "确认本计划及本次收据例外，允许有限修复与发布",
+  "native_receipt": false,
+  "explicit_exception": "Current plan only; real user reply substitutes unavailable native primitive. Native product behavior remains UNKNOWN; limited publication allowed."
+}

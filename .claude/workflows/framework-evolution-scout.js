@@ -35,21 +35,73 @@ const GATE_WEIGHTS = {
 const MAX_VERIFY = 32
 const TOP_DIGEST = 3 // FM-9 防橡皮图章：digest 封顶 top-3 APPROVED
 
-let parsed = args
-if (typeof args === 'string' && args.trim()) {
-  const t = args.trim()
-  if (t[0] === '{' || t[0] === '[') { try { parsed = JSON.parse(t) } catch (e) { parsed = {} } }
-  else parsed = {}
+// Validate caller intent before any agent; omitted input alone selects the default sweep.
+const record = v => v !== null && typeof v === 'object' && !Array.isArray(v)
+const textValue = v => typeof v === 'string' && v.trim().length > 0
+const score = v => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 3
+const stringList = v => Array.isArray(v) && v.every(textValue)
+let parsed = args === undefined ? {} : args
+if (typeof parsed === 'string') {
+  try { parsed = JSON.parse(parsed) } catch { throw new Error('invalid evolution args JSON') }
 }
-const runDate = (parsed && parsed.date) || 'unknown'
-const focusGaps = (parsed && parsed.focus_gaps) || null // 可选：只跑某些 GAP-id
-// 模式1b 单点评估：用户点名 repo（string 或 array）→ 跳过发现段，走同一套门禁（分支在 schema 定义之后）
-const targetRepos = (() => {
-  const t = parsed && parsed.target_repos
-  if (!t) return null
-  const arr = (Array.isArray(t) ? t : [t]).map(s => String(s).trim()).filter(Boolean)
-  return arr.length ? arr : null
-})()
+if (!record(parsed)) throw new Error('evolution args must be an object')
+if ('date' in parsed && !textValue(parsed.date)) throw new Error('invalid date')
+if ('focus_gaps' in parsed && (!stringList(parsed.focus_gaps) || !parsed.focus_gaps.length)) throw new Error('invalid focus_gaps')
+const runDate = parsed.date || 'unknown'
+const focusGaps = parsed.focus_gaps || null
+let targetRepos = null
+if ('target_repos' in parsed) {
+  const supplied = typeof parsed.target_repos === 'string' ? [parsed.target_repos] : parsed.target_repos
+  if (!stringList(supplied) || !supplied.length || supplied.some(r => !/^[\w.-]+\/[\w.-]+$/.test(r.trim()))) throw new Error('invalid target_repos')
+  targetRepos = [...new Set(supplied.map(r => r.trim().toLowerCase()))]
+}
+
+// Ephemeral coverage binds the original dispatch set, not just surviving results.
+const phaseCoverage = {}
+const failures = []
+function checked(name, ids, values, valid) {
+  const completed = []
+  phaseCoverage[name] = { expected: [...ids], completed }
+  if (!Array.isArray(values) || values.length !== ids.length) failures.push({ phase: name, id: '*', reason: 'result count mismatch' })
+  return ids.map((id, i) => {
+    const v = values?.[i]
+    if (!valid(v, id, i)) { failures.push({ phase: name, id, reason: 'missing or invalid result', result: v ?? null }); return null }
+    completed.push(id)
+    return v
+  })
+}
+const candidateId = c => c.repo.toLowerCase() + '#' + c.name.toLowerCase()
+function finish(result) {
+  const incomplete = failures.length > 0
+  result.run_status = incomplete ? 'INCOMPLETE' : 'COMPLETE'
+  result.phase_coverage = phaseCoverage
+  result.failures = failures
+  if (incomplete) {
+    for (const key of ['approved', 'approved_overflow', 'conditional', 'opportunities', 'results']) {
+      if (result[key]?.length) { result[key + '_quarantined'] = result[key]; result[key] = [] }
+    }
+  }
+  return result
+}
+function validCandidate(c) {
+  return record(c) && ['name','repo','url','dimension','gap_id','one_line_value'].every(k => textValue(c[k]))
+    && ['install','port-pattern','adapt-idea'].includes(c.reuse_mode) && score(c.fit_score)
+    && (c.gap_id === 'none' || openGapIds.includes(c.gap_id))
+}
+function mergeVerdict(c, v) {
+  const valid = record(v) && record(v.scores) && ['fit','quality','adoption','maintenance'].every(k => score(v.scores[k]))
+    && record(v.hard) && ['safety','compatibility','non_redundancy','gap_addressed','provenance'].every(k => ['PASS','FAIL'].includes(v.hard[k]))
+    && record(v.evidence) && record(v.supply_chain)
+    && ['name','repo','source_id'].every(k => v[k] == null || v[k] === c[k])
+    && (v.gap_id == null || v.gap_id === 'none' || openGapIds.includes(v.gap_id))
+    && (v.reuse_mode == null || ['install','port-pattern','adapt-idea'].includes(v.reuse_mode))
+  if (!valid) return null
+  // Strict adapters represent optional fields as null: absence must not erase known facts.
+  return { ...c, ...v, name: c.name, repo: c.repo, source_id: c.source_id,
+    gap_id: v.gap_id ?? c.gap_id, reuse_mode: v.reuse_mode ?? c.reuse_mode }
+}
+const validRedteam = r => record(r) && ['stands','downgraded','killed'].includes(r.redteam_verdict)
+  && ['LOW','MEDIUM','HIGH'].includes(r.integration_risk) && textValue(r.reason)
 
 // ── Phase Load：workflow 无 fs，派一个 loader agent 用 Bash+python 读真值文件 ──
 const LOADER_SCHEMA = {
@@ -122,10 +174,16 @@ const loaderPrompt =
   'RUN_DATE: ' + runDate
 
 phase('Load')
-const ctx = await agent(loaderPrompt, { label: 'load:truth-files', phase: 'Load', schema: LOADER_SCHEMA })
+const loaded = await agent(loaderPrompt, { label: 'load:truth-files', phase: 'Load', schema: LOADER_SCHEMA })
+const ctx = checked('Load', ['truth-files'], [loaded], v => record(v)
+  && Array.isArray(v.sources) && v.sources.length > 0 && v.sources.every(s => record(s) && textValue(s.id) && record(s.discovery))
+  && new Set(v.sources.map(s => s.id)).size === v.sources.length
+  && Array.isArray(v.gaps) && v.gaps.every(g => record(g) && textValue(g.id))
+  && new Set(v.gaps.map(g => g.id)).size === v.gaps.length
+  && stringList(v.existing_names) && stringList(v.existing_repos))[0]
 if (!ctx || !ctx.sources || !ctx.sources.length) {
   log('LOADER FAILED or no active sources — aborting (check evolution/*.yaml).')
-  return { run_date: runDate, error: 'loader_failed_or_no_sources', load_notes: ctx && ctx.load_notes }
+  return finish({ run_date: runDate, error: 'loader_failed_or_no_sources', load_notes: loaded && loaded.load_notes })
 }
 let sources = ctx.sources
 let gaps = ctx.gaps || []
@@ -248,22 +306,27 @@ if (targetRepos) {
     'Return via schema: candidates=[that ONE object], channel_notes=what you observed vs could not verify.'
   const intake = await parallel(targetRepos.map(r => () =>
     agent(intakePrompt(r), { label: 'intake:' + r, phase: 'Intake', schema: CANDIDATE_SCHEMA })))
-  const targets = intake.filter(Boolean).flatMap(d => d.candidates || []).filter(c => c && c.repo)
-  if (!targets.length) { log('INTAKE FAILED — no candidate constructed'); return { run_date: runDate, mode: 'punctual', error: 'intake_failed', target_repos: targetRepos } }
-  for (const c of targets) if (!c.gap_id || !openGapIds.includes(c.gap_id)) c.gap_id = 'none'
+  const acceptedIntake = checked('Intake', targetRepos, intake, (d, repo) => record(d)
+    && Array.isArray(d.candidates) && d.candidates.length === 1 && validCandidate(d.candidates[0])
+    && d.candidates[0].repo.toLowerCase() === repo)
+  const targets = acceptedIntake.filter(Boolean).flatMap(d => d.candidates)
   phase('Verify')
   const pVerdicts = await parallel(targets.map(c => () =>
     agent(verifyPrompt(c), { label: 'verify:' + c.repo, phase: 'Verify', schema: VERDICT_SCHEMA })
-      .then(v => (v ? Object.assign({}, c, v) : null))))
-  const pJudged = pVerdicts.filter(Boolean).map(adjudicate)
-  if (!pJudged.length) { log('VERIFY FAILED — no verdict returned'); return { run_date: runDate, mode: 'punctual', error: 'verify_failed', target_repos: targetRepos, run_status: 'INCOMPLETE' } }
+      .then(v => mergeVerdict(c, v))))
+  const pJudged = checked('Verify', targets.map(candidateId), pVerdicts, Boolean).filter(Boolean).map(adjudicate)
   phase('Redteam')
   // G1 相位完整性（claude5-unhobble）：fallback 替换计数——null 被保守默认吞掉后按返回数
   // 计数恒 100%，必须数替换本身（07-02 事故机理：整相位未跑仍发布裁决）
   let pRedteamFallbacks = 0
-  const pRedteamed = await parallel(pJudged.map(v => () =>
-    agent(redteamPrompt(v), { label: 'redteam:' + v.repo, phase: 'Redteam', schema: REDTEAM_SCHEMA })
-      .then(r => { if (!r) pRedteamFallbacks++; return Object.assign({}, v, { redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回——决定层失败按保守降级处理，不得视为无异议' } }) })))
+  const pRawRedteam = await parallel(pJudged.map(v => () =>
+    agent(redteamPrompt(v), { label: 'redteam:' + v.repo, phase: 'Redteam', schema: REDTEAM_SCHEMA })))
+  const pCheckedRedteam = checked('Redteam', pJudged.map(candidateId), pRawRedteam, validRedteam)
+  const pRedteamed = pJudged.map((v, i) => {
+    const r = pCheckedRedteam[i]
+    if (!r) pRedteamFallbacks++
+    return { ...v, redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回或非法——不得采纳' } }
+  })
   for (const v of pRedteamed) {
     // 无 open gap 对口 → 机械封顶 REJECTED（与 sweep 的 opportunities 分流同义；不依赖 verify LLM 自觉 FAIL）
     if (v.gap_id === 'none') { v.verdict = 'REJECTED'; v.no_open_gap_note = '无 open gap 对口：结论最多 opportunity/开 gap 提案，不可采纳（机械封顶，非 LLM 裁量）' }
@@ -271,7 +334,7 @@ if (targetRepos) {
     // 白名单语义与 sweep 对齐：APPROVED 只有精确 'stands' 才保得住，任何非规范字符串一律降档
     else if (v.verdict === 'APPROVED' && v.redteam.redteam_verdict !== 'stands') v.verdict = 'CONDITIONAL'
   }
-  return {
+  return finish({
     run_date: runDate,
     mode: 'punctual',
     red_lines: 'propose-only(行为面零编辑; 簿记走 scripts/evolution-bookkeep.mjs); 热度≠适配; 采纳另行人裁走 FUSION-RUNBOOK',
@@ -289,7 +352,7 @@ if (targetRepos) {
     run_status: (pJudged.length === targets.length && pRedteamFallbacks === 0) ? 'COMPLETE' : 'INCOMPLETE',
     phases_completed: { verify: `${pJudged.length}/${targets.length}`, redteam_fallbacks: pRedteamFallbacks },
     results: pRedteamed,
-  }
+  })
 }
 
 // ── Phase AdoptionReview：读 adoption-log 出 keep/watch/revert 复盘（propose-only）──
@@ -322,7 +385,7 @@ const adoptionReviewPrompt =
 
 // ── Phase Discover：按 source.discovery.method 生成通道 ──────────────────────
 const DISCOVER_PREAMBLE =
-  'You are a DISCOVERY SCOUT for luca_gstack (a Claude Code Skill-OS for CRM 产品设计). Primarily find external projects/capabilities/patterns that fill a KNOWN, OPEN gap below. ALSO surface genuinely high-signal/impressive projects that fit NO open gap as OPPORTUNITIES (gap_id="none") — do NOT silently drop them; a human will judge whether to register a new gap.\n\n' +
+  'You are a DISCOVERY SCOUT for luca_gstack (a product-neutral Skill OS across supported harnesses). Primarily find external projects/capabilities/patterns that fill a KNOWN, OPEN gap below. ALSO surface genuinely high-signal/impressive projects that fit NO open gap as OPPORTUNITIES (gap_id="none") — do NOT silently drop them; a human will judge whether to register a new gap.\n\n' +
   'OPEN GAPS (map a candidate to one if it fits; if it is high-signal but fits none, set gap_id="none" and STILL return it as an opportunity — only drop true low-signal off-topic noise):\n' + gapsText + '\n\n' +
   'HARD RULES:\n' +
   '- Only return things you ACTUALLY OBSERVED in real tool output. Never invent repos/stars from memory. VERIFY a repo actually exists before returning it.\n' +
@@ -365,8 +428,12 @@ const discoverResults = await parallel([
   () => agent(adoptionReviewPrompt, { label: 'adoption-review', phase: 'AdoptionReview', schema: ADOPTION_REVIEW_SCHEMA }),
   ...sources.map(src => () => agent(channelPrompt(src), { label: 'disc:' + src.id, phase: 'Discover', schema: CANDIDATE_SCHEMA })),
 ])
-const adoptionReview = discoverResults[0]
-const discovered = discoverResults.slice(1)
+const adoptionReview = checked('AdoptionReview', ['adoption-log'], [discoverResults[0]], v => record(v)
+  && Array.isArray(v.entries) && v.entries.every(e => record(e) && textValue(e.fused_candidate_id)
+    && ['keep','watch','revert'].includes(e.recommendation)))[0]
+const discovered = checked('Discover', sources.map(s => s.id), discoverResults.slice(1), (d, id) => record(d)
+  && Array.isArray(d.candidates) && d.candidates.every(c => validCandidate(c) && (c.source_id == null || c.source_id === id)))
+  .map((d, i) => d && ({ ...d, candidates: d.candidates.map(c => ({ ...c, source_id: sources[i].id })) }))
 const channelNotes = discovered.map((d, i) => sources[i].id + ': ' + ((d && d.channel_notes) || 'NO RESULT'))
 const raw = discovered.filter(Boolean).flatMap(d => d.candidates || [])
 const sourceSurfaced = {}
@@ -426,14 +493,14 @@ function verifyPrompt(c) {
 phase('Verify')
 const verdicts = await parallel(shortlist.map(c => () =>
   agent(verifyPrompt(c), { label: 'verify:' + c.repo, phase: 'Verify', schema: VERDICT_SCHEMA })
-    .then(v => (v ? Object.assign({}, c, v) : null))
+    .then(v => mergeVerdict(c, v))
 ))
 
 function adjudicate(v) {
   const h = v.hard || {}
   // default-deny：硬门任何非规范 "PASS"（含 "FAIL (…)"、"UNKNOWN"、缺字段）一律按 FAIL
   const HARD_KEYS = ['safety', 'compatibility', 'non_redundancy', 'gap_addressed', 'provenance']
-  const hardFail = HARD_KEYS.some(k => h[k] !== 'PASS')
+  const hardFail = HARD_KEYS.some(k => h[k] !== 'PASS') || v.gap_id === 'none'
   const s = v.scores || {}
   const W = /^(port-pattern|adapt-idea)/.test(String(v.reuse_mode || '')) ? GATE_WEIGHTS.pattern : GATE_WEIGHTS.install
   const weighted = Math.round(
@@ -447,7 +514,7 @@ function adjudicate(v) {
   else verdict = 'REJECTED'
   return Object.assign({}, v, { weighted_score: weighted, verdict, hard_fail: hardFail })
 }
-const judged = verdicts.filter(Boolean).map(adjudicate)
+const judged = checked('Verify', shortlist.map(candidateId), verdicts, Boolean).filter(Boolean).map(adjudicate)
 const byScore = (a, b) => (b.weighted_score || 0) - (a.weighted_score || 0)
 let approved = judged.filter(v => v.verdict === 'APPROVED').sort(byScore)
 let conditional = judged.filter(v => v.verdict === 'CONDITIONAL').sort(byScore)
@@ -464,8 +531,8 @@ function redteamPrompt(v) {
     'EXISTING luca_gstack capabilities: ' + [...existingNames].join(', ') + '\n\n' +
     'DO THREE THINGS:\n' +
     '1. STEEL-MAN THE INCUMBENT: name the closest existing skill/agent and argue why it is ALREADY enough for this gap. If that argument is strong → redteam_verdict="killed".\n' +
-    '2. ATTACK THE FIT HYPOTHESIS: what environment assumption does the fit-claim depend on, and does luca_gstack (FxUI brand-lock, framework/ read-only, Sonnet default, Claude Code harness) actually satisfy it? If it depends on something luca_gstack lacks → downgrade or kill.\n' +
-    '3. INTEGRATION COST: which luca_gstack surface files would the fusion touch? If it must edit framework/, SKILL.md P1-P7 invariants, or weaken a brand-lock → integration_risk="HIGH".\n\n' +
+    '2. ATTACK THE FIT HYPOTHESIS: what environment assumption does the fit-claim depend on, and does luca_gstack (framework/ read-only; actual current model, harness and verified project constraints only) actually satisfy it? If it depends on something luca_gstack lacks → downgrade or kill.\n' +
+    '3. INTEGRATION COST: which luca_gstack surface files would the fusion touch? If it must edit framework/, SKILL.md P1-P7 invariants, or weaken confirmed project constraints → integration_risk="HIGH".\n\n' +
     'redteam_verdict: "stands" (recommendation holds), "downgraded" (real but weaker than scored → CONDITIONAL), or "killed" (incumbent suffices / fit bogus). reason = one line.'
 }
 
@@ -473,15 +540,21 @@ phase('Redteam')
 const pool = approved.concat(conditional)
 // G1 相位完整性：fallback 替换计数（按返回数计数恒 100%，须数替换本身——07-02 事故机理）
 let sweepRedteamFallbacks = 0
-const redteamed = await parallel(pool.map(v => () =>
+const rawRedteam = await parallel(pool.map(v => () =>
   agent(redteamPrompt(v), { label: 'redteam:' + v.repo, phase: 'Redteam', schema: REDTEAM_SCHEMA })
-    .then(r => { if (!r) sweepRedteamFallbacks++; return Object.assign({}, v, { redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回——决定层失败按保守降级处理，不得视为无异议' } }) })
 ))
+const checkedRedteam = checked('Redteam', pool.map(candidateId), rawRedteam, validRedteam)
+const redteamed = pool.map((v, i) => {
+  const r = checkedRedteam[i]
+  if (!r) sweepRedteamFallbacks++
+  return { ...v, redteam: r || { redteam_verdict: 'downgraded', integration_risk: 'UNKNOWN', reason: 'redteam agent 未返回或非法——不得采纳' } }
+})
 // apply red-team verdicts
 const killed = redteamed.filter(v => v.redteam.redteam_verdict === 'killed')
 const survivors = redteamed.filter(v => v.redteam.redteam_verdict !== 'killed')
 approved = survivors.filter(v => v.verdict === 'APPROVED' && v.redteam.redteam_verdict === 'stands').sort(byScore)
 conditional = survivors.filter(v => v.verdict === 'CONDITIONAL' || v.redteam.redteam_verdict === 'downgraded').sort(byScore)
+for (const v of conditional) v.verdict = 'CONDITIONAL'
 for (const k of killed) { k.verdict = 'REJECTED'; k.killed_by_redteam = true }
 log('Redteam: ' + killed.length + ' killed, ' + approved.length + ' stand, ' + conditional.length + ' conditional')
 
@@ -495,11 +568,11 @@ for (const g of gaps) gapsCovered[g.id] = approved.filter(v => v.gap_id === g.id
 // G1 相位完整性契约（claude5-unhobble；07-02 事故：13 agent 阵亡首跑发布 2 APPROVED 终版全反转）
 // 分母=shortlist.length（实际派发面；unique 含 MAX_VERIFY 帽/droppedExisting 合法衰减不可用）
 const verifyDeaths = shortlist.length - judged.length
-const runStatus = (verifyDeaths === 0 && sweepRedteamFallbacks === 0) ? 'COMPLETE' : 'INCOMPLETE'
+const runStatus = failures.length === 0 ? 'COMPLETE' : 'INCOMPLETE'
 const quarantined = runStatus !== 'COMPLETE'
 if (quarantined) log(`⚠️ run INCOMPLETE（verify 阵亡 ${verifyDeaths}/${shortlist.length}、redteam fallback ${sweepRedteamFallbacks}）——采纳裁决隔离，bookkeep 将拒登记`)
 
-return {
+return finish({
   run_date: runDate,
   red_lines: 'propose-only(行为面零编辑; 簿记走 scripts/evolution-bookkeep.mjs); NOT routed through consolidate_memory; 热度≠适配',
   // digest 首节四件套（均为强制裁决项，不是可选附录）：
@@ -523,7 +596,8 @@ return {
   approved_quarantined: quarantined ? approved : [],
   conditional,
   opportunities,  // 高信号无 gap → 人审是否开新 gap（恢复"借鉴"能力，非自动采纳）
-  killed: killed.map(k => ({ name: k.name, repo: k.repo, gap_id: k.gap_id, reason: k.redteam.reason })),
+  killed: killed.map(k => ({ name: k.name, repo: k.repo, gap_id: k.gap_id, source_id: k.source_id, reason: k.redteam.reason,
+    verdict: k.verdict, hard: k.hard, scores: k.scores, weighted_score: k.weighted_score, reuse_mode: k.reuse_mode, redteam: k.redteam })),
   // 持久化结构化裁决（对抗裁判认定的真 delta）：hard{} + weighted + scores 落进可复查产物
-  rejected_summary: rejected.map(r => ({ name: r.name, repo: r.repo, gap_id: r.gap_id, weighted_score: r.weighted_score, hard: r.hard, scores: r.scores, reasons: r.reject_reasons || [], redundant_with: r.redundant_with })),
-}
+  rejected_summary: rejected.map(r => ({ name: r.name, repo: r.repo, gap_id: r.gap_id, source_id: r.source_id, weighted_score: r.weighted_score, hard: r.hard, scores: r.scores, verdict: r.verdict, reuse_mode: r.reuse_mode, reasons: r.reject_reasons || [], redundant_with: r.redundant_with })),
+})

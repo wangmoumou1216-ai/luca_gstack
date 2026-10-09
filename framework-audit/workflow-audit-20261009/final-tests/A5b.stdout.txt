@@ -1,0 +1,2 @@
+PASS routing map coverage
+PASS skill SSOT consistency

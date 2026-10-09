@@ -1,0 +1,36 @@
+{
+  "primary": "/Users/luca/Desktop/luca_gstack",
+  "baseline": "1322121d473fcf733808e65125903202d8683e66",
+  "dirty": [
+    {
+      "path": ".claude/hooks/lib/codex-child-project.mjs",
+      "working_sha256": "921110d5b26703c1aa2e69e58bb38ccdb89ed1f98e0182a6b377f3a64e47175d",
+      "index_entry": "100644 09caab949155880640aae8ffd82733c6c61ef5ed 0\t.claude/hooks/lib/codex-child-project.mjs\n"
+    },
+    {
+      "path": ".claude/observability/observations.jsonl",
+      "working_sha256": "a97f29090c6590c5077eb5c221d7d575830f17b294da57289e03971a7cbc5bff",
+      "index_entry": "100644 de369f0d7fb307a5e8981a03567be940ec57e504 0\t.claude/observability/observations.jsonl\n"
+    },
+    {
+      "path": ".claude/skill-os/runtime/project-session.md",
+      "working_sha256": "8b92a9b590209cc6f8424663be168d2d6ec2a6a95909c4220dd245a43380aa5d",
+      "index_entry": "100644 2a294270e8c4d736558df65e32d393525fb612a7 0\t.claude/skill-os/runtime/project-session.md\n"
+    },
+    {
+      "path": ".codex/model-route-hook.mjs",
+      "working_sha256": "6c6bb94df55c5966e50aff1109d1104e731ca9a25f27a3d4fff9635fd778060a",
+      "index_entry": "100644 e6100ddc6030e5c39a38c91884c2ba8c9e96916d 0\t.codex/model-route-hook.mjs\n"
+    },
+    {
+      "path": "memory/evals/eval-log.jsonl",
+      "working_sha256": "6e776f6230cb956d0da2f80835106aeebe5bacba43666e063e67a62d8da9fb4a",
+      "index_entry": "100644 eb7701668e9fe55fdb63e41f2c5b37aef01dfc25 0\tmemory/evals/eval-log.jsonl\n"
+    },
+    {
+      "path": "scripts/test-codex-child-project.mjs",
+      "working_sha256": "f8ed0430e825cce1437b66dc1d1ac4315a695b085a3e1871758d9bf75395555b",
+      "index_entry": "100644 9567cb21e8be9a153d3bbf4cbcf56d4212f39be1 0\tscripts/test-codex-child-project.mjs\n"
+    }
+  ]
+}

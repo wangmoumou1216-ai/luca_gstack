@@ -1,0 +1,13 @@
+{
+  "id": "A5d",
+  "argv": [
+    "node",
+    "scripts/check-agents-parity.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "pid": 95296,
+  "started_at": "2026-10-09T08:04:37.975971+00:00",
+  "finished_at": "2026-10-09T08:04:38.011136+00:00",
+  "exit_code": 0,
+  "sources_unchanged": true
+}

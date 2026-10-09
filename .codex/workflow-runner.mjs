@@ -61,11 +61,15 @@ const DRY = argv.includes('--dry-run');
 const rawName = argv.find((a) => !a.startsWith('--') && a !== argvValueAfter('--args'));
 function argvValueAfter(flag) { const i = argv.indexOf(flag); return i >= 0 ? argv[i + 1] : undefined; }
 const ARGS_JSON = (() => {
+  if (!argv.includes('--args')) return {};
   const v = argvValueAfter('--args');
-  if (v === undefined) return {};
+  if (argv.filter(a => a === '--args').length !== 1 || v === undefined || v.startsWith('--')) {
+    process.stderr.write('[runner] --args requires exactly one JSON value\n');
+    process.exit(2);
+  }
   try { return JSON.parse(v); } catch {
-    process.stderr.write(`[runner] --args 不是合法 JSON，已忽略：${String(v).slice(0, 80)}\n`);
-    return {};
+    process.stderr.write('[runner] --args 不是合法 JSON；未启动 workflow\n');
+    process.exit(2);
   }
 })();
 

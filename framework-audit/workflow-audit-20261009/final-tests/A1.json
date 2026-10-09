@@ -1,0 +1,13 @@
+{
+  "id": "A1",
+  "argv": [
+    "node",
+    "scripts/test-design-workflow-contract.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "pid": 93677,
+  "started_at": "2026-10-09T08:04:12.931980+00:00",
+  "finished_at": "2026-10-09T08:04:12.989359+00:00",
+  "exit_code": 0,
+  "sources_unchanged": true
+}

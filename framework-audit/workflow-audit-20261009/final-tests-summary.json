@@ -1,0 +1,107 @@
+[
+  {
+    "id": "A1",
+    "argv": [
+      "node",
+      "scripts/test-design-workflow-contract.mjs"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+    "pid": 93677,
+    "started_at": "2026-10-09T08:04:12.931980+00:00",
+    "finished_at": "2026-10-09T08:04:12.989359+00:00",
+    "exit_code": 0,
+    "sources_unchanged": true
+  },
+  {
+    "id": "A2",
+    "argv": [
+      "node",
+      "scripts/test-scout-workflows.mjs"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+    "pid": 93680,
+    "started_at": "2026-10-09T08:04:12.990279+00:00",
+    "finished_at": "2026-10-09T08:04:13.051883+00:00",
+    "exit_code": 0,
+    "sources_unchanged": true
+  },
+  {
+    "id": "A3",
+    "argv": [
+      "node",
+      "scripts/test-evolution-bookkeep.mjs"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+    "pid": 93682,
+    "started_at": "2026-10-09T08:04:13.052783+00:00",
+    "finished_at": "2026-10-09T08:04:14.411664+00:00",
+    "exit_code": 0,
+    "sources_unchanged": true
+  },
+  {
+    "id": "A4",
+    "argv": [
+      "node",
+      "scripts/test-workflow-runner.mjs"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+    "pid": 93825,
+    "started_at": "2026-10-09T08:04:14.412762+00:00",
+    "finished_at": "2026-10-09T08:04:14.900230+00:00",
+    "exit_code": 0,
+    "sources_unchanged": true
+  },
+  {
+    "id": "A5a",
+    "argv": [
+      "node",
+      "scripts/test-workflow-runner-runtime.mjs"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+    "pid": 93878,
+    "started_at": "2026-10-09T08:04:14.901198+00:00",
+    "finished_at": "2026-10-09T08:04:37.549707+00:00",
+    "exit_code": 0,
+    "sources_unchanged": true
+  },
+  {
+    "id": "A5b",
+    "argv": [
+      "node",
+      "scripts/check-routing-map.mjs"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+    "pid": 95269,
+    "started_at": "2026-10-09T08:04:37.550667+00:00",
+    "finished_at": "2026-10-09T08:04:37.744175+00:00",
+    "exit_code": 0,
+    "sources_unchanged": true
+  },
+  {
+    "id": "A5c",
+    "argv": [
+      "python3",
+      "scripts/build-agent-context.py",
+      "check"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+    "pid": 95295,
+    "started_at": "2026-10-09T08:04:37.745073+00:00",
+    "finished_at": "2026-10-09T08:04:37.975097+00:00",
+    "exit_code": 0,
+    "sources_unchanged": true
+  },
+  {
+    "id": "A5d",
+    "argv": [
+      "node",
+      "scripts/check-agents-parity.mjs"
+    ],
+    "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+    "pid": 95296,
+    "started_at": "2026-10-09T08:04:37.975971+00:00",
+    "finished_at": "2026-10-09T08:04:38.011136+00:00",
+    "exit_code": 0,
+    "sources_unchanged": true
+  }
+]

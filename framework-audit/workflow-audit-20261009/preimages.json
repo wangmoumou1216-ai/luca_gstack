@@ -1,0 +1,67 @@
+{
+  "baseline": "1322121d473fcf733808e65125903202d8683e66",
+  "read_scope": "NO_PIN framework",
+  "implementation_files": [
+    {
+      "path": ".claude/workflows/framework-evolution-scout.js",
+      "exists": true,
+      "sha256": "3f3136f735a7e1578c8cd3fba044f267563f8da0c0628bc8e096ad39f0751bf6"
+    },
+    {
+      "path": ".claude/workflows/external-skill-scout.js",
+      "exists": true,
+      "sha256": "eb0c955499264aa87d1d3249cfe80f975c13d41212b0fbf099a49d5b9d3dc7e8"
+    },
+    {
+      "path": ".codex/workflow-runner.mjs",
+      "exists": true,
+      "sha256": "d794913d9c003549dae33545f1d09a6704f41190fa4b2b66905e8aa4e7a8c531"
+    },
+    {
+      "path": "scripts/evolution-bookkeep.mjs",
+      "exists": true,
+      "sha256": "75db7911cbe0ec2ae755fa75b2998698b0d9b29b2c2a2e5e70645e4608efe1b1"
+    },
+    {
+      "path": ".claude/agents/orchestrator.md",
+      "exists": true,
+      "sha256": "bb969b78e104e18978ba8d43d3400f0bc3e4a4754f3d7dadfa1ee65f314678f3"
+    },
+    {
+      "path": ".claude/skill-os/optional-workflow-graph.yaml",
+      "exists": true,
+      "sha256": "8a266250a08ac6f939162430a5c131baf534e72801703d616dfa45e071fbf6f4"
+    },
+    {
+      "path": ".claude/skills/office/research-kit/SKILL.md",
+      "exists": true,
+      "sha256": "fe8acf4537e35f94a925408fe44276d0beda9f9578c8b752d018eb8f8a3fccb7"
+    },
+    {
+      "path": "scripts/test-scout-workflows.mjs",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "scripts/test-evolution-bookkeep.mjs",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "scripts/test-workflow-runner.mjs",
+      "exists": true,
+      "sha256": "25553e2e644203f9fd6274e1f9f80440659252b0048924bd82f11f61eee238e5"
+    },
+    {
+      "path": "scripts/test-design-workflow-contract.mjs",
+      "exists": true,
+      "sha256": "8b85c0d8c53c9ee2a5b2f1a69060dcf1d5cc492fb990244c03491744c6f48490"
+    },
+    {
+      "path": "scripts/verify.sh",
+      "exists": true,
+      "sha256": "604cf4e6439daa5ee365fb372155712c93f48f0af8db54a5ad580664811d2ae6"
+    }
+  ],
+  "status": "PLANNED; audit-only artifacts written"
+}

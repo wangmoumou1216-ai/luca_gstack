@@ -1,0 +1,28 @@
+{
+  "time": "2026-10-09T08:17:27.470483+00:00",
+  "phase": "U-006",
+  "completed": "U001-004 real tests; U005 independent 7/7 + original envelopes recorder success",
+  "source_inventory": "review2-tests/sources.json",
+  "head_before": "1322121d473fcf733808e65125903202d8683e66",
+  "upstream_target": "8f6cafddc38b165559116085fc243e429b694af5",
+  "upstream_paths": [
+    ".claude/hooks/lib/codex-child-project.mjs",
+    ".claude/skill-os/runtime/project-session.md",
+    ".codex/model-route-hook.mjs",
+    "memory/evals/eval-log.jsonl",
+    "scripts/test-codex-child-project.mjs"
+  ],
+  "protected_local_log_backup": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/workflow-eval-preserve-bemc0wpg",
+  "local_log_sha_before": "41ea110b4625eca9756015426631909a9ee3fa1df0571d30836ec137588c2b64",
+  "reason": "Upstream advanced during independent review; source hashes unchanged. Preserve append-only local records outside repository while Git fast-forwards, then restore exact local suffix atop upstream. No force/reset/stash, no user record enters source commit.",
+  "remaining": [
+    "normal commit with full hooks",
+    "push HEAD:main",
+    "primary pull --ff-only",
+    "A7"
+  ],
+  "upstream_merge_exit": 0,
+  "head_after": "8f6cafddc38b165559116085fc243e429b694af5",
+  "local_suffix_preserved": true,
+  "source_hashes_unchanged": true
+}

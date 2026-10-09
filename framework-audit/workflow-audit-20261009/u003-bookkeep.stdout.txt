@@ -1,0 +1,32 @@
+{"kind":"REAL_TEMP_FS_NOT_NATIVE","pid":87569,"cases":["real sweep appends exact candidates and updates only S1","punctual conserves both targets and never updates source registry","dry-run has zero writes","zero writes: incomplete","zero writes: unknown mode","zero writes: missing result","zero writes: duplicate candidate","zero writes: stats mismatch","zero writes: stats metadata run","zero writes: stats metadata bookkeep","zero writes: stats negative","zero writes: stats string","zero writes: missing coverage","zero writes: missing phase result","zero writes: changed verify identity","zero writes: nonempty failure evidence","zero writes: quarantined result","zero writes: source string count","zero writes: source wrong approved count","zero writes: candidate source spoof","zero writes: S1 missing own yield cannot consume S10","zero writes: only prefix S10 cannot match S1","zero writes: unknown source","zero writes: duplicate source","zero writes: registry quoted number","punctual original denominator cannot shrink","valid empty sweep can be booked","conditional, killed, rejected, opportunity and overflow remain bookable","all sources validated before any write","stats conservation guard removal detected"],"cli_sha256":"2c9f001ca5616ce7c690c5dbd477600e0f0b25106f3ac7be47987aa88f7f37e4"}
+PASS real sweep appends exact candidates and updates only S1
+PASS punctual conserves both targets and never updates source registry
+PASS dry-run has zero writes
+PASS zero writes: incomplete
+PASS zero writes: unknown mode
+PASS zero writes: missing result
+PASS zero writes: duplicate candidate
+PASS zero writes: stats mismatch
+PASS zero writes: stats metadata run
+PASS zero writes: stats metadata bookkeep
+PASS zero writes: stats negative
+PASS zero writes: stats string
+PASS zero writes: missing coverage
+PASS zero writes: missing phase result
+PASS zero writes: changed verify identity
+PASS zero writes: nonempty failure evidence
+PASS zero writes: quarantined result
+PASS zero writes: source string count
+PASS zero writes: source wrong approved count
+PASS zero writes: candidate source spoof
+PASS zero writes: S1 missing own yield cannot consume S10
+PASS zero writes: only prefix S10 cannot match S1
+PASS zero writes: unknown source
+PASS zero writes: duplicate source
+PASS zero writes: registry quoted number
+PASS punctual original denominator cannot shrink
+PASS valid empty sweep can be booked
+PASS conditional, killed, rejected, opportunity and overflow remain bookable
+PASS all sources validated before any write
+PASS stats conservation guard removal detected
+evolution-bookkeep 30/30

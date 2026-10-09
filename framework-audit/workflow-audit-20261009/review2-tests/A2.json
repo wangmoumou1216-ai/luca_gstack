@@ -1,0 +1,13 @@
+{
+  "id": "A2",
+  "argv": [
+    "node",
+    "scripts/test-scout-workflows.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "pid": 7717,
+  "started_at": "2026-10-09T08:11:03.669066+00:00",
+  "finished_at": "2026-10-09T08:11:03.734972+00:00",
+  "exit_code": 0,
+  "sources_unchanged": true
+}

@@ -1,0 +1,12 @@
+{
+  "resumed_at": "2026-10-09T08:31:01.618471+00:00",
+  "head": "8f6cafddc38b165559116085fc243e429b694af5",
+  "prior_commit": "Interrupted before completion; process absent and HEAD unchanged. No push occurred.",
+  "implementation_identity": "12 source hashes still match accepted review2 inventory",
+  "remaining": [
+    "normal commit with full hooks",
+    "push HEAD:main",
+    "primary ff-only pull",
+    "publication verification"
+  ]
+}

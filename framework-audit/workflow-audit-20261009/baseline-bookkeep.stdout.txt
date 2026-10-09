@@ -1,0 +1,185 @@
+{"kind":"REAL_TEMP_FS_NOT_NATIVE","pid":91842,"cases":["real sweep appends exact candidates and updates only S1","punctual conserves both targets and never updates source registry","dry-run has zero writes","zero writes: incomplete","zero writes: unknown mode","zero writes: missing result","zero writes: duplicate candidate","zero writes: stats mismatch","zero writes: stats metadata run","zero writes: stats metadata bookkeep","zero writes: stats negative","zero writes: stats string","zero writes: missing coverage","zero writes: missing phase result","zero writes: changed verify identity","zero writes: nonempty failure evidence","zero writes: quarantined result","zero writes: source string count","zero writes: source wrong approved count","zero writes: candidate source spoof","zero writes: S1 missing own yield cannot consume S10","zero writes: only prefix S10 cannot match S1","zero writes: unknown source","zero writes: duplicate source","zero writes: registry quoted number","punctual original denominator cannot shrink","valid empty sweep can be booked","conditional, killed, rejected, opportunity and overflow remain bookable","all sources validated before any write"],"cli_sha256":"75db7911cbe0ec2ae755fa75b2998698b0d9b29b2c2a2e5e70645e4608efe1b1"}
+FAIL real sweep appends exact candidates and updates only S1: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
+  'sources:\n' +
+    '  - id: S10\n' +
+    '    note: preserve me\n' +
++   '    yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }\n' +
+-   '    yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 }\n' +
+    '    status: active\n' +
+    '  - id: S1\n' +
+    '    note: preserve me\n' +
++   '    yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 }\n' +
+-   '    yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }\n' +
+    '    status: active\n'
+
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:35:10
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+PASS punctual conserves both targets and never updates source registry
+PASS dry-run has zero writes
+PASS zero writes: incomplete
+FAIL zero writes: unknown mode: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: missing result: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +1 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: duplicate candidate: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +3 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: stats mismatch: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: stats metadata run: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: stats metadata bookkeep: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: stats negative: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: stats string: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: missing coverage: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: missing phase result: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: changed verify identity: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: nonempty failure evidence: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: quarantined result: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: source string count: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 49, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: source wrong approved count: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 11, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: candidate source spoof: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:55:76
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: S1 missing own yield cannot consume S10: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:62:34
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: only prefix S10 cannot match S1: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:62:34
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: unknown source: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   （无）
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:62:34
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: duplicate source: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:62:34
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL zero writes: registry quoted number: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: "4", approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 1, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:62:34
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+FAIL punctual original denominator cannot shrink: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=punctual-2026-10-09-owner-one+owner-two）
+✅ yield_stats 已更新：
+   （无）
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:63:107
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:51
+PASS valid empty sweep can be booked
+PASS conditional, killed, rejected, opportunity and overflow remain bookable
+FAIL all sources validated before any write: AssertionError [ERR_ASSERTION]: unexpected acceptance: ✅ candidate-log.jsonl +2 行（run=2026-10）
+✅ yield_stats 已更新：
+   S1: yield_stats: { runs: 3, surfaced: 4, approved: 2, zero_yield_streak: 1 } → yield_stats: { runs: 4, surfaced: 5, approved: 3, zero_yield_streak: 0 }
+
+    at reject (file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:27:10)
+    at file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:78:3
+    at async file:///Users/luca/.codex/worktrees/7ede/luca_gstack/scripts/test-evolution-bookkeep.mjs:89:45
+evolution-bookkeep 5/29

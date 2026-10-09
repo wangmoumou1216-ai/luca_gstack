@@ -1,0 +1,39 @@
+{"kind":"REAL_TEMP_FS_NOT_NATIVE","pid":7718,"cases":["real sweep appends exact candidates and updates only S1","punctual conserves both targets and never updates source registry","dry-run has zero writes","zero writes: incomplete","zero writes: unknown mode","zero writes: missing result","zero writes: duplicate candidate","zero writes: stats mismatch","zero writes: stats metadata run","zero writes: stats metadata bookkeep","zero writes: stats negative","zero writes: stats string","zero writes: missing coverage","zero writes: missing phase result","zero writes: changed verify identity","zero writes: nonempty failure evidence","zero writes: quarantined result","zero writes: source string count","zero writes: source wrong approved count","zero writes: candidate source spoof","zero writes: bucket verdict contradiction","zero writes: hard gate contradiction","zero writes: score range contradiction","zero writes: weighted score contradiction","zero writes: redteam contradiction","zero writes: missing redteam","zero writes: no open gap recommendation","zero writes: S1 missing own yield cannot consume S10","zero writes: only prefix S10 cannot match S1","zero writes: unknown source","zero writes: duplicate source","zero writes: registry quoted number","punctual original denominator cannot shrink","valid empty sweep can be booked","conditional, killed, rejected, opportunity and overflow remain bookable","all sources validated before any write","stats conservation guard removal detected"],"cli_sha256":"94a023f5601591398286abbe0f5121134fd35116a3413ad236715b8a04be03fd"}
+PASS real sweep appends exact candidates and updates only S1
+PASS punctual conserves both targets and never updates source registry
+PASS dry-run has zero writes
+PASS zero writes: incomplete
+PASS zero writes: unknown mode
+PASS zero writes: missing result
+PASS zero writes: duplicate candidate
+PASS zero writes: stats mismatch
+PASS zero writes: stats metadata run
+PASS zero writes: stats metadata bookkeep
+PASS zero writes: stats negative
+PASS zero writes: stats string
+PASS zero writes: missing coverage
+PASS zero writes: missing phase result
+PASS zero writes: changed verify identity
+PASS zero writes: nonempty failure evidence
+PASS zero writes: quarantined result
+PASS zero writes: source string count
+PASS zero writes: source wrong approved count
+PASS zero writes: candidate source spoof
+PASS zero writes: bucket verdict contradiction
+PASS zero writes: hard gate contradiction
+PASS zero writes: score range contradiction
+PASS zero writes: weighted score contradiction
+PASS zero writes: redteam contradiction
+PASS zero writes: missing redteam
+PASS zero writes: no open gap recommendation
+PASS zero writes: S1 missing own yield cannot consume S10
+PASS zero writes: only prefix S10 cannot match S1
+PASS zero writes: unknown source
+PASS zero writes: duplicate source
+PASS zero writes: registry quoted number
+PASS punctual original denominator cannot shrink
+PASS valid empty sweep can be booked
+PASS conditional, killed, rejected, opportunity and overflow remain bookable
+PASS all sources validated before any write
+PASS stats conservation guard removal detected
+evolution-bookkeep 37/37

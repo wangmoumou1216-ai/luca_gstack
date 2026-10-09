@@ -310,6 +310,8 @@ check S38 "CI 合同 proof-it-bites（缺关键门必须失败）" "npm run test
 check S39 "Framework HTML 历史债务基线 proof-it-bites" "npm run test:framework-html-baseline --silent"
 check S21 "演进裁决核心回归（default-deny/权重分档/redteam兜底）" "npm run check:evolution-adjudication --silent"
 check S21b "人工效果反馈（证据/幂等/原始事实保护）" "npm run test:evolution-feedback --silent"
+check S21c "scout 完整分母、目标身份、nullable与异常隔离" "node scripts/test-scout-workflows.mjs"
+check S21d "演进簿记完整消费、来源块与拒绝零写" "node scripts/test-evolution-bookkeep.mjs"
 check S22 "Agent 编排契约回归（OD-first/状态枚举/双重身份/路径映射）" "npm run check:agent-contracts --silent"
 check S22b "Codex workflow runner 离线契约回归" "node scripts/test-workflow-runner.mjs"
 check S22c "固定WORK_ROOT与排队/在途取消运行时回归" "node scripts/test-workflow-runner-runtime.mjs"

@@ -122,10 +122,12 @@ research-kit 同一入口，不新增 skill 或 Workflow。未选择此模式时
    （同日重跑加 `-001` 序号不覆盖）。末尾附一句：「采集完成后，把原始数据投 /insight-synthesis
    产洞察；本文档的研究问题清单可直接作它的定标输入。」
 
-## Handoff（原四研究模式：standalone 终端交付免写；workflow 模式必写）
+## Handoff（原四研究模式：按共享豁免条件判断）
 
-standalone 模式下产出即终端交付（luca 拿工具去采集），按 lightweight 豁免 DONE 合法。
-workflow 模式（编排链中、insight-synthesis 为既定下游）必写：
+与 decision-questionnaire 相同，决定豁免前完整读取共享 handoff-protocol.md 到 FILE_END，
+按实际 context-cost、runtime-estimate、终端/恢复条件判断，不因 standalone 或文档数量默认轻量。
+本 skill 当前 runtime-estimate=12000，不满足轻量阈值，standalone 终端交付也必须写 handoff。
+workflow 模式（编排链中、insight-synthesis 为既定下游）同样必写：
 
 ```bash
 mkdir -p docs/handoff
@@ -134,7 +136,7 @@ mkdir -p docs/handoff
 按 `.claude/skills/office/references/handoff-protocol.md` 写
 `docs/handoff/YYYY-MM-DD-<topic>-research-kit-handoff.md`，**必含**：研究问题清单、
 工具类型与文件路径、目标对象与建议样本量、下游（insight-synthesis）定标输入指引。
-**不写 workflow-state**（原则，非仅循先例）：本 skill 是可选研究工具节点、轻量单文档终端交付，
+**不写 workflow-state**（原则，非仅循先例）：本 skill 是可选研究工具节点、单文档工具交付，
 无"中断后从此节点续跑"的语义可落——属「不占固定流程节点，故不写 workflow-state」这一类。
 重型多阶段的固定节点（deepresearch/ux-research/design-brief 等）才写。节点状态由编排层维护。
 

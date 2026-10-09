@@ -1,0 +1,13 @@
+{
+  "id": "A5b",
+  "argv": [
+    "node",
+    "scripts/check-routing-map.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "pid": 95269,
+  "started_at": "2026-10-09T08:04:37.550667+00:00",
+  "finished_at": "2026-10-09T08:04:37.744175+00:00",
+  "exit_code": 0,
+  "sources_unchanged": true
+}

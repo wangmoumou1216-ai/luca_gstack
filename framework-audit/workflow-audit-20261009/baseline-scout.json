@@ -1,0 +1,9 @@
+{
+  "source": "git1322121 exact files in OS temp",
+  "driver": [
+    "node",
+    "scripts/test-scout-workflows.mjs"
+  ],
+  "exit_code": 1,
+  "semantics": "Retrospective baseline execution with new frozen tests; not test-first history"
+}

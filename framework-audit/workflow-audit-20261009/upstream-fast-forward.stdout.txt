@@ -1,0 +1,8 @@
+Updating 1322121..8f6cafd
+Fast-forward
+ .claude/hooks/lib/codex-child-project.mjs   | 11 +++++
+ .claude/skill-os/runtime/project-session.md | 13 ++---
+ .codex/model-route-hook.mjs                 |  2 +-
+ memory/evals/eval-log.jsonl                 |  2 +
+ scripts/test-codex-child-project.mjs        | 74 ++++++++++++++++++++++++++++-
+ 5 files changed, 94 insertions(+), 8 deletions(-)

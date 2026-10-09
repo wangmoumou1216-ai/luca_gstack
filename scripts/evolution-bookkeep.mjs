@@ -45,12 +45,97 @@ if (ret.run_status !== 'COMPLETE') {
   console.error(`run_status=${ret.run_status ?? '(缺失)'} ≠ COMPLETE——残缺 run 拒登记（相位: ${JSON.stringify(ret.phases_completed ?? {})}）。补齐相位后 resume 重跑再 bookkeep。`);
   process.exit(3);
 }
-if (!ret.stats || (isPunctual ? !Array.isArray(ret.results) : !ret.source_yield)) {
-  console.error(isPunctual
-    ? '返回 JSON 缺 stats/results 字段——这不是 framework-evolution-scout 单点评估（mode:punctual）的返回值。'
-    : '返回 JSON 缺 stats/source_yield 字段——这不是 framework-evolution-scout 的返回值。');
-  process.exit(2);
+// COMPLETE is a producer claim, not proof: reconcile original dispatch identities and counts.
+const record = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+const text = v => typeof v === 'string' && v.trim().length > 0;
+const count = v => Number.isSafeInteger(v) && v >= 0;
+const need = (ok, message) => { if (!ok) { console.error(`Invalid workflow result: ${message}`); process.exit(2); } };
+const ids = rows => rows.map(v => `${v.repo.toLowerCase()}#${v.name.toLowerCase()}`);
+const same = (a,b) => a.length === b.length && new Set(a).size === a.length && new Set(b).size === b.length
+  && a.every(v => b.includes(v));
+need(record(ret) && (ret.mode === undefined || ['sweep','punctual'].includes(ret.mode)), 'unknown mode');
+const statKeys = ['raw','unique','verified','approved','conditional','rejected','killed_by_redteam','dropped_existing','opportunities'];
+need(record(ret.stats) && Object.keys(ret.stats).length === statKeys.length
+  && statKeys.every(k => count(ret.stats[k])), 'stats must contain only the declared nonnegative integer counts');
+need(Array.isArray(ret.failures) && ret.failures.length === 0, 'COMPLETE with failures or missing failure evidence');
+const expectedPhases = isPunctual ? ['Load','Intake','Verify','Redteam'] : ['Load','AdoptionReview','Discover','Verify','Redteam'];
+need(record(ret.phase_coverage) && same(Object.keys(ret.phase_coverage),expectedPhases), 'missing phase coverage');
+for (const phase of expectedPhases) {
+  const p = ret.phase_coverage[phase];
+  need(record(p) && Array.isArray(p.expected) && p.expected.every(text) && Array.isArray(p.completed)
+    && same(p.expected,p.completed), `incomplete or duplicate ${phase}`);
 }
+need(same(ret.phase_coverage.Load.expected,['truth-files']), 'Load identity');
+let candidates, approved, conditional, rejected, killed, opportunities;
+if (isPunctual) {
+  need(Array.isArray(ret.target_repos) && ret.target_repos.length > 0
+    && ret.target_repos.every(r => text(r) && /^[\w.-]+\/[\w.-]+$/.test(r)), 'target_repos');
+  need(Array.isArray(ret.results), 'results');
+  candidates = ret.results;
+  need(candidates.every(v => record(v) && text(v.repo) && text(v.name) && ['APPROVED','CONDITIONAL','REJECTED'].includes(v.verdict)), 'candidate shape');
+  need(same(candidates.map(v => v.repo.toLowerCase()),ret.target_repos.map(r=>r.toLowerCase())), 'request/result target mismatch');
+  need(same(ret.phase_coverage.Intake.expected,ret.target_repos), 'Intake identity');
+  approved = candidates.filter(v=>v.verdict==='APPROVED'); conditional = candidates.filter(v=>v.verdict==='CONDITIONAL');
+  rejected = candidates.filter(v=>v.verdict==='REJECTED'); killed = candidates.filter(v=>v.killed_by_redteam===true); opportunities = [];
+  need(killed.every(v=>v.verdict==='REJECTED'), 'killed verdict');
+  need(ret.stats.raw===candidates.length && ret.stats.unique===candidates.length && ret.stats.dropped_existing===0, 'punctual counts');
+} else {
+  for (const key of ['approved','approved_overflow','conditional','killed','rejected_summary','opportunities']) need(Array.isArray(ret[key]), key);
+  approved = [...ret.approved,...ret.approved_overflow]; conditional = ret.conditional;
+  killed = ret.killed; rejected = [...ret.rejected_summary,...killed]; opportunities = ret.opportunities;
+  candidates = [...approved,...conditional,...rejected];
+  need(record(ret.source_yield) && same(Object.keys(ret.source_yield),ret.phase_coverage.Discover.expected), 'source/Discover identity');
+  need(same(ret.phase_coverage.AdoptionReview.expected,['adoption-log']), 'AdoptionReview identity');
+  need(candidates.concat(opportunities).every(v=>record(v) && text(v.repo) && text(v.name)
+    && Object.hasOwn(ret.source_yield,v.source_id)), 'candidate/source identity');
+  let surfaced = 0;
+  for (const [sid,sy] of Object.entries(ret.source_yield)) {
+    need(record(sy) && same(Object.keys(sy),['surfaced','approved']) && count(sy.surfaced) && count(sy.approved), `source counts ${sid}`);
+    need(sy.approved===approved.filter(v=>v.source_id===sid).length, `approved source count ${sid}`);
+    need(sy.surfaced>=candidates.concat(opportunities).filter(v=>v.source_id===sid).length, `surfaced source count ${sid}`);
+    surfaced += sy.surfaced;
+  }
+  need(surfaced===ret.stats.raw, 'raw/source surfaced mismatch');
+}
+// Array placement cannot override a candidate's own gate facts. Recompute the
+// producer's small deterministic decision here before writing an APPROVED row.
+function validateDecision(v, bucket) {
+  const scoreKeys = ['fit','quality','adoption','maintenance'];
+  const hardKeys = ['safety','compatibility','non_redundancy','gap_addressed','provenance'];
+  need(record(v.scores) && scoreKeys.every(k=>typeof v.scores[k]==='number' && Number.isFinite(v.scores[k])
+    && v.scores[k]>=0 && v.scores[k]<=3), 'invalid candidate scores');
+  need(record(v.hard) && hardKeys.every(k=>['PASS','FAIL'].includes(v.hard[k])), 'invalid candidate hard gates');
+  need(text(v.gap_id) && ['install','port-pattern','adapt-idea'].includes(v.reuse_mode), 'invalid candidate gap/reuse mode');
+  const weights = v.reuse_mode==='install' ? [30,30,20,20] : [40,40,10,10];
+  const weighted = Math.round(scoreKeys.reduce((sum,k,i)=>sum+(v.scores[k]/3)*weights[i],0));
+  need(v.weighted_score===weighted, 'weighted score contradicts scores');
+  const hardFail = hardKeys.some(k=>v.hard[k]!=='PASS') || v.gap_id==='none';
+  let expected = hardFail ? 'REJECTED' : weighted>=70 ? 'APPROVED' : weighted>=45 ? 'CONDITIONAL' : 'REJECTED';
+  const needsRedteam = isPunctual || expected!=='REJECTED' || killed.includes(v);
+  if (needsRedteam || v.redteam!=null) {
+    need(record(v.redteam) && ['stands','downgraded','killed'].includes(v.redteam.redteam_verdict)
+      && ['LOW','MEDIUM','HIGH'].includes(v.redteam.integration_risk) && text(v.redteam.reason), 'invalid or missing redteam');
+    if (v.redteam.redteam_verdict==='killed') expected='REJECTED';
+    else if (expected==='APPROVED' && v.redteam.redteam_verdict==='downgraded') expected='CONDITIONAL';
+  }
+  need(killed.includes(v)===(v.redteam?.redteam_verdict==='killed'), 'killed classification contradicts redteam');
+  need(v.verdict===expected && v.verdict===bucket, 'candidate bucket/verdict/gate contradiction');
+}
+for (const [bucket,rows] of [['APPROVED',approved],['CONDITIONAL',conditional],['REJECTED',rejected]]) {
+  for (const v of rows) validateDecision(v,bucket);
+}
+need(same(ids(candidates), ret.phase_coverage.Verify.expected), 'Verify candidate identity');
+need(same(ids(isPunctual?candidates:[...approved,...conditional,...killed]),ret.phase_coverage.Redteam.expected), 'Redteam candidate identity');
+need(new Set(ids(candidates.concat(opportunities))).size===candidates.length+opportunities.length, 'duplicate candidate/opportunity');
+for (const [key,rows] of Object.entries({verified:candidates,approved,conditional,rejected,killed_by_redteam:killed,opportunities})) {
+  need(ret.stats[key]===rows.length, `stats.${key} mismatch`);
+}
+need(ret.stats.unique>=ret.stats.verified && ret.stats.raw>=ret.stats.unique+ret.stats.opportunities+ret.stats.dropped_existing, 'raw/unique conservation');
+for (const key of ['approved_quarantined','approved_overflow_quarantined','conditional_quarantined','opportunities_quarantined','results_quarantined']) {
+  need(ret[key]===undefined || (Array.isArray(ret[key]) && ret[key].length===0), `quarantine ${key}`);
+}
+// Whitelist before merging local bookkeeping metadata.
+const safeStats = Object.fromEntries(statKeys.map(k=>[k,ret.stats[k]]));
 
 const date = new Date().toISOString().slice(0, 10);
 // punctual run tag 掺入 repo 身份：同日评估不同 repo 是常态，纯日期 tag 会被幂等守卫误杀并诱导 --force 开闸
@@ -73,7 +158,7 @@ if (!force && existingLog.split('\n').some(l => l.includes(`"run":"${run}"`) && 
 const trim = (s, n = 240) => String(s || '').replace(/\s+/g, ' ').slice(0, n);
 const lines = [];
 if (isPunctual) {
-  lines.push({ date, run, type: 'run_summary', bookkeep: true, mode: 'punctual', target_repos: ret.target_repos, prior_entry_hint: ret.prior_entry_hint || [], ...ret.stats });
+  lines.push({ date, run, type: 'run_summary', bookkeep: true, mode: 'punctual', target_repos: ret.target_repos, prior_entry_hint: ret.prior_entry_hint || [], ...safeStats });
   for (const v of ret.results) {
     lines.push({
       date, run, type: 'candidate', mode: 'punctual', name: v.name, repo: v.repo, gap_id: v.gap_id,
@@ -84,7 +169,7 @@ if (isPunctual) {
     });
   }
 } else {
-lines.push({ date, run, type: 'run_summary', bookkeep: true, ...ret.stats });
+lines.push({ date, run, type: 'run_summary', bookkeep: true, ...safeStats });
 for (const v of [...(ret.approved || []), ...(ret.approved_overflow || [])]) {
   lines.push({ date, run, type: 'candidate', name: v.name, repo: v.repo, gap_id: v.gap_id, verdict: 'APPROVED', weighted_score: v.weighted_score, reuse_mode: v.reuse_mode, reason: trim((v.redteam && v.redteam.reason) || v.why_useful) });
 }
@@ -111,23 +196,28 @@ for (const v of ret.conditional || []) {
 let registry = readFileSync(registryPath, 'utf8');
 const yieldUpdates = [];
 const pruneWarnings = [];
+// Locate exact source blocks once. A missing yield line cannot consume the next source.
 for (const [sid, sy] of Object.entries(isPunctual ? {} : ret.source_yield)) {
-  // 定位该 source 块内的 yield_stats 行（块 = 本 id 行到下一个 "- id:" 之间）
-  const blockRe = new RegExp(`(- id: ${sid}[\\s\\S]*?)(yield_stats: \\{[^}]*\\})`);
-  const m = registry.match(blockRe);
-  if (!m) { console.error(`⚠️ registry 里找不到 ${sid} 的 yield_stats 行，跳过`); continue; }
-  const cur = m[2];
-  const num = (key) => { const mm = cur.match(new RegExp(`${key}: (\\d+)`)); return mm ? parseInt(mm[1], 10) : 0; };
-  const yieldCount = (sy.approved || 0) + (conditionalBySource[sid] || 0);
-  const next = {
-    runs: num('runs') + 1,
-    surfaced: num('surfaced') + (sy.surfaced || 0),
-    approved: num('approved') + (sy.approved || 0),
-    zero_yield_streak: yieldCount > 0 ? 0 : num('zero_yield_streak') + 1,
-  };
-  const nextLine = `yield_stats: { runs: ${next.runs}, surfaced: ${next.surfaced}, approved: ${next.approved}, zero_yield_streak: ${next.zero_yield_streak} }`;
-  registry = registry.replace(blockRe, `$1${nextLine}`);
-  yieldUpdates.push(`${sid}: ${cur} → ${nextLine}`);
+  const sourceStarts = [...registry.matchAll(/^([ \t]*)- id: ([^\s#]+)[ \t]*(?:#.*)?$/gm)];
+  const matches = sourceStarts.filter(m=>m[2]===sid);
+  need(matches.length===1, `registry source ${sid} must exist exactly once`);
+  const currentStart = matches[0].index;
+  const currentBlockEnd = sourceStarts.find(m=>m.index>currentStart && m[1].length<=matches[0][1].length)?.index ?? registry.length;
+  const block = registry.slice(currentStart,currentBlockEnd);
+  const yields = [...block.matchAll(/^[ \t]*yield_stats: \{([^}\n]*)\}[ \t]*$/gm)];
+  need(yields.length===1, `missing or ambiguous yield_stats in source ${sid}`);
+  const fields = yields[0][1].split(',').map(f=>f.trim().split(/:\s*/));
+  const keys = ['runs','surfaced','approved','zero_yield_streak'];
+  need(same(fields.map(f=>f[0]),keys) && fields.every(f=>f.length===2 && /^\d+$/.test(f[1]) && count(Number(f[1]))), `invalid registry counters ${sid}`);
+  const cur = Object.fromEntries(fields.map(([k,v])=>[k,Number(v)]));
+  const yieldCount = sy.approved + (conditionalBySource[sid] || 0);
+  const next = {runs:cur.runs+1,surfaced:cur.surfaced+sy.surfaced,approved:cur.approved+sy.approved,
+    zero_yield_streak:yieldCount>0?0:cur.zero_yield_streak+1};
+  need(Object.values(next).every(count), `registry counter overflow ${sid}`);
+  const nextLine = yields[0][0].replace(/yield_stats:.*/,`yield_stats: { runs: ${next.runs}, surfaced: ${next.surfaced}, approved: ${next.approved}, zero_yield_streak: ${next.zero_yield_streak} }`);
+  const at = currentStart + yields[0].index;
+  registry = registry.slice(0,at)+nextLine+registry.slice(at+yields[0][0].length);
+  yieldUpdates.push(`${sid}: ${yields[0][0].trim()} → ${nextLine.trim()}`);
   if (next.zero_yield_streak >= PRUNE_N) pruneWarnings.push(`⚠️ ${sid} 连续 ${next.zero_yield_streak} 轮零录取（≥${PRUNE_N}）→ 本期 digest 须提议降权/下线（人裁）`);
 }
 

@@ -1,0 +1,27 @@
+PASS W0 runner 存在且语法合法
+PASS W1 framework-evolution-scout 零改写可执行（无 SyntaxError）
+PASS W1b 全 agent 失败时走 workflow 自身降级路径而非崩溃
+PASS W2 external-skill-scout 零改写可执行
+PASS W2b parallel() 执行了全部 channel（无静默丢项）
+PASS W3 parallel 保持输入顺序（乱序完成也不错位）
+PASS W3b parallel 中单个 thunk 抛错收敛为 null，不炸整批
+PASS W4 runner 通过共同 resolver 选择显式 model，且不注入 reasoning effort
+PASS W4b app-server thread/turn 工作根隔离到 scratch，仓库不在可写面内
+PASS W4b2 workspace-write 档必须同时开 networkAccess（否则发现层全废）
+PASS W4b3 沙箱档有白名单校验且不含 danger-full-access
+PASS W4b4 prompt 前缀告知 REPO_ROOT（工作根非仓库，否则相对路径读不到文件）
+PASS W4c 并发有上限（无节流会打爆速率限制，且 agent 失败是静默 falsy 极难归因）
+PASS W4d 取消停止后续调度并终止已启动的子进程组
+PASS W5 runner 在写 schema 前做 strict 归一化
+PASS W5b 归一化函数可独立求值（源码结构未被破坏）
+PASS W5c 归一化输出满足 OpenAI strict 三要求（含嵌套与数组元素）
+PASS W5d 原可选字段转为 nullable（保住"可以没有"的语义，不是强行必填）
+PASS W5e 原必填字段不被改成 nullable
+PASS W6 reject malformed args ["--args"]
+PASS W6 reject malformed args ["--args","--dry-run"]
+PASS W6 reject malformed args ["--args","{bad"]
+PASS W6 reject malformed args ["--args","{}","--args","{}"]
+PASS W6 valid args framework-evolution-scout
+PASS W6 valid args external-skill-scout
+
+=== test-workflow-runner summary: PASS=25 FAIL=0 ===

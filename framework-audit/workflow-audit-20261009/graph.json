@@ -1,0 +1,41 @@
+{
+  "plan_id": "WORKFLOW-AUDIT-20261009-01",
+  "plan_sha256": "66bce40a3223786ef68e88ec65367caecfc23624031eab476b1b360a43ddda36",
+  "nodes": [
+    {
+      "id": "U-001",
+      "dependencies": []
+    },
+    {
+      "id": "U-002",
+      "dependencies": [
+        "U-001"
+      ]
+    },
+    {
+      "id": "U-003",
+      "dependencies": [
+        "U-002"
+      ]
+    },
+    {
+      "id": "U-004",
+      "dependencies": [
+        "U-003"
+      ]
+    },
+    {
+      "id": "U-005",
+      "dependencies": [
+        "U-004"
+      ]
+    },
+    {
+      "id": "U-006",
+      "dependencies": [
+        "U-005"
+      ]
+    }
+  ],
+  "external_dependencies": []
+}

@@ -112,7 +112,10 @@ scenes:
       - ["code-recon", "ux-brainstorm", "design-brief", "open-design"]  # brownfield 起步：现有代码 → 架构 brief 作 architecture_brief 输入（code-recon 2026-09-02）
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
-      - ["code-recon", "tech-spec", "task-plan"]  # 从现有代码起步的工程链（同上）
+      # 仅在 tech-spec 输入就绪时推荐整链：正式 PRD/Brief，或其合同允许的已定工程来源
+      # conversation_synthesis + 完整 source_register。architecture brief 只是可选补充，不能替代。
+      # 只有代码/改进意图：先 code-recon，再回实际需求 owner 澄清；不自动生成 PRD/CONV 或派发 tech-spec。
+      - ["code-recon", "tech-spec", "task-plan"]
     fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
       - ["ux-audit", "design-brief", "magicpath"]
       - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]

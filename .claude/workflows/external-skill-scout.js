@@ -52,21 +52,46 @@ const FOCUS_LABEL = {
 
 // ── args parsing (string => single focus; object => full config) ──────────
 // The harness may deliver an object arg JSON-stringified; recover it so re-runs work either way.
-let parsedArgs = args
-if (typeof args === 'string' && args.trim()) {
-  const t = args.trim()
-  if (t[0] === '{' || t[0] === '[') { try { parsedArgs = JSON.parse(t) } catch (e) { parsedArgs = t } }
-  else parsedArgs = t
-}
-let focus, runDate, extraExisting
+const record = v => v !== null && typeof v === 'object' && !Array.isArray(v)
+const textValue = v => typeof v === 'string' && v.trim().length > 0
+const stringList = v => Array.isArray(v) && v.every(textValue)
+const score = v => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 3
+let parsedArgs = args === undefined ? {} : args
 if (typeof parsedArgs === 'string') {
-  focus = [parsedArgs]
-  extraExisting = []
-  runDate = 'unknown'
-} else {
-  focus = (parsedArgs && parsedArgs.focus) || ['claude-code-meta', 'code-engineering', 'design-frontend', 'verification-redteam']
-  extraExisting = (parsedArgs && parsedArgs.existing_skills) || []
-  runDate = (parsedArgs && parsedArgs.date) || 'unknown'
+  const t = parsedArgs.trim()
+  if (!t) throw new Error('empty focus')
+  if (t[0] === '{' || t[0] === '[') {
+    try { parsedArgs = JSON.parse(t) } catch { throw new Error('invalid external scout args JSON') }
+  } else parsedArgs = { focus: [t] }
+}
+if (!record(parsedArgs)) throw new Error('external scout args must be an object or focus string')
+if ('focus' in parsedArgs && (!stringList(parsedArgs.focus) || !parsedArgs.focus.length)) throw new Error('invalid focus')
+if ('existing_skills' in parsedArgs && !stringList(parsedArgs.existing_skills)) throw new Error('invalid existing_skills')
+if ('date' in parsedArgs && !textValue(parsedArgs.date)) throw new Error('invalid date')
+const focus = parsedArgs.focus || ['claude-code-meta', 'code-engineering', 'design-frontend', 'verification-redteam']
+const extraExisting = parsedArgs.existing_skills || []
+const runDate = parsedArgs.date || 'unknown'
+const phaseCoverage = {}
+const failures = []
+function checked(name, ids, values, valid) {
+  const completed = []
+  phaseCoverage[name] = { expected: [...ids], completed }
+  if (!Array.isArray(values) || values.length !== ids.length) failures.push({ phase: name, id: '*', reason: 'result count mismatch' })
+  return ids.map((id, i) => {
+    const v = values?.[i]
+    if (!valid(v)) { failures.push({ phase: name, id, reason: 'missing or invalid result', result: v ?? null }); return null }
+    completed.push(id)
+    return v
+  })
+}
+function validCandidate(c) {
+  return record(c) && ['name','repo','url','type','category','one_line_value'].every(k => textValue(c[k])) && score(c.fit_score)
+}
+function mergeVerdict(c, v) {
+  if (!record(v) || !record(v.scores) || !['fit','quality','adoption','maintenance'].every(k => score(v.scores[k]))
+    || !record(v.hard) || !['safety','compatibility','non_redundancy'].every(k => ['PASS','FAIL'].includes(v.hard[k]))
+    || !record(v.evidence) || !['name','repo'].every(k => v[k] == null || v[k] === c[k])) return null
+  return { ...c, ...v, name: c.name, repo: c.repo }
 }
 const focusText = focus.map(f => '- ' + f + ': ' + (FOCUS_LABEL[f] || f)).join('\n')
 
@@ -87,8 +112,9 @@ const loadedExisting = await agent(
   'RETURN existing_names = lowercased union of all names. Do NOT invent; if a file is missing, return what you have and note it in load_notes.',
   { label: 'load:existing', phase: 'Load', schema: EXISTING_LOADER_SCHEMA }
 )
+const loadOk = checked('Load', ['existing'], [loadedExisting], v => record(v) && stringList(v.existing_names))[0]
 let existing
-if (loadedExisting && loadedExisting.existing_names && loadedExisting.existing_names.length) {
+if (loadOk) {
   existing = loadedExisting.existing_names.concat(extraExisting)
 } else {
   existing = FALLBACK_EXISTING.concat(extraExisting)
@@ -114,7 +140,7 @@ const CANDIDATE_SCHEMA = {
           install_method: { type: 'string' },
           one_line_value: { type: 'string' },
           fit_hypothesis: { type: 'string' },
-          fit_score: { type: 'number', description: '0-3 self-assessed fit to a CRM product-design Claude Code workflow' },
+          fit_score: { type: 'number', description: '0-3 self-assessed fit to the specified focus in a product-neutral Skill OS' },
           evidence_url: { type: 'string' },
         },
         required: ['name', 'repo', 'url', 'type', 'category', 'one_line_value', 'fit_score'],
@@ -170,7 +196,7 @@ const VERDICT_SCHEMA = {
 
 // ── Phase 1: discovery channels (multi-modal sweep, blind to each other) ───
 const SCOUT_PREAMBLE =
-  'You are a DISCOVERY SCOUT finding external Claude Code extensions on GitHub (SKILL.md skills AND Claude Code subagents) that would strengthen a product designer\'s Claude Code OS used for CRM product design (PRD / UX / prototype / spec workflow).\n\n' +
+  'You are a DISCOVERY SCOUT finding external Claude Code extensions on GitHub (SKILL.md skills AND Claude Code subagents) that would strengthen the product-neutral luca_gstack Skill OS across supported harnesses.\n\n' +
   'FOCUS AREAS (only return things plausibly fitting one of these gaps):\n' + focusText + '\n\n' +
   'TOOLS: Bash is available for `gh` (already authenticated) and `npx`. For web pages, FIRST run ToolSearch with query "select:WebFetch,WebSearch" to load those tools, then use them.\n\n' +
   'HARD RULES: Only return repos you ACTUALLY OBSERVED in real tool output. Never invent repos/stars from memory. If a tool errors, record it in channel_notes and return what you verified. For each candidate set fit_score 0-3 (3 = directly fills a focus gap). claimed_stars = as observed or "unknown" (real verification happens downstream). Map category to one focus key. Aim for QUALITY over volume; drop anything clearly unrelated to Claude Code or the focus areas.'
@@ -206,9 +232,11 @@ const channels = [
 ]
 
 phase('Discover')
-const discovered = await parallel(
+const rawDiscovered = await parallel(
   channels.map(ch => () => agent(ch.prompt, { label: ch.label, phase: 'Discover', schema: CANDIDATE_SCHEMA }))
 )
+const discovered = checked('Discover', channels.map(c => c.label), rawDiscovered, d => record(d)
+  && Array.isArray(d.candidates) && d.candidates.every(validCandidate))
 const channelNotes = discovered.map((d, i) => channels[i].label + ': ' + ((d && d.channel_notes) || 'NO RESULT (agent returned null)'))
 const raw = discovered.filter(Boolean).flatMap(d => d.candidates || [])
 log('Discovery: ' + raw.length + ' raw candidates across ' + channels.length + ' channels')
@@ -249,17 +277,17 @@ function verifyPrompt(c) {
     '4. verified_at: run  date -u +%Y-%m-%dT%H:%M:%SZ\n' +
     '5. SAFETY SCAN the skill file and any bundled scripts for: destructive bash (rm -rf, dd, mkfs, git push --force), network exfiltration (curl/wget POSTing local data, base64 piped to curl), secret harvesting (reading ~/.ssh, .env, env tokens, keychain), or curl-pipe-to-shell. ANY of these => safety FAIL.\n\n' +
     'SCORE THE 门禁:\n' +
-    'SOFT (0-3 each): fit (does it genuinely fill THIS gap for a CRM product-design Claude Code workflow: ' + label + '? 0 if off-target), adoption (stars: <100 weak=0-1, 100-1k=1-2, >1k=3; factor installs if known), maintenance (latest commit: <=6mo=3, 6-18mo=1-2, >18mo or archived=0), quality (SKILL.md structure, clear scope, examples/tests/evals, real docs vs thin stub).\n' +
+    'SOFT (0-3 each): fit (does it genuinely fill THIS gap for the specified focus in a product-neutral Skill OS: ' + label + '? 0 if off-target), adoption (stars: <100 weak=0-1, 100-1k=1-2, >1k=3; factor installs if known), maintenance (latest commit: <=6mo=3, 6-18mo=1-2, >18mo or archived=0), quality (SKILL.md structure, clear scope, examples/tests/evals, real docs vs thin stub).\n' +
     'HARD (return exactly "PASS" or "FAIL"): safety (safe code AND a permissive license present like MIT/Apache/BSD; missing or non-permissive license OR unsafe code => FAIL), compatibility (judge by what the candidate IS: install-as-SKILL/subagent => needs valid SKILL.md/subagent frontmatter, installable via `npx skills add` or droppable into ~/.claude/skills or .claude/agents, no trigger collision; install-as-MCP/tool/npm/CLI => does NOT need a SKILL.md, do NOT FAIL merely for lacking one — needs a real install path + no infra the user lacks + wires in as an MCP/tool NOT into route-guard/office; port-pattern/adapt-idea => the pattern is extractable without dragging a whole framework. FAIL only if none hold), non_redundancy (NOT already covered by the user\'s existing skills below — UNLESS clearly and demonstrably better; if redundant and not better => FAIL and set redundant_with).\n\n' +
     'USER EXISTING SKILLS (non-redundancy reference): ' + existingText + '\n\n' +
-    'RETURN the schema. why_useful = 1-2 concrete sentences tying it to a CRM product-design workflow. install_command = exact (npx skills add owner/repo@name -g -y, or a git clone + copy path). integration_note = where it would live in this OS (global ~/.claude/skills for a general skill, .claude/skills/office/ + a skill-routing-map.yaml entry for a design-pipeline skill, or .claude/agents/ for a subagent) and any registration step. evidence.* MUST be the numbers you actually observed; use null if a call failed. Cite real figures, default to skepticism.'
+    'RETURN the schema. why_useful = 1-2 concrete sentences tying it to the specified focus and verified workflow constraints. install_command = exact (npx skills add owner/repo@name -g -y, or a git clone + copy path). integration_note = where it would live in this OS (global ~/.claude/skills for a general skill, .claude/skills/office/ + a skill-routing-map.yaml entry for a design-pipeline skill, or .claude/agents/ for a subagent) and any registration step. evidence.* MUST be the numbers you actually observed; use null if a call failed. Cite real figures, default to skepticism.'
 }
 
 phase('Verify')
 const verdicts = await parallel(
   shortlist.map(c => () =>
     agent(verifyPrompt(c), { label: 'verify:' + c.repo, phase: 'Verify', schema: VERDICT_SCHEMA })
-      .then(v => (v ? Object.assign({}, c, v) : null))
+      .then(v => mergeVerdict(c, v))
   )
 )
 
@@ -283,7 +311,7 @@ function adjudicate(v) {
   return Object.assign({}, v, { weighted_score: weighted, verdict, hard_fail: hardFail })
 }
 
-const judged = verdicts.filter(Boolean).map(adjudicate)
+const judged = checked('Verify', shortlist.map(c => c.repo.toLowerCase() + '#' + c.name.toLowerCase()), verdicts, Boolean).filter(Boolean).map(adjudicate)
 const byScore = (a, b) => (b.weighted_score || 0) - (a.weighted_score || 0)
 const approved = judged.filter(v => v.verdict === 'APPROVED').sort(byScore)
 const conditional = judged.filter(v => v.verdict === 'CONDITIONAL').sort(byScore)
@@ -292,6 +320,8 @@ log('Verified ' + judged.length + ': APPROVED ' + approved.length + ', CONDITION
 
 return {
   run_date: runDate,
+  run_status: failures.length ? 'INCOMPLETE' : 'COMPLETE',
+  phase_coverage: phaseCoverage, failures,
   focus,
   stats: {
     raw: raw.length, unique: deduped.length, verified: judged.length,
@@ -299,5 +329,6 @@ return {
     dropped_for_cap: droppedForCap,
   },
   channel_notes: channelNotes,
-  approved, conditional, rejected,
+  approved: failures.length ? [] : approved, conditional: failures.length ? [] : conditional, rejected,
+  approved_quarantined: failures.length ? approved : [], conditional_quarantined: failures.length ? conditional : [],
 }

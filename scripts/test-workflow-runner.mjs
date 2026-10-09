@@ -5,7 +5,8 @@
 // 走 workflow 自己的降级路径，而不是炸掉整个 run。
 
 import { spawnSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync, rmSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, rmSync, mkdtempSync, mkdirSync, copyFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -43,7 +44,10 @@ ok('W0 runner 存在且语法合法',
 
 // ── W3：parallel 的保序与失败收敛（runner 自实现部分，最易错，直测）──
 {
-  const probe = join(WF_DIR, '__probe_tmp.js');
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'workflow-runner-dry-'));
+  for (const dir of ['.codex', 'scripts', '.claude/workflows']) mkdirSync(join(fixtureRoot, dir), {recursive: true});
+  for (const file of ['.codex/workflow-runner.mjs', 'scripts/model-route.mjs', 'scripts/model-route-host.mjs']) copyFileSync(join(ROOT, file), join(fixtureRoot, file));
+  const probe = join(fixtureRoot, '.claude/workflows/__probe_tmp.js');
   // 与真实 workflow 同形：带 export、带顶层 return
   writeFileSync(probe, `
 export const meta = { name: '__probe_tmp' }
@@ -58,9 +62,9 @@ const out = await parallel([
 log('done')
 return { out }
 `);
-  const r = spawnSync('node', [RUNNER, '__probe_tmp', '--dry-run'],
+  const r = spawnSync('node', [join(fixtureRoot, '.codex/workflow-runner.mjs'), '__probe_tmp', '--dry-run'],
     { cwd: ROOT, encoding: 'utf8', timeout: 60000 });
-  rmSync(probe, { force: true });
+  rmSync(fixtureRoot, {recursive: true, force: true});
   const out = parse(r.stdout);
   ok('W3 parallel 保持输入顺序（乱序完成也不错位）',
     !!out && JSON.stringify(out.out) === JSON.stringify(['a', 'b', null, 'd']),
@@ -155,5 +159,14 @@ return { out }
   }
 }
 
+// Bad CLI JSON must never broaden to the default sweep or reach agent dispatch.
+for (const tail of [['--args'], ['--args','--dry-run'], ['--args','{bad'], ['--args','{}','--args','{}']]) {
+  const r=spawnSync('node',[RUNNER,'framework-evolution-scout','--dry-run',...tail],{encoding:'utf8',timeout:10000});
+  ok(`W6 reject malformed args ${JSON.stringify(tail)}`,r.status===2 && !/runner: agent/.test(r.stderr),r.stderr);
+}
+for (const [name,value] of [['framework-evolution-scout',{}],['external-skill-scout','testing']]) {
+  const r=spawnSync('node',[RUNNER,name,'--dry-run','--args',JSON.stringify(value)],{encoding:'utf8',timeout:10000});
+  ok(`W6 valid args ${name}`,r.status===0 && parse(r.stdout)!==null,r.stderr);
+}
 console.log(`\n=== test-workflow-runner summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail === 0 ? 0 : 1);

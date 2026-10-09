@@ -1,0 +1,13 @@
+{
+  "id": "A5a",
+  "argv": [
+    "node",
+    "scripts/test-workflow-runner-runtime.mjs"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/7ede/luca_gstack",
+  "pid": 93878,
+  "started_at": "2026-10-09T08:04:14.901198+00:00",
+  "finished_at": "2026-10-09T08:04:37.549707+00:00",
+  "exit_code": 0,
+  "sources_unchanged": true
+}

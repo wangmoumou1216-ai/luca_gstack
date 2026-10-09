@@ -1,0 +1,39 @@
+{
+  "sha256": "b69b0784670d8de5c02afe06ec314a87298497d14ea1a9e4ae34ffc1ab2461a1",
+  "assertions": {
+    "A1": [
+      "node",
+      "scripts/test-design-workflow-contract.mjs"
+    ],
+    "A2": [
+      "node",
+      "scripts/test-scout-workflows.mjs"
+    ],
+    "A3": [
+      "node",
+      "scripts/test-evolution-bookkeep.mjs"
+    ],
+    "A4": [
+      "node",
+      "scripts/test-workflow-runner.mjs"
+    ],
+    "A5a": [
+      "node",
+      "scripts/test-workflow-runner-runtime.mjs"
+    ],
+    "A5b": [
+      "node",
+      "scripts/check-routing-map.mjs"
+    ],
+    "A5c": [
+      "python3",
+      "scripts/build-agent-context.py",
+      "check"
+    ],
+    "A5d": [
+      "node",
+      "scripts/check-agents-parity.mjs"
+    ]
+  },
+  "note": "Sources frozen before testing; individual argv/exit and stdout/stderr retained. Model boundary fixtures, not native product behavior."
+}

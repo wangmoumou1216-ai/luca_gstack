@@ -1,0 +1,71 @@
+{"kind":"FIXTURE_NOT_NATIVE","pid":93680,"root":"/Users/luca/.codex/worktrees/7ede/luca_gstack","cases":["framework-evolution-scout: full strict nullable response completes","framework-evolution-scout: missing load:truth-files","framework-evolution-scout: missing adoption-review","framework-evolution-scout: missing disc:S1","framework-evolution-scout: missing intake:owner/one","framework-evolution-scout: missing verify:owner/one","framework-evolution-scout: missing redteam:owner/one","framework-evolution-scout: successful empty discovery","framework-evolution-scout: invalid score 99","framework-evolution-scout: invalid score -1","framework-evolution-scout: invalid score \"3\"","framework-evolution-scout: invalid score null","framework-evolution-scout: score endpoint 0","framework-evolution-scout: score endpoint 3","framework-evolution-scout: hard FAIL rejects without lost result","framework-evolution-scout: candidate score out of range","framework-evolution-scout: no fixed product or model in prompts","framework-evolution-scout: dedup and verification cap conserve selected set","external-skill-scout: full strict nullable response completes","external-skill-scout: missing load:existing","external-skill-scout: missing C1:gh-search","external-skill-scout: missing verify:owner/one","external-skill-scout: successful empty discovery","external-skill-scout: invalid score 99","external-skill-scout: invalid score -1","external-skill-scout: invalid score \"3\"","external-skill-scout: invalid score null","external-skill-scout: score endpoint 0","external-skill-scout: score endpoint 3","external-skill-scout: hard FAIL rejects without lost result","external-skill-scout: candidate score out of range","external-skill-scout: no fixed product or model in prompts","external-skill-scout: dedup and verification cap conserve selected set","punctual legal \"owner/one\"","punctual legal [\"owner/one\"]","punctual legal [\"Owner/One\",\"owner/one\"]","reject target \"\" before agent","reject target [] before agent","reject target null before agent","reject target {} before agent","reject target [\"\"] before agent","reject target [\"owner/one\",3] before agent","reject args framework-evolution-scout \"bad\"","reject args framework-evolution-scout null","reject args framework-evolution-scout []","reject args external-skill-scout \"\"","reject args external-skill-scout {\"focus\":[]}","reject args external-skill-scout {\"focus\":null}","reject args external-skill-scout \"{bad\"","external bare focus and truly omitted args remain supported","intake exactly original target ","intake exactly original target other/repo","intake exactly original target owner/one,owner/two","two targets cannot lose one intake","verify gap null","verify gap UNKNOWN","source and repo identity cannot change","redteam {} stands","redteam {} downgraded","redteam {} killed","redteam {} UNKNOWN","no open gap {}","redteam {\"target_repos\":\"owner/one\"} stands","redteam {\"target_repos\":\"owner/one\"} downgraded","redteam {\"target_repos\":\"owner/one\"} killed","redteam {\"target_repos\":\"owner/one\"} UNKNOWN","no open gap {\"target_repos\":\"owner/one\"}","framework-evolution-scout: score guard removal detected","external-skill-scout: score guard removal detected"],"sources":{"framework-evolution-scout":"c589da8f171e0aebc372bccea7c01f938e2d0f5b2a3513f20d6da9826e6bd7e0","external-skill-scout":"c96b41b18e9120b5b92882f1b7e20e4abb506c60c705cd68b09e6e1ce1ff77a8"}}
+PASS framework-evolution-scout: full strict nullable response completes
+PASS framework-evolution-scout: missing load:truth-files
+PASS framework-evolution-scout: missing adoption-review
+PASS framework-evolution-scout: missing disc:S1
+PASS framework-evolution-scout: missing intake:owner/one
+PASS framework-evolution-scout: missing verify:owner/one
+PASS framework-evolution-scout: missing redteam:owner/one
+PASS framework-evolution-scout: successful empty discovery
+PASS framework-evolution-scout: invalid score 99
+PASS framework-evolution-scout: invalid score -1
+PASS framework-evolution-scout: invalid score "3"
+PASS framework-evolution-scout: invalid score null
+PASS framework-evolution-scout: score endpoint 0
+PASS framework-evolution-scout: score endpoint 3
+PASS framework-evolution-scout: hard FAIL rejects without lost result
+PASS framework-evolution-scout: candidate score out of range
+PASS framework-evolution-scout: no fixed product or model in prompts
+PASS framework-evolution-scout: dedup and verification cap conserve selected set
+PASS external-skill-scout: full strict nullable response completes
+PASS external-skill-scout: missing load:existing
+PASS external-skill-scout: missing C1:gh-search
+PASS external-skill-scout: missing verify:owner/one
+PASS external-skill-scout: successful empty discovery
+PASS external-skill-scout: invalid score 99
+PASS external-skill-scout: invalid score -1
+PASS external-skill-scout: invalid score "3"
+PASS external-skill-scout: invalid score null
+PASS external-skill-scout: score endpoint 0
+PASS external-skill-scout: score endpoint 3
+PASS external-skill-scout: hard FAIL rejects without lost result
+PASS external-skill-scout: candidate score out of range
+PASS external-skill-scout: no fixed product or model in prompts
+PASS external-skill-scout: dedup and verification cap conserve selected set
+PASS punctual legal "owner/one"
+PASS punctual legal ["owner/one"]
+PASS punctual legal ["Owner/One","owner/one"]
+PASS reject target "" before agent
+PASS reject target [] before agent
+PASS reject target null before agent
+PASS reject target {} before agent
+PASS reject target [""] before agent
+PASS reject target ["owner/one",3] before agent
+PASS reject args framework-evolution-scout "bad"
+PASS reject args framework-evolution-scout null
+PASS reject args framework-evolution-scout []
+PASS reject args external-skill-scout ""
+PASS reject args external-skill-scout {"focus":[]}
+PASS reject args external-skill-scout {"focus":null}
+PASS reject args external-skill-scout "{bad"
+PASS external bare focus and truly omitted args remain supported
+PASS intake exactly original target 
+PASS intake exactly original target other/repo
+PASS intake exactly original target owner/one,owner/two
+PASS two targets cannot lose one intake
+PASS verify gap null
+PASS verify gap UNKNOWN
+PASS source and repo identity cannot change
+PASS redteam {} stands
+PASS redteam {} downgraded
+PASS redteam {} killed
+PASS redteam {} UNKNOWN
+PASS no open gap {}
+PASS redteam {"target_repos":"owner/one"} stands
+PASS redteam {"target_repos":"owner/one"} downgraded
+PASS redteam {"target_repos":"owner/one"} killed
+PASS redteam {"target_repos":"owner/one"} UNKNOWN
+PASS no open gap {"target_repos":"owner/one"}
+PASS framework-evolution-scout: score guard removal detected
+PASS external-skill-scout: score guard removal detected
+scout-workflows 69/69

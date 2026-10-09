@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "node",
+    "scripts/check-plan-approval.mjs",
+    "--plan",
+    "/Users/luca/.codex/worktrees/7ede/luca_gstack/framework-audit/plans/2026-10-09-workflow-audit-plan.md",
+    "--plan-id",
+    "WORKFLOW-AUDIT-20261009-01",
+    "--scope",
+    "NO_PIN-framework-workflow-audit",
+    "--approval",
+    "/Users/luca/.codex/worktrees/7ede/luca_gstack/framework-audit/workflow-audit-20261009/human-confirmation.json",
+    "--effect",
+    "local-edit",
+    "--effect",
+    "local-test",
+    "--effect",
+    "evidence-write",
+    "--effect",
+    "read-only-review",
+    "--effect",
+    "commit",
+    "--effect",
+    "push",
+    "--effect",
+    "pull-ff-only"
+  ],
+  "exit_code": 0,
+  "stdout": "{\"status\":\"PASS\",\"plan_id\":\"WORKFLOW-AUDIT-20261009-01\",\"plan_path\":\"/Users/luca/.codex/worktrees/7ede/luca_gstack/framework-audit/plans/2026-10-09-workflow-audit-plan.md\",\"plan_sha256\":\"66bce40a3223786ef68e88ec65367caecfc23624031eab476b1b360a43ddda36\",\"scope\":\"NO_PIN-framework-workflow-audit\",\"effects\":[\"local-edit\",\"local-test\",\"evidence-write\",\"read-only-review\",\"commit\",\"push\",\"pull-ff-only\"],\"confirmed_at\":\"2026-10-09T07:55:11.437241+00:00\"}\n",
+  "stderr": "",
+  "authority": "mechanical binding only; actual authority is current user reply"
+}

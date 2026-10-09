@@ -1,0 +1,14 @@
+{
+  ".claude/workflows/framework-evolution-scout.js": "529c1e0c7a6b862b6896c2dda9d42071e58ef5c377686e552533d2d5573d89af",
+  ".claude/workflows/external-skill-scout.js": "c96b41b18e9120b5b92882f1b7e20e4abb506c60c705cd68b09e6e1ce1ff77a8",
+  ".codex/workflow-runner.mjs": "2264429f6fc710c291695fff00f3bce9876b3f764e85640ff0cd1dfadced02ba",
+  "scripts/evolution-bookkeep.mjs": "94a023f5601591398286abbe0f5121134fd35116a3413ad236715b8a04be03fd",
+  ".claude/agents/orchestrator.md": "4a3741dc8a59275ddfddac45c1f9602136feaddc6d598c97dd22c3e587d99b65",
+  ".claude/skill-os/optional-workflow-graph.yaml": "888ead3601e3ec8b792b15fe330d1b65fb21e9f7b8c3b90ed2bf827fb7aa73f2",
+  ".claude/skills/office/research-kit/SKILL.md": "8c5d6b5a72af95bfde92eea91d3ca252291c2847f461d891e986fb4f913336c7",
+  "scripts/test-scout-workflows.mjs": "c45401347ffd69a378967a8bf367c4a28f06f306010ae2d3d1ffc20337e715a9",
+  "scripts/test-evolution-bookkeep.mjs": "40108ffe329731201fc05a0074e276caebe9feff5688d77a7f1550a424f0ea95",
+  "scripts/test-workflow-runner.mjs": "5d05687b16647eda28bed7d3f97836e4be385ea43d54bf5dfa6ea03c60aa7d17",
+  "scripts/test-design-workflow-contract.mjs": "1b03be52f5aed1b6126927626517b6988fee1c5b1245f74da62ddf18fd340db0",
+  "scripts/verify.sh": "0cc5e2740be510174bac1d9f18f812a1bf7c2af4f48ff8287877cbf9be0ed852"
+}

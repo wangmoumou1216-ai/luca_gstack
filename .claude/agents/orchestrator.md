@@ -37,7 +37,7 @@ Plan Agent → 计划 → Orchestrator Free Task Mode → 结果
 | 2 文件无依赖可并行 | Parallel Fan-out，主 Agent 同一消息并发调用，不进入 Orchestrator（≥3 文件即命中 Plan Agent 触发条件 1） |
 | 用户直接调用单个 skill | Standalone 模式，skill 自行运行，不走 Orchestrator |
 
-> **冲突解决规则：** 若 workflow-state 有 PENDING 节点且用户同时点名某个 skill：优先执行该 standalone skill，完成后询问用户是否恢复 workflow。不自动进入 Orchestrator。
+> **冲突解决规则：** 历史 workflow-state 的 PENDING/IN_PROGRESS 本身不激活流程。按 routing-chain-check.md R3 核当前真实选择；用户独立点名 skill 时按 standalone 执行，不因旧状态补问恢复。用户已选流程的短回复仍承接原链。
 
 ---
 
@@ -369,7 +369,9 @@ Step 2  继承用户已选流程及当前精确输入；输入 entry 与 scene �
         不要求用户另说“跳过”，也不因无 PRD 先补完整需求链。
 Step 3  仅尚需发现或明确选择场景整链时按 scene 推荐路径变体（见 §3.3）；
         机制/多方案未定回对应 owner；关键入口不明等待真实答案。
-Step 4  只在本次选定路径内找第一个 status=PENDING 的 node；
+Step 4  只在本次选定路径内优先定位本次精确 status=IN_PROGRESS 的 node，补其未完成工作/门；
+        没有待续节点时，才选全部适用依赖已有效完成的第一个 status=PENDING 的 node；
+        多个在途节点无法从当前任务/identity 唯一定位时先澄清，不猜选，也不跳到后继。
         路径外节点不伪标 DONE，不拿它们的 handoff 阻塞短入口。
 Step 5  读本次路径实际选定上游的精确 handoff summary（`<WORK_ROOT>/docs/handoff/`）；
         已有需求/原型直接来源由 Brief 继承，不制造上游 handoff。
@@ -403,7 +405,13 @@ OD daemon 不可达而无该授权时暂停，报告连接问题，不自动 dis
 ### 3.4 Skill 执行循环
 
 ```
-WHILE 有 PENDING 节点:
+WHILE 本次选定路径有 IN_PROGRESS 或 PENDING 节点:
+
+  3.4-resume  先按 §3.2 Step 4 定位精确 IN_PROGRESS；没有时才取依赖就绪 PENDING。
+        有待续前置或依赖失败/未知时，不派发其后继；没有可执行节点则报告缺口并暂停。
+        有效当前产物、自检、独立票和 recorder 记录逐项复用；只有完成门未闭合时直接续 3.4d，
+        不重跑 3.4c 的产物生成/外部效果。需要补工作时按其当前输入/权限重新 pre-flight。
+        当前授权不覆盖下一效果或有未决 Human Gate 时，仍等待真实用户决定。
 
   3.4a  检查 handoff gate（optional-workflow-graph.yaml）
         仅检查本次路径真实适用的 gate，遵守 applies_when；
@@ -450,7 +458,7 @@ Step 1  读 `<WORK_ROOT>/.luca/workflow-state.yaml` → 定位本次恢复的精
 Step 2  读该 node 的 handoff summary 以恢复进度；随后按 next_skill 的当前输入合同及
         handoff-protocol.md 核验全部必需上游。最后 DONE 不替代依赖集合；失败/未知不作成功消费
 Step 3  展示："上次完成了 <last_done>，核心决策：<D-001...>"
-        "下一步是 <next_pending>"
+        "下一步是 <精确 IN_PROGRESS 的未完成工作/门，或依赖就绪 PENDING>"
 Step 4  下一步在当前有效执行授权范围内且无未决 Human Gate → 进入 §3.4 执行循环
         否则说明缺授权或待决事项，等待真实用户确认；状态文件本身不授予执行权限
 ```

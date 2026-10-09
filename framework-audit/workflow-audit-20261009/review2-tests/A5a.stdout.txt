@@ -1,0 +1,86 @@
+PASS G1 app-server path returns structured output
+PASS G1b anchor model is explicit and adopted
+PASS G1c effort is absent from thread and turn requests
+PASS G1d accepted evidence is persisted
+PASS G2 cyclic schema does not throw
+PASS G2b BigInt schema does not throw
+PASS G3 app-server exit returns null without crashing workflow
+PASS G3b transport failure is visible
+PASS G3c noncritical transport failure does not latch
+PASS G4 large app-server notification does not block
+PASS G5 timeout returns null and runner exits normally
+PASS G5b timeout kills the process group
+PASS G6 freeform object is converted before app-server
+PASS G6b freeform response is revived
+PASS G7 concurrency 0 cannot silently skip work
+PASS G7 concurrency -1 cannot silently skip work
+PASS G7 concurrency abc cannot silently skip work
+PASS G8 template-string export text is preserved
+PASS G8b real top-level export is stripped
+PASS I1 thread cwd is scratch, never repository root
+PASS I2 turn sandbox writes only scratch
+PASS I3 network is explicit for workspace-write
+PASS I4 approval is never and provider fallback is disabled
+PASS I5 runner completed under isolated contract
+PASS R1 light scene selects approved lower model
+PASS R2 critical review selects approved peak model
+PASS R4 critical pre-dispatch unknown model relation blocks fallback output
+PASS R4b critical pre-dispatch unknown model relation keeps diagnostic
+PASS R4c critical pre-dispatch unknown model relation stops later agent dispatch
+PASS R4 critical pre-dispatch missing bindings blocks fallback output
+PASS R4b critical pre-dispatch missing bindings keeps diagnostic
+PASS R4c critical pre-dispatch missing bindings stops later agent dispatch
+PASS R4 critical pre-dispatch missing activation blocks fallback output
+PASS R4b critical pre-dispatch missing activation keeps diagnostic
+PASS R4c critical pre-dispatch missing activation stops later agent dispatch
+PASS R4 critical pre-dispatch unprepared release mismatch blocks fallback output
+PASS R4b critical pre-dispatch unprepared release mismatch keeps diagnostic
+PASS R4c critical pre-dispatch unprepared release mismatch stops later agent dispatch
+PASS R5 canonical noncritical pre-dispatch failure preserves null/fallback
+PASS R6 unclassified unknown phase refuses fallback output
+PASS R6 unclassified unreadable policy refuses fallback output
+PASS R7 critical evidence failure stops queued workflow thunk
+PASS R7b critical evidence failure starts only the first agent
+PASS R7c critical queue failure blocks fallback output
+PASS R8 critical preparation failure persists activation latch
+PASS R8b persisted critical preparation failure blocks native prepare
+PASS R8c same activation second runner refuses credible output
+PASS R8d latched entry refuses no-agent thunk before workflow effects
+PASS R9 evidence state lock failure settles runner with exit 1
+PASS R9b evidence I/O failure reports unpersisted critical latch
+PASS R9c blocked evidence does not claim activation latch persisted
+PASS R9d unresolved critical ticket blocks second runner after lock is cleared
+PASS R9e unresolved-ticket refusal does not claim persistence succeeded
+PASS R10 current runner critical agents retain normal parallel dispatch
+PASS R10b parallel critical evidence is accepted independently
+PASS R11 critical preparation is durable before binding read
+PASS R11b unknown relation with failed latch keeps durable preparation intent
+PASS R11c pending preparation blocks next runner after write lock clears
+PASS R11d pending preparation blocks native prepare
+PASS R12 unavailable reservation refuses binding/resolver/model work
+PASS R12b refused reservation creates neither failure nor intent
+PASS R12c ordinary work can start after reservation lock clears
+PASS R13 concurrent unresolved preparation blocks noncritical fallback
+PASS R13b noncritical pending-intent refusal does not write failure latch
+PASS R14 malformed preparations refuse entry before workflow effects
+PASS R15 native completion lock failure retains bound critical ticket
+PASS R15b unresolved native critical completion blocks no-agent runner effects
+PASS R15c native pending-ticket refusal does not claim failure latch persisted
+PASS R15d native critical completion can close normally after lock clears
+PASS R15e closed critical native evidence allows runner effects
+PASS R16 pending noncritical native work does not block runner entry
+PASS R17 unbound critical native ticket also blocks runner entry
+PASS A08 actual session switch A→B succeeds while A work is in flight
+PASS A08 current session binding is B after the switch
+PASS A08 queued A work keeps the frozen absolute A root after the session switches to B
+PASS A08 explicit cancellation prevents not-yet-dispatched tool work
+PASS A08 cancellation reports in-flight work and does not claim OS rollback
+PASS A08 cancellation terminates the started child process group
+PASS R3 critical wrong-model blocks runner output
+PASS R3b critical wrong-model latches activation
+PASS R3 critical reroute blocks runner output
+PASS R3b critical reroute latches activation
+PASS R3 critical failed-turn blocks runner output
+PASS R3b critical failed-turn latches activation
+
+=== test-workflow-runner-runtime summary: PASS=84 FAIL=0 ===
