@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-10 · 项目探查被拒绝后的恢复指引）
+
+- 项目作用域 hook 的拒绝信息明确公开的 `project.sh list/status/switch` 入口和精确目录检索边界；缺少原生会话身份时不猜其他会话，绑定后仍禁止扫描项目总目录。为什么：原始会话将 skill 读取、项目总目录扫描和内部状态探查混在一条命令中，旧提示没有给出可用的恢复步骤。保留原拒绝判据，新增 Claude/Codex 双入口回归及公开查询执行验证。
+
 ### Fixed（2026-10-08 · 切模型后的工具权限误拦截）
 
 - Host Launch 新增 `codex-config-v2`，将合法模型、思考强度和有限显示偏好从安全身份中分离，与 Luca App 同步采用；权限、服务地址、项目与未知字段仍严格校验。为什么：正常切模型不应导致 `IDENTITY_CHANGED` 并阻断工具。旧 v1 会话保持原规则，新 App broker 与新会话采用修复。

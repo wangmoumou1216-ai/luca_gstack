@@ -1529,6 +1529,61 @@ check('PROJECT-CONTROL-003 ordinary source inspection and editing are not sideca
   }
 });
 
+// Replay the 2026-10-09 failure: a skill read was batched with project-wide
+// discovery and protected-state discovery. Recovery must name public queries
+// without weakening either deny or changing an unrelated skill-read command.
+check('PROJECT-CONTROL-004 blocked discovery provides usable public recovery on both harnesses', () => {
+  for (const viaAdapter of [false, true]) {
+    const env = makeEnv();
+    const invoke = command => run(env, { hook_event_name: 'PreToolUse', session_id: 'RECOVERY',
+      tool_name: viaAdapter ? 'shell' : 'Bash', tool_input: { command } }, {}, { viaAdapter });
+    const skillRead = 'cat .agents/skills/html-prototype/SKILL.md';
+    const projectSearch = String.raw`find ${env.projects} -maxdepth 3 \( -name CONTEXT.md -o -name '*.html' \) -print | head -100`;
+    const sidecarSearch = `${skillRead}; ${projectSearch}; find .claude -maxdepth 1 -name '.session-project-*' -print`;
+    const sidecar = invoke(sidecarSearch)?.hookSpecificOutput;
+    assert.equal(sidecar?.permissionDecision, 'deny');
+    assert.match(sidecar.permissionDecisionReason, /sidecar.*控制平面/);
+    assert.ok(sidecar.permissionDecisionReason.includes('bash scripts/project.sh status RECOVERY'));
+    assert.ok(sidecar.permissionDecisionReason.includes('bash scripts/project.sh list'));
+
+    const broad = invoke(`${skillRead}; ${projectSearch}`)?.hookSpecificOutput;
+    assert.equal(broad?.permissionDecision, 'deny');
+    assert.match(broad.permissionDecisionReason, /项目总目录/);
+    assert.ok(broad.permissionDecisionReason.includes('bash scripts/project.sh list'));
+    assert.ok(broad.permissionDecisionReason.includes('bash scripts/project.sh switch'));
+    assert.match(broad.permissionDecisionReason, /单独|单一/);
+    assert.match(broad.permissionDecisionReason, /精确绝对/);
+    for (const command of [skillRead, 'bash scripts/project.sh list', 'bash scripts/project.sh status RECOVERY']) {
+      assert.equal(invoke(command), null, `${viaAdapter}: public query / independent skill read must pass`);
+    }
+    // Execute the suggested public queries against the same isolated root.
+    // Merely allowing their command text would not prove a usable recovery path.
+    const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+    for (const args of [['list'], ['status', 'RECOVERY']]) {
+      const query = spawnSync('bash', [join(repo, 'scripts/project.sh'), ...args], {
+        cwd: env.gstack, encoding: 'utf8',
+        env: { ...process.env, LUCA_GSTACK_ROOT: env.gstack, LUCA_PROJECTS_ROOT: env.projects, CODEX_HOME: env.codexHome },
+      });
+      assert.equal(query.status, 0, query.stderr);
+      const view = JSON.parse(query.stdout);
+      if (args[0] === 'status') {
+        assert.equal(view.execution_authority, 'NOT_PROVIDED');
+        assert.equal(view.state, 'NO_PIN');
+      } else {
+        assert.equal(view.read_status, 'OK');
+        assert.deepEqual(view.projects, []);
+      }
+    }
+    assert.equal(invoke('cat docs/unbound.md')?.hookSpecificOutput?.permissionDecision, 'deny');
+  }
+  const env = makeEnv();
+  const missingIdentity = run(env, { tool_name: 'Bash',
+    tool_input: { command: "find .claude -name '.session-project-*'" } })?.hookSpecificOutput;
+  assert.equal(missingIdentity?.permissionDecision, 'deny');
+  assert.match(missingIdentity.permissionDecisionReason, /缺少可验证 session_id/);
+  assert.doesNotMatch(missingIdentity.permissionDecisionReason, /project.sh status/);
+});
+
 check('READ-GRANT-004 malformed project state cannot change explicit absolute-path delegation', () => {
   const env = makeEnv();
   const target = join(env.projects, 'beta', 'docs', 'reference.md');

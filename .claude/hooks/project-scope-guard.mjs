@@ -1091,12 +1091,12 @@ function main() {
   const sessionControlPlane = sessionControlPlaneReference(toolName, input);
   if (sessionControlPlane) {
     return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-      // 文案必须给出改写指引：本判据保留了 dotglob 安全余量，正常路径也可能被它拦下，而一条只说
-      // 「你在伪造控制平面」的拒绝会把人推向绕行（实测：一次误拦就催生了「把载荷挪出命令文本」的
-      // 方案）。给出两条不绕闸的出路，比让人自己发明第三条强。
+      // 查询状态走公开投影；只给通配改写建议会让正常项目发现反复撞内部控制平面。
       permissionDecisionReason: `session 状态 sidecar（project-state/read-grant/legacy-consumption/host-launch/child-project）是 hook 内部控制平面，普通工具不得读取、写入或伪造（${sessionControlPlane}）。`
-        + '若你并非要碰 sidecar，只是路径里带了通配或运行期展开：把它写成不含元字符的确定路径，'
-        + '或改用 Write/Edit 等文件类工具（按 file_path 精确判定，不扫命令文本）。' } });
+        + (sid ? `查询本会话项目状态请单独运行 bash scripts/project.sh status ${sid}；`
+          : '当前调用缺少可验证 session_id；请由宿主提供本会话原生身份后再查询状态，勿猜其他会话 ID。')
+        + '项目列表使用 bash scripts/project.sh list。公开查询不授予项目执行权限。'
+        + '若实际目标是普通框架文件，请使用不含通配或运行期展开的确定路径，或具有明确 file_path 的文件工具；受保护状态文件仍不可直接访问。' } });
   }
   if (toolName === 'Bash') {
     const patch = inspectApplyPatch(bashCommand, binding);
@@ -1226,7 +1226,12 @@ function main() {
     const direct = directProjectPathsAllowed(guardCmd, binding);
     if (direct.seen && !direct.allowed) {
       return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: authorityFailure || `Bash 直接项目路径不属于当前可验证 binding（${direct.value}）；禁止 no-pin/跨项目/失效 identity 访问。${recoveryHint}` } });
+        permissionDecisionReason: authorityFailure || `Bash 项目总目录或不安全项目路径不可直接访问（${direct.value}）。`
+          + '查看项目列表请单独运行 bash scripts/project.sh list。'
+          + "用户已明确选定项目且尚未绑定时，单独运行 bash scripts/project.sh switch '<canonical-name>'；"
+          + '由 hook 注入事务参数，验证提交结果后按 Project Gate 的轮次边界续接。'
+          + '内容检索请使用本次任务已授权目标的精确绝对目录；绑定项目也不允许扫描项目总目录。'
+          + recoveryHint } });
     }
     const r = rewriteBash(guardCmd, binding);
     if (r.unsafe) {
