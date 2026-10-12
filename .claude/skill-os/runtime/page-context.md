@@ -205,10 +205,10 @@ Packet 不受理。scope 的非模板/排除项仍保留在完整覆盖表，不
 
 ## 7. 原件保真执行路径（original_copy）
 
-**能力门：v1 HEADLESS_ONLY。** 在任何 profile/出图路径选择及外部 stage/run 前，继承或收集
-真实用户的显式 headless opt-in 和独立 run grant（准确 OD 目标/handoff、prompt/范围；最终
-bundle/hash 在外部动作前核验）。缺任何一项即 STOP，说明限制并等待真人选择，不默选 headless
-或先 stage；普通 carrier/reference_only 的桌面默认不能适用于原件。
+**OD 能力门：v1 HEADLESS_ONLY。** 在任何 profile/出图路径选择及外部 stage/run 前，核已选 OD
+的默认 headless 模式及独立 run grant（准确 OD 目标/handoff、prompt/范围；最终 bundle/hash
+在外部动作前核验）。不再询问自动模式许可；明确桌面生成或缺 run grant 即 STOP 于受影响动作，
+不先 stage、不以默认参数或模板采用代签。CD 原件沿独立 claude-design 的人工生成合同，不能复用 OD 收据。
 原件 headless 失败沿 OD Phase 3H 的原请求计数与至多一次授权 retry；桌面生成/回收不支持。
 重试耗尽、缺授权或无法核终态时 STOP，保留失败证据并暂停本次交付及依赖后继。
 完整读取 open-design Phase 0/3H 的选择、重试及恢复合同后才进入对应动作；不重置计数、

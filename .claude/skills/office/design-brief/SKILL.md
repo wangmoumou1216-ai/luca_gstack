@@ -48,13 +48,13 @@ python3 .claude/observability/scripts/get_rules.py design-brief "*" 2>/dev/null 
 
 作为资深产品与交互设计师，把明确的设计输入收敛为可执行、可验收的契约。
 产品、语言、品牌和设计系统来自已确认项目及用户输入，不能从框架模板推断。
-本节点放在**设计输入就绪之后、Open Design 执行之前**；三种入口汇合于此：
+本节点放在**设计输入就绪之后、已选设计工具执行之前**；三种入口汇合于此：
 
 | 入口 | 输入 | 工作 |
 |---|---|---|
 | pipeline | PRD / UX 研究、评审、已选方案 | 继承决策，补齐交互与模板适配 |
 | existing_requirements | 已有需求、口述转写、需求文档 | 建立来源索引，直接收敛设计，不强制重跑需求链 |
-| prototype_visual_refinement | 已有原型 + 模板/模块 + 精修要求 | 继承行为，锁定修改/保持边界，适配后交给 OD 美化 |
+| prototype_visual_refinement | 已有原型 + 模板/模块 + 精修要求 | 继承行为，锁定修改/保持边界，适配后交给已选工具美化 |
 
 入口与 A/B/C/D 场景分开。有效的场景、模板、位置、工具和授权直接继承；
 只有缺失且会改变意图的项目才询问。无 PRD 不等于无法设计生成。
@@ -235,8 +235,10 @@ DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED。NO_PIN 框架维护不跑项目 pream
 
 ## Phase 8：按已授权目标交接
 
-用户已明确目标及后续范围则继续；未定才提供 OD（推荐）、Claude Design、MagicPath、本地HTML或停在文档。
+用户已明确目标及后续范围则继续；要生成但工具未定交 design-output，只问一次 OD 或 Claude Design。
+明确选择 MagicPath、本地 HTML 或停在文档仍沿实际选择。冻结 Packet 尚未选择工具时，用
+design-output 的 path/hash-bound sidecar 记录后续选择，不改正文；硬绑定异工具回本 Brief 修订重冻。
 不重复许可、不自动换工具。工具不可达保留材料并报告具体状态。
-Brief DONE 只表示契约完成，不表示 OD 已生成或验收通过。
+Brief DONE 只表示契约完成，不表示 OD/CD 已生成或验收通过。
 
 <!-- FILE_END: design-brief/SKILL.md -->

@@ -61,16 +61,17 @@ prototype_visual_refinement 均从 design-brief → 已选生成工具开始。�
 
 | 用户意图 | Skill Pipeline |
 |---------|---------------|
-| 全流程设计（调研→方案→原型） | deepresearch ‖ ux-research → brainstorm → ux-brainstorm → design-brief → open-design |
+| 全流程设计（调研→方案→原型） | deepresearch ‖ ux-research → brainstorm → ux-brainstorm → design-brief → design-output |
 | 调研 + 方案（无原型） | deepresearch ‖ ux-research → brainstorm → ux-brainstorm |
-| 调研 + 原型（快速迭代） | ux-research → design-brief → open-design |
+| 调研 + 原型（快速迭代） | ux-research → design-brief → design-output |
 | 仅研究 | deepresearch ‖ ux-research（并行） |
-| 评审改版 | ux-audit → design-brief → open-design |
-| Agent 化改造 | brainstorm → deepresearch → design-brief → open-design |
+| 评审改版 | ux-audit → design-brief → design-output |
+| Agent 化改造 | brainstorm → deepresearch → design-brief → design-output |
 
 > `‖` = 并行，`→` = 串行依赖
 >
-> 设计产出终端默认推荐 **open-design**（CLAUDE.md 定的设计产出首选），以用户已选工具为准。
+> design-output 仅在未选时问一次 OD/CD，已选直接继承，保留完整原任务。
+> 它没有独立完成节点；Phase 绑定实际 open-design 或 claude-design adapter 后才执行与验收。
 > OD 不可达、认证失败或非 React/Canvas 场景不授权自动换工具；仅在用户明确选择 MagicPath / 本地 HTML，
 > 或明确批准包含相应备用路径的计划且触发条件满足时，才 dispatch 对应能力；否则报告 `BLOCKED` 并交还用户。
 > figma-demo 已降级为隐藏 skill，不作默认推荐。
@@ -82,9 +83,9 @@ prototype_visual_refinement 均从 design-brief → 已选生成工具开始。�
 
 | 触发信号 | Skill Pipeline |
 |---------|---------------|
-| 「直接出设计方案」「跳过调研」 | ux-brainstorm → design-brief → open-design |
+| 「直接出设计方案」「跳过调研」 | ux-brainstorm → design-brief → design-output |
 | 「已有调研，直接出 PRD」 | brainstorm → ux-brainstorm |
-| 「已有 PRD，直接出原型」 | design-brief → open-design |
+| 「已有 PRD，直接出原型」 | design-brief → design-output |
 
 > **判断原则：** 先继承实际输入成熟度和用户所选流程；已有需求/原型不因缺少“跳过”字样重跑整链。
 > 尚需研究且用户选择完整流程时才推荐整链。短入口保持 Brief 来源、状态、适配、冻结和验收门。
@@ -116,6 +117,8 @@ prototype_visual_refinement 均从 design-brief → 已选生成工具开始。�
 | `ux-brainstorm` | main_agent | 当前对话承接方案与取舍 |
 | `design-brief` | main_agent | 当前对话承接输入与冻结选择 |
 | `open-design` | main_agent | 当前对话承接工具、授权及采用选择 |
+| `design-output` | main_agent | 薄选择入口，无独立 node/handoff/DONE |
+| `claude-design` | main_agent | 可信 Muse Design、零发送、用户生成、精确回收与验收 |
 
 其他 skill 按上述 owner 和自身交互合同确定，不能仅按 WA 标签决定执行位置。
 以下是全链路示例；实际按选定 Pipeline 展示 Phase 和输出，短入口不创建空研究/PRD节点：
@@ -141,7 +144,7 @@ prototype_visual_refinement 均从 design-brief → 已选生成工具开始。�
   WA-4: /design-brief [execution_context=main_agent] — <交互契约主题，1句话>
 
 ━━━ Phase 5（依赖 Phase 4）━━━
-  WA-5: open-design [execution_context=main_agent] — 基于 design-brief 的 Generation Packet 产出设计（OD 交接与回收 HTML）
+  WA-5: <实际已选 open-design 或 claude-design> [execution_context=main_agent] — 冻结 Packet 交接、回收与验收；未选先 design-output，不另建节点
 
 预计产出路径：
   docs/research/ · docs/prd/ · docs/decisions/ · open-design 产出（HTML）
@@ -227,8 +230,10 @@ Work Agent 收到指令后必须按以下顺序执行：
 
 **工具授权先于重试分流：** 以下重试只限同一已授权工具，不得借 `BLOCKED` 改走未授权备用工具。
 缺少工具切换授权时暂停并交还用户；已有计划明确批准的备用路径可在其触发条件满足时继续，无需重复确认。
+CD stage 零发送、人工生成；未知上传/下载先核专用 status，不按 W9 重放外部效果。
 OD original_copy v1 是 HEADLESS_ONLY：在该阶段 profile/外部 stage/run 前，由主会话按 OD
-Phase 0 核真实显式 headless opt-in 与独立 run grant，缺项 STOP 等真人选择。原件失败遵守
+Phase 0 继承已选 OD 的默认 headless，并核独立当前 run grant；不再问自动模式许可，明确桌面或缺授权
+即 STOP 于受影响动作。原件失败遵守
 OD Phase 3H：桌面生成/回收不支持，不能套 W9 的普通恢复；耗尽或无法核终态就保留失败并停止
 该交付/依赖后继。普通 carrier/reference_only headless 失败保留原有「一次 retry → 同一项目 OD 桌面端恢复」，这不是更换工具；
 该一次 retry 由 OD 路径计数，W9 不得通过重启 WA 重置它或重新进入已耗尽的 headless 路径。
@@ -273,7 +278,7 @@ OD Phase 3H：桌面生成/回收不支持，不能套 W9 的普通恢复；耗�
   ✅ Phase 2: brainstorm — 完成
   ✅ Phase 3: ux-brainstorm — 完成
   ✅ Phase 4: design-brief — 完成
-  ✅ Phase 5: open-design — 完成
+  ✅ Phase 5: <实际已选 adapter> — 完成（仅实际回收/验收通过时）
 
 产出清单：
   研究报告   → docs/research/deepresearch-<topic>-YYYY-MM-DD.md
@@ -312,6 +317,8 @@ OD Phase 3H：桌面生成/回收不支持，不能套 W9 的普通恢复；耗�
 | /brainstorm | ✅ |
 | /ux-brainstorm | ✅ |
 | /design-brief | ✅ |
+| /design-output | ✅（薄入口） |
+| /claude-design | ✅（须实际宿主能力） |
 | /open-design | ✅ |
 | magicpath | ✅ |
 | /html-prototype | ✅ |

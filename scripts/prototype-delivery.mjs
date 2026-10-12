@@ -6,6 +6,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { parse as parseHtml, parseFragment as parseHtmlFragment } from 'parse5';
 import { parse as parseJavaScript } from 'acorn';
+import { verifyClaudeDesignRecovery } from './claude-design-recover.mjs';
 
 const schema = JSON.parse(fs.readFileSync(new URL('../.claude/skill-os/prototype-delivery.schema.json', import.meta.url)));
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -938,6 +939,27 @@ function boundChecks(bound, context) {
   checkedRef({ path: bound.base.entry, sha256: bound.base.sha256 }, context);
   requireThat(bound.base.origin !== 'open-design' || bound.base.recovery_ref, 'OD_RECOVERY_REQUIRED', bound.base.entry);
   if (bound.base.recovery_ref) checkedRef(bound.base.recovery_ref, context);
+  if (bound.base.origin === 'claude-design') {
+    requireThat(bound.base.recovery_ref, 'CD_RECOVERY_REQUIRED', bound.base.entry);
+    requireThat(typeof context.authenticateClaudeDesignSelection === 'function', 'CD_SELECTION_CONTEXT_REQUIRED', 'NEEDS_CONTEXT: verified caller selection callback required');
+    const recovered = verifyClaudeDesignRecovery(bound.base.recovery_ref, {
+      authorizeRead: item => {
+        const file = absolute(item.path);
+        requireThat(context.read_paths.includes(file) || context.read_roots.some(root => within(file, root)), 'READ_SCOPE_REFUSED', file);
+        return true;
+      },
+      authenticateSelection: subject => context.authenticateClaudeDesignSelection({ ...subject, recoveryRef: bound.base.recovery_ref }),
+    });
+    requireThat(recovered.selectionAuthenticity === 'CALLER_VERIFIED', 'CD_SELECTION_CONTEXT_REQUIRED', bound.base.entry);
+    requireThat(bound.source.locator === recovered.receipt.packet.path && bound.source.sha256 === recovered.receipt.packet.sha256, 'CD_PACKET_MISMATCH', bound.source.locator);
+    // Derived notes bind the accepted parent final through parentChecks; raw provenance stays checked above.
+    if (!bound.parent_accepted_ref) requireThat(bound.base.entry === recovered.entry && bound.base.sha256 === recovered.sha256, 'CD_RAW_IDENTITY_MISMATCH', bound.base.entry); // guard:cd-raw-identity
+    if (recovered.mechanicalAcceptance === 'PENDING_FIDELITY') {
+      requireThat(typeof context.verifyClaudeDesignFidelity === 'function' && context.verifyClaudeDesignFidelity({
+        recoveryRef: bound.base.recovery_ref, receipt: recovered.receipt, readRefs: recovered.readRefs,
+      }) === true, 'CD_FIDELITY_REQUIRED', 'Actual original/template checks required');
+    }
+  }
   if (bound.base.spec) checkedRef(bound.base.spec, context);
   for (const method of bound.methods) checkedRef({ path: method.path, sha256: method.sha256 }, context);
   dependencies(bound.base.closure, root, bound.base.entry_relative, context);

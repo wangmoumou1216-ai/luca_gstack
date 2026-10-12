@@ -113,6 +113,10 @@ Handoff 写入节的以下内容受保护：
 
 ### P7 — workflow-state 写入（严格保护）
 
+`design-output` 是薄选择入口，没有独立 node/DONE/writer；Workflow 只登记实际
+`open-design` 或 `claude-design` adapter，由 Orchestrator 验收后一次提交。CD 使用独立 provenance，
+不改历史 OD 节点、OD original_copy HEADLESS_ONLY 或其已有完成 seam。
+
 写入 `.claude/workflow-state.yaml` 的代码不得删除，`_NODE`、`_STATUS`、`_OUTPUT` 变量赋值不得改变含义。
 
 **唯一条件例外（OD composite postprocess）：** 仅在用户已批准的 open-design 同一 design-output

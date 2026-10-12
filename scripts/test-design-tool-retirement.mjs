@@ -57,11 +57,13 @@ function verifyGraph() {
   assert.doesNotMatch(graphText, /figma-layer|html_or_demo_to_figma/, 'retired graph dispatch must be removed');
   const scenes = readAuthority(root, `${graphPath}#scenes`);
   for (const scene of ['A', 'B', 'C', 'D']) {
-    assert.ok(scenes[scene].recommended_paths.some(path => path.includes('open-design')), `${scene}: OD path retained`);
+    assert.ok(scenes[scene].recommended_paths.some(path => path.includes('design-output')), `${scene}: design-output path retained`);
     for (const tool of ['html-prototype', 'magicpath']) {
       assert.ok(scenes[scene].fallback_paths.some(path => path.includes(tool)), `${scene}: independent ${tool} path retained`);
     }
   }
+  const output = readAuthority(root, `${graphPath}#design_output`);
+  assert.deepEqual(output.adapters, ['open-design', 'claude-design']);
   const gates = readAuthority(root, `${graphPath}#handoff_gates`);
   for (const name of ['design_brief_to_open_design', 'design_brief_to_html', 'design_brief_to_magicpath']) {
     for (const clause of ['design_generation_packet missing', 'tool_consumption_contract missing',
