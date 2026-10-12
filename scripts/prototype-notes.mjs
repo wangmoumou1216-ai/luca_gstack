@@ -218,6 +218,67 @@ function authorizedRead(file,context) {
   if (!fs.statSync(absolute).isFile() || fs.realpathSync(absolute)!==absolute) throw Error('READ_SCOPE_REFUSED: canonical file required');
   return fs.readFileSync(absolute);
 }
+function checkCSSEscapes(value,from,selectorRules=true) {
+  if(!value.includes('\\'))return;
+  const refuse=()=>{throw Error('UNSUPPORTED_ASSET: escaped CSS tokens outside supported qualified selectors: '+from);};
+  const blocks=[selectorRules?'rules':'declarations'];
+  let start=0,escaped=false,quote=null,comment=false,round=0,square=0;
+  for(let i=0;i<value.length;i++) {
+    const c=value[i],next=value[i+1];
+    if(comment){if(c==='*'&&next==='/'){comment=false;i++;}continue;}
+    if(!quote&&c==='/'&&next==='*'){comment=true;i++;continue;}
+    if(c==='\\') {
+      // Only simple punctuation escapes in a qualified rule prelude are admitted.
+      // Resource identifiers, URL strings, declarations and unknown contexts stay fail-closed.
+      if(!next || !/^[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]$/.test(next))refuse();
+      escaped=true;i++;continue;
+    }
+    if(quote){if(c===quote)quote=null;else if(c==='\n'||c==='\r'||c==='\f')refuse();continue;}
+    if(c==='"'||c==="'"){quote=c;continue;}
+    if(c==='('){round++;continue;}if(c===')'){if(--round<0)refuse();continue;}
+    if(c==='['){square++;continue;}if(c===']'){if(--square<0)refuse();continue;}
+    if(round||square)continue;
+    if(c==='{') {
+      const prelude=value.slice(start,i).replace(/\/\*[\s\S]*?\*\//g,' ').trim(),parent=blocks.at(-1);
+      const qualified=parent==='rules'&&prelude&&!prelude.startsWith('@');
+      if(escaped&&!qualified)refuse();
+      const ruleName=prelude.match(/^@([-\w\u0080-\u{10ffff}]+)/u)?.[1].toLowerCase();
+      blocks.push(qualified?'declarations':parent==='rules'&&['media','supports','container','layer','scope','starting-style'].includes(ruleName)?'rules':'opaque');
+      start=i+1;escaped=false;
+    } else if(c===';'||c==='}') {
+      if(escaped)refuse();
+      if(c==='}'&&blocks.length===1)refuse();if(c==='}')blocks.pop();
+      start=i+1;escaped=false;
+    }
+  }
+  if(escaped||quote||comment||round||square||blocks.length!==1)refuse();
+}
+const isCSPMeta=node=>node.tagName==='meta'&&attr(node,'http-equiv')?.trim().toLowerCase()==='content-security-policy';
+function notesInsertionOffset(tree,ignoredScripts=new Set()) {
+  const head=tree.nodes.find(n=>n.tagName==='head'),end=head?.sourceCodeLocation?.startTag?.endOffset;
+  if(!Number.isSafeInteger(end))throw Error('UNSUPPORTED_ASSET: explicit head before all business scripts required');
+  const policies=tree.nodes.filter(isCSPMeta);let offset=end+tree.bom;
+  if(policies.length) {
+    if(policies.length!==1)throw Error('UNSUPPORTED_ASSET: multiple CSP policies are not supported');
+    const policy=policies[0],content=attr(policy,'content'),loc=policy.sourceCodeLocation;
+    // Browsers do not trim this enumerated attribute; keep suspicious spellings fail-closed.
+    if(attr(policy,'http-equiv').toLowerCase()!=='content-security-policy')throw Error('UNSUPPORTED_ASSET: invalid CSP http-equiv spelling');
+    if(policy.parentNode!==head||!Number.isSafeInteger(loc?.endOffset))throw Error('UNSUPPORTED_ASSET: CSP must be an early direct head meta');
+    // Bounded offline profile: preserve the policy verbatim, never remove it or borrow a nonce.
+    const profile={'default-src':"'none'",'img-src':'data:','font-src':'data:','style-src':"'unsafe-inline'",'script-src':"'unsafe-inline'",'connect-src':"'none'",'form-action':"'none'",'base-uri':"'none'"},directives=new Map();
+    if(!content||/[^\x09\x0a\x0c\x0d\x20-\x7e]/.test(content))throw Error('UNSUPPORTED_ASSET: unsupported CSP policy syntax');
+    for(const part of content.split(';').filter(p=>p.trim())) {
+      const [name,...tokens]=part.trim().split(/[\t\n\f\r ]+/),key=name.toLowerCase();
+      if(directives.has(key)||!Object.hasOwn(profile,key)||tokens.length!==1||tokens[0]!==profile[key])throw Error('UNSUPPORTED_ASSET: incompatible or unknown CSP directive: '+key);
+      directives.set(key,tokens[0]);
+    }
+    if(directives.size!==Object.keys(profile).length)throw Error('UNSUPPORTED_ASSET: CSP does not match the supported offline inline profile');
+    offset=loc.endOffset+tree.bom;
+    if(tree.nodes.some(n=>!ignoredScripts.has(n)&&n.sourceCodeLocation?.startOffset<loc.startOffset&&(['script','style','link','base'].includes(n.tagName)||(n.attrs||[]).some(a=>/^on/i.test(a.name)))))throw Error('UNSUPPORTED_ASSET: CSP must precede business executable and style entrances');
+  }
+  if(tree.nodes.some(n=>n.tagName==='script'&&!ignoredScripts.has(n)&&n.sourceCodeLocation?.startOffset+tree.bom<offset))throw Error('UNSUPPORTED_ASSET: insertion must precede all business scripts');
+  return offset;
+}
 async function inlineAssets(source,options) {
   const transformations = [], assets = new Map(), selected = options.closure || [];
   for (const item of selected) {
@@ -243,6 +304,8 @@ async function inlineAssets(source,options) {
       else if(!['image/png','image/jpeg','image/gif','image/webp','image/avif','image/x-icon','image/vnd.microsoft.icon','font/woff','font/woff2','font/ttf','font/otf','application/font-woff','application/vnd.ms-fontobject'].includes(kind))throw Error('UNSUPPORTED_ASSET: uninspectable data resource type: '+kind);
       return url;
     }
+    // Rewriting a restricted source to data: can activate or suppress it across engines.
+    if (hasCSP) throw Error('UNSUPPORTED_ASSET: CSP resource behaviour cannot be preserved by inlining: ' + from + ' -> ' + url);
     if (!options.inline_assets) throw Error('UNSUPPORTED_ASSET: local resource requires approved inlining: ' + from + ' -> ' + url);
     if (/^(?:[a-z][a-z\d+.-]*:|\/\/|\/)/i.test(url) || /[\\\0?#]/.test(url) || /%(?:2e|2f|5c)/i.test(url)) throw Error('UNSUPPORTED_ASSET: escaping/network/query resource: ' + url);
     const name = path.posix.normalize(path.posix.join(path.posix.dirname(from),url));
@@ -300,8 +363,8 @@ async function inlineAssets(source,options) {
     }
     visit(ast);
   }
-  async function css(value,from,stack=[]) {
-    if (/\\/.test(value)) throw Error('UNSUPPORTED_ASSET: escaped CSS tokens are not supported by the static closure inspector: '+from);
+  async function css(value,from,stack=[],selectorRules=true) {
+    checkCSSEscapes(value,from,selectorRules);
     if (/(?<![\w-])(?:image-set|-webkit-image-set|image|src|cross-fade|-webkit-cross-fade|paint)\s*\(/i.test(value)) throw Error('UNSUPPORTED_ASSET: unsupported CSS resource function requires a complete resource parser: '+from);
     const matches=[...value.matchAll(/@import\s+(?:url\(\s*)?(?:"([^"]+)"|'([^']+)'|([^\s;)'"<]+))\s*\)?/gi),...value.matchAll(/url\(\s*(?:"([^"]+)"|'([^']+)'|([^\s)'"<]+))\s*\)/gi)];
     const patches=[];
@@ -317,6 +380,7 @@ async function inlineAssets(source,options) {
     return out;
   }
   const tree=sourceTree(source), patches=[], entry=options.entry_relative || 'index.html';
+  const hasCSP=tree.nodes.some(isCSPMeta);if(hasCSP)notesInsertionOffset(tree);
   // Enumerate all parser-recognized executable entrances before examining resource attributes.
   const executable=[];
   const classicType=type=>!type || /^(?:application\/(?:x-)?(?:javascript|ecmascript)|text\/(?:(?:x-)?(?:javascript|ecmascript)|javascript1\.[0-5]|jscript|livescript))$/i.test(type.split(';')[0].trim());
@@ -340,7 +404,7 @@ async function inlineAssets(source,options) {
     patches.push({start:loc.startOffset+tree.bom,end:loc.endOffset+tree.bom,text:(a.prefix?a.prefix+':':'')+a.name+'="'+replacement.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')+'"'});
   };
   for(const node of tree.nodes) {
-    if (['base','iframe','object','embed'].includes(node.tagName) || attr(node,'http-equiv')?.toLowerCase()==='content-security-policy')throw Error('UNSUPPORTED_ASSET: unsupported remapping/CSP/frame dependency: '+node.tagName);
+    if (['base','iframe','object','embed'].includes(node.tagName))throw Error('UNSUPPORTED_ASSET: unsupported remapping/frame dependency: '+node.tagName);
     if(node.tagName==='script') {
       if(attr(node,'type')?.toLowerCase()==='module')throw Error('UNSUPPORTED_ASSET: module script');
       if(!attr(node,'type') || /^(?:text|application)\/(?:javascript|ecmascript)$/i.test(attr(node,'type')))checkJS(text(node),entry);
@@ -351,7 +415,7 @@ async function inlineAssets(source,options) {
     }
     for(const a of node.attrs||[]) {
       let replacement=a.value;
-      if(a.name==='style')replacement=await css(a.value,entry);
+      if(a.name==='style')replacement=await css(a.value,entry,[],false);
       else if(a.name==='srcset') {
         if(/^data:/i.test(a.value)) {
           const syntax=/(data:[a-z/+.-]+;base64,[A-Za-z0-9+/=]+)(?: (\d+(?:\.\d+)?[wx]))?/gi;
@@ -380,8 +444,7 @@ async function inlineAssets(source,options) {
 function inspectSource(source) {
   const tree=sourceTree(source);
   if(tree.nodes.some(n=>(attr(n,'id')||'').startsWith('luca-notes-')))throw Error('CORRUPT_EMBEDDING: existing or damaged notes package');
-  const head=tree.nodes.find(n=>n.tagName==='head'), end=head?.sourceCodeLocation?.startTag?.endOffset, offset=Number.isSafeInteger(end)?end+tree.bom:undefined;
-  if(!Number.isSafeInteger(offset) || tree.nodes.some(n=>n.tagName==='script' && n.sourceCodeLocation?.startOffset+tree.bom<offset))throw Error('UNSUPPORTED_ASSET: explicit head before all business scripts required');
+  const offset=notesInsertionOffset(tree);
   if(tree.parseErrors.some(e=>['duplicate-attribute','eof-in-element-that-can-contain-only-text'].includes(e.code)))throw Error('UNSUPPORTED_ASSET: ambiguous source attributes or incomplete raw text');
   return {...tree,offset};
 }
@@ -443,14 +506,14 @@ export async function extractNotes(html,options = {}) {
     const canonical=await core.assemble(b);if(!canonical.ok)return canonical;
     const verified=await core.extractNotes({html:canonical.value.html,raw});if(!verified.ok)return verified;
     const originalTree=sourceTreeForPackage(canonical.value.html), originalOwned=originalTree.nodes.filter(n=>(attr(n,'id')||'').startsWith('luca-notes-'));
-    const currentHead=tree.nodes.find(n=>n.tagName==='head'), removals=[];
+    const currentOffset=notesInsertionOffset(tree,new Set([data[0],boot[0]])),removals=[];
     const range=node=>{const loc=node.sourceCodeLocation;if(!loc || !loc.endTag || !Number.isSafeInteger(loc.startOffset) || !Number.isSafeInteger(loc.endOffset))throw Error('unverifiable tool interval');return {start:loc.startOffset+tree.bom,end:loc.endOffset+tree.bom};};
     for(const node of [data[0],boot[0]]) {
       const expected=originalOwned.find(n=>attr(n,'id')===attr(node,'id')), actual=range(node), loc=expected?.sourceCodeLocation;
       if(!loc || html.slice(actual.start,actual.end)!==canonical.value.html.slice(loc.startOffset+originalTree.bom,loc.endOffset+originalTree.bom))throw Error('modified tool bytes');
       removals.push({...actual,kind:attr(node,'id'),sha256:await core.hash(html.slice(actual.start,actual.end))});
     }
-    if(removals[0].start!==currentHead?.sourceCodeLocation?.startTag?.endOffset+tree.bom || removals[0].end!==removals[1].start || tree.nodes.some(n=>n.tagName==='script' && ![data[0],boot[0]].includes(n) && n.sourceCodeLocation?.startOffset+tree.bom<removals[1].end))throw Error('moved or noncontiguous tool intervals');
+    if(removals[0].start!==currentOffset || removals[0].end!==removals[1].start || tree.nodes.some(n=>n.tagName==='script' && ![data[0],boot[0]].includes(n) && n.sourceCodeLocation?.startOffset+tree.bom<removals[1].end))throw Error('moved or noncontiguous tool intervals');
     const injected=b.bindings.filter(record=>record.strategy==='injected'), attributes=tree.nodes.flatMap(node=>(node.attrs||[]).filter(a=>a.name==='data-luca-note-anchor').map(a=>({node,a})));
     if(attributes.length!==injected.length || new Set(attributes.map(({a})=>a.value)).size!==attributes.length)throw Error('ambiguous injected mapping');
     for(const record of injected) {
