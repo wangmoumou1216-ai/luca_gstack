@@ -1,0 +1,62 @@
+{
+  "producer": "main",
+  "phase_id": "U003-bounded-live-smoke",
+  "status": "DONE",
+  "completion_scope": "Bounded policy consumption and two real native child calls only; not all U003/U004/U005",
+  "outputs_produced": [
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/live-manifest.json",
+      "sha256": "c2b5037f485d1408683d53e39fe9d845c21a2b39efc0ae89ccba3d04f7e429a1"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/native-agents.json",
+      "sha256": "ab8671f43b542f29d4d6faee890e21b42f3cce03620e29beba3d2e7b2f2143d1"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/native-dispatch.prompt.txt",
+      "sha256": "340c1da7fc057163a8176b15eae1ea2232aad7bb2b9164bb89c05ce36dd23def"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/native-dispatch.receipt.json",
+      "sha256": "bc0c5d1849130ca6e44b169de6ea72f2d9ba478d7a3668d120aac1ff9858d328"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/native-dispatch.stdout.json",
+      "sha256": "dbdc767ecc1afe63a7eea66f13803a620785258fa48845e7c9d3862177d5b837"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/native-child-adoption.json",
+      "sha256": "c8f1589c82f8c205baa54196a71e8796338b9d54b288a16674909454c9f676d0"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/policy-baseline.receipt.json",
+      "sha256": "448d88411066add9bc0702c24e3d96005778571abc68ed67b72b3b19ebd2eb70"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/policy-baseline.stdout.json",
+      "sha256": "e191b77f7f085ea3905857c665a63e4e3ed8ebc10f05d5934e5f135547c926f4"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/policy-candidate.receipt.json",
+      "sha256": "282a291dc993300162188b9051af6c5510624205900e2a2e4ca00933ad255598"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/policy-candidate.stdout.json",
+      "sha256": "37f894fe75a469bea4f6d54b3fa869035b827afcf7ee0fbcee8f7aa7ac901208"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/terminal-network-auth.receipt.json",
+      "sha256": "ebffe0ad89398c2779bf5326659157c35dc60867dd19fd79d6ee68ef442faf76"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/terminal-network-auth.stdout.json",
+      "sha256": "8848f694e07b6de9dd7e925e38ce1d145229a194f025df193772d2ecdf75bcce"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/live-summary.json",
+      "sha256": "e6f7c11001ef5208016bf4acc39761988c5531019859201ac2d816efee0c9c94"
+    }
+  ],
+  "outputs_skipped": [],
+  "blockers": []
+}

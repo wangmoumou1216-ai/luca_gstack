@@ -215,14 +215,10 @@ if (builderCheck.status !== 0) {
 }
 
 const model = read('.claude/skill-os/model-routing.yaml');
-const commonStart = model.indexOf('\nmodel_routing:');
-const commonEnd = model.indexOf('\nknown_lineup:', commonStart);
-const commonModel = commonStart >= 0
-  ? model.slice(commonStart, commonEnd > commonStart ? commonEnd : undefined)
-  : '';
-const codexStart = model.indexOf('\ncodex:');
-const codexEnd = model.indexOf('\nnew_scenario_protocol:', codexStart);
-const codex = codexStart >= 0 ? model.slice(codexStart, codexEnd > codexStart ? codexEnd : undefined) : '';
+// Stop at the next real top-level key; Claude/Codex must never satisfy common checks.
+const topLevelBlock = (text, key) => text.match(new RegExp(`(?:^|\\n)${key}:[\\s\\S]*?(?=\\n[A-Za-z_][\\w-]*:|$)`))?.[0] || '';
+const commonModel = topLevelBlock(model, 'model_routing');
+const codex = topLevelBlock(model, 'codex');
 if (!/\n\s{2}version:\s*2\b/.test(commonModel)) errors.push('common model policy must be v2');
 if (!/\n\s{2}status:\s*active\b/.test(commonModel)) errors.push('common model policy must be active');
 if (!/\n\s{2}scope:\s*common\b/.test(commonModel)) errors.push('model policy must be harness-neutral');

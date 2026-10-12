@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "claude",
+    "-p",
+    "--tools",
+    "",
+    "--output-format",
+    "json",
+    "--no-session-persistence",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--max-budget-usd",
+    "1"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/c252/luca_gstack",
+  "prompt_sha256": "c9d7001ecceb4ffec1a94e3737f10fad936bbca176cfbb40eca302f128fb7ee8",
+  "exit_code": 1,
+  "elapsed_seconds": 3.6730377674102783
+}

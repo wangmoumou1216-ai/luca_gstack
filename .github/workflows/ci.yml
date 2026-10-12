@@ -229,8 +229,8 @@ jobs:
           c=$(awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md)
           [ "$(echo "$c" | grep -c '^[0-9]\.')" -ge 6 ]
           echo "$c" | grep -q 'SF-002' && echo "$c" | grep -q 'SC-20260523-002' && echo "$c" | grep -q 'SC-20260523-003'
-      - name: Model-table alias sync (S33 remote)
-        run: node scripts/check-model-table.mjs
+      - name: Model policy and Claude native-routing counterexamples (S33 remote)
+        run: node scripts/check-model-table.mjs && node scripts/test-claude-native-routing.mjs
       - name: MEMORY_STANDALONE opt-in not leaked into tracked settings
         run: '! git ls-files -z ".claude/settings*.json" | xargs -0 -r grep -l MEMORY_STANDALONE | grep -q .'
 

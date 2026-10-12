@@ -1,0 +1,52 @@
+[
+  {
+    "timestamp": "2026-10-12T02:43:44.795Z",
+    "ordinal": 1,
+    "type": "event_msg",
+    "payload": {
+      "type": "task_started",
+      "turn_attribution": {
+        "turn_id": "01a12dfe-a1e3-7653-a751-b94e4c2f8193",
+        "turn_trigger": "composer",
+        "parent_turn_id": "01a12dee-1589-7780-ad4b-c0203a17005d",
+        "initiating_agent_path": "/root",
+        "root_turn_id": "01a12dee-1589-7780-ad4b-c0203a17005d"
+      },
+      "turn_id": "01a12dfe-a1e3-7653-a751-b94e4c2f8193",
+      "root_turn_id": "01a12dee-1589-7780-ad4b-c0203a17005d",
+      "started_at": 1791773024,
+      "model_context_window": 258400,
+      "collaboration_mode_kind": "default"
+    }
+  },
+  {
+    "timestamp": "2026-10-12T02:43:49.552Z",
+    "ordinal": 7,
+    "type": "turn_context",
+    "payload": {
+      "turn_id": "01a12dfe-a1e3-7653-a751-b94e4c2f8193",
+      "cwd": "/Users/luca/.codex/worktrees/c252/luca_gstack",
+      "approval_policy": "never",
+      "sandbox_policy": {
+        "type": "danger-full-access"
+      },
+      "model": "gpt-6-astra",
+      "effort": "high"
+    }
+  },
+  {
+    "timestamp": "2026-10-12T02:46:09.021Z",
+    "ordinal": 109,
+    "type": "event_msg",
+    "payload": {
+      "type": "task_complete",
+      "root_turn_id": "01a12dee-1589-7780-ad4b-c0203a17005d",
+      "turn_id": "01a12dfe-a1e3-7653-a751-b94e4c2f8193",
+      "last_agent_message": "## Quality Gate: Phase U002-local-patch — Spec\nStatus: **PASS（8/8）**，仅限冻结本地补丁。\n\n以下规格行号均指 `framework-audit/plans/2026-10-12-model-routing-strategy.md`。\n\n- **PASS C0｜范围与身份**：“只允许 U001 明列且获批”（L96）。25 个文件与 scope/completion 一致；审查前后 hash 无漂移，实际 diff 等于冻结 diff，HEAD 等于基线。\n- **PASS C1｜继承与 pin**：“普通任务默认继承”“保留有意设置的 judge 默认”（L62）。`model-routing.yaml:79–100`、`orchestrator.md:526–530` 保留用户选择、四个原生 pin 和独立验收，禁止自动降级。\n- **PASS C2｜退役消费者**：“退役重复义务，按同一批次修改相应检查规则”（L61）。登记检查移除 REG-2；治理检查不再消费 skill tier；`behavioral_ab.py:141–189` 将 tier 降为元数据，保留 fixture、regex、text-delta 门。\n- **PASS C3｜保护保留**：“保留当前实现”“全部保持”（L59、63）。解析后的 `model_routing`、`codex`、`agents` 与基线完全相等；冻结 hunks 未改 source-trust、项目隔离或 hook/runner 实现。\n- **PASS C4｜生成与接线**：“generated 文件从 owner 生成”（L96）。`check-agent-context` 验证派生一致；`verify.sh:287` 接入新变异测试。\n- **PASS A03**：指定的 model-table、registration-sync、agent-context 命令全部 exit 0。\n- **PASS AB**：指定 unittest，18 tests，OK。\n- **PASS MUTATION**：native-routing 31 cases 全通过，包含违规拒绝、恢复通过及治理异常 fail-open。\n\n未发现 missing、partial、scope creep 或 wrong implementation。此票不覆盖 U003–U005、上线或 ROI，也不将 Claude live 缺证据转为通过。\n\n**Spec finding count: 0；worst: none。**\n\nEVAL_ENVELOPE_JSON\n{\"schema_version\":1,\"producer\":\"quality-gate\",\"eval_run_id\":\"routing-spec-20261012-r1\",\"subject\":{\"skill\":\"U002-local-patch\",\"topic\":\"model-routing-strategy Spec-only review\",\"scene\":\"unknown\",\"input_summary\":\"Cold Spec-only review of the frozen 25-file U002 local candidate against the approved strategy and scope; identity verified before and after, designated assertions and native-routing mutation suite executed. Excludes U003-U005, deployment and ROI.\",\"output_paths\":[\"/tmp/luca-routing-review-20261012-ag6QvS/review-input.json\",\"/tmp/luca-routing-review-20261012-ag6QvS/implementation.diff\"],\"duration\":\"medium\"},\"verdict\":{\"status\":\"PASS\",\"passed\":8,\"total\":8,\"findings\":[]}}",
+      "started_at": 1791773024,
+      "completed_at": 1791773169,
+      "duration_ms": 144272,
+      "time_to_first_token_ms": 8737
+    }
+  }
+]

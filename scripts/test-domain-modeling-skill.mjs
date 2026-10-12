@@ -35,7 +35,7 @@ function yaml(p) {
 }
 function contracts() {
   const body = read(`${canonical}/SKILL.md`);
-  for (const text of ['name: domain-modeling','guided-execution','NEEDS_CONTEXT','resolved_terms','relationships','code_evidence','open_questions','writes','blocking_for_caller','resume_target','apply_patch','NO_PIN','extraction-bar.md','d81f3a183412e71a5b1e84ca21bc1a35eea03a60','FILE_END: domain-modeling/SKILL.md']) assert.ok(body.includes(text),`canonical missing ${text}`);
+  for (const text of ['name: domain-modeling','NEEDS_CONTEXT','resolved_terms','relationships','code_evidence','open_questions','writes','blocking_for_caller','resume_target','apply_patch','NO_PIN','extraction-bar.md','d81f3a183412e71a5b1e84ca21bc1a35eea03a60','FILE_END: domain-modeling/SKILL.md']) assert.ok(body.includes(text),`canonical missing ${text}`);
   assert.match(body,/one decision at\s+a time and wait for a real response/);
   assert.match(body,/no workflow\s+node\/state/);
   const frontmatter=spawnSync('python3',['-c',
@@ -60,7 +60,7 @@ function contracts() {
   const ordinaryCaller={caller:'code-recon',domain_question:'ownership contradiction',trigger_condition:'code evidence differs',scope:'verified fixture',inherited_authority:'read-only',authority_effect_intersection:'read-only'};
   assert.deepEqual(modes.modes.internal.required.filter(key=>!(key in ordinaryCaller)),[],'a valid non-Plan caller must not need a fabricated U-ID');
   const routing = read('.claude/skill-os/model-routing.yaml');
-  assert.match(routing,/guided-execution:[\s\S]*?skills:\s*\[[^\]]*domain-modeling/);
+  assert.match(routing,/^claude:\n  strategy: native-first\n  default_model: inherit\n  skill_tiers: ignored$/m);
   assert.match(routing, /native_agent_types:[\s\S]*?worker: MR-001/);
   assert.match(routing, /MR-001:[\s\S]*?role: anchor/); // Role and requested effort are independent.
   assert.match(read('.claude/skill-os/codex-viability.yaml'),/domain-modeling: \{tier: 1\}/);

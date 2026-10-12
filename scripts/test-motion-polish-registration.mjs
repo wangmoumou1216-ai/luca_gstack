@@ -78,7 +78,6 @@ out['frontmatter']=yaml.safe_load(body.split('---',2)[1]); print(json.dumps(out,
   const fm = registry.frontmatter, body = read(root, '.claude/skills/office/motion-polish/SKILL.md');
   assert.equal(fm.name, 'motion-polish'); assert.equal(fm['preamble-tier'], 1);
   assert.equal(fm['context-cost'].self, Buffer.byteLength(body)); assert.equal(fm['context-cost']['runtime-estimate'], 6500);
-  assert.equal(fm.metadata['recommended-model'], 'core-execution');
   assert.deepEqual(fm['allowed-tools'], ['Read', 'Write', 'Edit', 'Bash', 'Glob', 'Grep']);
   assert.ok(!fm['disable-model-invocation'] && !fm['allowed-tools'].includes('Agent'), 'SINGLE_EXECUTOR_BOUNDARY');
   assert.ok(body.trimEnd().endsWith('<!-- FILE_END: motion-polish/SKILL.md -->'), 'SKILL_EOF');
@@ -91,7 +90,9 @@ out['frontmatter']=yaml.safe_load(body.split('---',2)[1]); print(json.dumps(out,
   const view = JSON.parse(read(root, '.claude/skill-os/generated/input-modes/motion-polish.json'));
   assert.deepEqual(view.contract, modes); assert.equal(view.source_sha256, hash(read(root, '.claude/skill-os/input-modes.yaml')));
   const model = registry['.claude/skill-os/model-routing.yaml'];
-  assert.ok(model.tiers['core-execution'].skills.includes('motion-polish'), 'COMPAT_MODEL_REGISTRATION');
+  assert.equal(model.claude.strategy, 'native-first');
+  assert.equal(model.claude.default_model, 'inherit');
+  assert.equal(model.claude.skill_tiers, 'ignored');
   assert.match(read(root, '.claude/skill-os/model-routing.yaml'), /quality-gate:\s*MR-004/);
   assert.equal(registry['.claude/skill-os/codex-viability.yaml'].skills['motion-polish'].tier, 1);
   assert.match(read(root, 'scripts/check-skill-scene-coverage.py'), /"motion-polish":\s+\(\[f"\{D\}\/prototype\/\*\/index.html"\],\s+\[f"\{D\}\/handoff\/\*-motion-polish-handoff.md"\], "weak"\)/);

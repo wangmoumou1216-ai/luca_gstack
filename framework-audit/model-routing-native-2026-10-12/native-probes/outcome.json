@@ -1,0 +1,11 @@
+{
+  "status": "GAP",
+  "blocked_stage": "Claude live baseline availability; candidate not run",
+  "api_error_status": 403,
+  "terminal_reason": "api_error",
+  "result": "Failed to authenticate. API Error: 403 Request not allowed",
+  "model_usage": {},
+  "subagents_spawned": 0,
+  "total_cost_usd": 0,
+  "claim_boundary": "No model execution, no Claude routing adoption or behavior comparison evidence; auth/settings/bindings unchanged."
+}

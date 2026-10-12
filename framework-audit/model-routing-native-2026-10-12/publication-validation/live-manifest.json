@@ -1,0 +1,27 @@
+{
+  "scope": "NO_PIN",
+  "source_manifest": "review-input.json",
+  "source_manifest_sha256": "f11e1b3f83834e130273751fb5066e7f2f5dcbce25f8f1706c03073bd4eff87d",
+  "binary": "/Users/luca/.local/share/claude/versions/2.1.296",
+  "root_model": "user default; no override",
+  "effort": "user setting; no override",
+  "network": "existing terminal local proxy 127.0.0.1:7877",
+  "calls": [
+    {
+      "kind": "policy-baseline",
+      "fixture": "../native-probes/baseline.prompt.txt",
+      "budget_usd": 1
+    },
+    {
+      "kind": "policy-candidate",
+      "fixture": "../native-probes/candidate.prompt.txt",
+      "budget_usd": 1
+    },
+    {
+      "kind": "native-dispatch",
+      "fixture": "native-dispatch.prompt.txt",
+      "budget_usd": 2
+    }
+  ],
+  "limits": "Policy cases are synthetic, not ROI or full-workload A/B. Actual native child dispatch checks inherit and configured opus. Account unavailable/error behavior retained as GAP unless observed. No Codex deployment change."
+}

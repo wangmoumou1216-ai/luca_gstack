@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed（2026-10-12 · Claude 原生选模）
+
+- Claude 普通委派回归原生继承，退役中央档位、Fable 白名单和推荐元数据同步义务；保留有意的 agent 默认模型、独立验收和关键失败阻断，Codex 路由与 effort 不变。为什么：减少重复配置，把框架职责集中在任务与验收；原生账户验证和净收益仍须实测。
+
 ### Fixed（2026-10-10 · 项目探查被拒绝后的恢复指引）
 
 - 项目作用域 hook 的拒绝信息明确公开的 `project.sh list/status/switch` 入口和精确目录检索边界；缺少原生会话身份时不猜其他会话，绑定后仍禁止扫描项目总目录。为什么：原始会话将 skill 读取、项目总目录扫描和内部状态探查混在一条命令中，旧提示没有给出可用的恢复步骤。保留原拒绝判据，新增 Claude/Codex 双入口回归及公开查询执行验证。

@@ -24,7 +24,6 @@ const wizard = read('.claude/skills/office/references/office-wizard.md');
 
 assert.match(skill, /^name: writing-for-agents$/m);
 assert.match(skill, /^description: .*skills, AGENTS\.md, or CLAUDE\.md/m);
-assert.match(skill, /^\s+recommended-model: guided-execution$/m);
 assert.doesNotMatch(skill, /^disable-model-invocation:/m);
 assert.match(skill, /context pointers/i);
 assert.match(skill, /information hierarchy/i);
@@ -61,7 +60,7 @@ assert.match(command, /office\/writing-for-agents\/SKILL\.md/);
 assert.match(command, /SKILL-MECHANICS\.md/);
 assert.match(routing, /writing_for_agents:\s+[\s\S]*?invoke: "\/writing-for-agents"[\s\S]*?triggers: \[[^\]]*修改AGENTS\.md[^\]]*修改CLAUDE\.md/);
 assert.match(modes, /writing-for-agents:\s+[\s\S]*?agent_facing_document_target[\s\S]*?truth_owner_preserved/);
-assert.match(modelRouting, /guided-execution:[\s\S]*?writing-for-agents/);
+assert.match(modelRouting, /^claude:\n  strategy: native-first\n  default_model: inherit\n  skill_tiers: ignored$/m);
 assert.match(codexViability, /writing-for-agents: \{tier: 1\}/);
 assert.match(pins, /name: writing-for-agents[\s\S]*?path: skills\/productivity\/writing-for-agents[\s\S]*?pinned_sha: [a-f0-9]{40}/);
 assert.match(vetting, /name: writing-for-agents[\s\S]*?verdict: ADOPTED[^\n]*/);

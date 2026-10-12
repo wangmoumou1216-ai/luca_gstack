@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "routing-publish-standards-20261012-01",
+  "subject": {
+    "skill": "U002-publication-patch",
+    "topic": "Claude native model routing publication candidate — Standards",
+    "scene": "unknown",
+    "input_summary": "独立冷 Standards 审查；NO_PIN；冻结 32 文件，相对 b9b96d48cf389997949310d45c5e774c7aeddeb1；验证红线、哈希、运行时反例、CI 接线、生成清单与完成范围。",
+    "output_paths": [
+      "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/review-input.json"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 6,
+    "total": 6,
+    "findings": []
+  }
+}

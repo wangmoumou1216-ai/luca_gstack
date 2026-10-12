@@ -133,7 +133,7 @@
       "condition": "Selecting or validating an agent/subagent capability tier.",
       "load_before": "selecting, validating, or dispatching a model tier",
       "target": ".claude/skill-os/model-routing.yaml",
-      "contains": "Claude aliases, Codex effort mapping, whitelist, and dispatch rules.",
+      "contains": "Claude native-first configuration, Codex common model roles, independent review, and user-owned effort.",
       "loader": "orchestrator or root adapter",
       "read_to_end": true,
       "fallback": "Inherit the parent model and do not guess a stronger tier.",

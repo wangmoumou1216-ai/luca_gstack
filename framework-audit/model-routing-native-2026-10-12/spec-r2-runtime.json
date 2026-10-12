@@ -1,0 +1,24 @@
+{
+  "release_digest": "5d5d4a87ea45a9f9b9a4ef93feaa24e7470943f4eae4742db7416b0c5539cd1a",
+  "activation_id": "9fb86837-bd89-4d6a-9086-b607f7307c8a",
+  "root_session_id": "01a12dd1-d4a8-7551-b306-f04b9fa5701b",
+  "root_generation": 0,
+  "invocation_id": "4475c962-7c6f-49e1-8888-7b091ce568d1",
+  "route_id": "6454c9c5-51e1-4817-9126-4f5a11e88f2f",
+  "task_id": "native:01a12dee-1589-7780-ad4b-c0203a17005d:call_5a0f5a0443e846a4ad2453eb2f7cf385",
+  "input_sha": "fb086a8dd33cfefc0c218368b595b5e770afcda12ad2007c0b9ffa68e91efadc",
+  "requested_role": "peak",
+  "requested_model": "gpt-6-astra",
+  "route_harness": "codex-native",
+  "critical": true,
+  "policy_sha": "5cb7ff0d30c8cf139878f143df51dbcaa89612a5adb076f8e1b58d8c7f66bc34",
+  "routing_config_sha": "aed5bd88afd7d0fd853f04daca11de1f4b0f8550eed95ddf4cfe637b2109a336",
+  "capability_evidence_sha": "ea6e0553747090859540ebc557801ce11a9e431af4da25f8da874719ac350069",
+  "status": "accepted",
+  "external_identity": {
+    "tool_use_id": "call_5a0f5a0443e846a4ad2453eb2f7cf385",
+    "agent_type": "quality-gate",
+    "agent_id": "01a12e0b-489d-7801-b89f-1e034e04627d"
+  },
+  "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/12/rollout-2026-10-12T10-57-33-01a12e0b-489d-7801-b89f-1e034e04627d.jsonl:01a12e0b-4906-7f41-a6b5-3500d7c6977b"
+}

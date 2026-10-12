@@ -1,0 +1,31 @@
+{
+  "kind": "native-dispatch",
+  "argv": [
+    "claude",
+    "-p",
+    "--tools",
+    "Agent",
+    "--output-format",
+    "stream-json",
+    "--session-id",
+    "a7ce4c74-1435-48db-8da5-a9a27ada5999",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--max-budget-usd",
+    "2",
+    "--verbose",
+    "--allowedTools",
+    "Agent",
+    "--agents",
+    "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/model-routing-native-2026-10-12/publication-validation/native-agents.json"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/c252/luca_gstack",
+  "session_id": "a7ce4c74-1435-48db-8da5-a9a27ada5999",
+  "pid": 21017,
+  "started_at": 1791775831.983584,
+  "ended_at": 1791775854.231766,
+  "exit_code": 0,
+  "prompt_sha256": "340c1da7fc057163a8176b15eae1ea2232aad7bb2b9164bb89c05ce36dd23def",
+  "manifest_sha256": "c2b5037f485d1408683d53e39fe9d845c21a2b39efc0ae89ccba3d04f7e429a1"
+}

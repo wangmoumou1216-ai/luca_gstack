@@ -1,0 +1,256 @@
+这是一次有界、无工具的调度合同行为测试。不要执行任务或修改文件。下面 policy 是待测试的框架调度合同，不是允许改变用户根模型/effort的授权。按它回答3个拟派发任务；只输出JSON数组，每项有 id, model_parameter（省略则null）, independent_review, on_unavailable, root_model_changed, effort_changed。场景1 CODE：普通代码实现，通用worker没有原生model pin，用户未指定模型，旧计划写model_tier=core-execution。场景2 DESIGN：产品设计产物的独立最终quality-gate，agent原生model=opus，用户未指定模型。场景3 FRAMEWORK：框架常规执行验证，用户明确要求此worker使用sonnet，无pin。三个场景都不得改变根模型或用户effort。不要添加其他文字。
+POLICY:
+# 模型路由真值源（Single Source of Truth）
+# Codex native/runner 只执行顶层 model_routing 的 common-v2 角色政策。
+# 以下旧 tier/alias/fable 规则保留为延期的 Claude adapter 兼容合同，不能覆盖 Codex。
+#
+# 规则：
+# 1. 按「能力档（tier）」定义路由，不写死模型版本号。resolves_to 是 Claude Code
+#    档位别名（fable/opus/sonnet/haiku），运行时自动解析到该档当前最新模型——
+#    档位内升级（如 Opus 4.7→4.8）零维护，自动跟随。
+# 2. CLAUDE.md「模型路由」节、orchestrator.md §5 的速查表、各 SKILL.md frontmatter
+#    的 recommended-model 均引用本文件的 tier 名；调整路由只改本文件（速查快照同步）。
+# 3. 会话兜底（活规则）：Claude 在 session 中发现 known_lineup 之外的档位变化
+#    （新档位发布/档位退役/能力代际漂移），主动向用户提示更新本文件，不得沉默沿用。
+# 4. daily_governance.py 每日校验本文件 ↔ skill frontmatter 一致性与复核期限，
+#    异常写入 memory/digests/ 等用户裁决——检测自动化，重映射判断留给人。
+# 5. 【2026-07-10 Fable 手术刀改版】fable 配额稀缺，物尽其用：fable 只用于
+#    fable_whitelist 枚举的判定场景；dispatch 传 model: fable 的唯一合法依据是
+#    白名单条目。生成/研究/编排/checklist 审查/交互引导一律 ≤ opus。
+# 6. 【降级链】fable 不可用（配额耗尽/模型报错/被 availableModels 排除）→
+#    自动降一级到 opus 重试，并在产出中告知用户本次判定运行在降级档。
+# 7. 【native_precedence · 原生优先】Claude Code 原生已有 opusplan（plan=opus/
+#    执行=sonnet 的模式级双档）。当原生出现更通用的动态模型调控（auto/复杂度
+#    路由/fableplan 类特性）时：主动告知用户 → 提案将本文件降级为语义补充层，
+#    Claude 原生逻辑优先，不得与原生机制抢控制权。
+
+version: 2
+updated: 2026-09-20
+review_after_days: 90   # 超过此天数未复核 → digest 提醒重新核对档位映射
+
+# ─── 跨 harness 的唯一模型选择规则 ─────────────────────────────────────────
+# 当前生产 adapter 只启用 Codex native/runner；Claude adapter 按用户要求延期。
+# 模型名称与同端上下关系来自私有 0600 binding，不写入公共政策；effort 归用户所有。
+model_routing:
+  version: 2
+  status: active
+  scope: common
+  roles:
+    anchor: root-effective-selection
+    peak: user-approved-higher-selection
+    light: user-approved-lower-selection
+  scenes:
+    MR-001:
+      trigger: normal-conversation-or-implementation
+      role: anchor
+      critical: false
+    MR-002:
+      trigger: entered-plan-or-explicit-replan
+      role: peak
+      critical: true
+    MR-003:
+      trigger: redteam-refute-judge-oracle-expert-panel
+      role: peak
+      critical: true
+    MR-004:
+      trigger: semantic-review-or-terminal-decision
+      role: peak
+      critical: true
+    MR-005:
+      trigger: independent-review-before-authorized-irreversible-action
+      role: peak
+      critical: true
+    MR-006:
+      trigger: fact-collection-or-retrieval
+      role: anchor
+      critical: false
+    MR-007:
+      trigger: explicit-long-context-delegation
+      role: by-scene
+      requires_capacity: true
+    MR-008:
+      trigger: low-risk-mechanical-subtask
+      role: light
+      critical: false
+    MR-009:
+      trigger: bounded-verifiable-fact-collection
+      role: light
+      critical: false
+  dispatch:
+    native_agent_types:
+      default: MR-001
+      worker: MR-001
+      explorer: MR-006
+      preflight-agent: MR-008
+      fact-collector: MR-009
+      quality-gate: MR-004
+      muse-proto-judge: MR-004
+    workflows:
+      external-skill-scout:
+        Load: MR-008
+        Discover: MR-006
+        Verify: MR-004
+      framework-evolution-scout:
+        Load: MR-008
+        Intake: MR-006
+        Discover: MR-006
+        AdoptionReview: MR-004
+        Verify: MR-004
+        Redteam: MR-003
+  critical_failure: refuse-no-fallback
+  evidence: trusted-runtime-adoption-and-same-invocation-success
+  effort: user-owned-not-a-routing-input
+
+# Claude Code 当前已知档位阵容（能力高→低）。会话中发现阵容变化时更新此表。
+known_lineup: [fable, opus, sonnet, haiku]
+
+# 未声明 recommended-model 的 skill 默认归属
+default_tier: guided-execution
+
+tiers:
+  reasoning-heavy:
+    resolves_to: fable
+    fallback: opus   # 降级链：fable 不可用 → opus（规则 6）
+    description: 仅判定场景——对抗/裁决/出门前回验/规划期（fable_whitelist 是唯一授权清单）
+    note: |
+      2026-06-10 用户裁决 opus→fable（当时含全部设计 skill）；
+      2026-07-10 用户裁决收严为手术刀——整场交互 skill（brainstorm 系）与研究 fan-out
+      （deepresearch）迁出至 core-execution，fable 只留判定时刻（单次 5-30k token、
+      判断杠杆极高的点位），配额消耗降约 80-95%。
+    skills: [redteam, wayfinder]
+
+  core-execution:
+    resolves_to: opus
+    description: 承重执行与整场交互——写代码/工程合同/原型/外部设计工具编排/交互式设计 skill/研究 fan-out/判官常规模式；主循环推荐常驻档
+    note: |
+      2026-07-10 新增（用户裁决执行分两级：承重执行 opus / 轻执行 sonnet；
+      open-design 与 Claude Design 外部工具编排点名用 opus）。
+      brainstorm 系 4 skill 与 deepresearch 自 reasoning-heavy 迁入（Fable 手术刀，
+      见 reasoning-heavy.note）；其内部判定环节（苏格拉底审查/Oracle 对抗）按
+      fable_whitelist P1 单独 dispatch fable 微判官。
+    skills: [brainstorm, ux-brainstorm, design-brief,
+             deepresearch, insight-synthesis, tech-spec, task-plan, open-design, html-prototype, motion-polish, prototype-notes,
+             code-hygiene, code-review, codebase-design, auto, muse-x-digest,
+             grilling, diagnosing-bugs, resolving-merge-conflicts, to-spec, to-tickets, implement,
+             writing-workshop, loop-me]
+
+  guided-execution:
+    resolves_to: sonnet
+    description: 有框架/checklist/规范指导的轻执行与轻审查（默认档）
+    skills: [handoff, quick-research, idea, ux-research, ux-audit, figma-demo, challenge,
+             code-recon, muse-req-triage,
+             compare, magicpath, research-kit, ux-writing, wait-what, writing-for-agents, domain-modeling, issue-triage, setup-wizard]
+
+  mechanical:
+    resolves_to: haiku
+    description: 机械执行、格式检查、打分、检索
+    skills: [evals, careful, retro]
+
+# ─── Fable 使用白名单（2026-07-10，dispatch 传 model: fable 的唯一合法依据）───
+# 评估维度：单次 token 量级 × 判断杠杆 × 错判代价。全部是"小上下文、高杠杆"点位。
+fable_whitelist:
+  P0_出门前裁决:
+    - "期末合同回验（orchestrator Step 3b 的 RTM 判定 dispatch）"
+    - "交付验收裁决（REQ 终验含验收裁决时；oracle/taste 判据见 references/oracle-vs-taste-criteria.md）"
+    - "不可逆操作前复审（git 批量/发布/覆盖前的独立 review dispatch）"
+  P1_对抗判定:
+    - "redteam skill 全程"
+    - "refute/judge/oracle 型 subagent（brainstorm 苏格拉底审查、ux-brainstorm Oracle、judge panel 裁定）"
+  P2_复审与规划:
+    - "翻案复审（用户质疑结论/要求高模型复审时的 review dispatch）"
+    - "plan-mode 规划期 dispatch（Explore / Plan agent / 具名 wayfinder mode）——2026-07-10 用户点名"
+  # 此外一律不用 fable；拿不准 → 用 opus（宁降不越权）。
+
+# ─── Agent frontmatter pin 登记（与 .claude/agents/*.md 保持一致，governance 机检）───
+agents:
+  quality-gate: opus        # 判官≥执行者；合同回验模式由调用方参数升 fable（P0）
+  muse-proto-judge: opus    # AC 判官（muse）
+  fact-collector: sonnet   # 有界事实采集；不承担综合、裁决或写入
+  preflight-agent: haiku    # 纯机械前置检查（effort: low）
+
+# 有意不 pin 的 agent（机检白名单——不在 agents: 也不在此表的 agent 文件 → tripwire 告警）：
+# orchestrator=主循环行为模式（继承主循环）；plan-agent 被 spawn 时按白名单 P2 传 fable；
+# work-agent 按 Phase 的 model_tier 由 dispatch 参数决定（默认 core-execution）。
+agents_no_pin: [orchestrator, plan-agent, work-agent-template]
+
+# 非可调度目录（有 SKILL.md 但不可作为独立 skill 调用，无模型档——tripwire 豁免）
+non_dispatchable: [references]
+
+# ─── Dispatch 规则（执行层，2026-07-10 起为强制，非建议）───
+dispatch_rules:
+  principle: |
+    本节只描述 Claude 兼容调度；Codex native/runner 执行顶层 model_routing，
+    不消费 tier/alias，不豁免 workflow，不接受关键场景的自动模型降级。
+    spawn 任何 subagent 时，调度方必须解析 tier→alias 并显式传 Agent tool 的
+    model 参数（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin，如 Step 3b
+    对 quality-gate 传 fable）。不确定归属 → 省略参数继承主循环，不得猜 fable。
+  skill_execution: "按该 skill 的 recommended-model tier 解析"
+  task_execution: "按 Plan Agent 计划中该 Phase 的 model_tier 解析（默认 core-execution）"
+  builtin_agents:
+    explore_plan_mode: fable    # plan-mode 规划期（白名单 P2，用户点名）
+    plan_agent_plan_mode: fable # 同上
+    explore_general: sonnet     # 非规划期的一般检索/理解 fan-out
+    mechanical_fanout: haiku    # 机械批量（格式/计数/存在性检查）
+    judge_adversarial: fable    # 判定型（白名单 P0/P1）
+    judge_checklist: opus       # checklist 型判官（quality-gate 常规）
+  workflow_tool: "豁免——Workflow 脚本 agent() 保持自身 omit/inherit 逻辑（用户点名 dynamicworkflow 除外）"
+  main_loop: |
+    主循环模型为用户 /model 主权，框架不自动切（原生无此机制）。推荐 opus 常驻
+    （指挥官档），fable 全部经白名单点状 dispatch；重大架构/审查日可手动
+    /model fable 起 session（逃生阀，可选）。
+
+# ─── Codex 固定 effort 兼容元数据（不参与模型路由）───
+# 模型选择的唯一规则是顶层 common model_routing；账户模型名只在私有 binding。
+# 本段只守护 .codex/agents/*.toml 的固定 reasoning effort 合法性与漂移，
+# 不得被 runner/hook 当作场景档位或模型选择输入。
+codex:
+  principle: |
+    reasoning effort 是 agent 执行参数，不是 anchor/peak/light 模型角色。
+    已有 agent 可保留固定 effort；用户在调用时显式给出的 effort 原样保留。
+    动态路由只改 model，不根据场景升降 effort，也不把 effort 写入路由摘要或证据票。
+  model_name_boundary: |
+    账户可用模型会随订阅变化，因此公共 policy 不写模型名。用户批准的
+    Codex peak/light 及同端上下关系放在 mode 0600 私有 binding；根 anchor 取当前会话
+    effective model。模型选择的消费者是 model-route hook/runner，不是本 Codex 兼容段。
+  # 【枚举以**模型**为准，不以 config 解析器为准（2026-08-05 实测教训）】
+  # config 解析器接受 none/minimal/low/medium/high/xhigh —— 那是**超集**；
+  # 真实模型（gpt-5.6-sol 系）拒绝 minimal，其支持集为 none/low/medium/high/xhigh/max。
+  # 首版从"config 报错列出的枚举"取值，导致 mechanical 档定成 minimal，
+  # 实测每次调用 400 unsupported_value（preflight-agent 会恒失败）。
+  # 取枚举必须来自**实际调用**的反馈，不能来自配置层的校验信息。
+  effort_lineup: [none, low, medium, high, xhigh, max]   # 实测：真实模型接受集
+  effort_rejected_by_model: [minimal]                     # config 层接受但模型拒绝，勿用
+  agent_toml_model_field: omit-hook-owned
+  agent_toml_model_field_note: |
+    .codex/agents/*.toml 不写账户模型名。anchor 时继承根会话；peak/light 时由
+    已授信的 model-route hook 按公共 policy 与私有 binding 改写本次 spawn 的 model。
+  agents:                       # 固定 effort 或显式 inherit；不是模型档位
+    fact-collector: inherit     # 不设固定 effort，沿用调用方设置
+    quality-gate: high
+    muse-proto-judge: high
+    preflight-agent: low        # minimal 被真实模型拒绝，故固定为 low
+  independence_note: |
+    本段不与 Claude alias/tier 做模型投影。新场景的模型角色只在顶层 common
+    model_routing 登记一次；只有新增/修改某个 Codex agent 的固定 effort 时才更新 agents。
+
+# ─── 新场景入场协议（2026-07-10，用户要求：新增场景必须评估档位）───
+new_scenario_protocol:
+  rule: |
+    luca_gstack 新增任何场景逻辑（新 skill / 新 agent / 新 workflow 节点 / 新 dispatch
+    类型）时，创建者必须在创建的同一次改动中完成档位评估并显式声明——skill 写
+    recommended-model frontmatter，agent 写 model pin 或在本文件 agents: 登记
+    "无 pin+理由"，节点写进 dispatch_rules。不得静默落 default_tier。
+  evaluation_rubric: |
+    三问定档（与 fable_whitelist 同一评估维度）：
+    ① 单次 token 量级？（整场交互/fan-out=大 → 禁 fable）
+    ② 判断杠杆？（对抗/裁决/回验=极高；生成/编排=中；检索/格式=低）
+    ③ 错判代价？（不可逆/出门前=极高 → 白名单候选）
+    大token+中杠杆 → core-execution；小token+极高杠杆+高代价 → 提案进 fable_whitelist
+    （白名单变更须用户批准）；有框架指导的轻活 → guided-execution；机械 → mechanical。
+  tripwire: |
+    daily_governance.check_model_routing 扫描未声明档位的 skill/agent → digest 告警
+    "新场景待评估档位"，留用户裁决（机械兜底，创建时纪律为主路径；不做实时 hook——
+    新增场景是低频事件，为其加每-prompt hook 不符合复杂度自证）。
+
+# 硬性 pin 历史备注：quality-gate/muse-proto-judge 原 pin sonnet（2026-06 登记），
+# 2026-07-10 判官升档 opus（验证不对称：判官上下文小、判定杠杆大、错判代价高）。

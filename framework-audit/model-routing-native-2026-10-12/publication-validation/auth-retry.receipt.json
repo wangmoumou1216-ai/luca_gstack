@@ -1,0 +1,24 @@
+{
+  "exit_code": 1,
+  "elapsed_seconds": 6.085075855255127,
+  "argv": [
+    "claude",
+    "-p",
+    "--tools",
+    "",
+    "--output-format",
+    "json",
+    "--no-session-persistence",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--max-budget-usd",
+    "1"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/c252/luca_gstack",
+  "prompt_sha256": "7381ac4733747f25cc5c63805b145eb1fc5f422b172df09f3e7356a421c9a5c6",
+  "result": "Failed to authenticate. API Error: 403 Request not allowed",
+  "modelUsage": {},
+  "total_cost_usd": 0,
+  "session_id": "80002560-395d-494e-b84b-0a912b0cd714"
+}

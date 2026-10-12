@@ -1,0 +1,9 @@
+  [OK] claimed-text-no-op
+  [OK] wording-only-mechanical-pass
+  [OK] text-preservation-loss
+  [OK] empty-id
+  [OK] duplicate-id
+  [OK] mismatched-sets
+  [OK] invalid-regex
+  [OK] unclaimed-no-op
+behavioral_ab mechanical-only selftest: ALL PASS

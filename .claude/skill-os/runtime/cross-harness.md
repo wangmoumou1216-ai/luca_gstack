@@ -12,6 +12,11 @@ For each changed capability, state and verify separately:
 4. the explicit degradation or refusal path;
 5. the behavioural or live probe that demonstrates the claim.
 
-Do not hard-code account-sensitive model names for Codex tiers; use the canonical reasoning-effort mapping. Do not claim parity when one harness only has a prose promise and the other has an enforced tool boundary. When one harness changes an artifact consumed by the other, report its exact path.
+Claude uses native inheritance and agent configuration under `model-routing.yaml#claude`.
+Codex retains the deployed `model_routing` roles and private approved bindings; model selection
+and user-owned reasoning effort are independent. Do not hard-code account-sensitive model names
+or infer a model from effort. Do not claim parity when one harness only has a prose promise and
+the other has an enforced tool boundary. When one harness changes an artifact consumed by the
+other, report its exact path.
 
 <!-- FILE_END: skill-os/runtime/cross-harness.md -->

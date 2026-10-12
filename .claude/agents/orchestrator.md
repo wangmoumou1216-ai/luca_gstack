@@ -235,8 +235,8 @@ Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时
         - 全 PASS → 同节追加 SHIPPED: <date> / acceptance: <收尾 handoff 路径>
         - Scene C / 无 tech-spec handoff → 跳过本步（标注 N/A）
         - 模型：Codex quality-gate 按 common MR-004/peak，冷启动且关键失败不降级。
-          Claude 兼容路径 dispatch quality-gate 时传 model: fable（fable_whitelist P0
-          出门前裁决；fable 不可用→降级 opus 并告知）——见 §5 Dispatch 规则
+          Claude 按 quality-gate 的原生配置或用户明确指定模型执行；保留冷审和完成证据，
+          模型不可用或验收未完成时停止依赖动作——见 §5。
 ```
 
 ### 2.2-pf Parallel Skill Fan-out（非交互 Skill 并行执行）
@@ -486,7 +486,7 @@ Step 4  下一步在当前有效执行授权范围内且无未决 Human Gate →
 
 ---
 
-## 5. 模型路由（强制传参：Claude；Codex 按角色执行）
+## 5. 模型选择（Claude 原生优先；Codex 按角色执行）
 
 真值源：`.claude/skill-os/model-routing.yaml`。Codex native/runner 只消费顶层 common
 `model_routing`：正常执行/承重探索继承 anchor，已登记的关键审查身份使用 peak，机械任务
@@ -523,23 +523,12 @@ Codex native 的关键调用在完成证据落盘前，暂停新的 native/runne
 runner 内部任务按原权限可并行；implement 始终 max_active_subagents=1，不使用这项例外。
 新的 runner 必须等待既有关键义务闭合。
 
-下表和后面的 alias 传参/降级规则只描述延期的 Claude adapter 兼容合同，不证明 Claude
-具备 Codex 的运行时强制能力，也不能覆盖 Codex 关键场景政策。
-
-| 能力档 | 任务类型 | 当前解析（2026-07-10） |
-|---------|---------|---------|
-| reasoning-heavy | **仅判定场景**（fable_whitelist：出门前裁决/对抗判定/翻案复审/plan-mode 规划期）| Fable（不可用→降级 Opus）|
-| core-execution | 承重执行：写代码、tech-spec/task-plan、原型、OD/Claude Design 编排、交互式设计 skill、deepresearch、判官常规 | Opus |
-| guided-execution | 轻执行/checklist 审查/一般检索（默认档）| Sonnet |
-| mechanical | 机械执行、格式化、简单验证、preflight | Haiku |
-
-**Claude 兼容 Dispatch 规则：**
-1. spawn 任何 subagent 时，按真值源解析 tier→alias 并**显式传 Agent tool 的 `model` 参数**（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin）。
-2. `skill_execution` Phase → 该 skill 的 `recommended-model` tier；`task_execution` Phase → 计划中该 Phase 的 `model_tier`（缺省 core-execution）。
-3. **传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist` 条目**（本文件相关点位：Step 3b 合同回验判定 dispatch quality-gate 时传 fable 覆盖其 opus pin）。拿不准 → 用 opus，不得猜 fable。
-4. **降级链**：fable 调用失败（配额/不可用）→ 自动降 opus 重试，并在产出中告知用户本次判定运行在降级档。
-5. 发现真值源未收录的档位变化 → 先提示用户更新真值源再调度（活规则）。
-调度时向用户展示：`"下一步是 <task>，使用 <model>（依据：<tier/白名单条目>）"`
+**Claude 原生派发（native-first）：** 按 `model-routing.yaml` 的 `claude` 合同，普通委派省略 model，
+保留 agent frontmatter 与用户明确指定的原生配置；旧 `recommended-model`/`model_tier`
+及其中的档位注释不参与派发，不生成另一份 alias 表。已有独立判官默认值保持。
+关键审查只传冻结输入与验收标准，核实际采用与真实完成；原生替换、模型不可用或证据缺失
+不能被写成成功，也不自动换低档重试。报告具体缺口并停止对应依赖。
+这是一项调用方合同，不宣称 Claude 已具备 Codex hook/runner 的机械强制边界。
 
 ---
 

@@ -1,0 +1,27 @@
+{
+  "kind": "policy-candidate",
+  "argv": [
+    "claude",
+    "-p",
+    "--tools",
+    "",
+    "--output-format",
+    "json",
+    "--session-id",
+    "423fb7bb-228f-4c57-900e-4c898061f0ef",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--max-budget-usd",
+    "1",
+    "--no-session-persistence"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/c252/luca_gstack",
+  "session_id": "423fb7bb-228f-4c57-900e-4c898061f0ef",
+  "pid": 20100,
+  "started_at": 1791775825.121056,
+  "ended_at": 1791775831.983294,
+  "exit_code": 0,
+  "prompt_sha256": "3e86345d1fee1c4279f2187d8e0b618e4606901841366107c42f810ce235cf98",
+  "manifest_sha256": "c2b5037f485d1408683d53e39fe9d845c21a2b39efc0ae89ccba3d04f7e429a1"
+}

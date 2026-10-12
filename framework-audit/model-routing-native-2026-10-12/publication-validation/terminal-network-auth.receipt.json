@@ -1,0 +1,40 @@
+{
+  "exit_code": 0,
+  "elapsed_seconds": 7.4193643749458715,
+  "argv": [
+    "claude",
+    "-p",
+    "--tools",
+    "",
+    "--output-format",
+    "json",
+    "--no-session-persistence",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--max-budget-usd",
+    "1"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/c252/luca_gstack",
+  "prompt_sha256": "7381ac4733747f25cc5c63805b145eb1fc5f422b172df09f3e7356a421c9a5c6",
+  "network": "same local proxy as running terminal Claude process; no global config changes",
+  "result": "CLAUDE_ROUTING_AUTH_OK",
+  "modelUsage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 2,
+      "outputTokens": 22,
+      "cacheReadInputTokens": 535,
+      "cacheCreationInputTokens": 25004,
+      "webSearchRequests": 0,
+      "costUSD": 0.1002935,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "total_cost_usd": 0.1002935,
+  "session_id": "a8a81dd3-9845-4f64-9fc0-4b526c6a7283"
+}

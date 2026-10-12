@@ -1,0 +1,29 @@
+{
+  "scope": "NO_PIN/framework/model-routing-strategy",
+  "type": "native-Claude-policy-consumption-probe; not end-to-end agent dispatch or ROI proof",
+  "source_cases": [
+    "CODE",
+    "DESIGN",
+    "FRAMEWORK"
+  ],
+  "source_hashes": {
+    "baseline": "8f8849a343879bc125c7ec2a72aec3e7c42611dffb2b40c43e25a9cbe617d98d",
+    "candidate": "3e86345d1fee1c4279f2187d8e0b618e4606901841366107c42f810ce235cf98"
+  },
+  "entry": "claude --print; same user default model/effort; tools disabled, no model or fallback override",
+  "max_calls": 2,
+  "max_budget_usd_per_call": 1,
+  "timeout_seconds_per_call": 90,
+  "preservation": [
+    "root_model_changed=false",
+    "effort_changed=false",
+    "DESIGN independent_review=true"
+  ],
+  "gain_candidate": [
+    "CODE model_parameter=null",
+    "DESIGN native opus default or omit, no forced legacy upgrade",
+    "FRAMEWORK explicit sonnet honored",
+    "unavailable critical never claimed success"
+  ],
+  "limits": "Synthetic examples cover three user-confirmed task classes. Does not estimate quality or time benefits on full real work. No guard retired from smoke-only evidence."
+}

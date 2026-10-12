@@ -92,27 +92,26 @@ class BehavioralAbGateTests(unittest.TestCase):
         self.assertFalse(any("behavior change" in f or "行为差" in f for f in result["findings"]))
         self.assertNotIn("max_delta", result)
 
-    def test_all_current_tiers_including_core_are_supported(self):
-        self.assertIn("core-execution", ab._skill_tiers())
-        for tier in ab._skill_tiers():
+    def test_optional_and_legacy_tiers_are_metadata_only(self):
+        for tier in (None, "core-execution", "guided-execution", "future-label"):
             with self.subTest(tier=tier):
-                self.assertEqual(self.check([self.row()], [self.row()], tier=tier)["verdict"], "PASS")
+                result = self.check([self.row()], [self.row()], tier=tier)
+                self.assertEqual(result["verdict"], "PASS")
+                self.assertEqual(result["skill_tier"], tier)
 
-    def test_tier_choices_follow_owner_definition(self):
-        with tempfile.TemporaryDirectory() as directory:
-            policy = Path(directory) / "model-routing.yaml"
-            policy.write_text("tiers:\n  core-execution: {}\n  future-owner-tier: {}\n", encoding="utf-8")
-            with patch.object(ab, "ROUTING_PATH", policy):
-                self.assertEqual(ab._skill_tiers(), ("core-execution", "future-owner-tier"))
+    def test_metadata_cannot_bypass_actual_fixture_failure(self):
+        for tier in (None, "core-execution", "unknown"):
+            self.assertEqual(self.check([], [], tier=tier)["verdict"], "BLOCK")
 
-    def test_unreadable_tier_authority_is_scoped_block(self):
-        with patch.object(ab, "ROUTING_PATH", Path("/nonexistent/u002-model-routing.yaml")):
-            result = self.check([self.row()], [self.row()])
-        self.assertEqual(result["verdict"], "BLOCK")
-        self.assertTrue(any("cannot load current skill tiers" in f for f in result["findings"]))
+    def test_invalid_metadata_blocks_direct_call(self):
+        for tier in ("", " ", 42):
+            self.assertEqual(self.check([self.row()], [self.row()], tier=tier)["verdict"], "BLOCK")
 
-    def test_unknown_tier_blocks_direct_call(self):
-        self.assertEqual(self.check([self.row()], [self.row()], tier="unknown")["verdict"], "BLOCK")
+    def test_cli_accepts_new_label_without_central_tier_table(self):
+        completed, result = self.run_cli([self.row()], [self.row()], "--skill-tier", "native-default")
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(result["skill_tier"], "native-default")
+        self.assertEqual(result["native_adoption"], "NOT_VERIFIED")
 
     def test_model_metadata_does_not_prove_or_reject_adoption(self):
         result = self.check([self.row()], [self.row()], tier="core-execution")

@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SELF_MODEL = ROOT / ".claude" / "skill-os" / "evolution" / "self-model.yaml"
 
 IMPLICIT_COUPLING = [
-    "4 路 model 一致：SKILL.md recommended-model ↔ model-routing.yaml ↔ CLAUDE.md 快照 ↔ orchestrator.md 快照",
+    "模型边界：Claude native-first 继承/原生 agent pin；不消费 recommended-model；Codex common policy 与固定 effort 保持不变",
     "observability/rules.yaml 按 skill 名 scope 的规则（skill 改名 → 静默孤儿化）",
     "路由 5 文件同步：skill-routing-map / input-modes / optional-workflow-graph / rules.yaml / CLAUDE.md+AGENTS.md",
     "受保护区：framework/ 只读、SKILL.md P1-P7、当前项目明确提供的设计约束",
@@ -25,8 +25,8 @@ IMPLICIT_COUPLING = [
 GATE_SEQUENCE = [
     "④ 静态+契约：bash scripts/verify.sh + npm run check:hooks/check:routing-map/check:quality-gates/check:coding-discipline/check:self-model",
     "⑤ 漂移：npm run check:routing-map + daily_governance.check_model_routing()",
-    "⑥ 行为A/B（prose 改动必做）：behavioral_ab.py --skill-tier <候选 skill 档：reasoning-heavy=fable/opus · guided-execution=sonnet · mechanical=haiku>，在该档上 baseline vs candidate（勿固定 Sonnet，否则给 reasoning-heavy skill 测错模型，见 GAP-behavioral-ab-tier）",
-    "⑦ 对抗：preflight-agent + quality-gate(Sonnet) + redteam(Fable)",
+    "⑥ 行为A/B（prose 改动必做）：baseline vs candidate 使用相同的用户批准模型与 effort；记录实际采用，不从 skill recommended-model 推导模型（按 BENCHMARK-RUNBOOK 当前驱动与授权运行）",
+    "⑦ 对抗：preflight-agent + 独立 quality-gate + redteam；Claude 使用原生继承/有意 pin，Codex 使用 common role；不可用时停止，不自动降级",
     "⑧ 回滚就绪：git tag pre-fuse-<id> → worktree squash-merge 单提交",
     "⑨ 反馈：append adoption-log.jsonl",
 ]
