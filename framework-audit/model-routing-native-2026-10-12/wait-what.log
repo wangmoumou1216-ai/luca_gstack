@@ -1,0 +1,287 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /guided-execution:[\s\S]*?skills: \[[\s\S]*?\bwait-what\b/. Input:
+
+'# 模型选择边界：Claude 使用原生配置；Codex 保留已部署的 common-v2 角色政策。\n' +
+  '# common 是既有解析器 schema，不代表 Claude 也安装了该路由 adapter。\n' +
+  'version: 2\n' +
+  'updated: 2026-10-12\n' +
+  'review_after_days: 90\n' +
+  '\n' +
+  '# Codex native/runner：模型及相对关系来自私有 binding；effort 归用户所有。\n' +
+  'model_routing:\n' +
+  '  version: 2\n' +
+  '  status: active\n' +
+  '  scope: common\n' +
+  '  roles:\n' +
+  '    anchor: root-effective-selection\n' +
+  '    peak: user-approved-higher-selection\n' +
+  '    light: user-approved-lower-selection\n' +
+  '  scenes:\n' +
+  '    MR-001:\n' +
+  '      trigger: normal-conversation-or-implementation\n' +
+  '      role: anchor\n' +
+  '      critical: false\n' +
+  '    MR-002:\n' +
+  '      trigger: entered-plan-or-explicit-replan\n' +
+  '      role: peak\n' +
+  '      critical: true\n' +
+  '    MR-003:\n' +
+  '      trigger: redteam-refute-judge-oracle-expert-panel\n' +
+  '      role: peak\n' +
+  '      critical: true\n' +
+  '    MR-004:\n' +
+  '      trigger: semantic-review-or-terminal-decision\n' +
+  '      role: peak\n' +
+  '      critical: true\n' +
+  '    MR-005:\n' +
+  '      trigger: independent-review-before-authorized-irreversible-action\n' +
+  '      role: peak\n' +
+  '      critical: true\n' +
+  '    MR-006:\n' +
+  '      trigger: fact-collection-or-retrieval\n' +
+  '      role: anchor\n' +
+  '      critical: false\n' +
+  '    MR-007:\n' +
+  '      trigger: explicit-long-context-delegation\n' +
+  '      role: by-scene\n' +
+  '      requires_capacity: true\n' +
+  '    MR-008:\n' +
+  '      trigger: low-risk-mechanical-subtask\n' +
+  '      role: light\n' +
+  '      critical: false\n' +
+  '    MR-009:\n' +
+  '      trigger: bounded-verifiable-fact-collection\n' +
+  '      role: light\n' +
+  '      critical: false\n' +
+  '  dispatch:\n' +
+  '    native_agent_types:\n' +
+  '      default: MR-001\n' +
+  '      worker: MR-001\n' +
+  '      explorer: MR-006\n' +
+  '      preflight-agent: MR-008\n' +
+  '      fact-collector: MR-009\n' +
+  '      quality-gate: MR-004\n' +
+  '      muse-proto-judge: MR-004\n' +
+  '    workflows:\n' +
+  '      external-skill-scout:\n' +
+  '        Load: MR-008\n' +
+  '        Discover: MR-006\n' +
+  '        Verify: MR-004\n' +
+  '      framework-evolution-scout:\n' +
+  '        Load: MR-008\n' +
+  '        Intake: MR-006\n' +
+  '        Discover: MR-006\n' +
+  '        AdoptionReview: MR-004\n' +
+  '        Verify: MR-004\n' +
+  '        Redteam: MR-003\n' +
+  '  critical_failure: refuse-no-fallback\n' +
+  '  evidence: trusted-runtime-adoption-and-same-invocation-success\n' +
+  '  effort: user-owned-not-a-routing-input\n' +
+  '\n' +
+  '# Claude 原生选择合同；这是调度说明，不是额外的运行时强制 adapter。\n' +
+  'claude:\n' +
+  '  strategy: native-first\n' +
+  '  default_model: inherit\n' +
+  '  skill_tiers: ignored\n' +
+  '  explicit_model: user-request-or-agent-frontmatter\n' +
+  '  automatic_fallback: none\n' +
+  '  critical_review: independent-required\n' +
+  '\n' +
+  '# 普通 Claude 委派省略 model，交由原生继承/agent frontmatter 解析。\n' +
+  '# 用户明确指定模型时按原生接口处理；root model 与 effort 保持用户选择。\n' +
+  '# recommended-model 与旧计划 model_tier 仅为历史元数据，包括其中旧派发注释；\n' +
+  '# 不据它们选模、升级或自动降级，不要求新 skill 声明或同步旧档位。\n' +
+  '# 必须核验独立审查的输入、实际执行与完成；模型不可用或关键证据不足时\n' +
+  '# 保留失败并停止依赖动作，不把原生替换或自动重试当作已完成验收。\n' +
+  '\n' +
+  '# 保留已有 agent 的有意原生默认值；不是按场景覆盖 model 的中央路由表。\n' +
+  '# 新 agent 可直接继承原生默认，不要求加入无 pin 白名单。\n' +
+  'agents:\n' +
+  '  quality-gate: opus\n' +
+  '  muse-proto-judge: opus\n' +
+  '  fact-collector: sonnet\n' +
+  '  preflight-agent: haiku\n' +
+  '\n' +
+  '# ─── Codex 固定 effort 兼容元数据（不参与模型路由）───\n' +
+  '# 模型选择的唯一规则是顶层 common model_routing；账户模型名只在私有 binding。\n' +
+  '# 本段只守护 .codex/agents/*.toml 的固定 reasoning effort 合法性与漂移，\n' +
+  '# 不得被 runner/hook 当作场景档位或模型选择输入。\n' +
+  'codex:\n' +
+  '  principle: |\n' +
+  '    reasoning effort 是 agent 执行参数，不是 anchor/peak/light 模型角色。\n' +
+  '    已有 agent 可保留固定 effort；用户在调用时显式给出的 effort 原样保留。\n' +
+  '    动态路由只改 model，不根据场景升降 effort，也不把 effort 写入路由摘要或证据票。\n' +
+  '  model_name_boundary: |\n' +
+  '    账户可用模型会随订阅变化，因此公共 policy 不写模型名。用户批准的\n' +
+  '    Codex peak/light 及同端上下关系放在 mode 0600 私有 binding；根 anchor 取当前会话\n' +
+  '    effective model。模型选择的消费者是 model-route hook/runner，不是本 Codex 兼容段。\n' +
+  '  # 【枚举以**模型**为准，不以 config 解析器为准（2026-08-05 实测教训）】\n' +
+  '  # config 解析器接受 none/minimal/low/medium/high/xhigh —— 那是**超集**；\n' +
+  '  # 真实模型（gpt-5.6-sol 系）拒绝 minimal，其支持集为 none/low/medium/high/xhigh/max。\n' +
+  '  # 首版从"config 报错列出的枚举"取值，导致 mechanical 档定成 minimal，\n' +
+  '  # 实测每次调用 400 unsupported_value（preflight-agent 会恒失败）。\n' +
+  '  # 取枚举必须来自**实际调用**的反馈，不能来自配置层的校验信息。\n' +
+  '  effort_lineup: [none, low, medium, high, xhigh, max]   # 实测：真实模型接受集\n' +
+  '  effort_rejected_by_model: [minimal]                     # config 层接受但模型拒绝，勿用\n' +
+  '  agent_toml_model_field: omit-hook-owned\n' +
+  '  agent_toml_model_field_note: |\n' +
+  '    .codex/agents/*.toml 不写账户模型名。anchor 时继承根会话；peak/light 时由\n' +
+  '    已授信的 model-route hook 按公共 policy 与私有 binding 改写本次 spawn 的 model。\n' +
+  '  agents:                       # 固定 effort 或显式 inherit；不是模型档位\n' +
+  '    fact-collector: inherit     # 不设固定 effort，沿用调用方设置\n' +
+  '    quality-gate: high\n' +
+  '    muse-proto-judge: high\n' +
+  '    preflight-agent: low        # minimal 被真实模型拒绝，故固定为 low\n' +
+  '  independence_note: |\n' +
+  '    本段不与 Claude alias/tier 做模型投影。新场景的模型角色只在顶层 common\n' +
+  '    model_routing 登记一次；只有新增/修改某个 Codex agent 的固定 effort 时才更新 agents。\n'
+
+    at file:///Users/luca/.codex/worktrees/c252/luca_gstack/scripts/test-wait-what-skill.mjs:31:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '# 模型选择边界：Claude 使用原生配置；Codex 保留已部署的 common-v2 角色政策。\n' +
+    '# common 是既有解析器 schema，不代表 Claude 也安装了该路由 adapter。\n' +
+    'version: 2\n' +
+    'updated: 2026-10-12\n' +
+    'review_after_days: 90\n' +
+    '\n' +
+    '# Codex native/runner：模型及相对关系来自私有 binding；effort 归用户所有。\n' +
+    'model_routing:\n' +
+    '  version: 2\n' +
+    '  status: active\n' +
+    '  scope: common\n' +
+    '  roles:\n' +
+    '    anchor: root-effective-selection\n' +
+    '    peak: user-approved-higher-selection\n' +
+    '    light: user-approved-lower-selection\n' +
+    '  scenes:\n' +
+    '    MR-001:\n' +
+    '      trigger: normal-conversation-or-implementation\n' +
+    '      role: anchor\n' +
+    '      critical: false\n' +
+    '    MR-002:\n' +
+    '      trigger: entered-plan-or-explicit-replan\n' +
+    '      role: peak\n' +
+    '      critical: true\n' +
+    '    MR-003:\n' +
+    '      trigger: redteam-refute-judge-oracle-expert-panel\n' +
+    '      role: peak\n' +
+    '      critical: true\n' +
+    '    MR-004:\n' +
+    '      trigger: semantic-review-or-terminal-decision\n' +
+    '      role: peak\n' +
+    '      critical: true\n' +
+    '    MR-005:\n' +
+    '      trigger: independent-review-before-authorized-irreversible-action\n' +
+    '      role: peak\n' +
+    '      critical: true\n' +
+    '    MR-006:\n' +
+    '      trigger: fact-collection-or-retrieval\n' +
+    '      role: anchor\n' +
+    '      critical: false\n' +
+    '    MR-007:\n' +
+    '      trigger: explicit-long-context-delegation\n' +
+    '      role: by-scene\n' +
+    '      requires_capacity: true\n' +
+    '    MR-008:\n' +
+    '      trigger: low-risk-mechanical-subtask\n' +
+    '      role: light\n' +
+    '      critical: false\n' +
+    '    MR-009:\n' +
+    '      trigger: bounded-verifiable-fact-collection\n' +
+    '      role: light\n' +
+    '      critical: false\n' +
+    '  dispatch:\n' +
+    '    native_agent_types:\n' +
+    '      default: MR-001\n' +
+    '      worker: MR-001\n' +
+    '      explorer: MR-006\n' +
+    '      preflight-agent: MR-008\n' +
+    '      fact-collector: MR-009\n' +
+    '      quality-gate: MR-004\n' +
+    '      muse-proto-judge: MR-004\n' +
+    '    workflows:\n' +
+    '      external-skill-scout:\n' +
+    '        Load: MR-008\n' +
+    '        Discover: MR-006\n' +
+    '        Verify: MR-004\n' +
+    '      framework-evolution-scout:\n' +
+    '        Load: MR-008\n' +
+    '        Intake: MR-006\n' +
+    '        Discover: MR-006\n' +
+    '        AdoptionReview: MR-004\n' +
+    '        Verify: MR-004\n' +
+    '        Redteam: MR-003\n' +
+    '  critical_failure: refuse-no-fallback\n' +
+    '  evidence: trusted-runtime-adoption-and-same-invocation-success\n' +
+    '  effort: user-owned-not-a-routing-input\n' +
+    '\n' +
+    '# Claude 原生选择合同；这是调度说明，不是额外的运行时强制 adapter。\n' +
+    'claude:\n' +
+    '  strategy: native-first\n' +
+    '  default_model: inherit\n' +
+    '  skill_tiers: ignored\n' +
+    '  explicit_model: user-request-or-agent-frontmatter\n' +
+    '  automatic_fallback: none\n' +
+    '  critical_review: independent-required\n' +
+    '\n' +
+    '# 普通 Claude 委派省略 model，交由原生继承/agent frontmatter 解析。\n' +
+    '# 用户明确指定模型时按原生接口处理；root model 与 effort 保持用户选择。\n' +
+    '# recommended-model 与旧计划 model_tier 仅为历史元数据，包括其中旧派发注释；\n' +
+    '# 不据它们选模、升级或自动降级，不要求新 skill 声明或同步旧档位。\n' +
+    '# 必须核验独立审查的输入、实际执行与完成；模型不可用或关键证据不足时\n' +
+    '# 保留失败并停止依赖动作，不把原生替换或自动重试当作已完成验收。\n' +
+    '\n' +
+    '# 保留已有 agent 的有意原生默认值；不是按场景覆盖 model 的中央路由表。\n' +
+    '# 新 agent 可直接继承原生默认，不要求加入无 pin 白名单。\n' +
+    'agents:\n' +
+    '  quality-gate: opus\n' +
+    '  muse-proto-judge: opus\n' +
+    '  fact-collector: sonnet\n' +
+    '  preflight-agent: haiku\n' +
+    '\n' +
+    '# ─── Codex 固定 effort 兼容元数据（不参与模型路由）───\n' +
+    '# 模型选择的唯一规则是顶层 common model_routing；账户模型名只在私有 binding。\n' +
+    '# 本段只守护 .codex/agents/*.toml 的固定 reasoning effort 合法性与漂移，\n' +
+    '# 不得被 runner/hook 当作场景档位或模型选择输入。\n' +
+    'codex:\n' +
+    '  principle: |\n' +
+    '    reasoning effort 是 agent 执行参数，不是 anchor/peak/light 模型角色。\n' +
+    '    已有 agent 可保留固定 effort；用户在调用时显式给出的 effort 原样保留。\n' +
+    '    动态路由只改 model，不根据场景升降 effort，也不把 effort 写入路由摘要或证据票。\n' +
+    '  model_name_boundary: |\n' +
+    '    账户可用模型会随订阅变化，因此公共 policy 不写模型名。用户批准的\n' +
+    '    Codex peak/light 及同端上下关系放在 mode 0600 私有 binding；根 anchor 取当前会话\n' +
+    '    effective model。模型选择的消费者是 model-route hook/runner，不是本 Codex 兼容段。\n' +
+    '  # 【枚举以**模型**为准，不以 config 解析器为准（2026-08-05 实测教训）】\n' +
+    '  # config 解析器接受 none/minimal/low/medium/high/xhigh —— 那是**超集**；\n' +
+    '  # 真实模型（gpt-5.6-sol 系）拒绝 minimal，其支持集为 none/low/medium/high/xhigh/max。\n' +
+    '  # 首版从"config 报错列出的枚举"取值，导致 mechanical 档定成 minimal，\n' +
+    '  # 实测每次调用 400 unsupported_value（preflight-agent 会恒失败）。\n' +
+    '  # 取枚举必须来自**实际调用**的反馈，不能来自配置层的校验信息。\n' +
+    '  effort_lineup: [none, low, medium, high, xhigh, max]   # 实测：真实模型接受集\n' +
+    '  effort_rejected_by_model: [minimal]                     # config 层接受但模型拒绝，勿用\n' +
+    '  agent_toml_model_field: omit-hook-owned\n' +
+    '  agent_toml_model_field_note: |\n' +
+    '    .codex/agents/*.toml 不写账户模型名。anchor 时继承根会话；peak/light 时由\n' +
+    '    已授信的 model-route hook 按公共 policy 与私有 binding 改写本次 spawn 的 model。\n' +
+    '  agents:                       # 固定 effort 或显式 inherit；不是模型档位\n' +
+    '    fact-collector: inherit     # 不设固定 effort，沿用调用方设置\n' +
+    '    quality-gate: high\n' +
+    '    muse-proto-judge: high\n' +
+    '    preflight-agent: low        # minimal 被真实模型拒绝，故固定为 low\n' +
+    '  independence_note: |\n' +
+    '    本段不与 Claude alias/tier 做模型投影。新场景的模型角色只在顶层 common\n' +
+    '    model_routing 登记一次；只有新增/修改某个 Codex agent 的固定 effort 时才更新 agents。\n',
+  expected: /guided-execution:[\s\S]*?skills: \[[\s\S]*?\bwait-what\b/,
+  operator: 'match',
+  diff: 'simple'
+}
+
+Node.js v22.23.1

@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "scope": "Bounded policy consumption and two real native child calls only; not all U003/U004/U005",
+  "root_model": "claude-sonnet-5-5",
+  "native_session_id": "a7ce4c74-1435-48db-8da5-a9a27ada5999",
+  "children_actual_models": {
+    "a7830e148c2130eaf": "claude-opus-5-5",
+    "a32ec1b268762aeeb": "claude-sonnet-5-5"
+  },
+  "completed": 2,
+  "failed": 0,
+  "all_calls_omit_model": true,
+  "source_hashes_after": "32/32 unchanged",
+  "cleanup": "No custom config installed; agents were CLI-scoped; both children completed; retained transcripts and receipts remain readable",
+  "limits": [
+    "No full real-task A/B ROI measurement",
+    "No global Codex activation or source-trust changes",
+    "Not all live failure/rollback surfaces tested"
+  ]
+}
