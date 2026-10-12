@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "routing-postpublish-standards-20261012-02",
+  "subject": {
+    "skill": "PUBLISHED_SOURCE",
+    "topic": "routing-postpublish-standards",
+    "scene": "unknown",
+    "input_summary": "Independent cold Standards-only review of 32 frozen source/contract/test/generated files, baseline b9b96d48cf389997949310d45c5e774c7aeddeb1 to published head 931b059b8807338488740adcc7915d31b5604135; verified completion identity, standards, protected consumers, runtime and mutation evidence.",
+    "output_paths": [
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-postpublish-review-4ba5j5ca/code-input.json",
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-postpublish-review-4ba5j5ca/code.diff"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 6,
+    "total": 6,
+    "findings": []
+  }
+}

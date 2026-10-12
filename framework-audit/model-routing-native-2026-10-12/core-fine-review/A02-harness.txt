@@ -1,0 +1,19 @@
+PASS H1 CLAUDE_PROJECT_DIR 在 → claude
+PASS H2 CODEX_* 在 → codex
+PASS H3 都不在 → unknown（不猜）
+PASS H4 claude → canEmitControlVerb=true
+PASS H5 codex → canEmitControlVerb=true（实测共享控制动词）
+PASS H6 unknown → canEmitControlVerb=true（失效方向偏向保住强制）
+PASS H7a codex: block/write hook/input mutation 均可用，Workflow/AskUser 关闭
+PASS H7b unknown: 强制动词保留（保住强制），但 workflow/askUser 仍关（吐了也没人能执行）
+PASS H8 claude: CC 专有原语全开
+PASS V2-claude discovery invokes phase-a-discovery without binding
+PASS V2-claude unavailable discovery primitive degrades to NO_HINT without writes
+PASS V2-codex discovery invokes phase-a-discovery without binding
+PASS V2-codex unavailable discovery primitive degrades to NO_HINT without writes
+PASS E1 [接线] session-sync @claude → stdout 仍是 decision:block JSON（零回归）
+PASS E2 [接线] session-sync @codex → stdout 保留 decision:block JSON
+PASS E3 [接线] project-scope-guard @codex → stdout 保留 permissionDecision
+PASS E4 [接线] project-scope-guard @claude → 仍吐 permissionDecision（零回归）
+
+=== test-harness summary: PASS=17 FAIL=0 ===

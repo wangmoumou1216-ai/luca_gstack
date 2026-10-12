@@ -1,0 +1,27 @@
+PASS policy: active common v2, execution → anchor
+PASS policy-v2: active policy matches reviewed candidate
+PASS v2 bounded collector: exact identity selects light without downgrading exploration
+PASS resolve: execution uses the effective default
+PASS resolve: all seven scenes follow policy; delegation needs an explicit underlying scene
+PASS resolve: stable scene IDs are strings, never property-key coercions
+PASS resolve: JSON claims cannot establish capability or configuration provenance
+PASS resolve: missing/invalid model choices and non-Codex harnesses fail closed
+PASS resolve: unsupported/unknown override, pin, evidence and safety cannot be READY
+PASS resolve: long delegation budgets payload + system/tools + safety reserve
+PASS resolve: model/config hashes bind both choices and safety, never effort
+PASS v2 resolve: one common policy produces anchor, peak and light choices
+PASS v2 resolve: requested peak remains critical when root anchor is already equal or higher
+PASS v2 resolve: light never upgrades and missing or unapproved light stays on root anchor
+PASS v2 resolve: peak relation is fail-closed while root anchor ignores ambient default drift
+PASS v2 resolve: complete 6-series binding routes all roles; missing root names require explicit approval
+PASS v2 dispatch: exact caller identity maps to scenes and unknown callers never guess
+PASS v2 resolve: policy semantics are harness-neutral and effort cannot change a route
+PASS manifest: only complete READY routes get an invocation-bound manifest
+PASS decision: trusted adoption + same-call success accepts a current critical verdict
+PASS decision: no declared or unknown fallback is accepted even with a clear failure latch
+PASS decision: request/self-report, wrong model or invocation, errors and reroutes are rejected
+PASS decision: task/input/config/policy/capability/route/call/generation bindings must all be current
+PASS decision: the parent failure latch blocks old success, null and conservative fallback
+PASS decision: effort changes preserve acceptance; equal selections still require independent review
+PASS JSON CLI: reads canonical policy but cannot turn parent JSON claims into attestation
+26 behavioral test groups passed

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "routing-postpublish-spec-20261012-02",
+  "subject": {
+    "skill": "PUBLISHED_SOURCE",
+    "topic": "model-routing strategy post-publication Spec review",
+    "scene": "unknown",
+    "input_summary": "Frozen published source and original U001–U005/A01–A06 requirements; independent read-only review with fresh A03 and five pure resolver checks.",
+    "output_paths": [
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-postpublish-review-4ba5j5ca/published-completion.json"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "FAIL",
+    "passed": 3,
+    "total": 6,
+    "findings": [
+      "MAJOR: Original scope incomplete: U003 only bounded smoke, U004 real-task comparison and U005 activation/rollback incomplete; A01/A02 full raw evidence absent, A04 exact --ci closure unavailable, A05/A06 UNKNOWN.",
+      "MINOR: Active code-hygiene/SKILL.md:169 still protects fable→opus fallback, contradicting retired automatic fallback; consumer map omitted this non-metadata obligation.",
+      "UNKNOWN: Native evidence proves two marker calls only, not the complete original live safety/error/rollback denominator."
+    ]
+  }
+}
