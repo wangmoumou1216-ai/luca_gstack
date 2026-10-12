@@ -6,11 +6,7 @@ description: |
   工程规格节点。把 PRD + design-brief → 技术合同。
   强制验证所有 MUST 级需求的覆盖率，不允许静默跳过。
   产出：docs/engineering/YYYY-MM-DD-<topic>-tech-spec.md
-  v1.0.1（2026-07-02，fork内）：design-brief handoff 查找加 topic 过滤+同日多份告警，
-  修复同一天多份 design-brief handoff 时"取最新"取错的回归风险。
-  v1.0.2（2026-07-06，fork内）：修复 v1.0.1 告警的死子路径——current-topic.txt
-  非空但过滤无命中时会静默回退全局最新且不告警。告警条件改绑「过滤是否真正命中」
-  （_FILTERED 标志），topic 非空却没匹配上也会告警。
+  输入使用用户或当前 handoff 的精确来源，经 project-session 核验；不从共享别名或最新文件猜测。
 allowed-tools:
   - Read
   - Write
@@ -28,27 +24,8 @@ context-cost:
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH | SESSION: $_SESSION_ID"
-# 找 design-brief handoff——若 .claude/current-topic.txt 有值，先按 topic 过滤再取最新，
-# 避免同一天对多个 topic 各跑一次 design-brief 时取错同日 handoff
-# （2026-07-02 修复的真实回归风险）。
-_TOPIC_HINT=$(cat .claude/current-topic.txt 2>/dev/null || echo "")
-_FILTERED=0
-if [ -n "$_TOPIC_HINT" ]; then
-  _HANDOFF=$(ls docs/handoff/*design-brief-handoff.md 2>/dev/null | grep -F "$_TOPIC_HINT" | sort | tail -1)
-  [ -n "${_HANDOFF:-}" ] && _FILTERED=1   # 仅当 topic 过滤真命中才算过滤成功
-fi
-if [ -z "${_HANDOFF:-}" ]; then
-  _HANDOFF=$(ls docs/handoff/*design-brief-handoff.md 2>/dev/null | sort | tail -1)
-fi
-echo "DESIGN_BRIEF_HANDOFF: ${_HANDOFF:-NOT FOUND}"
-_TODAY_COUNT=$(ls docs/handoff/"$(date +%Y-%m-%d)"-*design-brief-handoff.md 2>/dev/null | wc -l | tr -d ' ')
-# 告警绑定「过滤是否真正命中」而非「hint 是否为空」：topic 非空却没匹配上时同样回退了全局最新，必须一并告警
-if [ "${_TODAY_COUNT:-0}" -gt 1 ] && [ "$_FILTERED" -ne 1 ]; then
-  echo "⚠️ 今天已有 $_TODAY_COUNT 份 design-brief handoff，未能按 current-topic.txt 过滤到唯一一份（topic 为空、或 topic='$_TOPIC_HINT' 无匹配）——上面取到的『最新』可能不是你要的那条。请向用户确认具体要哪条 topic 的 handoff，不要静默假设。"
-fi
-# 找最新的 PRD
-_PRD=$(ls docs/prd/*prd.md 2>/dev/null | sort | tail -1)
-echo "PRD: ${_PRD:-NOT FOUND}"
+# Phase 0 resolves exact authorized inputs; NO_PIN never probes project aliases.
+echo "INPUTS: resolve verified caller references in Phase 0"
 python3 .claude/observability/scripts/get_rules.py tech-spec "*" 2>/dev/null || true
 ```
 
@@ -112,12 +89,13 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5（门禁）�
 **目标**：用最小 context 建立上游全景，不读全文。
 
 先按上述来源模式准入。conversation_synthesis 完整读取 register 及原始来源、冻结 MUST 集
-后进入 Phase 1，不执行下列 PRD/Brief 的发现/加载；preamble glob 仍只作线索，不作来源授权。
+后进入 Phase 1，不执行下列 PRD/Brief 的发现/加载。框架工作保持 NO_PIN；项目读取先按
+project-session 核验当前 pin 或子会话关联及有限读取范围，Codex 使用获准读取通道。
 以下执行步骤仅适用于正常 PRD/Brief 分支（input_mode=prd）：
-1. 读取 Preamble 已定位的 `$_HANDOFF`（`docs/handoff/` 中按 `current-topic.txt` 过滤后取最新的 `*design-brief-handoff.md`，< 2000 tokens，标准 handoff 格式）——若 Preamble 输出了同日多份告警且未过滤成功，先向用户确认具体是哪个 topic，不要直接假设"最新的那份"就是对的
-2. 读取 `docs/handoff/` 中最新的 `*brainstorm-handoff.md`（如存在）
-3. 读取 `docs/prd/` 中最新 PRD 文件的前 60 行（确认 R-series 和 AE-series 编号范围）；并定向读取其末尾 `## Outstanding Questions → Deferred to Planning` 子节（上游合法放行、延后到本阶段答的开放问题，不在前 60 行内）。把每条 Deferred 项带入本 spec 风险节，并在 Phase 6 handoff 的「待澄清」节传递给下游——未解决前不得据此做隐式假设。
-4. 如存在 `*prd-ai-spec.md`，读取其前 60 行（确认 Agent 边界）
+1. 从用户或当前已核验 handoff 解析精确 design-brief handoff 绝对路径，实际读取其来源与门禁。缺失或有歧义返回 NEEDS_CONTEXT；共享 docs/current-topic 别名与最新文件不能用于选择输入。
+2. 仅当该 handoff 或用户明确引用 brainstorm handoff 时读取其精确路径；不扫描其他话题。
+3. 读取本次绑定 PRD 的前 60 行（确认 R-series 和 AE-series 编号范围），并定向读取其末尾 `## Outstanding Questions → Deferred to Planning` 子节。把每条 Deferred 项带入本 spec 风险节，并在 Phase 6 handoff 的「待澄清」节传递给下游——未解决前不得据此做隐式假设。
+4. 仅当本次来源明确引用 `prd-ai-spec` 时，按其精确路径读取前 60 行（确认 Agent 边界）。
 5. 从 design-brief 正文定向读取以下节，不读全文：
    - `设计决策清单`
    - `体验验证结论` / 状态覆盖表
@@ -150,7 +128,7 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5（门禁）�
 6. **不读全文**。如需要具体条款，按需读取对应章节。
 
 正常 PRD/Brief 输入的准入质量门（standalone 和 workflow 都执行）：
-- 输入必须来自已验证项目/当前话题的精确 PRD、Brief 与 handoff，preamble 最新路径仅为发现线索。
+- 输入必须来自已验证项目/当前话题的精确 PRD、Brief 与 handoff；缺少授权路径或来源关系就停在门前。
 - 先运行 `node scripts/check-quality-gates.mjs --handoff "<精确 Brief handoff 绝对路径>"`，
   核 `gate_result=PASS`、`coverage_scope=prd_end_to_end`，并定向核对 Brief 矩阵覆盖当前实际 PRD
   的全部 MUST R/AE；文件存在或 source IDs 相似不等于通过。

@@ -1,12 +1,12 @@
 # Phase 1 Agent Prompts — ux-brainstorm
 
-> 外移自 `SKILL.md` Phase 1「上下文扫描 & 查漏」。本文件是 Phase 1 三个并行后台
+> 外移自 `SKILL.md` Phase 1「上下文扫描 & 查漏」。本文件是 Phase 1 三个真实原生
 > agent（Agent A / B / C）的完整 `task()` 调度模板（含 prompt 与输出 XML schema）。
 > 在 Phase 1 发射 subagent 前完整读取本文件，按模板逐字构造三个调度；
 > 除 `{...}` 占位符外不得改写 prompt 内容。
 
 ```
-Subagent调度：3个并行后台agent
+Subagent调度：3个真实原生角色；调度/完成按 ux-brainstorm/SKILL.md 当前宿主合同
 每个agent接收完整的研究内容（或冷启动想法），产出结构化XML。
 
 --- Agent A: 提取设计约束与信号 ---

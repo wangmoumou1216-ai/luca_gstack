@@ -12,7 +12,7 @@
 | `code-recon` | Brownfield「从现有代码起步」的正门 skill：把一个已有代码库逆向成一份**设计可消费的架构 brief**， 再作为输入喂给设计管线（ux-brainstorm / design-brie… | `.claude/skills/office/code-recon/SKILL.md` |
 | `code-review` | 固定代码改动范围和需求输入，委托 code-hygiene Mode D 唯一方法权威，只返回分轴 findings。 | `.claude/skills/office/code-review/SKILL.md` |
 | `codebase-design` | 工程模块设计原语：用 Module / Interface / Depth / Seam / Adapter 的稳定词汇，判断模块是否足够深、 接口是否把复杂度藏在正确位置，以及测试面应放在哪里。用于模… | `.claude/skills/office/codebase-design/SKILL.md` |
-| `deepresearch` | Deep research orchestrator. Launches 5-8 parallel research agents across web, docs, code, and academi… | `.claude/skills/office/deepresearch/SKILL.md` |
+| `deepresearch` | Deep research orchestrator. Dispatches 5-8 native research agents under approved scheduling across we… | `.claude/skills/office/deepresearch/SKILL.md` |
 | `design-brief` | 设计收敛与模板适配节点。承接全流程已选方案、已有需求/口述转写，或已有原型的 UI 精修； 继承确认事实，补齐关键缺口，按模板语义定位模块、验证动作/状态承载能力，界定生成工具自由度。 输出可追踪决策、… | `.claude/skills/office/design-brief/SKILL.md` |
 | `diagnosing-bugs` | Diagnose an unexpected failure, regression, flaky behavior, or performance regression by first buildi… | `.claude/skills/office/diagnosing-bugs/SKILL.md` |
 | `domain-modeling` | Build or sharpen a domain model when language overloads distinct concepts, relationships or ownership… | `.claude/skills/office/domain-modeling/SKILL.md` |
@@ -39,7 +39,7 @@
 | `to-tickets` | Explicit-only publication facade that turns an exact gated task-plan into tracer-bullet implementatio… | `.claude/skills/office/to-tickets/SKILL.md` |
 | `ux-audit` | 页面UX评审。启动时询问：场景（优化参考B/改版基线C）+ 激活哪些模块（多选）。 三个模块：A视觉层级与一致性（35%）/ B交互与可访问性（40%）/ C 业务领域专项（25%，可选，profile… | `.claude/skills/office/ux-audit/SKILL.md` |
 | `ux-brainstorm` | 发散引擎（UX设计方案编排器）。将ux-research报告（或设计想法）发散为2-3个设计方案 + 交互架构文档：通过7个UX逼问（4必选+3条件触发）审问假设，生成含稳定ID的方案， 经Oracle… | `.claude/skills/office/ux-brainstorm/SKILL.md` |
-| `ux-research` | UX设计深度研究编排器。输入设计问题，分解为5+1个研究维度，并行派发研究Agent， 通过共识矩阵交叉验证，苏格拉底式审查后生成结构化UX研究报告。 竞品分析是其中一个维度，不是全部。 Human i… | `.claude/skills/office/ux-research/SKILL.md` |
+| `ux-research` | UX设计深度研究编排器。输入设计问题，分解为5+1个研究维度，按批准调度原生研究Agent， 通过共识矩阵交叉验证，苏格拉底式审查后生成结构化UX研究报告。 竞品分析是其中一个维度，不是全部。 Huma… | `.claude/skills/office/ux-research/SKILL.md` |
 | `ux-writing` | 内容与语言设计：产品 voice/tone 规范、微文案系统（错误/空态/CTA/onboarding/AI hedging）、 界面文案评审与改写——PRD 之后设计段的**内容维度方法论节点**，产… | `.claude/skills/office/ux-writing/SKILL.md` |
 | `wait-what` | 显式对话修复入口：当上一条说明没讲明白时，补足缺失前提，并用自然中文和项目术语重新讲清楚。 | `.claude/skills/office/wait-what/SKILL.md` |
 | `wayfinder` | Thin planning facade for work that is simultaneously huge, multi-session, and foggy; delegates to Pla… | `.claude/skills/office/wayfinder/SKILL.md` |
@@ -51,7 +51,7 @@
 | Skill | Defining constraint | Authority path |
 |---|---|---|
 | `careful` | 危险操作警告。在执行 rm -rf、DROP TABLE、force-push、git reset --hard 等 危险命令前警告用户，允许用户覆盖。来源：gstack careful，直接借用。 | `.claude/skills/office/careful/SKILL.md` |
-| `challenge` | CEO/创始人视角挑战需求范围，寻找 10 星产品。四种模式：范围扩张/选择性扩张/ 保持范围/范围缩减。仅场景A（新功能）适用。在 /brainstorm 之后、/ux-research 之前运行。来… | `.claude/skills/office/challenge/SKILL.md` |
+| `challenge` | CEO/创始人视角挑战需求范围，寻找 10 星产品。四种模式：范围扩张/选择性扩张/ 保持范围/范围缩减。默认用于场景A（新功能）；B/C/D 必须真实确认。在 /brainstorm 之后、/ux-r… | `.claude/skills/office/challenge/SKILL.md` |
 | `compare` | 对比两个 skill 产出（或同一 skill 的两个版本），输出结构化差异分析。 适用场景：两次 brainstorm 方案对比、两个 design-brief 对比、评审迭代前后对比。 | `.claude/skills/office/compare/SKILL.md` |
 | `evals` | 质量追踪。记录每次流程的客观指标：节点完成情况/品味检查得分/假设验证状态/ 原生AI思维应用程度。来源：EVALS.md + EVALS-optimize.md。 | `.claude/skills/office/evals/SKILL.md` |
 | `figma-demo` | 口述+Figma→HTML Demo 编排器。设计师口述需求+提供Figma链接/截图， 结构化翻译→Socratic映射验证→Blueprint生成→SubAgent逐节点构建→ 组装完整HTML D… | `.claude/skills/office/figma-demo/SKILL.md` |

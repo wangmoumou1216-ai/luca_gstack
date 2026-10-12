@@ -4,7 +4,7 @@ preamble-tier: 2
 version: 1.0.0
 description: |
   页面UX评审。启动时询问：场景（优化参考B/改版基线C）+ 激活哪些模块（多选）。
-  三个模块：A视觉层级与一致性（35%）/ B交互与可访问性（40%）/ C 业务领域专项（25%，可选，profile 定，默认 CRM）。
+  三个模块：A视觉层级与一致性（35%）/ B交互与可访问性（40%）/ C 业务领域专项（25%，可选，profile 来自已确认业务领域）。
   串行执行，每个模块用Agent tool调度对应specialists/文件。截图是强制输入。
   ux-audit直接产出最终报告，不需要再合并。(luca_gstack)
 allowed-tools:
@@ -27,12 +27,13 @@ NO_PIN 框架维护只读取本合同，不运行项目 preamble，不访问 doc
 共享别名，也不执行 Phase 2 的项目写入。共享别名不能用于推断或修复项目绑定。
 
 ```bash
+# 本次输入提示由调用方提供；Phase 0 在已获准 canonical 范围内发现/验证，不从共享别名取最新。
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH"
-_CONSTRAINTS=$(ls docs/prd/*-prd-constraints.md 2>/dev/null | head -1)
+_CONSTRAINTS="${_CONSTRAINTS:-}"
 echo "CONSTRAINTS: ${_CONSTRAINTS:-none}"
-_TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
+_TOPIC="${_TOPIC:-none}"
 echo "CURRENT_TOPIC: $_TOPIC"
 python3 .claude/observability/scripts/get_rules.py ux-audit "*" 2>/dev/null || true
 ```
@@ -81,7 +82,7 @@ AskUserQuestion：
 > B）**Module B — 交互与可访问性**（40%权重）
 >    Nielsen 10条 / Norman 7条 / WCAG 2.1 AA
 >
-> C）**Module C — 业务领域专项**（25%权重，可选，仅业务类项目；默认 CRM profile）
+> C）**Module C — 业务领域专项**（25%权重，可选，仅业务类项目；采用已确认 profile）
 >    首屏字段可见性/高频操作路径/数据可信度/列表专项
 >
 > 选全部（A+B+C）综合评分才有意义。单选只产出该模块分数。
@@ -180,6 +181,11 @@ Module A 完成：得分 {N}/100（完整/不完整评分）或 UNKNOWN，AI Slo
 
 ### 执行 Module C（用户选了 C）
 
+先从已验证项目 CONTEXT、用户输入或既有 domain owner 核对实际领域、用户角色、页面范围、
+业务标准和版本。选择 C 不等于选择纷享销客 CRM；缺 profile/标准则返回 NEEDS_CONTEXT，
+保留 A/B 结果，按原阻塞处理等待真实决定。CRM 可使用现有 specialist，其他领域只消费本次
+已确认业务标准并保持同一证据/计分接口；不把 CRM 字段移植到未知领域。
+
 用 Agent tool 调度：
 
 ```
@@ -187,12 +193,16 @@ Module A 完成：得分 {N}/100（完整/不完整评分）或 UNKNOWN，AI Slo
 
 输入：
 - 截图：{用户提供的截图}
-- CRM 业务标准：.claude/skills/office/references/crm-business-criteria.md（只读 §1.2-1.5）
+- 已确认领域/profile、用户角色与业务标准：{实际来源、版本、适用章节与检查项}
+- 纷享销客 CRM profile 仅在已明确采用时使用 crm-business-criteria.md §1.2-1.5
+- 页面/状态/视口与实际交互路径：{已观察操作、点击次数、筛选离开/返回记录；缺项 UNKNOWN}
+- 证据边界：每项 PASS/FAIL/UNKNOWN/N/A 与依据；N/A 说明不适用，UNKNOWN 保留在适用分母
 
 产出：写入 docs/evaluation/YYYY-MM-DD-<topic>-ux-audit-module-c.md
 完成后返回：
   STATUS: DONE / BLOCKED
-  Module C 得分：{N}/100
+  Module C 得分：{N}/100（完整/不完整评分）或 UNKNOWN
+  证据覆盖：{已判定/适用项、UNKNOWN/N/A及原因、实际计入权重}
   P0：{N}条 | P1：{N}条 | P2：{N}条
 ```
 

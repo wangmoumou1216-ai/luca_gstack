@@ -24,20 +24,21 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+# 本次输入提示由调用方提供；Phase 0 在已获准 canonical 范围内发现/验证，不从共享别名取最新。
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH"
-_PRD=$(ls -t docs/prd/*-prd.md 2>/dev/null | head -1)
-_CONSTRAINTS=$(ls docs/prd/*-prd-constraints.md 2>/dev/null | head -1)
-_UX_AUDIT=$(ls -t docs/evaluation/*-ux-audit.md 2>/dev/null | head -1)
-_UX_RESEARCH=$(ls -t docs/research/ux-research-*.md 2>/dev/null | head -1)
-_UX_BRAINSTORM=$(ls -t docs/decisions/*-ux-brainstorm.md 2>/dev/null | head -1)
+_PRD="${_PRD:-}"
+_CONSTRAINTS="${_CONSTRAINTS:-}"
+_UX_AUDIT="${_UX_AUDIT:-}"
+_UX_RESEARCH="${_UX_RESEARCH:-}"
+_UX_BRAINSTORM="${_UX_BRAINSTORM:-}"
 echo "PRD: ${_PRD:-none}"
 echo "CONSTRAINTS: ${_CONSTRAINTS:-none}"
 echo "UX_AUDIT: ${_UX_AUDIT:-none}"
 echo "UX_RESEARCH: ${_UX_RESEARCH:-none}"
 echo "UX_BRAINSTORM: ${_UX_BRAINSTORM:-none}"
-_TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
+_TOPIC="${_TOPIC:-none}"
 echo "CURRENT_TOPIC: $_TOPIC"
 python3 .claude/observability/scripts/get_rules.py design-brief "*" 2>/dev/null || true
 ```
@@ -76,7 +77,7 @@ python3 .claude/observability/scripts/get_rules.py design-brief "*" 2>/dev/null 
 
 ## Phase 0：输入继承与缺口核对
 
-读取用户指定的精确材料，核对可达性、版本、话题和作用域；preamble 的最新文件只是发现线索，
+读取用户指定的精确材料，核对可达性、版本、话题和作用域；preamble 的本次输入提示不是授权，
 不得自动混入其他话题。按输入合同登记用户/任务/对象/动作、目标/成功标准、平台/范围、
 修改区/保持区、模板/语义位置、目标工具、来源、确认状态和未决项。
 口述指用户提供的语音转写；不虚构未提供的音频读取/识别能力。

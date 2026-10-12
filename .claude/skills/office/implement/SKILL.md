@@ -16,9 +16,13 @@ metadata:
 
 ## Preamble
 
+Resolve input references from the user or verified current handoff under the existing project-session
+scope. Framework work stays NO_PIN. Shared topic/docs aliases and newest-file discovery do not
+establish authority; missing or ambiguous exact inputs return NEEDS_CONTEXT.
+
 ```bash
 git branch --show-current 2>/dev/null || true
-cat .claude/current-topic.txt 2>/dev/null || true
+# Exact input reads follow the verified caller scope below.
 python3 .claude/observability/scripts/get_rules.py implement "*" 2>/dev/null || true
 ```
 

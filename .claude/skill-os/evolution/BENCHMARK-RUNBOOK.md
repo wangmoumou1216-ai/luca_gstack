@@ -22,6 +22,50 @@
 单点工具走**模式 1b 单点评估**（Workflow `framework-evolution-scout`，args `{target_repos:["owner/repo"], date}`：
 跳过发现段，同门禁 Verify 五硬门 + 推荐级红队，簿记 `evolution-bookkeep.mjs` 落 candidate-log），不值得对标。
 
+### Scout 簿记与恢复边界
+
+- sweep **启动前由 main/caller** 在已授权、已核验的框架根实际运行只读
+  `node scripts/evolution-adoption-snapshot.mjs --workflow-args [--date RUN_DATE]`，读回完整 stdout，
+  保留本次调用时间、cwd/root、argv、退出码及原始 JSON 的授权证据路径与 SHA256，紧接着派发。
+  CLI 实际读取并验证权限/文件身份，冻结实际
+  adoption-log **原始字节 SHA256、字节数、原始 1-based 行号 + fused_candidate_id**。
+  同 ID 的多次采纳是独立实例，不去重。将 CLI 返回 JSON **原样作为 workflow args**；
+  原始分母由调用方持有，不能由 Load 或其他 agent 填写、重建或添加 `trusted` 标记。
+  workflow 在首个 agent 前复制调用方快照；Load 返回必须与它逐字节 hash/长度和逐行身份完全一致，
+  AdoptionReview 必须逐实例返回结果并绑定同一 hash。缺少调用方 freeze 在派发任何 agent 前拒绝。
+  缺失、不可读、解析失败、账本变动、漏项、重复项或额外项均不能 COMPLETE；只有实际空账本
+  允许空 review。无收益证据保持 `watch / unknown / helped_update=unknown`。
+  punctual 明确排除 adoption review，不要求读取 adoption-log。
+- 人工触发 `node scripts/evolution-bookkeep.mjs <return.json> [--dry-run] [--root DIR]`。
+  Node 在提交前重新读取实际 adoption-log，对照原始 hash、行实例和 review 完整集，同时保留
+  candidate 分数、硬门、红队和数量守恒校验。`--dry-run` 零写入，包含不创建锁或事务日志。
+- POSIX Python helper 用 evolution 目录中的稳定 `.evolution-bookkeep.lock` 串行化全部 run，
+  锁覆盖读取、Node 计划、持久提交和恢复。`.evolution-bookkeep-journal.json` 保留每次 run 的
+  input hash、精确 before/after 字节及 hash、`PREPARED → COMMITTED` 状态；两个文件先各自
+  atomic replace + file/directory fsync，之后才持久化 COMMITTED 并报告成功。punctual 不重写 registry。
+- 相同输入字节重试是成功的 no-op；同 run 不同输入冲突，`--force` 保留为兼容参数但不能绕过
+  幂等、覆盖或冲突门。不同 run 并发串行计数，不丢日志或累加值。PREPARED 必须用原输入重试，
+  只接受每个目标精确匹配记录的 before/after；第三状态漂移、账本漂移、旧目录 journal、异常
+  链接或锁身份变化都拒绝覆盖。先人工核实这些差异，勿删除锁/journal 或猜测 legacy 半写入 run。
+  旧版已记账且无事务证据的同 run 不自动迁移。journal 是恢复证据，随治理数据保留。
+
+Claude 与 Codex 共享该 workflow 和 CLI；Load 的 Bash 调用依赖各自真实 agent runtime。
+本地 fixture 可验证 schema/控制流，不能代替任一宿主的真实 agent 成功证据。
+
+调用入口（已授权框架根内；日期是调用方已确定的 run_date，不由模型推测）：
+
+```sh
+node .codex/workflow-runner.mjs framework-evolution-scout --args "$(node scripts/evolution-adoption-snapshot.mjs --workflow-args --date 'YYYY-MM')"
+```
+
+Claude 调用方先执行同一 `--workflow-args --date 'YYYY-MM'` CLI 并读回/保留输出，随后用
+`Workflow({name:'framework-evolution-scout', args:<该次 CLI 返回 JSON>})`；可在调用方明确选择后
+添加 `focus_gaps`，不得修改返回的 `adoption_snapshot`。如果 CLI 失败，停止，不派发 workflow。
+两端均把实际 CLI 输出及其路径/hash/时刻绑定到本次派发证据。只有调用方确实执行并读回 CLI 才
+满足前置条件；workflow DSL 无文件原语，不能仅凭 JSON 字段证明 root 输入的来源。此边界信任
+获授权调用方的冻结输入，不能机械认证恶意替换该输入的调用方；Load/review 回复无此权威。
+consumer 仍独立重读实际 ledger，在簿记写入前验证当前字节与原始分母。
+
 ## 流程（六步，复用 mattpocock 先例的结构）
 
 | # | 步骤 | 产物 |

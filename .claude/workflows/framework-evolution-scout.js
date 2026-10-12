@@ -49,12 +49,29 @@ if ('date' in parsed && !textValue(parsed.date)) throw new Error('invalid date')
 if ('focus_gaps' in parsed && (!stringList(parsed.focus_gaps) || !parsed.focus_gaps.length)) throw new Error('invalid focus_gaps')
 const runDate = parsed.date || 'unknown'
 const focusGaps = parsed.focus_gaps || null
+// Sweep runs must receive an immutable caller-side adoption denominator.  The
+// runner obtains this through the native CLI snapshot command before dispatch;
+// never derive it from the editable Load response.
+const validAdoptionSnapshot = v => record(v)
+  && v.version === 1
+  && typeof v.sha256 === 'string' && /^[a-f0-9]{64}$/.test(v.sha256)
+  && Number.isSafeInteger(v.byte_length) && v.byte_length >= 0
+  && Array.isArray(v.entries)
+  && v.entries.every(e => record(e) && Number.isSafeInteger(e.line) && e.line > 0 && textValue(e.fused_candidate_id))
+const sameAdoptionSnapshot = (a, b) => validAdoptionSnapshot(a) && validAdoptionSnapshot(b)
+  && a.version === b.version && a.sha256 === b.sha256 && a.byte_length === b.byte_length
+  && a.entries.length === b.entries.length
+  && a.entries.every((e, i) => e.line === b.entries[i].line && e.fused_candidate_id === b.entries[i].fused_candidate_id)
 let targetRepos = null
 if ('target_repos' in parsed) {
   const supplied = typeof parsed.target_repos === 'string' ? [parsed.target_repos] : parsed.target_repos
   if (!stringList(supplied) || !supplied.length || supplied.some(r => !/^[\w.-]+\/[\w.-]+$/.test(r.trim()))) throw new Error('invalid target_repos')
   targetRepos = [...new Set(supplied.map(r => r.trim().toLowerCase()))]
 }
+if (targetRepos && Object.hasOwn(parsed, 'adoption_snapshot')) throw new Error('target_repos 与 adoption_snapshot 不得混用')
+let frozenAdoptionSnapshot = null
+if (!targetRepos && !validAdoptionSnapshot(parsed.adoption_snapshot)) throw new Error('requires caller CLI freeze')
+if (!targetRepos) frozenAdoptionSnapshot = structuredClone(parsed.adoption_snapshot)
 
 // Ephemeral coverage binds the original dispatch set, not just surviving results.
 const phaseCoverage = {}
@@ -144,6 +161,14 @@ const LOADER_SCHEMA = {
     },
     existing_names: { type: 'array', items: { type: 'string' }, description: 'lowercased skill/agent names already present (office+global+static)' },
     existing_repos: { type: 'array', items: { type: 'string' }, description: 'owner/repo to BLOCK from re-surfacing: all vetting-registry repos + candidate-log REJECTED/KILLED within TTL. Opportunities and stale rejects excluded (分级拉黑, 见 loader prompt #6)' },
+    adoption_snapshot: {
+      type: ['object', 'null'],
+      properties: {
+        version: { type: 'number' }, sha256: { type: 'string' }, byte_length: { type: 'number' },
+        entries: { type: 'array', items: { type: 'object', properties: { line: { type: 'number' }, fused_candidate_id: { type: 'string' } }, required: ['line', 'fused_candidate_id'] } },
+      },
+      required: ['version', 'sha256', 'byte_length', 'entries'],
+    },
     prior_opportunities: {
       type: 'array',
       items: { type: 'object', properties: { name: { type: 'string' }, repo: { type: 'string' }, note: { type: 'string' }, date: { type: 'string' } } },
@@ -156,11 +181,13 @@ const LOADER_SCHEMA = {
     },
     load_notes: { type: 'string' },
   },
-  required: ['sources', 'gaps', 'existing_names', 'existing_repos'],
+  required: ['sources', 'gaps', 'existing_names', 'existing_repos', 'adoption_snapshot'],
 }
 
 const loaderPrompt =
   'You are a LOADER. Read luca_gstack 真值文件 and return structured JSON. Use Bash with python3 to parse YAML deterministically, e.g.:\n' +
+  'Before Load, the native caller has frozen adoption denominator with `node scripts/evolution-adoption-snapshot.mjs --workflow-args --date ' + runDate + '`; preserve adoption_snapshot exactly and do not recompute or edit it.\n' +
+  (targetRepos ? 'do not read or snapshot adoption-log; adoption review is explicitly excluded for punctual evaluation.\n' : '') +
   '  python3 -c "import yaml,json;print(json.dumps(yaml.safe_load(open(P))))"\n\n' +
   'Read and extract (RUN_DATE for date math = the date below; if "unknown", use `date -u +%Y-%m-%d`):\n' +
   '1. .claude/skill-os/evolution/sources-registry.yaml → sources where status=="active": {id,class,feeds_dimensions,reuse_mode,authority_tier,discovery,freshness_window_months,discrimination}. DROP status:off.\n' +
@@ -180,7 +207,8 @@ const ctx = checked('Load', ['truth-files'], [loaded], v => record(v)
   && new Set(v.sources.map(s => s.id)).size === v.sources.length
   && Array.isArray(v.gaps) && v.gaps.every(g => record(g) && textValue(g.id))
   && new Set(v.gaps.map(g => g.id)).size === v.gaps.length
-  && stringList(v.existing_names) && stringList(v.existing_repos))[0]
+  && stringList(v.existing_names) && stringList(v.existing_repos)
+  && (targetRepos ? v.adoption_snapshot === null : sameAdoptionSnapshot(v.adoption_snapshot, frozenAdoptionSnapshot)))[0]
 if (!ctx || !ctx.sources || !ctx.sources.length) {
   log('LOADER FAILED or no active sources — aborting (check evolution/*.yaml).')
   return finish({ run_date: runDate, error: 'loader_failed_or_no_sources', load_notes: loaded && loaded.load_notes })
@@ -303,6 +331,7 @@ if (targetRepos) {
     '- gap_id: map to ONE of the OPEN GAPS below only if it genuinely fits; else "none" — do NOT force-fit, "none" is a legitimate answer and downstream hard gates handle it\n' +
     '- dimension, reuse_mode (install | port-pattern | adapt-idea), one_line_value, fit_hypothesis, fit_score 0-3, signals (stars/forks/pushed as observed), evidence_url\n\n' +
     'OPEN GAPS:\n' + gapsText + '\n\n' +
+    'This punctual evaluation must not read or snapshot adoption-log; adoption review is explicitly excluded. Do not read or snapshot adoption-log.\n' +
     'Return via schema: candidates=[that ONE object], channel_notes=what you observed vs could not verify.'
   const intake = await parallel(targetRepos.map(r => () =>
     agent(intakePrompt(r), { label: 'intake:' + r, phase: 'Intake', schema: CANDIDATE_SCHEMA })))
@@ -337,6 +366,7 @@ if (targetRepos) {
   return finish({
     run_date: runDate,
     mode: 'punctual',
+    adoption_review_excluded: true,
     red_lines: 'propose-only(行为面零编辑; 簿记走 scripts/evolution-bookkeep.mjs); 热度≠适配; 采纳另行人裁走 FUSION-RUNBOOK',
     target_repos: targetRepos,
     prior_entry_hint: priorEntryHints,
@@ -365,19 +395,22 @@ const ADOPTION_REVIEW_SCHEMA = {
         type: 'object',
         properties: {
           fused_candidate_id: { type: 'string' },
+          line: { type: 'number', description: 'positive safe integer line number' },
           recommendation: { type: 'string', enum: ['keep', 'watch', 'revert'] },
           evidence: { type: 'string', description: 'OBSERVED evidence of help/harm, or "unknown" — never invent' },
-          helped_update: { type: 'string', description: 'proposed new value for the helped field (yes|no|unknown), propose-only' },
+          helped_update: { type: 'string', enum: ['yes', 'no', 'unknown'], description: 'proposed new value for the helped field, propose-only' },
         },
-        required: ['fused_candidate_id', 'recommendation', 'evidence'],
+        required: ['line', 'fused_candidate_id', 'recommendation', 'evidence', 'helped_update'],
       },
     },
     review_notes: { type: 'string' },
+    ledger_sha256: { type: 'string', pattern: '^[a-f0-9]{64}$' },
   },
-  required: ['entries', 'review_notes'],
+  required: ['entries', 'review_notes', 'ledger_sha256'],
 }
 const adoptionReviewPrompt =
   'You are the ADOPTION REVIEWER (propose-only: read/inspect only, edit NOTHING). Read .claude/skill-os/evolution/adoption-log.jsonl. For EACH fused entry produce keep/watch/revert with OBSERVED evidence only:\n' +
+  'Use `node scripts/evolution-adoption-snapshot.mjs --expect-sha256 ' + frozenAdoptionSnapshot.sha256 + '` to verify the caller freeze before reviewing; preserve every original line identity and return ledger_sha256 exactly as shown.\n' +
   '1. Is the fused content still in place? grep the target file(s) named in "target" for the fused mechanism.\n' +
   '2. Any sign of help/harm since fusion: `git log --oneline -- <target files>` (reverts? follow-up fixes?); search memory/episodic/index.jsonl for the skill/candidate name; note quality-gate/regression mentions if any.\n' +
   '3. helped currently "unknown" + no evidence found → recommendation="watch", evidence="unknown". Recommend "revert" ONLY with concrete regression evidence.\n' +
@@ -428,9 +461,22 @@ const discoverResults = await parallel([
   () => agent(adoptionReviewPrompt, { label: 'adoption-review', phase: 'AdoptionReview', schema: ADOPTION_REVIEW_SCHEMA }),
   ...sources.map(src => () => agent(channelPrompt(src), { label: 'disc:' + src.id, phase: 'Discover', schema: CANDIDATE_SCHEMA })),
 ])
-const adoptionReview = checked('AdoptionReview', ['adoption-log'], [discoverResults[0]], v => record(v)
-  && Array.isArray(v.entries) && v.entries.every(e => record(e) && textValue(e.fused_candidate_id)
-    && ['keep','watch','revert'].includes(e.recommendation)))[0]
+const adoptionIds = frozenAdoptionSnapshot.entries.map(e => `line:${e.line}:${e.fused_candidate_id}`)
+const review = discoverResults[0]
+const validReview = record(review)
+  && Array.isArray(review.entries) && review.entries.every((e, i) => record(e) && textValue(e.fused_candidate_id)
+    && Number.isSafeInteger(e.line) && e.line === frozenAdoptionSnapshot.entries[i]?.line
+    && e.fused_candidate_id === frozenAdoptionSnapshot.entries[i]?.fused_candidate_id
+    && ['keep','watch','revert'].includes(e.recommendation)
+    && textValue(e.evidence)
+    && ['yes','no','unknown'].includes(e.helped_update)
+    && (e.evidence.trim().toLowerCase() !== 'unknown' || (e.recommendation === 'watch' && e.helped_update === 'unknown')))
+  && review.ledger_sha256 === frozenAdoptionSnapshot.sha256
+  && review.entries.length === frozenAdoptionSnapshot.entries.length
+  && review.entries.every((e, i) => `line:${e.line}:${e.fused_candidate_id}` === adoptionIds[i])
+if (!validReview) failures.push({ phase: 'AdoptionReview', id: 'adoption-log', reason: 'missing or invalid result', result: review ?? null })
+phaseCoverage.AdoptionReview = { expected: [...adoptionIds], completed: validReview ? [...adoptionIds] : [] }
+const adoptionReview = validReview ? review : null
 const discovered = checked('Discover', sources.map(s => s.id), discoverResults.slice(1), (d, id) => record(d)
   && Array.isArray(d.candidates) && d.candidates.every(c => validCandidate(c) && (c.source_id == null || c.source_id === id)))
   .map((d, i) => d && ({ ...d, candidates: d.candidates.map(c => ({ ...c, source_id: sources[i].id })) }))
@@ -574,6 +620,7 @@ if (quarantined) log(`⚠️ run INCOMPLETE（verify 阵亡 ${verifyDeaths}/${sh
 
 return finish({
   run_date: runDate,
+  adoption_snapshot: frozenAdoptionSnapshot,
   red_lines: 'propose-only(行为面零编辑; 簿记走 scripts/evolution-bookkeep.mjs); NOT routed through consolidate_memory; 热度≠适配',
   // digest 首节四件套（均为强制裁决项，不是可选附录）：
   adoption_review: adoptionReview || { entries: [], review_notes: 'adoption-review agent 未返回' },

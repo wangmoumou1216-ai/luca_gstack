@@ -211,7 +211,7 @@ check C11 "Claude hooks 运行时副作用测试通过" "npm run check:hooks --s
 C11_PASSED=$LAST_CHECK_PASSED
 check C12 "settings.json 有 PreToolUse hook（会话级项目隔离）" "grep -q 'PreToolUse' .claude/settings.json"
 check C13 "project-scope-guard.mjs 语法合法" "node --check .claude/hooks/project-scope-guard.mjs"
-check C14 "会话级项目隔离回归通过（重定向/deny/跨session/fail-open）" "npm run test:project-scope --silent"
+check C14 "会话级项目隔离回归通过（重定向/deny/跨session/故障拒绝）" "npm run test:project-scope --silent"
 check C15 "session-end.mjs 语法合法"   "node --check .claude/hooks/session-end.mjs"
 check C16 "self-model 与磁盘一致（audit F4-05）" "npm run check:self-model --silent"
 check C17 "workflow-state 事务、并发与真实调用块失败传播" "python3 scripts/test-workflow-state-guard.py"
@@ -258,6 +258,7 @@ check S40 "跨 harness 语义 projection proof-it-bites（delegation/obligation/
 check S41 "controlled-change schema/controller/guard 全量回归" "npm run test:controlled-change --silent"
 check S42 "六项集成冻结 source manifest tuple 可复现" "node scripts/validate-skill-integration-receipt.mjs --source-manifest"
 check S43 "engineering-delivery 七项 owner/trigger/loader/flow 回归" "npm run test:engineering-delivery --silent"
+check S43b "NO_PIN 工程入口真实 preamble 不读共享别名" "node scripts/test-framework-preambles.mjs"
 check S44 "六项集成终态 receipt 与三路同 SHA 评审闭合" "npm run check:skill-integration-receipt --silent"
 check S46 "wait-what 中文化/显式调用/零副作用契约" "npm run test:wait-what --silent"
 check S47 "handoff 生成时 gate_result/criteria/标题契约会咬" "npm run test:handoff-validator --silent"

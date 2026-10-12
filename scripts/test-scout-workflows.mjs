@@ -11,9 +11,12 @@ export const evolution = 'framework-evolution-scout', external = 'external-skill
 export const candidate = (repo = 'owner/one') => ({name: repo.split('/').at(-1), repo, url: `https://github.com/${repo}`,
   dimension: 'testing', gap_id: 'G1', reuse_mode: 'install', source_id: 'S1', one_line_value: 'fixture', fit_score: 3,
   type: 'skill', category: 'code-engineering'});
+export const ledgerBytes = '{"fused_candidate_id":"same/id","helped":"unknown"}\n\n{"fused_candidate_id":"same/id","helped":"unknown"}\n';
+export const snapshot = {version:1,sha256:createHash('sha256').update(ledgerBytes).digest('hex'),byte_length:Buffer.byteLength(ledgerBytes),entries:[{line:1,fused_candidate_id:'same/id'},{line:3,fused_candidate_id:'same/id'}]};
+export const adoptionReview = s => ({ledger_sha256:s.sha256,entries:s.entries.map(e=>({...e,recommendation:'watch',evidence:'unknown',helped_update:'unknown'})),review_notes:'fixture'});
 export const load = { sources: [{id: 'S1', authority_tier: 'official', discovery: {method: 'gh-search'},
   reuse_mode: ['install'], feeds_dimensions: ['testing']}], gaps: [{id: 'G1', dimension: 'testing', severity: 'high'}],
-  existing_names: [], existing_repos: [] };
+  existing_names: [], existing_repos: [], adoption_snapshot:snapshot };
 export const verdict = {scores: {fit: 3, quality: 3, adoption: 3, maintenance: 3},
   hard: {safety: 'PASS', compatibility: 'PASS', non_redundancy: 'PASS', gap_addressed: 'PASS', provenance: 'PASS'},
   evidence: {stars: 10, last_commit: '2026-10-01', license: 'MIT', verified_at: '2026-10-09', source_url: 'fixture'},
@@ -43,13 +46,18 @@ function wireValue(schema, value) {
 export async function run(name = evolution, args = {}, changes = {}, options = {}) {
   const source = options.source ?? readFileSync(resolve(ROOT, `.claude/workflows/${name}.js`), 'utf8');
   const calls = options.calls || [];
+  // Caller authority is frozen from the original independent ledger fixture,
+  // NEVER from changes['load:truth-files'] or another editable agent response.
+  let callerArgs = args;
+  if (name === evolution && !options.noFreeze && (args === undefined || (args && typeof args === 'object' && !Array.isArray(args)))
+    && !Object.hasOwn(args || {},'target_repos')) callerArgs = {adoption_snapshot:structuredClone(snapshot), ...args};
   const output = await new AsyncFunction('args','agent','phase','parallel','log',source.replace('export const meta','const meta'))(
-    args, async (prompt, opts) => {
-      calls.push({label: opts.label, phase: opts.phase, prompt});
+    callerArgs, async (prompt, opts) => {
+      calls.push({label: opts.label, phase: opts.phase, prompt, schema: opts.schema});
       let value;
       if (Object.hasOwn(changes,opts.label)) value = changes[opts.label];
-      else if (opts.phase === 'Load') value = name === external ? {existing_names: []} : load;
-      else if (opts.phase === 'AdoptionReview') value = {entries: [], review_notes: 'fixture'};
+      else if (opts.phase === 'Load') value = name === external ? {existing_names: []} : (args?.target_repos ? {...load,adoption_snapshot:null} : load);
+      else if (opts.phase === 'AdoptionReview') value = adoptionReview(changes['load:truth-files']?.adoption_snapshot || snapshot);
       else if (opts.phase === 'Discover') value = bundle([candidate()]);
       else if (opts.phase === 'Intake') value = bundle([candidate(opts.label.slice(7))]);
       else if (opts.phase === 'Verify') value = verdict;
@@ -113,7 +121,7 @@ for (const t of ['',[],null,{},[''],['owner/one',3]]) test(`reject target ${JSON
 for (const [name,arg] of [[evolution,'bad'],[evolution,null],[evolution,[]],[external,''],[external,{focus:[]}],[external,{focus:null}],[external,'{bad']]) test(`reject args ${name} ${JSON.stringify(arg)}`,async()=>{
   const calls=[]; await assert.rejects(run(name,arg,{},{calls})); assert.equal(calls.length,0);
 });
-test('external bare focus and truly omitted args remain supported',async()=>{
+test('external bare focus and fixture caller prepares omitted sweep args',async()=>{
   assert.equal((await run(external,'testing')).focus[0],'testing'); assert.equal((await run(evolution,undefined)).run_status,'COMPLETE');
 });
 for (const cs of [[],[candidate('other/repo')],[candidate(),candidate('owner/two')]]) test(`intake exactly original target ${cs.map(c=>c.repo)}`,async()=>{
@@ -138,10 +146,80 @@ for (const mode of [{},{target_repos:'owner/one'}]) {
     if(value==='UNKNOWN') incomplete(r); else { assert.equal(r.run_status,'COMPLETE'); assert.equal(r.stats[value==='stands'?'approved':value==='downgraded'?'conditional':'rejected'],1); }
   });
   test(`no open gap ${JSON.stringify(mode)}`,async()=>{
-    const r=await run(evolution,mode,{'load:truth-files':{...load,gaps:[]},[mode.target_repos?'intake:owner/one':'disc:S1']:bundle([{...candidate(),gap_id:'none'}])});
+    const r=await run(evolution,mode,{'load:truth-files':{...load,gaps:[],adoption_snapshot:mode.target_repos?null:snapshot},[mode.target_repos?'intake:owner/one':'disc:S1']:bundle([{...candidate(),gap_id:'none'}])});
     assert.equal(r.run_status,'COMPLETE'); assert.equal(r.stats.approved,0); assert.equal(r.stats[mode.target_repos?'rejected':'opportunities'],1);
   });
 }
+for (const [id,edit] of [
+  ['omission',r=>r.entries.pop()], ['empty nonempty ledger',r=>{r.entries=[]}],
+  ['duplicate',r=>{r.entries[1]=r.entries[0]}], ['spurious',r=>{r.entries[1].line=2}],
+  ['wrong fused ID',r=>{r.entries[1].fused_candidate_id='other'}], ['stale hash',r=>{r.ledger_sha256='0'.repeat(64)}],
+  ['unknown cannot manufacture help',r=>{r.entries[0].helped_update='yes'}],
+  ['unknown cannot manufacture keep',r=>{r.entries[0].recommendation='keep'}],
+]) test(`adoption producer rejects ${id}`,async()=>{
+  const r=adoptionReview(snapshot);edit(r);incomplete(await run(evolution,{}, {'adoption-review':r}));
+});
+for (const s of [null,{}, {...snapshot,entries:[snapshot.entries[0],snapshot.entries[0]]}, {...snapshot,sha256:'fake'}])
+  test(`adoption Load invalid snapshot ${JSON.stringify(s)}`,async()=>incomplete(await run(evolution,{}, {'load:truth-files':{...load,adoption_snapshot:s}})));
+test('adoption strict schema carries duplicate original instances and unknown/watch',async()=>{
+  const calls=[];const r=await run(evolution,{}, {},{strict:true,calls});
+  assert.equal(r.run_status,'COMPLETE');assert.deepEqual(r.adoption_snapshot,snapshot);
+  assert.deepEqual(r.adoption_review,adoptionReview(snapshot));
+  assert.deepEqual(r.phase_coverage.AdoptionReview.expected,['line:1:same/id','line:3:same/id']);
+  assert.ok(calls[0].schema.required.includes('adoption_snapshot'));
+  assert.match(calls[0].prompt,/node scripts\/evolution-adoption-snapshot.mjs/);
+  assert.match(calls.find(c=>c.phase==='AdoptionReview').prompt,/--expect-sha256/);
+});
+test('actually empty caller snapshot is valid; missing reviewer still fails',async()=>{
+  const empty={version:1,sha256:createHash('sha256').update('').digest('hex'),byte_length:0,entries:[]};
+  const changes={'load:truth-files':{...load,adoption_snapshot:empty}};
+  const caller={adoption_snapshot:empty};
+  const r=await run(evolution,caller,changes,{strict:true});assert.equal(r.run_status,'COMPLETE');
+  assert.deepEqual(r.phase_coverage.AdoptionReview,{expected:[],completed:[]});
+  incomplete(await run(evolution,caller, {...changes,'adoption-review':null}));
+});
+test('U3-A2 missing caller freeze refuses before any agent',async()=>{
+  const calls=[];await assert.rejects(run(evolution,{}, {},{noFreeze:true,calls}),/requires caller CLI freeze/);assert.equal(calls.length,0);
+});
+for(const [id,edit] of [
+  ['empty with real hash/length',s=>{s.entries=[]}],['nonempty subset',s=>s.entries.pop()],
+  ['changed original line',s=>{s.entries[1].line=2}],['changed fused ID',s=>{s.entries[1].fused_candidate_id='other'}],
+  ['changed hash',s=>{s.sha256='0'.repeat(64)}],['changed byte length',s=>{s.byte_length++}],
+])test(`U3-A2 caller denominator rejects Load ${id}`,async()=>{
+  const original=structuredClone(snapshot),forged=structuredClone(snapshot);edit(forged);const calls=[];
+  const r=await run(evolution,{adoption_snapshot:original},{'load:truth-files':{...load,adoption_snapshot:forged}},{calls,strict:true});
+  incomplete(r);assert.deepEqual(original,snapshot);assert.deepEqual(calls.map(c=>c.phase),['Load']);
+});
+test('U3-A2 caller snapshot copied before editable Load boundary',async()=>{
+  const original=structuredClone(snapshot),calls=[];
+  const source=readFileSync(resolve(ROOT,`.claude/workflows/${evolution}.js`),'utf8');
+  const r=await new AsyncFunction('args','agent','phase','parallel','log',source.replace('export const meta','const meta'))(
+    {adoption_snapshot:original},async()=>{calls.push('Load');original.entries=[];return {...load,adoption_snapshot:original}},()=>{},()=>{},()=>{});
+  incomplete(r);assert.deepEqual(calls,['Load']);
+});
+test('U3-A2 caller reconciliation removal is caught by original oracle',async()=>{
+  const original=readFileSync(resolve(ROOT,`.claude/workflows/${evolution}.js`),'utf8');
+  const mutant=original.replace('sameAdoptionSnapshot(v.adoption_snapshot, frozenAdoptionSnapshot)','validAdoptionSnapshot(v.adoption_snapshot)');
+  assert.notEqual(mutant,original);const forged={...snapshot,entries:[]};
+  const r=await run(evolution,{adoption_snapshot:structuredClone(snapshot)}, {'load:truth-files':{...load,adoption_snapshot:forged}},{source:mutant});
+  assert.throws(()=>assert.ok(r.failures.some(f=>f.phase==='Load')),'original caller/Load mismatch oracle must detect mutant');
+  assert.equal(readFileSync(resolve(ROOT,`.claude/workflows/${evolution}.js`),'utf8'),original);
+});
+test('punctual explicitly excludes adoption snapshot/reviewer',async()=>{
+  const calls=[];const r=await run(evolution,{target_repos:'owner/one'}, {},{calls,strict:true});
+  assert.equal(r.run_status,'COMPLETE');assert.equal(r.adoption_review_excluded,true);
+  assert.equal(r.adoption_snapshot,undefined);assert.ok(!Object.hasOwn(r.phase_coverage,'AdoptionReview'));
+  assert.ok(!calls.some(c=>c.phase==='AdoptionReview'));assert.match(calls[0].prompt,/do not read or snapshot adoption-log/);
+});
+if (!process.env.SCOUT_TEST_ROOT) test('U3-A6 adoption completeness mutation is caught by original oracle',async()=>{
+  const original=readFileSync(resolve(ROOT,`.claude/workflows/${evolution}.js`),'utf8');
+  const mutant=original.replace(/const validReview = record\(review\)[\s\S]*?(?=\nif \(!validReview\))/, 'const validReview = true');
+  assert.notEqual(mutant,original);
+  const bad={...adoptionReview(snapshot),entries:[]};
+  const r=await run(evolution,{}, {'adoption-review':bad},{source:mutant});
+  assert.throws(()=>incomplete(r),'original omission oracle must reject mutant acceptance');
+  assert.equal(readFileSync(resolve(ROOT,`.claude/workflows/${evolution}.js`),'utf8'),original);
+});
 if (!process.env.SCOUT_TEST_ROOT) for (const name of [evolution,external]) test(`${name}: score guard removal detected`,async()=>{
   const original=readFileSync(resolve(ROOT,`.claude/workflows/${name}.js`),'utf8');
   assert.ok(original.includes('v <= 3')); const mutant=original.replace('v <= 3','true');

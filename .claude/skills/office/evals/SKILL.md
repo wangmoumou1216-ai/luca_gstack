@@ -20,9 +20,10 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+# 本轮清单须确认获准；发现仅在 canonical 当前任务范围内进行。
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 echo "BRANCH: $_BRANCH"
-_EVALS=$(ls docs/evals/*.md 2>/dev/null | wc -l)
+_EVALS="${_EVALS:-unknown}"
 echo "EXISTING_EVALS: $_EVALS"
 ```
 
@@ -30,7 +31,7 @@ echo "EXISTING_EVALS: $_EVALS"
 
 ## 执行
 
-读取 docs/ 目录下所有产出文件，记录以下指标。
+读取本轮已确认且获准的完整产出清单，记录以下指标。项目材料使用已验证 canonical 目标；框架材料使用获准精确框架路径，不读共享 docs/ 别名或无关历史。缺本轮清单则 NEEDS_CONTEXT，不从旧文件数量猜进度。
 
 同时读取 observability 的短规则和近期纠正摘要：
 

@@ -48,12 +48,39 @@ check(failures(inspectPrototype({ ...base, mode: "ux-audit" })).includes("UX aud
 check(failures(inspectPrototype({ ...base, mode: "screenshot-delta" })).includes("Screenshot delta preserved region declared"), "Screenshot preservation gate remains");
 check(inspectPrototype({ ...base, html: defaultHtml.replace("<!-- DECISION: D-001 -->", ""), mode: "standalone-mobile", prototypeSpec: baseSpec + "standalone mobile traceability 不完整" }).checks.some((c) => c.name === "Standalone mobile traceability limitation recorded" && c.passed), "Standalone gate remains");
 
+const standaloneHtml = defaultHtml.replace('<!-- DECISION: D-001 -->','');
+const standaloneSpec = baseSpec + 'Source kind: standalone_brief\nBrief source: actual fixture user request\ntraceability 不完整\n';
+const standaloneInput = {html:standaloneHtml,prototypeSpec:standaloneSpec,mode:'standalone-brief'};
+check(failures(inspectPrototype(standaloneInput)).length===0,'Actual direct brief needs no fabricated D ID');
+for(const missing of ['Source kind: standalone_brief','Brief source: actual fixture user request','traceability 不完整']) {
+  check(failures(inspectPrototype({...standaloneInput,prototypeSpec:standaloneSpec.replace(missing,'')})).includes('Standalone brief source and limitation recorded'),`Standalone refuses missing ${missing}`);
+}
+for (const newline of ['\n', '\r\n']) {
+  for (const value of ['', ' ', '\t', ' \t ']) {
+    const emptySourceSpec = standaloneSpec.replace('Brief source: actual fixture user request', `Brief source:${value}`).replaceAll('\n', newline);
+    check(failures(inspectPrototype({...standaloneInput, prototypeSpec:emptySourceSpec})).includes('Standalone brief source and limitation recorded'), 'Blank brief source cannot consume the next line');
+  }
+  const splitKindSpec = standaloneSpec.replace('Source kind: standalone_brief', 'Source kind:\nstandalone_brief').replaceAll('\n', newline);
+  check(failures(inspectPrototype({...standaloneInput, prototypeSpec:splitKindSpec})).includes('Standalone brief source and limitation recorded'), 'Source kind must be on its own field line');
+  const shortSourceSpec = standaloneSpec.replace('actual fixture user request', '\t问').replaceAll('\n', newline);
+  check(failures(inspectPrototype({...standaloneInput, prototypeSpec:shortSourceSpec})).length===0, 'A real one-character source is nonempty');
+}
+check(failures(inspectPrototype({...standaloneInput,designBrief:'Actual upstream text without any D IDs'})).includes('Standalone brief source and limitation recorded'),'Upstream brief cannot claim direct-brief exemption');
+check(failures(inspectPrototype({...standaloneInput,designBrief:'D-001'})).includes('Design decisions mapped'),'Actual upstream D ID remains binding in standalone mode');
+check(failures(inspectPrototype({...standaloneInput,prototypeSpec:standaloneSpec.replace('24/30','23/30')})).includes('Current aesthetic score >= 24/30'),'Standalone ordinary UI preserves aesthetic gate');
+check(failures(inspectPrototype({...standaloneInput,html:standaloneHtml.replaceAll('data-prototype-state=','not-state=')})).includes('State coverage markers present'),'Standalone ordinary UI preserves states');
+check(failures(inspectPrototype(standaloneInput)).length===0,'Standalone restores pass after violations');
+
 const logicModule = `const PrototypeLogic = { initial: () => ({ count: 0 }), transition: (state, action) => action === "add" ? ({ count: state.count + 1 }) : ({ ...state }) };\n`;
 const walks = ["happy", "edge", "illegal"].map((key) => `<section data-prototype-walkthrough="${key}"><button data-walkthrough-reset>Reset</button><button data-walkthrough-step="first" data-logic-action="add">Add</button></section><!-- WALKTHROUGH END: ${key} -->`).join("");
 const logicHtml = `<html data-prototype-purpose="logic-validation"><body><h1 data-prototype-problem>${prose}</h1><dl data-prototype-state-panel data-prototype-state="initial"><dt>Count</dt><dd>0</dd></dl><nav data-prototype-freeplay><button data-logic-action="add">Add</button></nav><nav data-prototype-walkthrough-tabs>${["happy", "edge", "illegal"].map((key) => `<button data-show-walkthrough="${key}">${key}</button>`).join("")}</nav>${walks}<script>// PROTOTYPE LOGIC START\n${logicModule}// PROTOTYPE LOGIC END\n</script></body></html>`;
 const logicSpec = "purpose: logic-validation\nui_variant_count: 0\nDynamic Reference Status: NOT_REQUIRED\nLogic Validation Coverage\nQuestion source: actual confirmed fixture brief\n";
 const logicInput = { html: logicHtml, prototypeSpec: logicSpec, purpose: "logic-validation" };
 check(failures(inspectPrototype(logicInput)).length === 0, "Logic exemption preserves all remaining static gates");
+for (const value of ['', ' ', '\t']) {
+  const emptyQuestionSpec = logicSpec.replace('Question source: actual confirmed fixture brief', `Question source:${value}\nNext field: fixture`);
+  check(failures(inspectPrototype({...logicInput, prototypeSpec:emptyQuestionSpec})).includes('Logic question source recorded'), 'Blank question source cannot consume the next field');
+}
 check(inspectPrototype(logicInput).checks.filter((c) => c.status === "N/A" && /aesthetic|State coverage/.test(c.name)).length === 2, "Only aesthetic and fixed-state gates N/A");
 check(failures(inspectPrototype({ ...logicInput, html: logicHtml.replace("const PrototypeLogic", "document.title; const PrototypeLogic") })).includes("Portable pure logic boundary (static)"), "DOM contamination fails");
 check(failures(inspectPrototype({ ...logicInput, html: logicHtml.replace('data-walkthrough-reset', 'not-reset') })).includes("Logic happy reset and real steps declared (static)"), "Missing known-state reset fails");
@@ -139,6 +166,31 @@ report = run(1);
 assert.deepEqual(report.checks.filter((c) => !c.passed).map((c) => c.name), ["Design decisions mapped"]);
 fs.writeFileSync(htmlPath, fixture);
 run(0);
+
+// Exercise real CLI mode inference + three-viewport browser path, then exact source failures/recovery.
+fs.writeFileSync(htmlPath,fixture.replace('<!-- DECISION: D-001 -->',''));
+fs.writeFileSync(path.join(dir,'prototype-spec.md'),standaloneSpec);
+report=run(0);
+assert.equal(report.mode,'standalone-brief');
+assert.equal(report.browser.screenshots.length,3);
+fs.writeFileSync(path.join(dir,'prototype-spec.md'),standaloneSpec.replace('traceability 不完整',''));
+report=run(1);
+assert.deepEqual(report.checks.filter(c=>!c.passed).map(c=>c.name),['Standalone brief source and limitation recorded']);
+fs.writeFileSync(path.join(dir,'prototype-spec.md'),standaloneSpec);
+run(0);
+fs.writeFileSync(path.join(dir,'prototype-spec.md'),standaloneSpec.replace('Brief source: actual fixture user request','Brief source:\t'));
+report=run(1);
+assert.deepEqual(report.checks.filter(c=>!c.passed).map(c=>c.name),['Standalone brief source and limitation recorded']);
+fs.writeFileSync(path.join(dir,'prototype-spec.md'),standaloneSpec);
+run(0);
+const upstream=path.join(dir,'actual-design-brief.md');fs.writeFileSync(upstream,'D-001');
+report=run(1,[upstream,'--mode=standalone-brief']);
+assert.ok(report.checks.some(c=>c.name==='Design decisions mapped'&&!c.passed));
+fs.writeFileSync(htmlPath,fixture);
+run(0,[upstream,'--mode=standalone-brief']);
+const missingBrief=spawnSync(process.execPath,[checker,htmlPath,path.join(dir,'missing-brief.md')],{encoding:'utf8'});
+assert.equal(missingBrief.status,2);assert.match(missingBrief.stderr,/Supplied design brief is missing/);
+run(0,[upstream,'--mode=standalone-brief']);
 
 // Removing legacy design resources must preserve the independent demo controller.
 const templatePath = fileURLToPath(new URL("../../figma-demo/templates/demo-template.html", import.meta.url));

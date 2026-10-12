@@ -288,7 +288,7 @@ handoff_gates:
 quality_gates:
   always_enforced:
     - "no fabrication"
-    - "one question at a time where user input is required"
+    - "one question at a time where user input is required, except grilling asks all ready independent frontier decisions in one round under office Voice"
     - "verified current project or external design system constraints when provided"
     - "AI/Agent control: visible, pause, take over, undo when agentic execution exists"
     - "artifact paths follow office/SKILL.md conventions"

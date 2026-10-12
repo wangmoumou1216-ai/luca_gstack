@@ -5,12 +5,17 @@ import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
 import {createServer} from 'node:http';
 import {appendFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, cpSync, realpathSync, chmodSync, readdirSync, symlinkSync} from 'node:fs';
-import {join, dirname, resolve, delimiter} from 'node:path';
+import {join, dirname, resolve, relative, delimiter} from 'node:path';
 import {spawn, spawnSync} from 'node:child_process';
+import { cleanupNativeEvidence, evidenceOptions, moduleSourceFiles, nativeEvidence } from './native-test-evidence.mjs';
 
 const concurrentMode = process.argv.includes('--controlled-concurrent');
 const controlledMode = concurrentMode || process.argv.includes('--controlled-owner');
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const audit = evidenceOptions(), driver = fileURLToPath(import.meta.url);
+assert.ok(!audit || !controlledMode, 'bound U1 evidence currently covers only the default new/resumed lifecycle');
+const evidenceRuns = [], turnEvidence = [], setupPids = [], ownedRuns = [];
+let activeEvidence, activeSession, afterCaptured = false, activeHookOffset = 0, activeCapture;
 // Allowlist inheritance: GIT_*, LUCA_*, CODEX_*, NODE_OPTIONS, secrets,
 // proxy settings and shared memory roots never reach fixture processes.
 const baseEnv = Object.fromEntries(['PATH', 'LANG', 'LC_ALL', 'SHELL', 'TERM', 'SYSTEMROOT']
@@ -47,12 +52,16 @@ Object.assign(baseEnv, {HOME:isolatedHome, TMPDIR:realpathSync('/tmp'), TMP:temp
   PATH:bin + delimiter + (baseEnv.PATH || '/usr/bin:/bin')});
 const hookLog = join(root, 'hook-payloads.jsonl');
 const requestLog = join(root, 'responses-requests.jsonl');
-const archive = spawnSync('git', ['archive','HEAD'], {cwd:repo,env:baseEnv,maxBuffer:64*1024*1024});
-if(archive.status) throw Error('archive failed');
-if(spawnSync('tar',['-xf','-','-C',work],{input:archive.stdout,env:baseEnv}).status) throw Error('extract failed');
+// The tracked evidence archive exceeds 64 MiB; stream it to the isolated file
+// instead of truncating spawnSync stdout and mistaking status=null for success.
+const archivePath = join(root, 'source.tar');
+const archive = spawnSync('git', ['archive','--output',archivePath,'HEAD'], {cwd:repo,env:baseEnv});
+if(archive.error || archive.status !== 0) throw Error(`archive failed: ${archive.error?.message || archive.stderr}`);
+if(spawnSync('tar',['-xf',archivePath,'-C',work],{env:baseEnv}).status !== 0) throw Error('extract failed');
 const overlays = ['.codex/model-route-hook.mjs', 'scripts/codex-trust-hooks.mjs',
   '.codex/codex-hook-adapter.mjs', 'scripts/controlled-change-controller.mjs', 'scripts/controlled-native-owner.mjs',
-  'scripts/controlled-change.mjs', '.claude/hooks/controlled-change-guard.mjs', '.claude/hooks/project-scope-guard.mjs'];
+  'scripts/controlled-change.mjs', '.claude/hooks/controlled-change-guard.mjs', '.claude/hooks/project-scope-guard.mjs',
+  '.claude/hooks/session-restore.mjs', '.claude/hooks/lib/harness.mjs'];
 for(const path of overlays) cpSync(join(repo,path),join(work,path));
 checked('git',['init','-q'],{cwd:work});
 writeFileSync(join(work,'.codex/config.toml'), '# isolated fixture; no production writable roots\n');
@@ -75,6 +84,10 @@ writeFileSync(dispatch,`import {readFileSync,appendFileSync} from 'node:fs';impo
 const raw=readFileSync(0,'utf8'),entry=JSON.parse(readFileSync(${JSON.stringify(join(root,'entries.json'))}))[+process.argv[2]];
 const result=spawnSync('/bin/sh',['-c',entry.command],{input:raw,encoding:'utf8',env:process.env,timeout:35000,maxBuffer:4*1024*1024});
 appendFileSync(${JSON.stringify(hookLog)},JSON.stringify({entry:+process.argv[2],payload:JSON.parse(raw),status:result.status,output:result.stdout,error:result.stderr})+'\\n');
+if(process.env.LUCA_NATIVE_EVIDENCE_URL && entry.event==='SessionEnd') {
+  const response=await fetch(process.env.LUCA_NATIVE_EVIDENCE_URL,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({entry:+process.argv[2],session_id:JSON.parse(raw).session_id})});
+  if(!response.ok) throw Error('native evidence observer failed: '+await response.text());
+}
 process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');process.exitCode=result.status??2;
 `);
 
@@ -150,9 +163,25 @@ const server = createServer((request, response) => {
   request.setEncoding('utf8');
   request.on('data', chunk => body += chunk);
   request.on('end', () => {
-    requestCount += 1;
     let parsed = {};
     try { parsed = JSON.parse(body); } catch {}
+    if (request.url === '/native-evidence-after') {
+      try {
+        const rows = readFileSync(hookLog, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse);
+        const currentRows = rows.slice(activeHookOffset);
+        const rootEnds = currentRows.filter(row => row.payload.session_id === parsed.session_id && row.payload.hook_event_name === 'SessionEnd');
+        const needed = entries.map((entry, index) => entry.event === 'SessionEnd' ? index : -1).filter(index => index >= 0);
+        if (activeEvidence && !afterCaptured && parsed.session_id === activeSession
+          && needed.every(index => rootEnds.some(row => row.entry === index))) {
+          activeEvidence.after({ ready: true, native_session_id: parsed.session_id, session_end_registrations: rootEnds,
+            hook_rows: currentRows, activation: activation(parsed.session_id) });
+          afterCaptured = true;
+        }
+        response.writeHead(200); response.end('observed');
+      } catch (error) { response.writeHead(500); response.end(error.stack); }
+      return;
+    }
+    requestCount += 1;
     appendFileSync(requestLog, JSON.stringify({n:requestCount,url:request.url,keys:Object.keys(parsed),input:parsed.input,tools:parsed.tools})+'\n');
     const userMessages=(parsed.input||[]).filter(x=>x.type==='message'&&x.role==='user');
     const lastUser=JSON.stringify(userMessages.map(x=>x.content));
@@ -170,6 +199,11 @@ const server = createServer((request, response) => {
         : message(program ? 'WRAPPER_MISSING' : 'CONTROLLED_OWNER_DONE');
     } else     if(!lastUser.includes('Isolated framework acceptance:')&&!lastUser.includes('Repeat the isolated acceptance')) item=message('CHILD_DONE');
     else {
+      if (rootStep === 0) {
+        try { activeEvidence?.before({ ready: Array.isArray(parsed.input) && parsed.input.length > 0 && Boolean(activeSession),
+          endpoint: request.url, native_session_id: activeSession, request_keys: Object.keys(parsed), request_number: requestCount }); }
+        catch (error) { response.writeHead(500); response.end(error.stack); return; }
+      }
       rootStep++;
       if(rootStep===1) item=call('exec_command',{cmd:'head -1 README.md',max_output_tokens:100});
       else if(rootStep===2) item=call('exec_command',{cmd:"printf 'hook-test\\n' > incident-probe.txt",max_output_tokens:100});
@@ -195,9 +229,11 @@ const configPath = join(home, 'config.toml');
 writeFileSync(configPath, `model = "gpt-6.1-sol"\nmodel_provider = "localstub"\napproval_policy = "never"\nsandbox_mode = "danger-full-access"\nmodel_reasoning_effort = "low"\ncheck_for_update_on_startup = false\nsuppress_unstable_features_warning = true\n[features]\nhooks = true\napps = false\ndaemon_auto_start = false\nmulti_agent = true\n[model_providers.localstub]\nname = "Local offline stub"\nbase_url = "http://127.0.0.1:${port}/v1"\nenv_key = "LOCAL_STUB_KEY"\nwire_api = "responses"\nsupports_websockets = false\nrequest_max_retries = 0\nstream_max_retries = 0\n[projects.${JSON.stringify(work)}]\ntrust_level = "trusted"\n`);
 
 const isolatedEnv = {...baseEnv,NODE_ENV:'test',PYTHONUSERBASE:pythonUserBase,LUCA_EVENT_ATTESTATION_TEST:'1',LUCA_CONTROLLED_TEST_HOME:isolatedHome,LUCA_MODEL_ROUTE_STATE_ROOT:join(root,'state'),LUCA_MODEL_ROUTE_BINDINGS_PATH:bindings,LUCA_MODEL_ROUTE_TRANSCRIPT_ROOT:join(home,'sessions'),LUCA_CHILD_PROJECT_STORE_ROOT:join(root,'child-store'),LUCA_CHILD_PROJECT_TEST_CODEX_HOME:home,LUCA_PROJECTS_ROOT:join(root,'projects'),MEMORY_ROOT:work,HOME:isolatedHome,CODEX_HOME:home,LOCAL_STUB_KEY:'offline',NO_PROXY:'127.0.0.1,localhost',no_proxy:'127.0.0.1,localhost'};
+if (audit) isolatedEnv.LUCA_NATIVE_EVIDENCE_URL = `http://127.0.0.1:${port}/native-evidence-after`;
 function appServerRequest(method, params) {
   return new Promise((resolve,reject) => {
     const app = spawn(binary,['app-server','--listen','stdio://'],{env:isolatedEnv,cwd:work,stdio:['pipe','pipe','pipe']});
+    setupPids.push(app.pid);
     let buffer='', appErr='', settled=false;
     const finish=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);app.kill('SIGKILL');if(error)reject(error);else resolve(value)};
     const timer=setTimeout(()=>finish(new Error(`${method} timeout`)),10000);
@@ -221,6 +257,29 @@ function activation(sessionId) {
   return readdirSync(directory).filter(name=>name.endsWith('.json'))
     .map(name=>JSON.parse(readFileSync(join(directory,name),'utf8'))).find(state=>state.root_session_id===sessionId);
 }
+function retainTurnTranscripts(turn) {
+  const sessions = join(home, 'sessions');
+  const parent = readdirSync(sessions, { recursive: true })
+    .filter(path => path.endsWith(`-${turn.session}.jsonl`));
+  assert.equal(parent.length, 1, 'retain the exact native parent transcript');
+  const originals = [{ kind: 'parent', path: join(sessions, parent[0]) }];
+  for (const call of Object.values(turn.state?.invocations || {})) {
+    if (call.status !== 'accepted') continue;
+    const match = /^codex-transcript:(.+\.jsonl):([^:]+)$/.exec(call.evidence_ref || '');
+    assert.ok(match, 'accepted native child must name its original transcript');
+    originals.push({ kind: 'child', path: match[1], invocation_id: call.invocation_id,
+      input_sha: call.input_sha, external_identity: call.external_identity,
+      original_evidence_ref: call.evidence_ref, turn_id: match[2] });
+  }
+  const retained = originals.map((original, index) => {
+    const source = realpathSync(original.path), within = relative(realpathSync(sessions), source);
+    assert.ok(within && !within.startsWith('..') && !within.startsWith('/'),
+      'native transcript must belong to the isolated session directory');
+    const ref = turn.run.write(`native-${original.kind}-transcript-${index}.jsonl`, readFileSync(source), true);
+    return { ...original, path: source, source_sha256: ref.sha256, retained_ref: ref };
+  });
+  turn.run.write('native-transcript-index.json', { native_session_id: turn.session, transcripts: retained });
+}
 try {
 const listed = await appServerRequest('hooks/list',{cwds:[work]});
 const registrations=(listed.data||[]).flatMap(group=>group.hooks||[]);
@@ -234,13 +293,45 @@ assert.ok(initialRegistrations.every(hook=>hook.enabled===true && hook.trustStat
   'all 11 isolated hooks must start enabled and trusted');
 
 async function runTurn(args) {
- const child=spawn(binary,args,{env:isolatedEnv,cwd:work});child.stdin.end();
- let stdout='',stderr='';child.stdout.on('data',b=>stdout+=b);child.stderr.on('data',b=>stderr+=b);
+ activeHookOffset = (() => { try { return readFileSync(hookLog, 'utf8').trim().split('\n').filter(Boolean).length; } catch { return 0; } })();
+ const child=spawn(binary,args,{env:isolatedEnv,cwd:work,detached:Boolean(audit)});child.stdin.end();
+ const name = iteration === 1 ? 'new' : 'resumed';
+ if (audit) ownedRuns.push({ name, child });
+ activeSession = null; afterCaptured = false;
+ activeEvidence = nativeEvidence({ audit, name, repo, driver, child, argv: [binary, ...args], cwd: work, env: isolatedEnv, scratch: root, port, setupPids,
+   sources: moduleSourceFiles([join(repo, 'scripts/native-test-evidence.mjs'), ...overlays.map(path => join(repo, path)),
+     ...overlays.map(path => join(work, path)), ...['.codex/hooks.json', '.claude/hooks/session-restore.mjs', '.claude/hooks/session-sync.mjs',
+       '.claude/hooks/session-end.mjs', '.claude/hooks/route-guard.mjs', '.claude/hooks/post-edit.mjs', '.claude/skill-os/model-routing.yaml'].map(path => join(work, path)),
+     dispatch, configPath, bindings]), sourceMetadata: { fixture_git_head: checked('git', ['rev-parse', 'HEAD'], { cwd: work }),
+       archived_source_head: checked('git', ['rev-parse', 'HEAD'], { cwd: repo }), binary_version: checked(binary, ['--version']) },
+   seed: { initialRegistrations, entries, args, new_or_resumed: name, previous_session: sid || null,
+     initial_file: (() => { try { return readFileSync(join(work, 'incident-probe.txt'), 'utf8'); } catch { return null; } })() },
+   coverage: [
+     { feature: 'native lifecycle', entry: `Codex ${name} CLI`, state: 'read-write-patch-child-completion', assert_ids: ['U1-A5'] },
+     { feature: 'native hook registration', entry: `Codex ${name} CLI`, state: 'all eleven registrations executed', assert_ids: ['U1-A5'] },
+     { feature: 'native child adoption', entry: `Codex ${name} CLI`, state: 'same-invocation evidence accepted', assert_ids: ['U1-A5'] },
+   ] });
+ if (activeEvidence) evidenceRuns.push(activeEvidence);
+ let stdout='',stderr='';child.stdout.on('data',b=>{
+   stdout+=b;
+   const start = stdout.split('\n').filter(Boolean).flatMap(line => { try { return [JSON.parse(line)]; } catch { return []; } }).find(row => row.type === 'thread.started');
+   if (start) activeSession = start.thread_id;
+ });child.stderr.on('data',b=>stderr+=b);
  const timer=setTimeout(()=>child.kill('SIGKILL'),45000);
  let status;
  try {status=await new Promise((resolve,reject)=>{child.once('close',resolve);child.once('error',reject)});}
  finally {clearTimeout(timer);}
+ activeCapture = { name, status, stdout, stderr };
  const events=stdout.trim().split('\n').filter(Boolean).map(line=>JSON.parse(line));
+ if (activeEvidence) {
+   const rows = readFileSync(hookLog, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse);
+   const turnRows = rows.slice(activeHookOffset).filter(row => row.payload.session_id === activeSession);
+   const turn = { run: activeEvidence, data: { exitCode: status, stdout, stderr }, events, session: activeSession,
+     hooks: turnRows, allHooks: rows.slice(activeHookOffset), state: activation(activeSession),
+     file: (() => { try { return readFileSync(join(work, 'incident-probe.txt'), 'utf8'); } catch { return null; } })() };
+   turnEvidence.push(turn);
+   retainTurnTranscripts(turn);
+ }
  return {status,events,stderr};
 }
 if (concurrentMode) {
@@ -267,8 +358,20 @@ secondActivation=activation(sid);
 }
 } catch(error) {
   writeFileSync(join(root,'failure.json'),JSON.stringify({error:error.stack,first,second},null,2));
+  if (audit) {
+    server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
+    const captured = { status: 'GAP', error: error.stack, first, second, active_native_capture: activeCapture,
+      hook_payloads: (() => { try { return readFileSync(hookLog, 'utf8'); } catch { return ''; } })(),
+      requests: (() => { try { return readFileSync(requestLog, 'utf8'); } catch { return ''; } })() };
+    turnEvidence.forEach(turn => turn.run.capture({ ...turn.data, results: [], artifacts: { 'failure.json': captured } }));
+    const cleanup = await cleanupNativeEvidence(ownedRuns, root, port, setupPids);
+    const receipts = turnEvidence.map(turn => turn.run.finish({ cleanup: cleanup(turn.run) }));
+    writeFileSync(join(audit.dir, 'failure.json'), JSON.stringify({ ...captured, receipts,
+      remaining_gaps: ['native driver failed before all required process arms completed'],
+      cleanup: ownedRuns.map(run => ({ name: run.name, ...cleanup(run) })) }, null, 2));
+  }
   throw new Error(`Native lifecycle failed; evidence: ${root}`,{cause:error});
-} finally {server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
+} finally {server.closeAllConnections();if(server.listening)await new Promise(resolve=>server.close(resolve));}
 const hooks=readFileSync(hookLog,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse);
 const allEvents=[...first.events,...(second?.events||[])];
 const denied=hooks.filter(x=>x.status!==0||/"permissionDecision":"deny"|"continue":false/.test(x.output));
@@ -329,4 +432,32 @@ for(const [index,state] of [firstActivation,secondActivation].entries()) {
 result.failures=failures;result.pass=failures.length===0;
 writeFileSync(join(root,'result.json'),JSON.stringify(result,null,2));
 console.log(`${result.pass?'PASS':'FAIL'} native Codex lifecycle: ${hooks.length} hook events, ${new Set(hooks.map(event=>event.entry)).size}/11 registrations; evidence: ${join(root,'result.json')}`);
+if (audit) {
+  const rawRequests = readFileSync(requestLog, 'utf8'), rawHooks = readFileSync(hookLog, 'utf8');
+  turnEvidence.forEach(turn => {
+    const invocations = Object.values(turn.state?.invocations || {}), preparations = Object.values(turn.state?.preparations || {});
+    const expected = [
+      { cli_exit: 0, turn_completed: true, session_preserved: true, exact_file: 'hook-patch-tested\n', native_failures: false },
+      { registration_ids: entries.map((_, index) => index) },
+      { status: 'paused', critical_failure: false, accepted_same_invocation: true, unresolved_preparations: false },
+    ];
+    const actual = [
+      { cli_exit: turn.data.exitCode, turn_completed: turn.events.some(event => event.type === 'turn.completed'),
+        session_preserved: turn.session === sid, exact_file: turn.file, native_failures: denied.length > 0 || toolErrors.length > 0 || turn.events.some(event => event.type === 'turn.failed' || event.type === 'error') },
+      { registration_ids: [...new Set(turn.hooks.map(row => row.entry))].sort((a, b) => a - b) },
+      { status: turn.state?.status, critical_failure: turn.state?.critical_failure,
+        accepted_same_invocation: invocations.length === 1 && invocations.every(call => call.status === 'accepted' && call.evidence_ref?.startsWith('codex-transcript:')),
+        unresolved_preparations: preparations.some(call => ['pending', 'invalidated'].includes(call.status)) },
+    ];
+    turn.run.capture({ ...turn.data, results: expected.map((value, index) => ({ expected: value, actual: actual[index] })),
+      artifacts: { 'native-result.json': result, 'hook-payloads.json': turn.allHooks, 'responses-requests.json': rawRequests,
+        'all-hook-payloads.json': rawHooks, 'activation.json': turn.state } });
+  });
+  const cleanup = await cleanupNativeEvidence(evidenceRuns, root, port, setupPids);
+  const receipts = turnEvidence.map(turn => turn.run.finish({ cleanup: cleanup(turn.run) }));
+  writeFileSync(join(audit.dir, 'summary.json'), JSON.stringify({ pass: result.pass && receipts.length === 2 && receipts.every(row => row.status === 'PASS'), receipts }, null, 2));
+  assert.equal(receipts.length, 2, 'both native process instances require receipts');
+  assert.ok(receipts.every(receipt => receipt.status === 'PASS'), JSON.stringify(receipts));
+  console.log(`Bound native evidence: ${audit.dir}`);
+}
 if(failures.length) {console.error(failures.join('; '));process.exitCode=1;}

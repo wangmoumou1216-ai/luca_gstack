@@ -26,8 +26,8 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+# 本次输入提示由调用方提供；Phase 0 在已获准 canonical 范围内发现/验证，不从共享别名取最新。
 python3 .claude/observability/scripts/get_rules.py research-kit "*" 2>/dev/null || true
-cat .claude/current-topic.txt 2>/dev/null || true
 ```
 
 ## 定位（研究段上游缺失环：采集之前）
@@ -93,8 +93,8 @@ research-kit 同一入口，不新增 skill 或 Workflow。未选择此模式时
 
 ## 原四研究模式流程（单 agent 内联五步）
 
-1. **定标（缺任一先问清）**：要回答的研究问题/待验证假设（优先从最新 PRD 的 Outstanding
-   Questions / 关键假设节取，`ls -t docs/prd/*.md` 探测；无 PRD 时请用户口述）；
+1. **定标（缺任一先问清）**：要回答的研究问题/待验证假设（优先从本次已核验精确 PRD 的 Outstanding
+   Questions / 关键假设节取；无 PRD 可用用户口述，不要求补上游。发现仅限已获准 canonical 当前任务范围，不按共享目录或“最新”文件代选）；
    目标对象是谁；选哪种工具（用户没点名时按下表建议并 AskUserQuestion 确认）：
    - 想知道**为什么/怎么想** → 访谈提纲
    - 想知道**多少人/分布** → 问卷（前提：问题已知，只是量化；探索性问题回访谈）

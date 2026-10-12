@@ -30,9 +30,10 @@ context-cost:
 按 Phase 0–2 的来源/页面合同导出同包，不创建 OD 项目。
 
 ```bash
+# 仅用本次输入；发现遵循获准 canonical 当前任务范围。
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown"); echo "BRANCH: $_BRANCH"
-_DECISION=$(ls -t docs/decisions/*-design-brief.md 2>/dev/null | head -1); echo "DESIGN_BRIEF: ${_DECISION:-none}"
-_TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none"); echo "CURRENT_TOPIC: $_TOPIC"
+_DECISION="${_DECISION:-}"; echo "DESIGN_BRIEF: ${_DECISION:-none}"
+_TOPIC="${_TOPIC:-none}"; echo "CURRENT_TOPIC: $_TOPIC"
 # OD daemon 探测：桌面端是【动态端口】，从 sidecar 进程取（不要写死 7456/7457；daemon 重启会换端口，每段重测）
 _OD_URL="${OD_DAEMON_URL:-}"
 _PID=$(pgrep -f "prebundled/daemon/daemon-sidecar" 2>/dev/null | head -1)

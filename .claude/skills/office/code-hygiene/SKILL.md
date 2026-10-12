@@ -109,7 +109,7 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 | 记忆系统没坏 | `python3 memory/tests/test_memory_system.py` | 脚本能 import |
 | 路由金标没变 | `node scripts/test-route-guard.mjs` | 「逻辑等价」 |
 | 下游测试通过 | 项目自己的 `bats`/`swift test`/`pytest`/`npm test` 全跑 | 临时合成的最小复现 |
-| prose 改 skill 真改了行为 | `behavioral_ab.py`（被改 skill 的档位上跑）verdict=PASS | 静态测试全绿（SC-20260601-002：绿≠改了行为）|
+| 声明 skill 原生行为改变或能力增益 | 分别冻结 baseline/candidate 源与真实原生运行证据，由独立判官核验所声明行为；`behavioral_ab.py` PASS 仅辅助机械文本检查 | 机械 PASS、模型/档位元数据或静态全绿不能证明原生行为/增益（SC-20260601-002）|
 
 ### 红旗——出现即停，先跑验证
 

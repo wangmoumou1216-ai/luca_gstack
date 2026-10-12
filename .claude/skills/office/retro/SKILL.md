@@ -20,10 +20,11 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+# 本次输入提示由调用方提供；Phase 0 在已获准 canonical 范围内发现/验证，不从共享别名取最新。
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 echo "BRANCH: $_BRANCH"
-_DECISION=$(ls -t docs/decisions/*-design-brief.md 2>/dev/null | head -1)
-_REVIEW=$(ls -t docs/review/*.md 2>/dev/null | head -1)
+_DECISION="${_DECISION:-}"
+_REVIEW="${_REVIEW:-}"
 echo "DECISION: ${_DECISION:-none}"
 echo "REVIEW: ${_REVIEW:-none}"
 python3 .claude/observability/scripts/get_rules.py retro "*" 2>/dev/null || true
@@ -87,20 +88,15 @@ AskUserQuestion：
 写入 `docs/retro/YYYY-MM-DD-<topic>-retro.md`：
 
 **复盘记录模版真值源 = 本 skill 目录下的 `SCHEMA.md`。** 读取 `SCHEMA.md`，按其结构
-（复盘人 + 问一~问五 + 「追加到 CONTEXT.md」节，其中问三分「走了什么弯路/原因分类/具体说明」、
-问四含「是否追加到 CONTEXT.md 是/否」）填充各节内容。不要在本文件另维护一份并行模版，
+（复盘人 + 问一~问五 + 「待治理的学习候选」节，其中问三分「走了什么弯路/原因分类/具体说明」、
+问四记录候选行动与证据）填充各节内容。不要在本文件另维护一份并行模版，
 避免两份模版漂移；字段结构一律以 `SCHEMA.md` 为准。
 
-**如果问四有具体行动 → 追加到项目根目录 CONTEXT.md（区四长期记忆）：**
-
-```markdown
-## 来自 YYYY-MM-DD 复盘的红线
-
-{具体约束或洞察}
-来源：{topic} 项目复盘
-```
-
-
+**问四的具体行动先保存在复盘记录中，作为待治理候选。** 实际满足 extraction 信号时，
+完整读取 `.claude/skill-os/extraction-bar.md`，按其门判定，再按
+`.claude/skills/office/references/learning-actions.md` 的既有治理接口处理。
+候选记录本身不授予 CONTEXT、root adapter、skill 或 promoted-facts 写权；
+项目知识落点另核 project-session、归因与精确写许可。无许可则保留建议与未决状态。
 
 **workflow-state 写入：**
 

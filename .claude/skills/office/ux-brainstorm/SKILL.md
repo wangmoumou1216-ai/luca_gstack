@@ -77,7 +77,7 @@ AI Native不等于「加一个AI按钮」。它意味着：
 线性流程（无分支）：ux-research*.md（或设计想法）→ Phase 0 → 1 → 2 → 2.5 → 3 → 3.6 → 4 → 5 → 6 → 7 → 8
 
 - **Phase 0: 读取输入 & 分类规模** — 读取ux-research*.md（或进入冷启动模式）· 分类：Lightweight / Standard / Deep-feature / Deep-product · 按规模路由问题集
-- **Phase 1: 上下文扫描 & 查漏（并行后台agent）** — Agent A: 从研究中提取设计约束与信号 · Agent B: 识别隐性设计假设 · Agent C: 对照设计方案检查清单找缺口 · 可选：缺口严重时补充研究
+- **Phase 1: 上下文扫描 & 查漏（三个原生角色，按批准调度）** — Agent A: 从研究中提取设计约束与信号 · Agent B: 识别隐性设计假设 · Agent C: 对照设计方案检查清单找缺口 · 可选：缺口严重时补充研究
 - **Phase 2: 内部压力测试（自主进行，不对用户可见）** — 对研究本身做分级压力测试 · AI时代范式透镜检查 · 产出：Phase 3该重点追问什么
 - **Phase 2.5: AI Native评估（自主进行，不对用户可见）** — 决策路径分析（执行步 vs 判断步）· 路径压缩可行性（N→N', delta ≥ 2?）· 判定：fully/partially/assisted/not_suitable · Agent介入检查 · 产出：Phase 4 + Phase 6的路由信号
 - **Phase 3: 设计追问（用户参与，一次一个问题）** — 7个UX逼问（4必选+3条件触发），一次只问一个 · 使用AskUserQuestion，优先单选 · 应用反奉承 + 反驳模式
@@ -94,7 +94,7 @@ AI Native不等于「加一个AI按钮」。它意味着：
 | 输出 | 两份markdown文档：设计方案文档 + 交互架构文档 |
 | 代码编辑 | **NONE** — 这个skill不写代码 |
 | 用户交互 | Phase 3强制参与；Phase 5（manual findings）和Phase 8可选门控 |
-| Subagent调度 | 3个并行后台（Phase 1）+ 1个前台Oracle（Phase 5） |
+| Subagent调度 | 3个原生角色（Phase 1，按批准调度）+ 1个独立阻塞Oracle（Phase 5） |
 | 语言 | 指令为英文；输出自动匹配用户输入语言 |
 
 ## CRITICAL RULES
@@ -205,21 +205,25 @@ Slug规则：小写、连字符分隔、去非字母数字、最长50字符。
 
 ## Phase 1: 上下文扫描 & 查漏
 
-发射**三个并行后台agent**从输入材料中提取结构化知识。此时不读
+排入**三个真实原生 agent** 从输入材料提取结构化知识，按下方已批准调度执行。此时不读
 `references/design-proposal-template.md`——Phase 6才需要。
 
 **Subagent调度兼容性：**
-- 如果环境支持 `task()`（如Claude Code with subagent API）：使用 `task()` + `run_in_background=true`。
-- 如果环境不支持 `task()`（如Claude.ai chat）：
-  顺序执行每个agent的prompt作为内部推理，输出相同XML格式。
-  逻辑完全相同——只是失去并行性。
+Use the current harness's real native subagent interface: Claude Agent/task where exposed,
+Codex collaboration/spawn_agent under its adapter. The literal `task()` name is not a capability
+probe. Keep all specified roles/prompts and result schemas; scheduling follows the approved plan
+and max_active_subagents=1 unless its explicit concurrency gate permits more. Read actual native
+completion and same-invocation accepted evidence before dependent work. Missing dispatch or a
+required independent examiner means BLOCKED with the missing capability; internal reasoning is
+not a completed subagent or independent review. The following task(...) examples are prompt
+schemas to adapt to the exposed native interface, not proof of a callable tool.
 
-**Load `references/phase1-agent-prompts.md` now — Phase 1 发射并行 agent 前必须完整读取。**
+**Load `references/phase1-agent-prompts.md` now — Phase 1 派发原生 agent 前必须完整读取。**
 它包含 Agent A / B / C 的完整 `task()` 调度模板（含 prompt 与输出 XML schema），
-按模板逐字构造三个调度。
+保留三个 prompt 的完整事实任务与输出字段，按当前真实原生接口构造调度。
 
-**发射这三个task后结束当前响应。** 等待 `<system-reminder>`
-通知所有agent完成，然后用 `background_output(task_id="...")` 收集每个结果。
+按当前宿主的真实完成/读回接口收集三个角色结果；Claude 后台通知与 Codex wait/readback
+各用其实际表面。三角色全部完成并核验后才继续；串行调度不减少角色分母。
 
 结果到齐后，组装内部 `<phase1_synthesis>` 草稿，合并 design_signals +
 implicit_assumptions + gaps。不向用户展示——这是内部使用。
@@ -676,7 +680,7 @@ docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
   呈现3个方案含一个非显而易见角度，运行一次对抗性审查后写设计方案。
   」
 
-**Phase 1**（并行后台）：
+**Phase 1**（三个原生角色，按批准调度）：
 - Agent A提取S1-S8设计约束（D2范式有效性、D4 AI可行性判定等）
 - Agent B识别4个隐性假设（销售人员愿意信任AI建议、AI准确率足以支撑Evaluability等）
 - Agent C标记3个缺口（缺空态设计考虑、缺信任修复机制、缺Agent控制边界定义）

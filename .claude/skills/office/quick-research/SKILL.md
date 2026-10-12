@@ -25,8 +25,8 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+# 本次输入提示由调用方提供；Phase 0 在已获准 canonical 范围内发现/验证，不从共享别名取最新。
 python3 .claude/observability/scripts/get_rules.py quick-research "*" 2>/dev/null || true
-cat .claude/current-topic.txt 2>/dev/null || true
 ```
 
 # Quick Research

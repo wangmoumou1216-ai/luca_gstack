@@ -26,12 +26,7 @@ context-cost:
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH | SESSION: $_SESSION_ID"
-# 找最新 tech-spec handoff
-_TS_HANDOFF=$(ls docs/handoff/*tech-spec-handoff.md 2>/dev/null | sort | tail -1)
-echo "TECH_SPEC_HANDOFF: ${_TS_HANDOFF:-NOT FOUND}"
-# 找最新 tech-spec 文件
-_TS=$(ls docs/engineering/*tech-spec.md 2>/dev/null | sort | tail -1)
-echo "TECH_SPEC: ${_TS:-NOT FOUND}"
+# Exact tech-spec and handoff reads follow the verified caller scope in Phase 0.
 python3 .claude/observability/scripts/get_rules.py task-plan "*" 2>/dev/null || true
 ```
 
@@ -71,7 +66,7 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 
 
 ## Phase 0：确认输入存在
 
-先定位已验证项目/当前话题的精确 tech-spec handoff 和 canonical TS，latest glob 仅作线索。
+先消费用户或本次已验证交接明确提供的精确 tech-spec handoff 和 canonical TS；不从 shared docs 或 latest glob 推断来源。
 tech-spec handoff 必须存在；缺失时 NEEDS_CONTEXT，提示先完成 tech-spec。
 完整读取它并运行 `node scripts/check-quality-gates.mjs --handoff "<精确 TS handoff 绝对路径>"`，
 核 gate_result=PASS 与实际 Phase 5 COVERAGE GATE PASS，然后按来源类型分支。

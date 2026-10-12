@@ -196,7 +196,7 @@ dependency category、正确且非空 before/after 图、相关 ADR 冲突 callo
 - **handoff**：brief 作为下游设计 skill 的输入 artifact。workflow 模式仅在已批准 canonical
   项目根内、该有限 handoff 路径有写权限时创建目录并写入（不跟共享 docs symlink），再写
   `docs/handoff/<date>-<topic>-code-recon-handoff.md`（含 gate_result + 产出路径 + 关键架构决策/风险）；
-  standalone 轻量模式（终端交付、无下游消费）可免 handoff。之后建议路由到
+  standalone 同样按共享 office/handoff-protocol 完成交接；本 skill 未定义可豁免的轻量子模式。之后建议路由到
   `/ux-brainstorm` 或 `/design-brief`（它们把这份 brief 作为 `architecture_brief` optional 输入消费）。
 - **记忆**：输出 brief 不授予事实入库。仅在 governed extraction 门通过、项目落点已核验且有
   精确写许可时，由相应 memory owner 处理项目事实；未授权只保留建议，不自动写项目/全局 memory。
@@ -216,6 +216,6 @@ dependency category、正确且非空 before/after 图、相关 ADR 冲突 callo
 5. **brief 是设计输入不是终点**：产出后交给 ux-brainstorm/design-brief，不在本 skill 里做设计或写实现。
 6. **规模阈值第 4 条**：耦合走 subprocess 字符串/配置值的仓（如 gstack 自身），codegraph 看不见——别上工具，老实读。
 
-handoff 协议：见 Phase 5（workflow 模式必写，standalone 轻量终端交付可免）。
+handoff 协议：见 Phase 5；standalone/workflow 均遵守共享完成门和实际有限写权限。
 
 <!-- FILE_END: code-recon/SKILL.md -->
