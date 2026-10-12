@@ -1,0 +1,30 @@
+PASS native-first without recommended-model/no-pin registration
+PASS retired known_lineup: rejected and restored
+PASS retired default_tier: rejected and restored
+PASS retired tiers: rejected and restored
+PASS retired fable_whitelist: rejected and restored
+PASS retired agents_no_pin: rejected and restored
+PASS retired non_dispatchable: rejected and restored
+PASS retired dispatch_rules: rejected and restored
+PASS retired new_scenario_protocol: rejected and restored
+PASS quality-gate pin drift: rejected and restored
+PASS quality-gate file missing: rejected and restored
+PASS quality-gate registry missing: rejected and restored
+PASS muse-proto-judge pin drift: rejected and restored
+PASS muse-proto-judge file missing: rejected and restored
+PASS muse-proto-judge registry missing: rejected and restored
+PASS fact-collector pin drift: rejected and restored
+PASS fact-collector file missing: rejected and restored
+PASS fact-collector registry missing: rejected and restored
+PASS preflight-agent pin drift: rejected and restored
+PASS preflight-agent file missing: rejected and restored
+PASS preflight-agent registry missing: rejected and restored
+PASS Claude fallback forbidden: rejected and restored
+PASS common critical failure: rejected and restored
+PASS common critical scene: rejected and restored
+PASS common evidence: rejected and restored
+PASS common role authority: rejected and restored
+PASS common effort: rejected and restored
+PASS Codex fixed effort: rejected and restored
+PASS common boundary decoy: rejected and restored
+PASS Claude native routing: 31 cases; actual checker/governance rejection + restoration

@@ -1,0 +1,25 @@
+{
+  "source": "Latest actual human instruction: 做核心，加快进度",
+  "core_scope": [
+    "Correct missed Claude fallback example",
+    "Fresh relevant core regression",
+    "Final independent review of corrected core",
+    "Publish correction"
+  ],
+  "deferred_by_user": [
+    "Remaining net-benefit paired comparison",
+    "Expanded all-surface activation/rollback experiment"
+  ],
+  "stopped_owned_pids": [
+    23646,
+    80839,
+    82181,
+    82182,
+    82183,
+    82184,
+    82253,
+    85072
+  ],
+  "completed_pair_receipts": 8,
+  "partial_not_counted_as_complete": true
+}

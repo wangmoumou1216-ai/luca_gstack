@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "routing-core-final-standards-20261012-03",
+  "subject": {
+    "skill": "CORE_FINAL",
+    "topic": "Claude native model inheritance — Standards",
+    "scene": "unknown",
+    "input_summary": "Framework NO_PIN；33 文件冻结终版；独立 Standards-only Mode D；核验完成证据、最终 hunks、保护边界及隔离反例。",
+    "output_paths": [
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-postpublish-review-4ba5j5ca/core-final.diff"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": []
+  }
+}

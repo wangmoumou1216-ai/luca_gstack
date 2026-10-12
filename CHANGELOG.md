@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-12 · 路由复审补漏）
+
+- 清理护栏的 fallback 示例改用实际存在的 memory-root 回退，移除已退役的 Claude 模型自动降级示例；保留原有 fallback、兼容与 fail-open 保护。为什么：避免旧说明与 Claude 原生选模合同冲突。
+
 ### Changed（2026-10-12 · Claude 原生选模）
 
 - Claude 普通委派回归原生继承，退役中央档位、Fable 白名单和推荐元数据同步义务；保留有意的 agent 默认模型、独立验收和关键失败阻断，Codex 路由与 effort 不变。为什么：减少重复配置，把框架职责集中在任务与验收；原生账户验证和净收益仍须实测。

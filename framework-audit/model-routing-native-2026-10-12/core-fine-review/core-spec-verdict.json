@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "routing-core-final-spec-20261012-03",
+  "subject": {
+    "skill": "CORE_FINAL",
+    "topic": "routing-core-final-spec",
+    "scene": "unknown",
+    "input_summary": "Independent Spec-only review of frozen 33-file core against original protection requirements and latest core-only scope amendment; excludes deferred ROI/global activation and pending publication/full CI.",
+    "output_paths": [
+      "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/routing-postpublish-review-4ba5j5ca/core-final-input.json"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 7,
+    "total": 7,
+    "findings": []
+  }
+}

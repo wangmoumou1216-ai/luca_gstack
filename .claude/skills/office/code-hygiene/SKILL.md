@@ -166,7 +166,7 @@ AskUserQuestion（或在 agent 自调用时按上下文确定）：
 | 4 | `types` | 类型重复定义 | `grep` interface/type | luca 自身仓 .mjs/.py 基本无类型 → 本算子主要对**下游 TS**生效 |
 | 5 | `weak-types` | `any`/`unknown`/`interface{}`/无注解 | `tsc --noImplicitAny`·mypy | 逐项 typecheck，失败即单条回退；公共 API 保守。luca 自身仓低产出（无 tsconfig），价值在下游 TS |
 | 6 | `defensive` | 无意义 try/catch、吞错的兜底 | `grep -A5 "try {"` | **重护栏（按属性非按文件名）**：边界处 catch 保留（HTTP handler / CLI 入口 / 队列消费者 / 测试）。判据 = **任何 catch 体仅 `exit(0)`/`return`/静默放行，或函数/邻近注释含 `fail-open\|绝不卡住\|fail open\|safety contract\|SESSION_SYNC_BLOCK`** → 强制降 MEDIUM 交人。具名实例：luca hooks（session-sync/session-restore/route-guard/post-edit）；**但护栏按属性匹配——`memory/scripts/*.py` 治理脚本（daily_governance/consolidate 等）里的 fail-open `except`（auto-grow「任何异常 fail-open」）同属此类、同等保护，非仅那 4 个具名 hook** |
-| 7 | `legacy` | deprecated/legacy/v1/fallback 死分支 | `grep @deprecated\|TODO remove`·LSP caller | **重护栏（按属性非按文件名）**：判据 = **任何含 `Static Fallback\|兼容语义\|fallback\|档位回退\|@deprecated 但有真实 caller` 的分支**都是**有意保留的兜底**，不是死分支。具名实例：CLAUDE.md Static Fallback 节、兼容语义（「写 PRD」→ /brainstorm）、model-routing 档位回退（fable→opus）；**未具名但同属性者一视同仁保护**。删前必 grep+确认零真实 caller 且非有意 fallback |
+| 7 | `legacy` | deprecated/legacy/v1/fallback 死分支 | `grep @deprecated\|TODO remove`·LSP caller | **重护栏（按属性非按文件名）**：判据 = **任何含 `Static Fallback\|兼容语义\|fallback\|档位回退\|@deprecated 但有真实 caller` 的分支**都是**有意保留的兜底**，不是死分支。具名实例：CLAUDE.md Static Fallback 节、兼容语义（「写 PRD」→ /brainstorm）、memory-root 的脚本相对回退；**未具名但同属性者一视同仁保护**。删前必 grep+确认零真实 caller 且非有意 fallback |
 | 8 | `slop` | AI slop：复述代码的注释、过程旁白、平庸套话、stub 标记 | `grep` + 启发式（**只改注释，不动逻辑**）| 与 luca **最小注释原则**完全同向：保留「解释 WHY」的注释（workaround/不变量/反直觉行为/引用），删「复述 WHAT」的噪声。若「改注释」需要动代码 → 上报，不自己动 |
 
 ### cleanup-all 顺序（模式 C）
