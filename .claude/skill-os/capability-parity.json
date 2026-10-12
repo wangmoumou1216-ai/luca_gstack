@@ -32,7 +32,7 @@
     ],
     ".claude/agents/orchestrator.md": [
       "Step 3b 【合同回验",
-      "模型路由（强制传参",
+      "模型选择（Claude 原生优先",
       "correction-attribution",
       "不注册为 subagent",
       "增量重规划"
@@ -67,16 +67,16 @@
       "execution_to_acceptance"
     ],
     ".claude/skill-os/model-routing.yaml": [
-      "core-execution",
-      "fable_whitelist",
-      "new_scenario_protocol",
-      "native_precedence",
-      "agents_no_pin"
+      "model_routing:",
+      "native-first",
+      "user-request-or-agent-frontmatter",
+      "independent-required",
+      "user-owned-not-a-routing-input"
     ],
     "memory/scripts/daily_governance.py": [
       "check_loop_health",
       "AUTHORITATIVE_MEMORY_ROOT",
-      "新场景待评估档位",
+      "native-first",
       "Skill 评估消费",
       "待批准晋升",
       "GOVERNANCE_CALLER_ROOT",

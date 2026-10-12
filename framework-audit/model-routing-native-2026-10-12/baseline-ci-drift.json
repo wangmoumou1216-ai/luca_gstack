@@ -1,0 +1,9 @@
+{
+  "check": "C16",
+  "status": "FAIL",
+  "generator_unchanged_from_HEAD": true,
+  "generated_inventory_unchanged_from_HEAD": true,
+  "difference": "local ~/.claude/skills contains extra synced directory absent from committed inventory",
+  "related_to_candidate": false,
+  "action": "retain failure; no global inventory edits"
+}

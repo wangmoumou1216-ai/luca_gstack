@@ -9,7 +9,7 @@
 - 当前已确认项目的品牌敏感外部材料仍按 `observability/rules.yaml` 注入并用 blockquote 标明，不能写进 route-guard；SKILL.md P1-P7 不变量继续保护。
 - 候选 worktree 是编辑对象。Htest 前从已授信正式框架启动，不把候选当作原生运行根。
 - 来源/方法 ID、gain/preservation 口径和独立 oracle 在实施前冻结。失败后不能把 gain 改成 preservation。
-- `model-routing.yaml` 顶层 common 政策是当前原生模型选择权威。使用当前 common native type/角色，禁止以固定模型别名或 model/effort 等价推定采用。
+- `model-routing.yaml` 按 harness 分工：Claude 原生继承/agent 配置，Codex 执行既有 common native type/角色。独立验收保留，实际采用须取证，不以旧 skill 档位或 model/effort 等价推定。
 - 同一时刻最多一个运行中 subagent。前一位真实 completed 且**同次调用 accepted** 后再派下一位；producer 自报不构成真实采用证据。角色由当前 adapter 解析，effort 属于用户，不改私有 binding。
 - `behavioral_ab.py extract/judge` 只作 **mechanical-only** 投影：文本差异仅称 **text delta**，regex 保持也只是文本检查。机械 PASS 不证明技能能力提升；最终行为判定由独立判官依据真实原生轨迹作出。
 - 其他手册的历史模型、并发或提取配方不能覆盖当前 model-routing、个人串行及原生批准权威。
@@ -37,7 +37,7 @@
 3. 用健康、已授信基线启动**全新原生 baseline sessions**；baseline 只读实际 M/旧安装。允许正常文件读取以执行真实技能，不再使用“baseline 禁文件读”的旧配方。
 4. 结束全部 baseline sessions，按合同正常停机并切到候选，再启动**全新原生 candidate sessions**；candidate 读实际 C/候选安装。两 arm 不共享 live 编辑，固定输入、来源身份及 oracle，保留各自真实轨迹。
 5. 原生 evidence 必须绑定实际来源 C/M、运行根、调用和真实采用/完成。缺回执、工具缺失、原生调用失败或任何第三态记 **UNKNOWN/BLOCKED** 并阻断比较，不能计作 baseline FAIL 或 candidate PASS。
-6. `extract` 的 JSON fixtures 可作为输入材料；`judge --skill-tier <当前定义的 tier>` 支持 `core-execution`，校验非空唯一 ID、相等集合、有效 regex 和 text delta。`--model` 是调用者元数据，不能校验真实采用。不同字节、等价行为不构成 gain。
+6. `extract` 的 JSON fixtures 可作为输入材料；`judge` 校验非空唯一 ID、相等集合、有效 regex 和 text delta。可选的旧 `--skill-tier` 与 `--model` 都只是调用者元数据，不依赖中央档位表，也不能校验真实采用。不同字节、等价行为不构成 gain。
 7. 全量 verify 的依赖缺失不是 PASS；先列明准确安装/缓存影响，按 Htest 范围处理。保留其他运行根、个人学习记录及维护者工作。
 
 ## 落地陷阱与采纳验收（FM-10 / FM-11）
@@ -61,7 +61,7 @@
 
 ## 隐式耦合清单（FM-6，每次检查实际范围）
 
-- 当前 common model_routing、native_agent_types、公共角色与同次真实采用回执；不以历史 alias 或 effort 快照替代。
+- Claude 原生配置与 Codex common model_routing/native_agent_types 分别核验；两端保留独立验收与真实执行证据，不以历史 alias 或 effort 快照替代。
 - `observability/rules.yaml` 的 skill scope 与调用接线；改名不能造成孤儿。
 - 路由、input-modes、workflow graph、目录/入口与当前 root adapter 的适用合同，生成面按有限清单同步。
 - `framework/` 只读、SKILL.md P1-P7、当前已确认项目的设计约束、保护例外与其他会话占用。

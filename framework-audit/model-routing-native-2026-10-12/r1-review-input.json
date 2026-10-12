@@ -1,0 +1,108 @@
+{
+  "work_root": "/Users/luca/.codex/worktrees/c252/luca_gstack",
+  "baseline": "b9b96d48cf389997949310d45c5e774c7aeddeb1",
+  "diff_path": "/tmp/luca-routing-review-20261012-ag6QvS/implementation.diff",
+  "diff_sha256": "1801d02962d485ee1876e2e0c07f2449ed61bf509508424116de10c495e01304",
+  "files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/model-routing.yaml",
+      "sha256": "b5cc85b62d0238afcfd03f6ce2c361f949918a793cd8509097f905084f3fc001"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/agents/plan-agent.md",
+      "sha256": "6842910983b1de98752931fda2114a51d58754063571eaf3003b5176139c143f"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/agents/orchestrator.md",
+      "sha256": "590365cf3ce3cd846e95784869879cbc5a9cb7089725bd62650a1fa228d1142c"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/agents/quality-gate.md",
+      "sha256": "620b32601459dfa1ad1a85bfecae833b6405d23c838f56b166d255a1341223dc"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/agents/muse-proto-judge.md",
+      "sha256": "7a359d842d0ecc63a06c5b073879350d7f7318e3dd0b0fabf5103e8e53b2af77"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/routing-chain-check.md",
+      "sha256": "782b74267f5a4842fb99bd0b8ca73eea43e9e1f3d6863d29f203028bd6feaa91"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/runtime/cross-harness.md",
+      "sha256": "3d3c6d9e745413a721a42d76a8acb4743cb1b3811b929e2f8bce4f62045522b8"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/skill-authoring.md",
+      "sha256": "0ef35034d43120d2a373f3e1fbbb5daf4000dba2c5648a5912f38826ee34c85a"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/agent-context-manifest.json",
+      "sha256": "b9f712d065b1b746343e5516edb293cbc1bf0f5bbff55817b17e027bfa95dc09"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/capability-parity.json",
+      "sha256": "cd0300c2c165dff1922c38aeb4a02e3577b93ffc2647a8b73ca497a406d49585"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/evolution/BENCHMARK-RUNBOOK.md",
+      "sha256": "1581589a56f4089aa27a5099a08ab981354ad3d24c54388e58a32e5fdcf382fd"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/evolution/FUSION-RUNBOOK.md",
+      "sha256": "226bb0872bfc439e73b480549467325589fd3683e8f2aff69f132af0015c9a0b"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/evolution/self-model.yaml",
+      "sha256": "3f627e4dd2319ee45c13ca82361566f817c6e2e64fdf7b028eaf943f709fabdf"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/check-model-table.mjs",
+      "sha256": "08be68700dfa024fd7ff1801b9aace8b282d311f6f46596463509f9ca71152e5"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/check-registration-sync.mjs",
+      "sha256": "03f8a7edf31e341924d517417030b49d44d4ffde647bc669906f921b2b37e8dd"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/check-agent-contracts.mjs",
+      "sha256": "92a66a648260844ee7dbe6df3a1d6b8e3f2b357b67d6c6ae589552f9436afb9d"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/check-agent-context.mjs",
+      "sha256": "958ee4477be80f38eaed28251086df0ed4cff61a770031df84b48e7b1372e606"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/fusion-preflight.py",
+      "sha256": "2d2d54bac417a3727dc6d1094c9e32224877904b739928c7c1c8b53a1922a422"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/memory/scripts/daily_governance.py",
+      "sha256": "519a9cbc4badb7c5ca9b50493fe8eb0f8ee6d3316d3654ba79bf09aa8afa26ad"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/generated/context-index.md",
+      "sha256": "33346145ff36f0938e8220d0a19837a8a41eae112859e526c82ce41a576c2c46"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/test-claude-native-routing.mjs",
+      "sha256": "9bff7e864a2764aba33db61ea464b891a37eb625cf370dce44a240dcd84e356d"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/memory/scripts/behavioral_ab.py",
+      "sha256": "17bbd98568cbf358fe344554e5bf92dd77e7e5e455b3084b9f6e51cc4f2223e3"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/memory/tests/test_behavioral_ab_gate.py",
+      "sha256": "547f5291f274fff408bcf25e4a77c4db4d36c317d89f7519f0a5599fe626220c"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/CHANGELOG.md",
+      "sha256": "e2212f078343878ce9c25ed152b6e90cccddea1a0e9b3abcb9ba3d481697f9b7"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/verify.sh",
+      "sha256": "680c23ad89e5bcc756e70dc53d1b13024159ec1a755be97d35447e9113bc38b8"
+    }
+  ]
+}

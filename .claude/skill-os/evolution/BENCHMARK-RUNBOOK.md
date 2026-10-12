@@ -30,7 +30,7 @@
 | ② | 对标矩阵：逐单元映射到我方对应物（有/无/弱） | matrix |
 | ③ | rubric 深评：逐单元 dossier（价值/冗余/借鉴面/证据） | N 份 dossier |
 | ④ | 红队：含**反向红队**（用对方的失败反证我方机制，如 registration-sync 案例） | 红队定论 |
-| ⑤ | fable 复审（model-routing 白名单 P2 翻案复审档） | 复审意见 |
+| ⑤ | 独立冷启动复审（按 model-routing 当前 harness 合同；保留用户模型选择） | 复审意见 |
 | ⑥ | GATE 逐项裁决（luca 人裁）：install / refresh / adapt-idea / 开新 gap / 拒 | 裁决记录 |
 
 产物统一落 `framework-audit/<target>-benchmark-YYYY-MM/`。
@@ -50,7 +50,7 @@
 | W④ 血统对标 | 上游改动 ↔ 我方历史吸收落点逐条映射，判 no-op/需同步/被推翻 | **直读我方落点原文（file:line）**，禁凭 ADOPTED.md 摘要判 no-op——摘要会漏吸收劣化（R2 曾据此 OVERTURNED 一条 no-op） |
 | W⑤ need-first 门 | 每个净新增候选先答三问：我们框架**哪里**要处理 / **为什么**要处理（实证痛点指针，n=1 需注明）/ **价值是什么** | 「成本低」不得冒充「有需求」；场景零实发 → 最多记 gap 提案不动手；收益量化一律标 [CLAIM] 交红队（先验：07-23 轮 3 候选红队后仅 0.5 存活） |
 | W⑥ 靶子落盘 | 全部结论按 **FACT / INFERENCE / CLAIM** 三级标注写成红队靶子：§0 带外写入台账 / §1 源头定义 / §2 问题定义 / §3 逐项裁决 / §4 红队分工 | 靶子落盘后编排者冻结对证据基底的写入 |
-| W⑦ 红队+终审 | opus **并行** refute 分工（枚举完整性 / 血统 no-op / 逐候选）→ fable **串行**终审逐项 verdict（stands/overturned/modified） | 红队独立取证、不接受靶子转述；判官必须亲裁编排者-红队对质点，允许 NEW FINDINGS |
+| W⑦ 红队+终审 | 按当前 harness 模型合同派发 refute 分工（枚举完整性 / 血统 no-op / 逐候选）→ 独立终审逐项 verdict（stands/overturned/modified）；串并行遵守当前原生关键门与用户约束 | 红队独立取证、不接受靶子转述；判官必须亲裁编排者-红队对质点，允许 NEW FINDINGS |
 | W⑧ 规划执行 | 共识稿附 Plan 格式执行计划（前提门/断言列表/失败策略），人批后执行 | propose-only 不破：无显式预授权不动手 |
 | W⑨ SSOT 回写+基线推进 | vetting-registry 追加 window-update-review → ADOPTED.md / adoption-log / CHANGELOG（复用下方出口接线）→ **registry 基线推进（出口「基线推进」条）** | installed-pins 的 ack 核验用**逐 unit path 域当前 SHA，永不用 repo HEAD**；registry 的 ack_commit 才是 repo 域 |
 

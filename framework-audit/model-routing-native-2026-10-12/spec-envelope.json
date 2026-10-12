@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "routing-spec-20261012-r1",
+  "subject": {
+    "skill": "U002-local-patch",
+    "topic": "model-routing-strategy Spec-only review",
+    "scene": "unknown",
+    "input_summary": "Cold Spec-only review of the frozen 25-file U002 local candidate against the approved strategy and scope; identity verified before and after, designated assertions and native-routing mutation suite executed. Excludes U003-U005, deployment and ROI.",
+    "output_paths": [
+      "/tmp/luca-routing-review-20261012-ag6QvS/review-input.json",
+      "/tmp/luca-routing-review-20261012-ag6QvS/implementation.diff"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 8,
+    "total": 8,
+    "findings": []
+  }
+}

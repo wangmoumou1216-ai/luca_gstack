@@ -1,0 +1,159 @@
+{
+  "plan_id": "routing-native-first-20261012",
+  "plan_path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/plans/2026-10-12-model-routing-strategy.md",
+  "plan_sha256": "7d6b00e10e8f8c9491c2ed64b66e3a347b421f12da90da2dcf5adb29f119bf51",
+  "scope": "NO_PIN/framework/model-routing-strategy",
+  "source_identity": "user-current-thread-01a12dd1-d4a8-7551-b306-f04b9fa5701b:2026-10-12:expert-steelman-plan",
+  "baseline_head": "b9b96d48cf389997949310d45c5e774c7aeddeb1",
+  "user_request": "按照你的计划，改造，执行",
+  "authorization_interpretation": "最新用户在计划展示后明确批准执行。以下是同一 Claude 选模解耦范围的有限实现清单，不重复索取已批准范围。无Git发布/全局配置/私有binding授权。",
+  "files": [
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/model-routing.yaml",
+      "preimage_sha256": "1fead141706c67b1e3a5ade9b4ac1fd1a5520d5f619d1e75eb861682446f3791"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/agents/plan-agent.md",
+      "preimage_sha256": "8bdbe6debb64155bddae6f12821b2f488dcbf73ded15f8bbbe3522992df3e8f1"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/agents/orchestrator.md",
+      "preimage_sha256": "49a6e09665db163c5a42b7974a05a4651ff2a1592211d5fa846ebea22747a0c1"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/agents/quality-gate.md",
+      "preimage_sha256": "540c68f1f6566c98e88e7fb6d9a52a6ddb9a29702c831f53fe41b773b8e2490d"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/agents/muse-proto-judge.md",
+      "preimage_sha256": "71e3a1b42c2c53ba98a38c7700b0b3c2fe8f229aace9012c7a768387fcbfc4a6"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/routing-chain-check.md",
+      "preimage_sha256": "bc8c565f85618d61baf324aab5c31af091b30df8f942e3f05c2a847a17f0b878"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/runtime/cross-harness.md",
+      "preimage_sha256": "d9899018487257331988a965799543bc89aa55f31a1fe964c35a47e3a6825c5f"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/skill-authoring.md",
+      "preimage_sha256": "6a0460d328b9067d2ab0ffcbcd1080ee3a118b31cfd70c2c149b64c510a604fb"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/agent-context-manifest.json",
+      "preimage_sha256": "2a8fa36091c046ff5ff647dfeb2e1d2915f290fed65761edd7e3de4200725995"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/capability-parity.json",
+      "preimage_sha256": "1dc798a266c4ff78ee3a97036a9a7e9d5f28ce4b0c140af1ae1b4470d2adb317"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/evolution/BENCHMARK-RUNBOOK.md",
+      "preimage_sha256": "05826d41e56f5af0d069620d6d5cff49d9e59425a60fc2961cd7629f65226b63"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/evolution/FUSION-RUNBOOK.md",
+      "preimage_sha256": "2f1f57260c860ae9c7bf829dc0da54f227ebb31c1aca7ea54bc514cb406d1681"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/evolution/self-model.yaml",
+      "preimage_sha256": "ffbc028e077e6835445e3c14b55c8f3e1bbcf6373bca1c478a6886c772f19dae"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/check-model-table.mjs",
+      "preimage_sha256": "55059d9075eef7fa0994f63b7eb0c15d1c996bef098788bcd79b779293ffe62a"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/check-registration-sync.mjs",
+      "preimage_sha256": "d2c1f12ee170b23c276a19ac74f32d8c94a819cf39528ee9ce5fd79a30636e94"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/check-agent-contracts.mjs",
+      "preimage_sha256": "90bbd1d917256b2bb9b2178f8554b5da10942805600e1dffe5538a67bd7fc606"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/check-agent-context.mjs",
+      "preimage_sha256": "4fdad222c601264eec50b80b042ebda876f038f59e2bdf94332ff2bdb07639cd"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/fusion-preflight.py",
+      "preimage_sha256": "6b6ea4814632dd5d48fbe596cdef84cdbc7d083e78fac00d6667b4a2f890fb9e"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/memory/scripts/daily_governance.py",
+      "preimage_sha256": "e9c93b16a48a591526c68a827f2c5b8665655e437677b46c3aafaa368d5c73fb"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/.claude/skill-os/generated/context-index.md",
+      "preimage_sha256": "d81c30441dc9646cec4c015368e21e1d40191d9a4e701fc5d59e119f8cd13294"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/test-claude-native-routing.mjs",
+      "preimage_sha256": null
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/memory/scripts/behavioral_ab.py",
+      "preimage_sha256": "1135ea1a55a8d288ec5d02505c5e19e51d4926ce3b9b8827ed928716831f4a16"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/memory/tests/test_behavioral_ab_gate.py",
+      "preimage_sha256": "3622cfc9d5b6441097ca8363d9e4c3116ff2fdd5a8e6bd1e292ac2587b6237eb"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/CHANGELOG.md",
+      "preimage_sha256": "1dafde460862054caf7166a50cd91eac5c9e96ee14e67335896f963c2b039227"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/verify.sh",
+      "preimage_sha256": "0cc5e2740be510174bac1d9f18f812a1bf7c2af4f48ff8287877cbf9be0ed852"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/test-wait-what-skill.mjs",
+      "preimage_sha256": "75029346ab6d9a119beeffdee31bfed65959d689ef2d420fa67c62fcd6fdbefd"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/test-writing-for-agents-skill.mjs",
+      "preimage_sha256": "2a0d99282aaece9b26da3dd8f6aec9a957ed0af55fbcf990cfc205b621faf36b"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/test-motion-polish-registration.mjs",
+      "preimage_sha256": "c8e66cc2e7b255c3f460b9b3bb4272a6f3deafc42bb4e15ed80e039fb729c94d"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/test-prototype-notes-registration.mjs",
+      "preimage_sha256": "cd7ebde79949eb9c4a7c2a9f969ffa5f90660954b8912c931487f34a040a456a"
+    },
+    {
+      "path": "/Users/luca/.codex/worktrees/c252/luca_gstack/scripts/test-domain-modeling-skill.mjs",
+      "preimage_sha256": "78dc6b4edb9c3029aa7d693fdd4376602815a465c62f2f6739968c6ddd10aedc"
+    }
+  ],
+  "preserved": [
+    "Codex model_routing parsed object and codex fixed effort unchanged",
+    "intentional Claude native pins unchanged",
+    "root/user model/effort and cold independent review",
+    "source trust/project isolation/hook implementation unchanged",
+    "legacy skill recommended-model metadata left inert, no required declarations/sync or dispatch interpretation"
+  ],
+  "consumer_map": {
+    "central tiers/whitelist/dispatch": "retire; Claude native inheritance/frontmatter/user request own selection",
+    "plan/orchestrator/benchmark/fusion": "remove mandatory legacy alias dispatch; preserve critical independent judge",
+    "governance/model-table/registration/parity": "replace tier sync with native-first policy/pin and existing Codex invariant checks",
+    "context manifest/generated/self-model": "correct native-first versus Codex role pointer, no model-to-effort equivalence"
+  },
+  "validation": [
+    "existing A01-A04 suites",
+    "new negative/mutation fixtures for omitted skill metadata and retained pin/common safeguards",
+    "cold Standards and Spec review",
+    "live availability/account probes only using existing authorized channels; no global install or binding edit"
+  ],
+  "status": "U001_COMPLETE_PREFLIGHT_PASS_WITH_DIRECT_CONSUMER_AND_VALIDATION_EXTENSIONS",
+  "scope_refinement": "直接消费者补齐：behavioral_ab 的旧 tiers 读取会在删除中央表后阻断所有子命令；将 --skill-tier 保留为不参与判决的兼容元数据，保留fixture/regex/text gate，配套负向测试。属于同一已授权解耦，无新效果。",
+  "ci_wiring_extension": {
+    "path": "scripts/verify.sh",
+    "preimage_sha256": "0cc5e2740be510174bac1d9f18f812a1bf7c2af4f48ff8287877cbf9be0ed852",
+    "reason": "Run new native-routing mutation test in existing S33 gate; same authorized migration validation."
+  },
+  "test_consumer_extension": "Full integration found five skill test consumers requiring retired central tiers or metadata; replace only those requirements with native-first/inherit/ignored checks; all other permission/semantic/delivery assertions preserved."
+}

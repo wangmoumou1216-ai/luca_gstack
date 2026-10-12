@@ -11,7 +11,7 @@ means those mechanical checks passed; capability_gain remains unknown.
 
 --claims-behavior-change is a compatibility alias of --claims-text-change.
 --model records caller-supplied metadata only; it is never adoption evidence.
---skill-tier choices come from the owning checkout's model-routing.yaml tiers.
+--skill-tier is optional legacy caller metadata; it does not select models or gate text checks.
 """
 import argparse
 import difflib
@@ -48,26 +48,6 @@ def _resolve_root():
 ROOT = _resolve_root()
 EPISODIC = ROOT / "memory" / "episodic" / "index.jsonl"
 EVAL_LOG = ROOT / "memory" / "evals" / "eval-log.jsonl"
-
-CODE_ROOT = Path(__file__).resolve().parents[2]
-ROUTING_PATH = CODE_ROOT / ".claude" / "skill-os" / "model-routing.yaml"
-
-
-def _skill_tiers():
-    # Use code authority, not MEMORY_ROOT, which only redirects data extraction.
-    import yaml
-
-    try:
-        policy = yaml.safe_load(ROUTING_PATH.read_text(encoding="utf-8"))
-    except yaml.YAMLError as error:
-        raise ValueError(f"invalid model-routing.yaml: {error}") from error
-    tiers = policy.get("tiers") if isinstance(policy, dict) else None
-    if not isinstance(tiers, dict) or not tiers or any(
-        not isinstance(name, str) or not name.strip() for name in tiers
-    ):
-        raise ValueError("model-routing.yaml must define nonempty tier names")
-    return tuple(tiers)
-
 
 def _read_jsonl(p):
     rows = []
@@ -159,16 +139,11 @@ def _outputs_by_id(rows, arm, findings):
 
 
 def judge(baseline, candidate, claims_change, model, must_hold, epsilon,
-          skill_tier="guided-execution"):
+          skill_tier=None):
     """Return a text check. Caller metadata cannot prove runtime adoption/gain."""
     findings = []
-    try:
-        tiers = _skill_tiers()
-    except (OSError, UnicodeError, ValueError, ImportError) as error:
-        findings.append(f"BLOCK: cannot load current skill tiers: {error}")
-    else:
-        if skill_tier not in tiers:
-            findings.append(f"BLOCK: unknown skill tier {skill_tier!r}")
+    if skill_tier is not None and (not isinstance(skill_tier, str) or not skill_tier.strip()):
+        findings.append("BLOCK: skill-tier metadata must be a nonempty string when supplied")
     if not isinstance(epsilon, (int, float)) or not math.isfinite(epsilon) or not 0 <= epsilon <= 1:
         findings.append("BLOCK: epsilon must be a finite number between 0 and 1")
 
@@ -258,13 +233,8 @@ def main():
                     dest="claims_change", action="store_true",
                     help="require measurable text delta; compatibility alias does not test behavior")
     pj.add_argument("--model", default=None, help="caller metadata only, never adoption evidence")
-    try:
-        tiers = _skill_tiers()
-    except (OSError, UnicodeError, ValueError, ImportError) as error:
-        print(json.dumps(_result("BLOCK", [f"BLOCK: cannot load current skill tiers: {error}"]),
-                         ensure_ascii=False, indent=2))
-        return 1
-    pj.add_argument("--skill-tier", default="guided-execution", choices=tiers)
+    pj.add_argument("--skill-tier", default=None,
+                    help="optional legacy caller metadata; not a model selection or acceptance rule")
     pj.add_argument("--must-hold", nargs="*", default=None)
     pj.add_argument("--epsilon", type=float, default=0.02)
 

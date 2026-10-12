@@ -9,7 +9,7 @@
 //   3. 触发边界对齐（不得再现「2-3 文件」旧边界，CLAUDE.md ≥3 即触发）
 //   4. 双重身份（orchestrator/work-agent-template 无 frontmatter；真 subagent 保留）
 //   5. orchestrator skill 路径映射表逐行落盘存在
-//   6. 模型档速查快照四档名齐全（与 model-routing.yaml tiers 同步）
+//   6. Claude native-first 入口与模型 policy 指针（旧四档快照已退役）
 //   7. plan-agent 能力锚（块0前提门/增量重规划/块5出门自检——防修剪纪律误删）
 // 文件缺失/抽取失败即 FAIL——重构改了形状必须同步更新本检查，不许静默跳过。
 
@@ -99,9 +99,8 @@ t('路径映射表抽取到 ≥10 行', rows.length >= 10, `实际 ${rows.length
 for (const [, name, p] of rows)
   t(`路径映射 ${name} 落盘存在`, existsSync(join(root, p)), p);
 
-// 6. 模型档速查快照（daily_governance 另有值域校验，此处保四档名在场）
-for (const tier of ['reasoning-heavy', 'core-execution', 'guided-execution', 'mechanical'])
-  t(`orchestrator 模型档快照含 ${tier}`, orch.includes('| ' + tier + ' '));
+// 6. Claude 原生继承/显式 pin；不再消费 skill 的旧推荐档位。
+t('orchestrator 声明 Claude native-first', orch.includes('native-first') && orch.includes('model-routing.yaml'));
 
 // 7. plan-agent 能力锚 + preflight 防裸奔规则
 t('plan-agent 含块 0 前提门', plan.includes('块 0 — 前提门'));
@@ -134,12 +133,10 @@ t('Codex quality-gate 如实声明权限继承', codexQg.includes('权限继承�
 t('Codex quality-gate 不宣称已机械隔离 sandbox', !/^sandbox_mode\s*=/m.test(codexQg));
 
 // 9. 模型选择只有一份公共 policy；Codex 固定 effort 表是兼容元数据，不是第二条模型路由。
-const commonStart = modelRouting.indexOf('\nmodel_routing:');
-const commonEnd = modelRouting.indexOf('\nknown_lineup:', commonStart);
-const commonModel = commonStart >= 0
-  ? modelRouting.slice(commonStart, commonEnd > commonStart ? commonEnd : undefined)
-  : '';
-const codexModel = (modelRouting.split(/^codex:/m)[1] || '').split(/^new_scenario_protocol:/m)[0] || '';
+// Stop at the next real top-level key; Claude/Codex must never satisfy common checks.
+const topLevelBlock = (text, key) => text.match(new RegExp(`(?:^|\\n)${key}:[\\s\\S]*?(?=\\n[A-Za-z_][\\w-]*:|$)`))?.[0] || '';
+const commonModel = topLevelBlock(modelRouting, 'model_routing');
+const codexModel = topLevelBlock(modelRouting, 'codex');
 t('公共模型 policy 是v2 active/common', /\n\s{2}version:\s*2\b/.test(commonModel)
   && /\n\s{2}status:\s*active\b/.test(commonModel) && /\n\s{2}scope:\s*common\b/.test(commonModel));
 for (const role of ['anchor', 'peak', 'light'])

@@ -20,9 +20,12 @@ pointer/branches、两种 load、steps/reference/disclosure、co-location、lead
 ## 6. 与我方治理面的接线（写完之后）
 
 写好只是一半；skill 要**可达**才存在：routing 词条（skill-routing-map.yaml）→ /office 登记
-（如一级）→ input-modes → workflow-graph（如入流程）→ model-routing 三问 → parity 锚点
+（如一级）→ input-modes → workflow-graph（如入流程）→ 当前 harness 的模型选择合同 → parity 锚点
 （双仓）→ FM-11 可达性实测。保护区红线查 `skill-invariants.md`（P1-P7）；行为改动过
 FUSION 行为 A/B。编排层可达契约见 ORCHESTRATION-INTEGRATION（对标产物，模式可复用）。
+
+Claude 新 skill 可直接继承原生配置，旧 `recommended-model` 字段不再必填或同步；
+Codex 仅在新增实际派发身份时核 common 角色登记。独立验收与用户模型/effort 选择保持。
 
 **登记 ≠ 生效——还要接"消费面"（2026-07-21 补：登记齐全但决策逻辑没提它，等于没加）。**
 上面是**曝光面**；曝光面登记完，再逐条问"**谁会读这条登记、它的真值逻辑提到这个 skill 了吗**"：

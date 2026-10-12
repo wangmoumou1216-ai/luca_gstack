@@ -1,0 +1,13 @@
+{
+  "routing-inherit-probe": {
+    "description": "Bounded routing test: return marker only; no tools or external effects",
+    "prompt": "Return exactly INHERIT_OK. No tools, delegation or other actions.",
+    "tools": []
+  },
+  "routing-pin-probe": {
+    "description": "Bounded native pinned-model test: return marker only",
+    "prompt": "Return exactly PIN_OK. No tools, delegation or other actions.",
+    "tools": [],
+    "model": "opus"
+  }
+}

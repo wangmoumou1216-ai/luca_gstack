@@ -1,0 +1,1157 @@
+diff --git a/.claude/agents/muse-proto-judge.md b/.claude/agents/muse-proto-judge.md
+index b3ffd4e..3cb54d3 100644
+--- a/.claude/agents/muse-proto-judge.md
++++ b/.claude/agents/muse-proto-judge.md
+@@ -6,7 +6,7 @@ description: |
+   永不静默自动应用任何修复。冷启动隔离上下文调度（同 quality-gate 的调度
+   方式）——调度方只传"原型路径 + acceptance_criteria 列表"，绝不传生成过程/
+   推理链。muse fork 专属新增，母版 luca_gstack 无此 agent。
+-model: opus  # 2026-07-10 判官升档（同 quality-gate）；REQ 终验含验收裁决时由调用方参数升 fable（fable_whitelist P0）
++model: opus  # 保留独立判官的原生默认值；用户明确指定时按原生配置处理
+ tools:
+   - Read
+   - Bash   # 仅用于渲染/截图取证（如无头浏览器截图核对视觉状态），禁止用于写文件；无 Edit/Write 权限，与"永不静默自动应用修复"的只读承诺一致
+diff --git a/.claude/agents/orchestrator.md b/.claude/agents/orchestrator.md
+index 5c7cff7..a683c8a 100644
+--- a/.claude/agents/orchestrator.md
++++ b/.claude/agents/orchestrator.md
+@@ -235,8 +235,8 @@ Step 3b 【合同回验，2026-07-10 验收闭环】存在 tech-spec handoff 时
+         - 全 PASS → 同节追加 SHIPPED: <date> / acceptance: <收尾 handoff 路径>
+         - Scene C / 无 tech-spec handoff → 跳过本步（标注 N/A）
+         - 模型：Codex quality-gate 按 common MR-004/peak，冷启动且关键失败不降级。
+-          Claude 兼容路径 dispatch quality-gate 时传 model: fable（fable_whitelist P0
+-          出门前裁决；fable 不可用→降级 opus 并告知）——见 §5 Dispatch 规则
++          Claude 按 quality-gate 的原生配置或用户明确指定模型执行；保留冷审和完成证据，
++          模型不可用或验收未完成时停止依赖动作——见 §5。
+ ```
+ 
+ ### 2.2-pf Parallel Skill Fan-out（非交互 Skill 并行执行）
+@@ -486,7 +486,7 @@ Step 4  下一步在当前有效执行授权范围内且无未决 Human Gate →
+ 
+ ---
+ 
+-## 5. 模型路由（强制传参：Claude；Codex 按角色执行）
++## 5. 模型选择（Claude 原生优先；Codex 按角色执行）
+ 
+ 真值源：`.claude/skill-os/model-routing.yaml`。Codex native/runner 只消费顶层 common
+ `model_routing`：正常执行/承重探索继承 anchor，已登记的关键审查身份使用 peak，机械任务
+@@ -523,23 +523,12 @@ Codex native 的关键调用在完成证据落盘前，暂停新的 native/runne
+ runner 内部任务按原权限可并行；implement 始终 max_active_subagents=1，不使用这项例外。
+ 新的 runner 必须等待既有关键义务闭合。
+ 
+-下表和后面的 alias 传参/降级规则只描述延期的 Claude adapter 兼容合同，不证明 Claude
+-具备 Codex 的运行时强制能力，也不能覆盖 Codex 关键场景政策。
+-
+-| 能力档 | 任务类型 | 当前解析（2026-07-10） |
+-|---------|---------|---------|
+-| reasoning-heavy | **仅判定场景**（fable_whitelist：出门前裁决/对抗判定/翻案复审/plan-mode 规划期）| Fable（不可用→降级 Opus）|
+-| core-execution | 承重执行：写代码、tech-spec/task-plan、原型、OD/Claude Design 编排、交互式设计 skill、deepresearch、判官常规 | Opus |
+-| guided-execution | 轻执行/checklist 审查/一般检索（默认档）| Sonnet |
+-| mechanical | 机械执行、格式化、简单验证、preflight | Haiku |
+-
+-**Claude 兼容 Dispatch 规则：**
+-1. spawn 任何 subagent 时，按真值源解析 tier→alias 并**显式传 Agent tool 的 `model` 参数**（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin）。
+-2. `skill_execution` Phase → 该 skill 的 `recommended-model` tier；`task_execution` Phase → 计划中该 Phase 的 `model_tier`（缺省 core-execution）。
+-3. **传 `model: fable` 的唯一合法依据是真值源 `fable_whitelist` 条目**（本文件相关点位：Step 3b 合同回验判定 dispatch quality-gate 时传 fable 覆盖其 opus pin）。拿不准 → 用 opus，不得猜 fable。
+-4. **降级链**：fable 调用失败（配额/不可用）→ 自动降 opus 重试，并在产出中告知用户本次判定运行在降级档。
+-5. 发现真值源未收录的档位变化 → 先提示用户更新真值源再调度（活规则）。
+-调度时向用户展示：`"下一步是 <task>，使用 <model>（依据：<tier/白名单条目>）"`
++**Claude 原生派发（native-first）：** 按 `model-routing.yaml` 的 `claude` 合同，普通委派省略 model，
++保留 agent frontmatter 与用户明确指定的原生配置；旧 `recommended-model`/`model_tier`
++及其中的档位注释不参与派发，不生成另一份 alias 表。已有独立判官默认值保持。
++关键审查只传冻结输入与验收标准，核实际采用与真实完成；原生替换、模型不可用或证据缺失
++不能被写成成功，也不自动换低档重试。报告具体缺口并停止对应依赖。
++这是一项调用方合同，不宣称 Claude 已具备 Codex hook/runner 的机械强制边界。
+ 
+ ---
+ 
+diff --git a/.claude/agents/plan-agent.md b/.claude/agents/plan-agent.md
+index bf429a3..8424aca 100644
+--- a/.claude/agents/plan-agent.md
++++ b/.claude/agents/plan-agent.md
+@@ -7,8 +7,8 @@
+ 仅填写 `model` 或在 prompt 中写“规划官”不会把 default/anchor 变成 peak。当前 MR-002
+ 没有独立的 native agent_type；default 子任务只可收集/组织规划输入，关键方案裁决必须
+ 通过已登记的 `quality-gate`（MR-004/peak）冷审。不得把输入整理称为 peak 规划裁决。
+-Claude 兼容路径仍按 `fable_whitelist` P2 显式传 `model: fable`（无 pin，登记于
+-`agents_no_pin`；该兼容路径的 opus 降级不适用于 Codex 关键场景）。
++Claude 按 `model-routing.yaml` 的 native-first 合同使用原生继承/agent 配置；
++规划本身不触发框架换模。关键方案仍须独立冷审，用户指定模型与 effort 保持有效。
+ 
+ ---
+ 
+@@ -282,10 +282,9 @@ Step 3  输出覆盖率报告（镜像块 1.5 格式，写入计划文件开头
+ - **执行顺序**（标注：串行 / 并行）
+ - **产出物**（具体文件路径或可观测的结果）
+ - **阶段门控**（本 Phase 完成的判断标准）
+-- **model_tier**（该 Phase 的模型档位，2026-07-10 起必填——Orchestrator 据此传
+-  Agent tool `model` 参数。默认 `core-execution`；标 `mechanical`/`guided-execution`
+-  须一句降档理由；标 `reasoning-heavy` 仅可引用 model-routing.yaml `fable_whitelist`
+-  条目，不得自创 fable 用途）
++- **agent_role**（职责与实际原生入口；Codex 按已登记身份解析 common 角色，Claude
++  使用原生继承/agent 配置。旧计划的 `model_tier` 只作历史元数据，不据此传 model；
++  关键审查的独立性和用户模型/effort 选择不变）
+ - **skills_needed**（可选：该 Phase 的 Work Agent 可能需要调用的 skill 路径列表）
+ 
+ **skills_needed 填写规则：**
+@@ -317,7 +316,7 @@ Step 3  输出覆盖率报告（镜像块 1.5 格式，写入计划文件开头
+ Phase N（task_execution — 默认）:
+   编排模式: Supervisor
+   phase_type: task_execution
+-  model_tier: core-execution                              # 必填；降档须注理由，fable 须引白名单
++  agent_role: worker                                      # 实际入口；模型按当前 harness 合同解析
+   任务: <描述>
+   产出物: <文件路径（用户选择 MagicPath 时为 canvas job_id）>
+   阶段门控: <判断标准>
+@@ -330,7 +329,7 @@ Phase N（skill_execution — 执行某个 skill）:
+   编排模式: Supervisor
+   phase_type: skill_execution
+   skill: deepresearch
+-  model_tier: core-execution                              # 按该 skill 的 recommended-model 填
++  agent_role: worker                                      # skill 元数据不强制换模
+   execution_context: subagent                             # subagent | main_agent
+   任务: 深度研究目标领域（核心概念、关键机制、技术约束）
+   产出物: docs/handoff/YYYY-MM-DD-deepresearch-handoff.md
+@@ -543,7 +542,7 @@ RECOMMENDATION: <下一步建议动作，给用户可选项>
+ - [ ] 每个 U-block / Phase 任务有 Source 溯源（无凭空任务）
+ - [ ] 每个不可逆操作配 [BLOCKING] 断言 + 用户确认点
+ - [ ] 复杂且新颖 → 研究 Phase 已排入，或跳过理由已显式写出待确认
+-- [ ] 每个 Phase 的 model_tier 已填（fable 仅可引白名单条目）
++- [ ] 每个 Phase 的 agent_role 已明确；关键审查使用实际可用的独立入口，用户模型/effort 不被覆盖
+ - [ ] 设计产出 Phase 走 open-design 首选，或用户明确选择的工具（按 Gap 2 核验，不因故障静默换工具）
+ 
+ ---
+diff --git a/.claude/agents/quality-gate.md b/.claude/agents/quality-gate.md
+index e383d93..983f6d8 100644
+--- a/.claude/agents/quality-gate.md
++++ b/.claude/agents/quality-gate.md
+@@ -5,7 +5,7 @@ description: |
+   Two modes: Free Task Mode (runs Plan Agent assertions) + Skill Mode (checks skill output quality).
+   Runs in independent context — does not pollute the main session.
+   Returns a short PASS/FAIL report with specific findings.
+-model: opus  # 2026-07-10 判官升档（验证不对称：判官上下文小、判定杠杆大）；合同回验模式由调用方参数升 fable（fable_whitelist P0）
++model: opus  # 保留独立判官的原生默认值；用户明确指定时按原生配置处理
+ tools:
+   - Read
+   - Bash
+diff --git a/.claude/skill-os/agent-context-manifest.json b/.claude/skill-os/agent-context-manifest.json
+index c6d4294..4cdd7f1 100644
+--- a/.claude/skill-os/agent-context-manifest.json
++++ b/.claude/skill-os/agent-context-manifest.json
+@@ -133,7 +133,7 @@
+       "condition": "Selecting or validating an agent/subagent capability tier.",
+       "load_before": "selecting, validating, or dispatching a model tier",
+       "target": ".claude/skill-os/model-routing.yaml",
+-      "contains": "Claude aliases, Codex effort mapping, whitelist, and dispatch rules.",
++      "contains": "Claude native-first configuration, Codex common model roles, independent review, and user-owned effort.",
+       "loader": "orchestrator or root adapter",
+       "read_to_end": true,
+       "fallback": "Inherit the parent model and do not guess a stronger tier.",
+diff --git a/.claude/skill-os/capability-parity.json b/.claude/skill-os/capability-parity.json
+index 471b2ba..069bb67 100644
+--- a/.claude/skill-os/capability-parity.json
++++ b/.claude/skill-os/capability-parity.json
+@@ -32,7 +32,7 @@
+     ],
+     ".claude/agents/orchestrator.md": [
+       "Step 3b 【合同回验",
+-      "模型路由（强制传参",
++      "模型选择（Claude 原生优先",
+       "correction-attribution",
+       "不注册为 subagent",
+       "增量重规划"
+@@ -67,16 +67,16 @@
+       "execution_to_acceptance"
+     ],
+     ".claude/skill-os/model-routing.yaml": [
+-      "core-execution",
+-      "fable_whitelist",
+-      "new_scenario_protocol",
+-      "native_precedence",
+-      "agents_no_pin"
++      "model_routing:",
++      "native-first",
++      "user-request-or-agent-frontmatter",
++      "independent-required",
++      "user-owned-not-a-routing-input"
+     ],
+     "memory/scripts/daily_governance.py": [
+       "check_loop_health",
+       "AUTHORITATIVE_MEMORY_ROOT",
+-      "新场景待评估档位",
++      "native-first",
+       "Skill 评估消费",
+       "待批准晋升",
+       "GOVERNANCE_CALLER_ROOT",
+diff --git a/.claude/skill-os/evolution/BENCHMARK-RUNBOOK.md b/.claude/skill-os/evolution/BENCHMARK-RUNBOOK.md
+index 50b5c72..651e437 100644
+--- a/.claude/skill-os/evolution/BENCHMARK-RUNBOOK.md
++++ b/.claude/skill-os/evolution/BENCHMARK-RUNBOOK.md
+@@ -30,7 +30,7 @@
+ | ② | 对标矩阵：逐单元映射到我方对应物（有/无/弱） | matrix |
+ | ③ | rubric 深评：逐单元 dossier（价值/冗余/借鉴面/证据） | N 份 dossier |
+ | ④ | 红队：含**反向红队**（用对方的失败反证我方机制，如 registration-sync 案例） | 红队定论 |
+-| ⑤ | fable 复审（model-routing 白名单 P2 翻案复审档） | 复审意见 |
++| ⑤ | 独立冷启动复审（按 model-routing 当前 harness 合同；保留用户模型选择） | 复审意见 |
+ | ⑥ | GATE 逐项裁决（luca 人裁）：install / refresh / adapt-idea / 开新 gap / 拒 | 裁决记录 |
+ 
+ 产物统一落 `framework-audit/<target>-benchmark-YYYY-MM/`。
+@@ -50,7 +50,7 @@
+ | W④ 血统对标 | 上游改动 ↔ 我方历史吸收落点逐条映射，判 no-op/需同步/被推翻 | **直读我方落点原文（file:line）**，禁凭 ADOPTED.md 摘要判 no-op——摘要会漏吸收劣化（R2 曾据此 OVERTURNED 一条 no-op） |
+ | W⑤ need-first 门 | 每个净新增候选先答三问：我们框架**哪里**要处理 / **为什么**要处理（实证痛点指针，n=1 需注明）/ **价值是什么** | 「成本低」不得冒充「有需求」；场景零实发 → 最多记 gap 提案不动手；收益量化一律标 [CLAIM] 交红队（先验：07-23 轮 3 候选红队后仅 0.5 存活） |
+ | W⑥ 靶子落盘 | 全部结论按 **FACT / INFERENCE / CLAIM** 三级标注写成红队靶子：§0 带外写入台账 / §1 源头定义 / §2 问题定义 / §3 逐项裁决 / §4 红队分工 | 靶子落盘后编排者冻结对证据基底的写入 |
+-| W⑦ 红队+终审 | opus **并行** refute 分工（枚举完整性 / 血统 no-op / 逐候选）→ fable **串行**终审逐项 verdict（stands/overturned/modified） | 红队独立取证、不接受靶子转述；判官必须亲裁编排者-红队对质点，允许 NEW FINDINGS |
++| W⑦ 红队+终审 | 按当前 harness 模型合同派发 refute 分工（枚举完整性 / 血统 no-op / 逐候选）→ 独立终审逐项 verdict（stands/overturned/modified）；串并行遵守当前原生关键门与用户约束 | 红队独立取证、不接受靶子转述；判官必须亲裁编排者-红队对质点，允许 NEW FINDINGS |
+ | W⑧ 规划执行 | 共识稿附 Plan 格式执行计划（前提门/断言列表/失败策略），人批后执行 | propose-only 不破：无显式预授权不动手 |
+ | W⑨ SSOT 回写+基线推进 | vetting-registry 追加 window-update-review → ADOPTED.md / adoption-log / CHANGELOG（复用下方出口接线）→ **registry 基线推进（出口「基线推进」条）** | installed-pins 的 ack 核验用**逐 unit path 域当前 SHA，永不用 repo HEAD**；registry 的 ack_commit 才是 repo 域 |
+ 
+diff --git a/.claude/skill-os/evolution/FUSION-RUNBOOK.md b/.claude/skill-os/evolution/FUSION-RUNBOOK.md
+index ead5d12..03d4a00 100644
+--- a/.claude/skill-os/evolution/FUSION-RUNBOOK.md
++++ b/.claude/skill-os/evolution/FUSION-RUNBOOK.md
+@@ -9,7 +9,7 @@
+ - 当前已确认项目的品牌敏感外部材料仍按 `observability/rules.yaml` 注入并用 blockquote 标明，不能写进 route-guard；SKILL.md P1-P7 不变量继续保护。
+ - 候选 worktree 是编辑对象。Htest 前从已授信正式框架启动，不把候选当作原生运行根。
+ - 来源/方法 ID、gain/preservation 口径和独立 oracle 在实施前冻结。失败后不能把 gain 改成 preservation。
+-- `model-routing.yaml` 顶层 common 政策是当前原生模型选择权威。使用当前 common native type/角色，禁止以固定模型别名或 model/effort 等价推定采用。
++- `model-routing.yaml` 按 harness 分工：Claude 原生继承/agent 配置，Codex 执行既有 common native type/角色。独立验收保留，实际采用须取证，不以旧 skill 档位或 model/effort 等价推定。
+ - 同一时刻最多一个运行中 subagent。前一位真实 completed 且**同次调用 accepted** 后再派下一位；producer 自报不构成真实采用证据。角色由当前 adapter 解析，effort 属于用户，不改私有 binding。
+ - `behavioral_ab.py extract/judge` 只作 **mechanical-only** 投影：文本差异仅称 **text delta**，regex 保持也只是文本检查。机械 PASS 不证明技能能力提升；最终行为判定由独立判官依据真实原生轨迹作出。
+ - 其他手册的历史模型、并发或提取配方不能覆盖当前 model-routing、个人串行及原生批准权威。
+@@ -37,7 +37,7 @@
+ 3. 用健康、已授信基线启动**全新原生 baseline sessions**；baseline 只读实际 M/旧安装。允许正常文件读取以执行真实技能，不再使用“baseline 禁文件读”的旧配方。
+ 4. 结束全部 baseline sessions，按合同正常停机并切到候选，再启动**全新原生 candidate sessions**；candidate 读实际 C/候选安装。两 arm 不共享 live 编辑，固定输入、来源身份及 oracle，保留各自真实轨迹。
+ 5. 原生 evidence 必须绑定实际来源 C/M、运行根、调用和真实采用/完成。缺回执、工具缺失、原生调用失败或任何第三态记 **UNKNOWN/BLOCKED** 并阻断比较，不能计作 baseline FAIL 或 candidate PASS。
+-6. `extract` 的 JSON fixtures 可作为输入材料；`judge --skill-tier <当前定义的 tier>` 支持 `core-execution`，校验非空唯一 ID、相等集合、有效 regex 和 text delta。`--model` 是调用者元数据，不能校验真实采用。不同字节、等价行为不构成 gain。
++6. `extract` 的 JSON fixtures 可作为输入材料；`judge` 校验非空唯一 ID、相等集合、有效 regex 和 text delta。可选的旧 `--skill-tier` 与 `--model` 都只是调用者元数据，不依赖中央档位表，也不能校验真实采用。不同字节、等价行为不构成 gain。
+ 7. 全量 verify 的依赖缺失不是 PASS；先列明准确安装/缓存影响，按 Htest 范围处理。保留其他运行根、个人学习记录及维护者工作。
+ 
+ ## 落地陷阱与采纳验收（FM-10 / FM-11）
+@@ -61,7 +61,7 @@
+ 
+ ## 隐式耦合清单（FM-6，每次检查实际范围）
+ 
+-- 当前 common model_routing、native_agent_types、公共角色与同次真实采用回执；不以历史 alias 或 effort 快照替代。
++- Claude 原生配置与 Codex common model_routing/native_agent_types 分别核验；两端保留独立验收与真实执行证据，不以历史 alias 或 effort 快照替代。
+ - `observability/rules.yaml` 的 skill scope 与调用接线；改名不能造成孤儿。
+ - 路由、input-modes、workflow graph、目录/入口与当前 root adapter 的适用合同，生成面按有限清单同步。
+ - `framework/` 只读、SKILL.md P1-P7、当前已确认项目的设计约束、保护例外与其他会话占用。
+diff --git a/.claude/skill-os/evolution/self-model.yaml b/.claude/skill-os/evolution/self-model.yaml
+index 5614338..0c4c8dd 100644
+--- a/.claude/skill-os/evolution/self-model.yaml
++++ b/.claude/skill-os/evolution/self-model.yaml
+@@ -28,7 +28,7 @@ identity:
+   purpose: "多项目个人开发环境的 Claude Code Skill-OS（设计→工程链：PRD→UX→原型→工程规格）；CRM（纷享销客）为可选休眠 profile，非默认场景"
+   architecture: "Skill-first, Graph-optional；环境/项目剥离(docs/state/topic 三软链)"
+   brand_authority: "当前项目明确提供的规范或用户在外部工具配置的设计系统；framework/ 只读恒成立，页面参考不成为品牌强制"
+-  default_model: sonnet            # 镜像 model-routing default_tier=guided-execution
++  default_model: inherit           # Claude 原生配置；Codex 按 common 角色与用户批准 binding
+ 
+ # 七维演进面：每维指向真实文件 + 守卫 + 什么样的外部能帮它
+ surface:
+diff --git a/.claude/skill-os/generated/context-index.md b/.claude/skill-os/generated/context-index.md
+index e3208c5..31aded1 100644
+--- a/.claude/skill-os/generated/context-index.md
++++ b/.claude/skill-os/generated/context-index.md
+@@ -15,7 +15,7 @@ If this index is missing, unreadable or known stale, use the complete source man
+ {"id":"long-session","obligation_ids":["K6","K10"],"runtime":["claude","codex"],"leading_words":["checkpoint","handoff","multi-phase","compact","resume"],"condition":"A multi-phase task is about to cross a phase, spawn two heavy agents, approach compaction or handoff, or perform a Git/external effect.","load_before":"checkpointing, handoff, compaction, or the effect gate","target":".claude/skill-os/runtime/long-session.md","contains":"Checkpoint triggers, required fields, context bounds, and resume procedure.","loader":"root adapter","read_to_end":true,"fallback":"Stop before the effect and write a minimal auditable checkpoint outside project docs for NO_PIN work."},
+ {"id":"luca-app","obligation_ids":["K6","K10"],"runtime":["claude","codex"],"leading_words":["luca app","侧栏","当前页","打开","预览","Figma"],"condition":"The user refers to the app, sidebar, current page, or selection, or an actual inspect, open, navigate, or present action is imminent. LUCA_APP=1 alone does not activate this owner.","load_before":"answering the reference; reading, opening, or navigating app content; or presenting a verified HTML/Figma deliverable","target":".claude/skill-os/runtime/luca-app.md","contains":"Read/present/automation split, tool preference, selection resolution, and truthful degradation.","loader":"root adapter semantic action","read_to_end":true,"fallback":"Use documented local scripts when available and report unavailable state without invention."},
+ {"id":"harness-boundary","obligation_ids":["K2","K4","K6"],"runtime":["claude","codex"],"leading_words":["system","developer","tool unavailable","do not use workflow","do not ask"],"condition":"A harness-injected preference appears to conflict with semantic routing or planning.","load_before":"using the injection to suppress a route or plan","target":".claude/skill-os/runtime/harness-boundary.md","contains":"Safety/capability facts versus behavioural preferences and the two-question test.","loader":"root adapter or route-guard STOP hint","read_to_end":true,"fallback":"Safety/tool facts bind; behavioural preferences do not erase semantic assessment."},
+-{"id":"model-routing","obligation_ids":["K10"],"runtime":["claude","codex"],"leading_words":["model","reasoning effort","subagent","档位"],"condition":"Selecting or validating an agent/subagent capability tier.","load_before":"selecting, validating, or dispatching a model tier","target":".claude/skill-os/model-routing.yaml","contains":"Claude aliases, Codex effort mapping, whitelist, and dispatch rules.","loader":"orchestrator or root adapter","read_to_end":true,"fallback":"Inherit the parent model and do not guess a stronger tier."},
++{"id":"model-routing","obligation_ids":["K10"],"runtime":["claude","codex"],"leading_words":["model","reasoning effort","subagent","档位"],"condition":"Selecting or validating an agent/subagent capability tier.","load_before":"selecting, validating, or dispatching a model tier","target":".claude/skill-os/model-routing.yaml","contains":"Claude native-first configuration, Codex common model roles, independent review, and user-owned effort.","loader":"orchestrator or root adapter","read_to_end":true,"fallback":"Inherit the parent model and do not guess a stronger tier."},
+ {"id":"review-contract","obligation_ids":["K6","K9","K10"],"runtime":["claude","codex"],"leading_words":["review","评审","redteam","反证","quality gate"],"condition":"The user requests review or a phase requires independent adversarial closure.","load_before":"mapping the review object to a capability, choosing a reviewer, or declaring review closure","target":".claude/skill-os/routing-chain-check.md","contains":"R4 independence, REFUTE stance, runtime partition, missing-vote handling, mutation, and final closure.","loader":"root adapter or code-hygiene Mode D","read_to_end":true,"fallback":"Do not claim independent closure."},
+ {"id":"routing-junction","obligation_ids":["K2","K4","K6","K7","K10"],"runtime":["claude","codex"],"leading_words":["brainstorm","研究前置","复杂且新颖","设计产出","原型","模板适配","界面产出","走我的设计流程","workflow","流程续接","门禁回复","从需求到成品","完整跑一遍","闭环","engineering-delivery","工程交付"],"condition":"A brainstorm or ux-brainstorm target may need research first (R1); a design/prototype output or existing-prototype template adaptation needs entry/tool routing (R2); a workflow is selected, continued, ambiguously referenced or recommended, including a short gate reply with a continuing full task (R3); or engineering-delivery preset selection must be distinguished from mention (R5). Review-object mapping remains the earlier R4 branch.","load_before":"asking for missing input or accepting a fresh skill candidate after workflow selection/continuation, an ambiguous reference or a gate reply; resolving a mature-input entry, recommending research first, choosing a design-output tool, recommending a workflow, interpreting preset selection, or dispatching the target capability","target":".claude/skill-os/routing-chain-check.md","contains":"R1/R2/R3/R5 semantic junctions, mature-input entry versus output tool, full-task continuity, actual selection versus recommendation, scoped graph reads and non-authorization boundaries.","loader":"root adapter or semantic router","read_to_end":true,"fallback":"Defer the affected recommendation or dispatch until the junction owner is readable; neither lexical candidates nor graph reads select a workflow or grant effects."},
+ {"id":"shared-skill-contract","obligation_ids":["K4","K9","K10"],"runtime":["claude","codex"],"leading_words":["skill","standalone","workflow","handoff","completion"],"condition":"A project skill will be invoked or a workflow/standalone completion status will be declared.","load_before":"running the selected skill preamble","target":".claude/skills/office/SKILL.md","contains":"Shared execution discipline, completion statuses, handoff, retrieval, observability, and output protections.","loader":"root adapter after skill selection","read_to_end":true,"fallback":"Do not invoke the skill until its shared contract is readable."},
+diff --git a/.claude/skill-os/model-routing.yaml b/.claude/skill-os/model-routing.yaml
+index 635c96d..21a4671 100644
+--- a/.claude/skill-os/model-routing.yaml
++++ b/.claude/skill-os/model-routing.yaml
+@@ -1,34 +1,10 @@
+-# 模型路由真值源（Single Source of Truth）
+-# Codex native/runner 只执行顶层 model_routing 的 common-v2 角色政策。
+-# 以下旧 tier/alias/fable 规则保留为延期的 Claude adapter 兼容合同，不能覆盖 Codex。
+-#
+-# 规则：
+-# 1. 按「能力档（tier）」定义路由，不写死模型版本号。resolves_to 是 Claude Code
+-#    档位别名（fable/opus/sonnet/haiku），运行时自动解析到该档当前最新模型——
+-#    档位内升级（如 Opus 4.7→4.8）零维护，自动跟随。
+-# 2. CLAUDE.md「模型路由」节、orchestrator.md §5 的速查表、各 SKILL.md frontmatter
+-#    的 recommended-model 均引用本文件的 tier 名；调整路由只改本文件（速查快照同步）。
+-# 3. 会话兜底（活规则）：Claude 在 session 中发现 known_lineup 之外的档位变化
+-#    （新档位发布/档位退役/能力代际漂移），主动向用户提示更新本文件，不得沉默沿用。
+-# 4. daily_governance.py 每日校验本文件 ↔ skill frontmatter 一致性与复核期限，
+-#    异常写入 memory/digests/ 等用户裁决——检测自动化，重映射判断留给人。
+-# 5. 【2026-07-10 Fable 手术刀改版】fable 配额稀缺，物尽其用：fable 只用于
+-#    fable_whitelist 枚举的判定场景；dispatch 传 model: fable 的唯一合法依据是
+-#    白名单条目。生成/研究/编排/checklist 审查/交互引导一律 ≤ opus。
+-# 6. 【降级链】fable 不可用（配额耗尽/模型报错/被 availableModels 排除）→
+-#    自动降一级到 opus 重试，并在产出中告知用户本次判定运行在降级档。
+-# 7. 【native_precedence · 原生优先】Claude Code 原生已有 opusplan（plan=opus/
+-#    执行=sonnet 的模式级双档）。当原生出现更通用的动态模型调控（auto/复杂度
+-#    路由/fableplan 类特性）时：主动告知用户 → 提案将本文件降级为语义补充层，
+-#    Claude 原生逻辑优先，不得与原生机制抢控制权。
+-
++# 模型选择边界：Claude 使用原生配置；Codex 保留已部署的 common-v2 角色政策。
++# common 是既有解析器 schema，不代表 Claude 也安装了该路由 adapter。
+ version: 2
+-updated: 2026-09-20
+-review_after_days: 90   # 超过此天数未复核 → digest 提醒重新核对档位映射
++updated: 2026-10-12
++review_after_days: 90
+ 
+-# ─── 跨 harness 的唯一模型选择规则 ─────────────────────────────────────────
+-# 当前生产 adapter 只启用 Codex native/runner；Claude adapter 按用户要求延期。
+-# 模型名称与同端上下关系来自私有 0600 binding，不写入公共政策；effort 归用户所有。
++# Codex native/runner：模型及相对关系来自私有 binding；effort 归用户所有。
+ model_routing:
+   version: 2
+   status: active
+@@ -99,103 +75,29 @@ model_routing:
+   evidence: trusted-runtime-adoption-and-same-invocation-success
+   effort: user-owned-not-a-routing-input
+ 
+-# Claude Code 当前已知档位阵容（能力高→低）。会话中发现阵容变化时更新此表。
+-known_lineup: [fable, opus, sonnet, haiku]
+-
+-# 未声明 recommended-model 的 skill 默认归属
+-default_tier: guided-execution
+-
+-tiers:
+-  reasoning-heavy:
+-    resolves_to: fable
+-    fallback: opus   # 降级链：fable 不可用 → opus（规则 6）
+-    description: 仅判定场景——对抗/裁决/出门前回验/规划期（fable_whitelist 是唯一授权清单）
+-    note: |
+-      2026-06-10 用户裁决 opus→fable（当时含全部设计 skill）；
+-      2026-07-10 用户裁决收严为手术刀——整场交互 skill（brainstorm 系）与研究 fan-out
+-      （deepresearch）迁出至 core-execution，fable 只留判定时刻（单次 5-30k token、
+-      判断杠杆极高的点位），配额消耗降约 80-95%。
+-    skills: [redteam, wayfinder]
+-
+-  core-execution:
+-    resolves_to: opus
+-    description: 承重执行与整场交互——写代码/工程合同/原型/外部设计工具编排/交互式设计 skill/研究 fan-out/判官常规模式；主循环推荐常驻档
+-    note: |
+-      2026-07-10 新增（用户裁决执行分两级：承重执行 opus / 轻执行 sonnet；
+-      open-design 与 Claude Design 外部工具编排点名用 opus）。
+-      brainstorm 系 4 skill 与 deepresearch 自 reasoning-heavy 迁入（Fable 手术刀，
+-      见 reasoning-heavy.note）；其内部判定环节（苏格拉底审查/Oracle 对抗）按
+-      fable_whitelist P1 单独 dispatch fable 微判官。
+-    skills: [brainstorm, ux-brainstorm, design-brief,
+-             deepresearch, insight-synthesis, tech-spec, task-plan, open-design, html-prototype, motion-polish, prototype-notes,
+-             code-hygiene, code-review, codebase-design, auto, muse-x-digest,
+-             grilling, diagnosing-bugs, resolving-merge-conflicts, to-spec, to-tickets, implement,
+-             writing-workshop, loop-me]
+-
+-  guided-execution:
+-    resolves_to: sonnet
+-    description: 有框架/checklist/规范指导的轻执行与轻审查（默认档）
+-    skills: [handoff, quick-research, idea, ux-research, ux-audit, figma-demo, challenge,
+-             code-recon, muse-req-triage,
+-             compare, magicpath, research-kit, ux-writing, wait-what, writing-for-agents, domain-modeling, issue-triage, setup-wizard]
+-
+-  mechanical:
+-    resolves_to: haiku
+-    description: 机械执行、格式检查、打分、检索
+-    skills: [evals, careful, retro]
+-
+-# ─── Fable 使用白名单（2026-07-10，dispatch 传 model: fable 的唯一合法依据）───
+-# 评估维度：单次 token 量级 × 判断杠杆 × 错判代价。全部是"小上下文、高杠杆"点位。
+-fable_whitelist:
+-  P0_出门前裁决:
+-    - "期末合同回验（orchestrator Step 3b 的 RTM 判定 dispatch）"
+-    - "交付验收裁决（REQ 终验含验收裁决时；oracle/taste 判据见 references/oracle-vs-taste-criteria.md）"
+-    - "不可逆操作前复审（git 批量/发布/覆盖前的独立 review dispatch）"
+-  P1_对抗判定:
+-    - "redteam skill 全程"
+-    - "refute/judge/oracle 型 subagent（brainstorm 苏格拉底审查、ux-brainstorm Oracle、judge panel 裁定）"
+-  P2_复审与规划:
+-    - "翻案复审（用户质疑结论/要求高模型复审时的 review dispatch）"
+-    - "plan-mode 规划期 dispatch（Explore / Plan agent / 具名 wayfinder mode）——2026-07-10 用户点名"
+-  # 此外一律不用 fable；拿不准 → 用 opus（宁降不越权）。
+-
+-# ─── Agent frontmatter pin 登记（与 .claude/agents/*.md 保持一致，governance 机检）───
++# Claude 原生选择合同；这是调度说明，不是额外的运行时强制 adapter。
++claude:
++  strategy: native-first
++  default_model: inherit
++  skill_tiers: ignored
++  explicit_model: user-request-or-agent-frontmatter
++  automatic_fallback: none
++  critical_review: independent-required
++
++# 普通 Claude 委派省略 model，交由原生继承/agent frontmatter 解析。
++# 用户明确指定模型时按原生接口处理；root model 与 effort 保持用户选择。
++# recommended-model 与旧计划 model_tier 仅为历史元数据，包括其中旧派发注释；
++# 不据它们选模、升级或自动降级，不要求新 skill 声明或同步旧档位。
++# 必须核验独立审查的输入、实际执行与完成；模型不可用或关键证据不足时
++# 保留失败并停止依赖动作，不把原生替换或自动重试当作已完成验收。
++
++# 保留已有 agent 的有意原生默认值；不是按场景覆盖 model 的中央路由表。
++# 新 agent 可直接继承原生默认，不要求加入无 pin 白名单。
+ agents:
+-  quality-gate: opus        # 判官≥执行者；合同回验模式由调用方参数升 fable（P0）
+-  muse-proto-judge: opus    # AC 判官（muse）
+-  fact-collector: sonnet   # 有界事实采集；不承担综合、裁决或写入
+-  preflight-agent: haiku    # 纯机械前置检查（effort: low）
+-
+-# 有意不 pin 的 agent（机检白名单——不在 agents: 也不在此表的 agent 文件 → tripwire 告警）：
+-# orchestrator=主循环行为模式（继承主循环）；plan-agent 被 spawn 时按白名单 P2 传 fable；
+-# work-agent 按 Phase 的 model_tier 由 dispatch 参数决定（默认 core-execution）。
+-agents_no_pin: [orchestrator, plan-agent, work-agent-template]
+-
+-# 非可调度目录（有 SKILL.md 但不可作为独立 skill 调用，无模型档——tripwire 豁免）
+-non_dispatchable: [references]
+-
+-# ─── Dispatch 规则（执行层，2026-07-10 起为强制，非建议）───
+-dispatch_rules:
+-  principle: |
+-    本节只描述 Claude 兼容调度；Codex native/runner 执行顶层 model_routing，
+-    不消费 tier/alias，不豁免 workflow，不接受关键场景的自动模型降级。
+-    spawn 任何 subagent 时，调度方必须解析 tier→alias 并显式传 Agent tool 的
+-    model 参数（frontmatter 有 pin 的 agent 可省略；参数可覆盖 pin，如 Step 3b
+-    对 quality-gate 传 fable）。不确定归属 → 省略参数继承主循环，不得猜 fable。
+-  skill_execution: "按该 skill 的 recommended-model tier 解析"
+-  task_execution: "按 Plan Agent 计划中该 Phase 的 model_tier 解析（默认 core-execution）"
+-  builtin_agents:
+-    explore_plan_mode: fable    # plan-mode 规划期（白名单 P2，用户点名）
+-    plan_agent_plan_mode: fable # 同上
+-    explore_general: sonnet     # 非规划期的一般检索/理解 fan-out
+-    mechanical_fanout: haiku    # 机械批量（格式/计数/存在性检查）
+-    judge_adversarial: fable    # 判定型（白名单 P0/P1）
+-    judge_checklist: opus       # checklist 型判官（quality-gate 常规）
+-  workflow_tool: "豁免——Workflow 脚本 agent() 保持自身 omit/inherit 逻辑（用户点名 dynamicworkflow 除外）"
+-  main_loop: |
+-    主循环模型为用户 /model 主权，框架不自动切（原生无此机制）。推荐 opus 常驻
+-    （指挥官档），fable 全部经白名单点状 dispatch；重大架构/审查日可手动
+-    /model fable 起 session（逃生阀，可选）。
++  quality-gate: opus
++  muse-proto-judge: opus
++  fact-collector: sonnet
++  preflight-agent: haiku
+ 
+ # ─── Codex 固定 effort 兼容元数据（不参与模型路由）───
+ # 模型选择的唯一规则是顶层 common model_routing；账户模型名只在私有 binding。
+@@ -230,25 +132,3 @@ codex:
+   independence_note: |
+     本段不与 Claude alias/tier 做模型投影。新场景的模型角色只在顶层 common
+     model_routing 登记一次；只有新增/修改某个 Codex agent 的固定 effort 时才更新 agents。
+-
+-# ─── 新场景入场协议（2026-07-10，用户要求：新增场景必须评估档位）───
+-new_scenario_protocol:
+-  rule: |
+-    luca_gstack 新增任何场景逻辑（新 skill / 新 agent / 新 workflow 节点 / 新 dispatch
+-    类型）时，创建者必须在创建的同一次改动中完成档位评估并显式声明——skill 写
+-    recommended-model frontmatter，agent 写 model pin 或在本文件 agents: 登记
+-    "无 pin+理由"，节点写进 dispatch_rules。不得静默落 default_tier。
+-  evaluation_rubric: |
+-    三问定档（与 fable_whitelist 同一评估维度）：
+-    ① 单次 token 量级？（整场交互/fan-out=大 → 禁 fable）
+-    ② 判断杠杆？（对抗/裁决/回验=极高；生成/编排=中；检索/格式=低）
+-    ③ 错判代价？（不可逆/出门前=极高 → 白名单候选）
+-    大token+中杠杆 → core-execution；小token+极高杠杆+高代价 → 提案进 fable_whitelist
+-    （白名单变更须用户批准）；有框架指导的轻活 → guided-execution；机械 → mechanical。
+-  tripwire: |
+-    daily_governance.check_model_routing 扫描未声明档位的 skill/agent → digest 告警
+-    "新场景待评估档位"，留用户裁决（机械兜底，创建时纪律为主路径；不做实时 hook——
+-    新增场景是低频事件，为其加每-prompt hook 不符合复杂度自证）。
+-
+-# 硬性 pin 历史备注：quality-gate/muse-proto-judge 原 pin sonnet（2026-06 登记），
+-# 2026-07-10 判官升档 opus（验证不对称：判官上下文小、判定杠杆大、错判代价高）。
+diff --git a/.claude/skill-os/routing-chain-check.md b/.claude/skill-os/routing-chain-check.md
+index e674d7d..43d537d 100644
+--- a/.claude/skill-os/routing-chain-check.md
++++ b/.claude/skill-os/routing-chain-check.md
+@@ -97,7 +97,7 @@ NONE 后丢掉原任务。项目切换重核 pin/权限及相关来源，SWITCH_
+ | 设计决策文档 / 提案 / 计划 | `redteam`（按名调用） | 有显式 target 即以 target 为对象；框架治理场景产出落 `framework-audit/` |
+ | 渲染页面 / 原型 | `/ux-audit` | 截图为强制输入（其 Phase 0 自拦） |
+ | workflow 中的 skill 产出 | `quality-gate` Skill Mode | 需 skill_name / output_path / handoff_path |
+-| 用户质疑我已给的结论（翻案） | fable 复审官 | 档位依据 `model-routing.yaml` P2 |
++| 用户质疑我已给的结论（翻案） | 独立复审官 | 按 `model-routing.yaml` 的当前 harness 合同派发；用户明确指定模型时保留其选择 |
+ | **跨产物交付验收**（PRD ↔ 原型 ↔ figma 三方对齐） | **自建独立评审编排** | 无单一 skill 覆盖三方一致性；**验证者须独立于各产物的生产者**（证据标准①）——任何产出工具自身的自检不算独立复审 |
+ 
+ *证据标准（**下限非上限**——做得更多永远合法；严禁用打勾替代"针对这个场景该攻什么"的思考）*：
+@@ -113,7 +113,7 @@ observability active rules，看有没有重犯用户已明确指出过的问题
+ **不宣称已握手**，带未决项交用户裁决，而不是自行加轮。判断值得多跑一轮时说明理由再跑。
+ 
+ *退场条件*：harness 原生具备评审分流能力，或实测显示本索引的判断劣于直接语义判断 → 分流部分退场，
+-只留资产索引与证据标准（比照 `model-routing.yaml` 的 `native_precedence` 活规则）。
++只留资产索引与证据标准；模型选择边界继续以 `model-routing.yaml` 的当前 harness 合同为准。
+ 
+ **R5 · engineering-delivery preset（只认显式选择）**
+ 仅当用户明确说选择/启用/按 `engineering-delivery preset` 执行时，才把该 preset 作为 routing metadata
+diff --git a/.claude/skill-os/runtime/cross-harness.md b/.claude/skill-os/runtime/cross-harness.md
+index aba1057..4bd7e11 100644
+--- a/.claude/skill-os/runtime/cross-harness.md
++++ b/.claude/skill-os/runtime/cross-harness.md
+@@ -12,6 +12,11 @@ For each changed capability, state and verify separately:
+ 4. the explicit degradation or refusal path;
+ 5. the behavioural or live probe that demonstrates the claim.
+ 
+-Do not hard-code account-sensitive model names for Codex tiers; use the canonical reasoning-effort mapping. Do not claim parity when one harness only has a prose promise and the other has an enforced tool boundary. When one harness changes an artifact consumed by the other, report its exact path.
++Claude uses native inheritance and agent configuration under `model-routing.yaml#claude`.
++Codex retains the deployed `model_routing` roles and private approved bindings; model selection
++and user-owned reasoning effort are independent. Do not hard-code account-sensitive model names
++or infer a model from effort. Do not claim parity when one harness only has a prose promise and
++the other has an enforced tool boundary. When one harness changes an artifact consumed by the
++other, report its exact path.
+ 
+ <!-- FILE_END: skill-os/runtime/cross-harness.md -->
+diff --git a/.claude/skill-os/skill-authoring.md b/.claude/skill-os/skill-authoring.md
+index f4dd450..33a5771 100644
+--- a/.claude/skill-os/skill-authoring.md
++++ b/.claude/skill-os/skill-authoring.md
+@@ -20,10 +20,13 @@ pointer/branches、两种 load、steps/reference/disclosure、co-location、lead
+ ## 6. 与我方治理面的接线（写完之后）
+ 
+ 写好只是一半；skill 要**可达**才存在：routing 词条（skill-routing-map.yaml）→ /office 登记
+-（如一级）→ input-modes → workflow-graph（如入流程）→ model-routing 三问 → parity 锚点
++（如一级）→ input-modes → workflow-graph（如入流程）→ 当前 harness 的模型选择合同 → parity 锚点
+ （双仓）→ FM-11 可达性实测。保护区红线查 `skill-invariants.md`（P1-P7）；行为改动过
+ FUSION 行为 A/B。编排层可达契约见 ORCHESTRATION-INTEGRATION（对标产物，模式可复用）。
+ 
++Claude 新 skill 可直接继承原生配置，旧 `recommended-model` 字段不再必填或同步；
++Codex 仅在新增实际派发身份时核 common 角色登记。独立验收与用户模型/effort 选择保持。
++
+ **登记 ≠ 生效——还要接"消费面"（2026-07-21 补：登记齐全但决策逻辑没提它，等于没加）。**
+ 上面是**曝光面**；曝光面登记完，再逐条问"**谁会读这条登记、它的真值逻辑提到这个 skill 了吗**"：
+ - **`.claude/agents/plan-agent.md` 块 2「研究方向编排」**——研究类 skill 必查。graph 的
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 776cc30..a116fef 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ 
+ ## [Unreleased]
+ 
++### Changed（2026-10-12 · Claude 原生选模）
++
++- Claude 普通委派回归原生继承，退役中央档位、Fable 白名单和推荐元数据同步义务；保留有意的 agent 默认模型、独立验收和关键失败阻断，Codex 路由与 effort 不变。为什么：减少重复配置，把框架职责集中在任务与验收；原生账户验证和净收益仍须实测。
++
+ ### Fixed（2026-10-10 · 项目探查被拒绝后的恢复指引）
+ 
+ - 项目作用域 hook 的拒绝信息明确公开的 `project.sh list/status/switch` 入口和精确目录检索边界；缺少原生会话身份时不猜其他会话，绑定后仍禁止扫描项目总目录。为什么：原始会话将 skill 读取、项目总目录扫描和内部状态探查混在一条命令中，旧提示没有给出可用的恢复步骤。保留原拒绝判据，新增 Claude/Codex 双入口回归及公开查询执行验证。
+diff --git a/memory/scripts/behavioral_ab.py b/memory/scripts/behavioral_ab.py
+index e71e01e..3134ee3 100644
+--- a/memory/scripts/behavioral_ab.py
++++ b/memory/scripts/behavioral_ab.py
+@@ -11,7 +11,7 @@ means those mechanical checks passed; capability_gain remains unknown.
+ 
+ --claims-behavior-change is a compatibility alias of --claims-text-change.
+ --model records caller-supplied metadata only; it is never adoption evidence.
+---skill-tier choices come from the owning checkout's model-routing.yaml tiers.
++--skill-tier is optional legacy caller metadata; it does not select models or gate text checks.
+ """
+ import argparse
+ import difflib
+@@ -49,26 +49,6 @@ ROOT = _resolve_root()
+ EPISODIC = ROOT / "memory" / "episodic" / "index.jsonl"
+ EVAL_LOG = ROOT / "memory" / "evals" / "eval-log.jsonl"
+ 
+-CODE_ROOT = Path(__file__).resolve().parents[2]
+-ROUTING_PATH = CODE_ROOT / ".claude" / "skill-os" / "model-routing.yaml"
+-
+-
+-def _skill_tiers():
+-    # Use code authority, not MEMORY_ROOT, which only redirects data extraction.
+-    import yaml
+-
+-    try:
+-        policy = yaml.safe_load(ROUTING_PATH.read_text(encoding="utf-8"))
+-    except yaml.YAMLError as error:
+-        raise ValueError(f"invalid model-routing.yaml: {error}") from error
+-    tiers = policy.get("tiers") if isinstance(policy, dict) else None
+-    if not isinstance(tiers, dict) or not tiers or any(
+-        not isinstance(name, str) or not name.strip() for name in tiers
+-    ):
+-        raise ValueError("model-routing.yaml must define nonempty tier names")
+-    return tuple(tiers)
+-
+-
+ def _read_jsonl(p):
+     rows = []
+     if not p.exists():
+@@ -159,16 +139,11 @@ def _outputs_by_id(rows, arm, findings):
+ 
+ 
+ def judge(baseline, candidate, claims_change, model, must_hold, epsilon,
+-          skill_tier="guided-execution"):
++          skill_tier=None):
+     """Return a text check. Caller metadata cannot prove runtime adoption/gain."""
+     findings = []
+-    try:
+-        tiers = _skill_tiers()
+-    except (OSError, UnicodeError, ValueError, ImportError) as error:
+-        findings.append(f"BLOCK: cannot load current skill tiers: {error}")
+-    else:
+-        if skill_tier not in tiers:
+-            findings.append(f"BLOCK: unknown skill tier {skill_tier!r}")
++    if skill_tier is not None and (not isinstance(skill_tier, str) or not skill_tier.strip()):
++        findings.append("BLOCK: skill-tier metadata must be a nonempty string when supplied")
+     if not isinstance(epsilon, (int, float)) or not math.isfinite(epsilon) or not 0 <= epsilon <= 1:
+         findings.append("BLOCK: epsilon must be a finite number between 0 and 1")
+ 
+@@ -258,13 +233,8 @@ def main():
+                     dest="claims_change", action="store_true",
+                     help="require measurable text delta; compatibility alias does not test behavior")
+     pj.add_argument("--model", default=None, help="caller metadata only, never adoption evidence")
+-    try:
+-        tiers = _skill_tiers()
+-    except (OSError, UnicodeError, ValueError, ImportError) as error:
+-        print(json.dumps(_result("BLOCK", [f"BLOCK: cannot load current skill tiers: {error}"]),
+-                         ensure_ascii=False, indent=2))
+-        return 1
+-    pj.add_argument("--skill-tier", default="guided-execution", choices=tiers)
++    pj.add_argument("--skill-tier", default=None,
++                    help="optional legacy caller metadata; not a model selection or acceptance rule")
+     pj.add_argument("--must-hold", nargs="*", default=None)
+     pj.add_argument("--epsilon", type=float, default=0.02)
+ 
+diff --git a/memory/scripts/daily_governance.py b/memory/scripts/daily_governance.py
+index ec973e8..c9587eb 100644
+--- a/memory/scripts/daily_governance.py
++++ b/memory/scripts/daily_governance.py
+@@ -483,7 +483,7 @@ def recent_episodes(today: str):
+ 
+ 
+ def check_model_routing():
+-    """模型路由真值源 ↔ skill frontmatter 一致性 + 复核期限。
++    """Claude 原生策略/pin 与 Codex common policy 检测 + 复核期限。
+ 
+     只做检测并列入 digest 待裁决，不自动改映射（重映射是判断题，留给人）。
+     fail-open：任何异常折叠成一条 issue，绝不打断治理。
+@@ -495,11 +495,8 @@ def check_model_routing():
+         if not routing_path.exists():
+             return ["model-routing.yaml 不存在（模型路由真值源缺失）"]
+         data = yaml.safe_load(routing_path.read_text(encoding="utf-8")) or {}
+-        tiers = data.get("tiers", {}) or {}
+-        lineup = data.get("known_lineup", []) or []
+ 
+-        # 新的模型选择真值只能在顶层 common v2。下方 Claude tier 与 Codex
+-        # fixed-effort 段在过渡期仍做兼容检查，但不得重新成为第二份模型 policy。
++        # common v2 仍由 Codex adapter 消费；Claude 使用原生继承/显式 pin。
+         common = data.get("model_routing") or {}
+         if common.get("version") != 2:
+             issues.append("model-routing: 公共 model_routing 必须是 v2")
+@@ -532,85 +529,45 @@ def check_model_routing():
+         if ((data.get("codex") or {}).get("agents") or {}).get("preflight-agent") != "low":
+             issues.append("model-routing: Codex preflight-agent 固定 effort 必须为 low")
+ 
+-        registered = {}
+-        for name, t in tiers.items():
+-            t = t or {}
+-            if t.get("resolves_to") not in lineup:
+-                issues.append(f"model-routing: tier {name} 的 resolves_to={t.get('resolves_to')} 不在 known_lineup {lineup} 内")
+-            for s in t.get("skills", []) or []:
+-                registered[s] = name
+-
+-        declared = {}
+-        skills_dir = CODE_ROOT / ".claude" / "skills" / "office"
+-        if skills_dir.is_dir():
+-            for sk in sorted(skills_dir.iterdir()):
+-                f = sk / "SKILL.md"
+-                if not f.is_file():
+-                    continue
+-                for line in f.read_text(encoding="utf-8").splitlines():
+-                    ls = line.strip()
+-                    if ls.startswith("recommended-model:"):
+-                        declared[sk.name] = ls.split(":", 1)[1].split("#", 1)[0].strip()
+-                        break
+-        for skill, tier in declared.items():
+-            if tier not in tiers:
+-                issues.append(f"model-routing: {skill}/SKILL.md recommended-model={tier} 不是已定义 tier")
+-            elif registered.get(skill) != tier:
+-                issues.append(f"model-routing: {skill} frontmatter={tier} 与真值源登记={registered.get(skill, '未登记')} 不一致")
+-        for skill in registered:
+-            if skill not in declared:
+-                issues.append(f"model-routing: 真值源登记了 {skill} 但其 SKILL.md 无 recommended-model 声明")
+-
+-        # 新场景入场 tripwire（2026-07-10 new_scenario_protocol）：
+-        # ① office skill 目录既无 frontmatter 声明也未在真值源登记 → 待评估档位
+-        non_dispatch = set(data.get("non_dispatchable") or [])
+-        if skills_dir.is_dir():
+-            for sk in sorted(skills_dir.iterdir()):
+-                if not (sk / "SKILL.md").is_file():
+-                    continue
+-                if sk.name in non_dispatch:
+-                    continue  # 只读参考资产目录等非可调度项，无模型档
+-                if sk.name not in declared and sk.name not in registered:
+-                    issues.append(f"model-routing: 新场景待评估档位——office/{sk.name} 未声明 recommended-model 且未在真值源登记（按 new_scenario_protocol 三问定档）")
+-        # ② agents/*.md（有 frontmatter 的）：pin 值须与 agents: 登记一致；无 pin 须在 agents_no_pin
+-        agents_dir = CODE_ROOT / ".claude" / "agents"
+-        pinned = {k: str(v) for k, v in (data.get("agents") or {}).items()}
+-        no_pin = set(data.get("agents_no_pin") or [])
+-        if agents_dir.is_dir():
+-            for af in sorted(agents_dir.glob("*.md")):
+-                text = af.read_text(encoding="utf-8")
+-                if not text.startswith("---") or text.count("---") < 2:
+-                    continue  # 无 frontmatter 的行为模式文档（如 plan-agent）不在机检范围
+-                fm = text.split("---", 2)[1]
+-                fm_model = None
+-                for l in fm.splitlines():
+-                    if l.strip().startswith("model:"):
+-                        fm_model = l.split(":", 1)[1].split("#", 1)[0].strip()
+-                        break
+-                stem = af.stem
+-                if fm_model:
+-                    if stem not in pinned:
+-                        issues.append(f"model-routing: agents/{af.name} 有 pin={fm_model} 但真值源 agents: 未登记")
+-                    elif pinned[stem] != fm_model:
+-                        issues.append(f"model-routing: agents/{af.name} pin={fm_model} 与真值源登记={pinned[stem]} 不一致")
+-                elif stem not in no_pin:
+-                    issues.append(f"model-routing: 新场景待评估档位——agents/{af.name} 无 model pin 且未在 agents_no_pin 登记（按 new_scenario_protocol 三问定档）")
+-
+-        # 模型档速查只在 orchestrator 保留；两个 root adapter 仅保留 model-routing.yaml 指针。
+-        for md_rel in (".claude/agents/orchestrator.md",):
+-            md_path = CODE_ROOT / md_rel
+-            if not md_path.is_file():
++        # 退役字段重新出现即漂移；旧 skill metadata 完全不消费。
++        for retired in ("known_lineup", "default_tier", "tiers", "fable_whitelist",
++                        "agents_no_pin", "non_dispatchable", "dispatch_rules", "new_scenario_protocol"):
++            if retired in data:
++                issues.append(f"model-routing: Claude retired tier policy restored: {retired}")
++        expected_claude = {
++            "strategy": "native-first", "default_model": "inherit", "skill_tiers": "ignored",
++            "explicit_model": "user-request-or-agent-frontmatter", "automatic_fallback": "none",
++            "critical_review": "independent-required",
++        }
++        if data.get("claude") != expected_claude:
++            issues.append("model-routing: Claude native-first policy drift")
++        for name, model in {"quality-gate": "opus", "muse-proto-judge": "opus",
++                            "fact-collector": "sonnet", "preflight-agent": "haiku"}.items():
++            if (data.get("agents") or {}).get(name) != model:
++                issues.append(f"model-routing: Claude intentional pin registration drift: {name}")
++            af = CODE_ROOT / ".claude" / "agents" / f"{name}.md"
++            if not af.is_file():
++                issues.append(f"model-routing: Claude intentional pin file missing: {name}")
+                 continue
+-            md_lines = md_path.read_text(encoding="utf-8").splitlines()
+-            for name, t in tiers.items():
+-                alias = str((t or {}).get("resolves_to", ""))
+-                for line in md_lines:
+-                    if line.strip().startswith(f"| {name} "):
+-                        if alias and alias.lower() not in line.lower():
+-                            issues.append(f"model-routing: {md_rel} 速查快照 {name} 行未含当前解析 {alias}，快照漂移")
+-                        break
+-                else:
+-                    issues.append(f"model-routing: {md_rel} 速查快照缺少 {name} 行（表被改动或删除）")
++            body = af.read_text(encoding="utf-8")
++            if not body.startswith("---\n") or len(body.split("---", 2)) != 3:
++                issues.append(f"model-routing: Claude intentional pin frontmatter missing: {name}")
++                continue
++            fm = yaml.safe_load(body.split("---", 2)[1]) or {}
++            if fm.get("model") != model:
++                issues.append(f"model-routing: Claude intentional pin drift: {name}")
++        expected_roles = {"anchor": "root-effective-selection", "peak": "user-approved-higher-selection",
++                          "light": "user-approved-lower-selection"}
++        if roles != expected_roles:
++            issues.append("model-routing: common role authority drift")
++        for scene in ("MR-002", "MR-003", "MR-004", "MR-005"):
++            entry = scenes.get(scene) or {}
++            if entry.get("critical") is not True or entry.get("role") != "peak":
++                issues.append(f"model-routing: common critical scene drift: {scene}")
++        if common.get("critical_failure") != "refuse-no-fallback":
++            issues.append("model-routing: common critical failure boundary drift")
++        if common.get("evidence") != "trusted-runtime-adoption-and-same-invocation-success":
++            issues.append("model-routing: common invocation evidence boundary drift")
+ 
+         updated = data.get("updated")
+         review_days = int(data.get("review_after_days", 90))
+@@ -618,7 +575,7 @@ def check_model_routing():
+             updated_date = updated if hasattr(updated, "year") else datetime.strptime(str(updated), "%Y-%m-%d").date()
+             age = (datetime.now(timezone.utc).date() - updated_date).days
+             if age > review_days:
+-                issues.append(f"model-routing: 已 {age} 天未复核（>{review_days}），模型阵容可能已变化，建议核对档位映射")
++                issues.append(f"model-routing: 已 {age} 天未复核（>{review_days}），建议复核原生 pin 与 Codex policy")
+     except Exception as e:  # noqa: BLE001 — 校验绝不打断治理
+         issues.append(f"model-routing 校验异常：{e}")
+     return issues
+diff --git a/memory/tests/test_behavioral_ab_gate.py b/memory/tests/test_behavioral_ab_gate.py
+index 1716c3c..ee3fb1d 100644
+--- a/memory/tests/test_behavioral_ab_gate.py
++++ b/memory/tests/test_behavioral_ab_gate.py
+@@ -92,27 +92,26 @@ class BehavioralAbGateTests(unittest.TestCase):
+         self.assertFalse(any("behavior change" in f or "行为差" in f for f in result["findings"]))
+         self.assertNotIn("max_delta", result)
+ 
+-    def test_all_current_tiers_including_core_are_supported(self):
+-        self.assertIn("core-execution", ab._skill_tiers())
+-        for tier in ab._skill_tiers():
++    def test_optional_and_legacy_tiers_are_metadata_only(self):
++        for tier in (None, "core-execution", "guided-execution", "future-label"):
+             with self.subTest(tier=tier):
+-                self.assertEqual(self.check([self.row()], [self.row()], tier=tier)["verdict"], "PASS")
++                result = self.check([self.row()], [self.row()], tier=tier)
++                self.assertEqual(result["verdict"], "PASS")
++                self.assertEqual(result["skill_tier"], tier)
+ 
+-    def test_tier_choices_follow_owner_definition(self):
+-        with tempfile.TemporaryDirectory() as directory:
+-            policy = Path(directory) / "model-routing.yaml"
+-            policy.write_text("tiers:\n  core-execution: {}\n  future-owner-tier: {}\n", encoding="utf-8")
+-            with patch.object(ab, "ROUTING_PATH", policy):
+-                self.assertEqual(ab._skill_tiers(), ("core-execution", "future-owner-tier"))
+-
+-    def test_unreadable_tier_authority_is_scoped_block(self):
+-        with patch.object(ab, "ROUTING_PATH", Path("/nonexistent/u002-model-routing.yaml")):
+-            result = self.check([self.row()], [self.row()])
+-        self.assertEqual(result["verdict"], "BLOCK")
+-        self.assertTrue(any("cannot load current skill tiers" in f for f in result["findings"]))
++    def test_metadata_cannot_bypass_actual_fixture_failure(self):
++        for tier in (None, "core-execution", "unknown"):
++            self.assertEqual(self.check([], [], tier=tier)["verdict"], "BLOCK")
++
++    def test_invalid_metadata_blocks_direct_call(self):
++        for tier in ("", " ", 42):
++            self.assertEqual(self.check([self.row()], [self.row()], tier=tier)["verdict"], "BLOCK")
+ 
+-    def test_unknown_tier_blocks_direct_call(self):
+-        self.assertEqual(self.check([self.row()], [self.row()], tier="unknown")["verdict"], "BLOCK")
++    def test_cli_accepts_new_label_without_central_tier_table(self):
++        completed, result = self.run_cli([self.row()], [self.row()], "--skill-tier", "native-default")
++        self.assertEqual(completed.returncode, 0, completed.stderr)
++        self.assertEqual(result["skill_tier"], "native-default")
++        self.assertEqual(result["native_adoption"], "NOT_VERIFIED")
+ 
+     def test_model_metadata_does_not_prove_or_reject_adoption(self):
+         result = self.check([self.row()], [self.row()], tier="core-execution")
+diff --git a/scripts/check-agent-context.mjs b/scripts/check-agent-context.mjs
+index 21a3f33..281fc71 100644
+--- a/scripts/check-agent-context.mjs
++++ b/scripts/check-agent-context.mjs
+@@ -215,14 +215,10 @@ if (builderCheck.status !== 0) {
+ }
+ 
+ const model = read('.claude/skill-os/model-routing.yaml');
+-const commonStart = model.indexOf('\nmodel_routing:');
+-const commonEnd = model.indexOf('\nknown_lineup:', commonStart);
+-const commonModel = commonStart >= 0
+-  ? model.slice(commonStart, commonEnd > commonStart ? commonEnd : undefined)
+-  : '';
+-const codexStart = model.indexOf('\ncodex:');
+-const codexEnd = model.indexOf('\nnew_scenario_protocol:', codexStart);
+-const codex = codexStart >= 0 ? model.slice(codexStart, codexEnd > codexStart ? codexEnd : undefined) : '';
++// Stop at the next real top-level key; Claude/Codex must never satisfy common checks.
++const topLevelBlock = (text, key) => text.match(new RegExp(`(?:^|\\n)${key}:[\\s\\S]*?(?=\\n[A-Za-z_][\\w-]*:|$)`))?.[0] || '';
++const commonModel = topLevelBlock(model, 'model_routing');
++const codex = topLevelBlock(model, 'codex');
+ if (!/\n\s{2}version:\s*2\b/.test(commonModel)) errors.push('common model policy must be v2');
+ if (!/\n\s{2}status:\s*active\b/.test(commonModel)) errors.push('common model policy must be active');
+ if (!/\n\s{2}scope:\s*common\b/.test(commonModel)) errors.push('model policy must be harness-neutral');
+diff --git a/scripts/check-agent-contracts.mjs b/scripts/check-agent-contracts.mjs
+index 27ccf15..6feb959 100644
+--- a/scripts/check-agent-contracts.mjs
++++ b/scripts/check-agent-contracts.mjs
+@@ -9,7 +9,7 @@
+ //   3. 触发边界对齐（不得再现「2-3 文件」旧边界，CLAUDE.md ≥3 即触发）
+ //   4. 双重身份（orchestrator/work-agent-template 无 frontmatter；真 subagent 保留）
+ //   5. orchestrator skill 路径映射表逐行落盘存在
+-//   6. 模型档速查快照四档名齐全（与 model-routing.yaml tiers 同步）
++//   6. Claude native-first 入口与模型 policy 指针（旧四档快照已退役）
+ //   7. plan-agent 能力锚（块0前提门/增量重规划/块5出门自检——防修剪纪律误删）
+ // 文件缺失/抽取失败即 FAIL——重构改了形状必须同步更新本检查，不许静默跳过。
+ 
+@@ -99,9 +99,8 @@ t('路径映射表抽取到 ≥10 行', rows.length >= 10, `实际 ${rows.length
+ for (const [, name, p] of rows)
+   t(`路径映射 ${name} 落盘存在`, existsSync(join(root, p)), p);
+ 
+-// 6. 模型档速查快照（daily_governance 另有值域校验，此处保四档名在场）
+-for (const tier of ['reasoning-heavy', 'core-execution', 'guided-execution', 'mechanical'])
+-  t(`orchestrator 模型档快照含 ${tier}`, orch.includes('| ' + tier + ' '));
++// 6. Claude 原生继承/显式 pin；不再消费 skill 的旧推荐档位。
++t('orchestrator 声明 Claude native-first', orch.includes('native-first') && orch.includes('model-routing.yaml'));
+ 
+ // 7. plan-agent 能力锚 + preflight 防裸奔规则
+ t('plan-agent 含块 0 前提门', plan.includes('块 0 — 前提门'));
+@@ -134,12 +133,10 @@ t('Codex quality-gate 如实声明权限继承', codexQg.includes('权限继承
+ t('Codex quality-gate 不宣称已机械隔离 sandbox', !/^sandbox_mode\s*=/m.test(codexQg));
+ 
+ // 9. 模型选择只有一份公共 policy；Codex 固定 effort 表是兼容元数据，不是第二条模型路由。
+-const commonStart = modelRouting.indexOf('\nmodel_routing:');
+-const commonEnd = modelRouting.indexOf('\nknown_lineup:', commonStart);
+-const commonModel = commonStart >= 0
+-  ? modelRouting.slice(commonStart, commonEnd > commonStart ? commonEnd : undefined)
+-  : '';
+-const codexModel = (modelRouting.split(/^codex:/m)[1] || '').split(/^new_scenario_protocol:/m)[0] || '';
++// Stop at the next real top-level key; Claude/Codex must never satisfy common checks.
++const topLevelBlock = (text, key) => text.match(new RegExp(`(?:^|\\n)${key}:[\\s\\S]*?(?=\\n[A-Za-z_][\\w-]*:|$)`))?.[0] || '';
++const commonModel = topLevelBlock(modelRouting, 'model_routing');
++const codexModel = topLevelBlock(modelRouting, 'codex');
+ t('公共模型 policy 是v2 active/common', /\n\s{2}version:\s*2\b/.test(commonModel)
+   && /\n\s{2}status:\s*active\b/.test(commonModel) && /\n\s{2}scope:\s*common\b/.test(commonModel));
+ for (const role of ['anchor', 'peak', 'light'])
+diff --git a/scripts/check-model-table.mjs b/scripts/check-model-table.mjs
+index 17d2249..feaa119 100644
+--- a/scripts/check-model-table.mjs
++++ b/scripts/check-model-table.mjs
+@@ -1,6 +1,5 @@
+ #!/usr/bin/env node
+-// Model-routing SSOT gate. Root adapters carry only a conditional pointer; the full tier snapshot
+-// remains in model-routing.yaml and orchestrator.md.
++// Model-routing SSOT gate: Claude native inheritance/pins and unchanged Codex common policy.
+ import assert from 'node:assert/strict';
+ import { spawnSync } from 'node:child_process';
+ import { readFileSync } from 'node:fs';
+@@ -12,11 +11,9 @@ const read = (path) => readFileSync(join(root, path), 'utf8');
+ const yaml = read('.claude/skill-os/model-routing.yaml');
+ const orchestrator = read('.claude/agents/orchestrator.md');
+ 
+-const commonStart = yaml.indexOf('\nmodel_routing:');
+-const commonEnd = yaml.indexOf('\nknown_lineup:', commonStart);
+-const common = commonStart >= 0
+-  ? yaml.slice(commonStart, commonEnd > commonStart ? commonEnd : undefined)
+-  : '';
++// Stop at the next real top-level key; Claude/Codex must never satisfy common checks.
++const topLevelBlock = (text, key) => text.match(new RegExp(`(?:^|\\n)${key}:[\\s\\S]*?(?=\\n[A-Za-z_][\\w-]*:|$)`))?.[0] || '';
++const common = topLevelBlock(yaml, 'model_routing');
+ 
+ assert.match(common, /\n\s{2}version:\s*2\b/, 'common model policy must be v2');
+ assert.match(common, /\n\s{2}status:\s*active\b/, 'common model policy must be active');
+@@ -30,14 +27,6 @@ assert.match(common, /Redteam:\s*MR-003\b/, 'workflow Redteam dispatch drift');
+ assert.match(common, /effort:\s*user-owned-not-a-routing-input\b/, 'effort must not be a model-routing input');
+ assert.doesNotMatch(common, /\bgpt-[\w.-]+\b/, 'public common policy must not contain account model names');
+ 
+-for (const tier of ['reasoning-heavy', 'core-execution', 'guided-execution', 'mechanical']) {
+-  const match = yaml.match(new RegExp(`\\n  ${tier}:\\s*\\n[\\s\\S]{0,300}?resolves_to:\\s*["']?([\\w.-]+)`));
+-  assert.ok(match, `model-routing.yaml cannot resolve ${tier}`);
+-  const row = orchestrator.split('\n').find((line) => line.trim().startsWith(`| ${tier} `));
+-  assert.ok(row, `orchestrator.md lacks ${tier} snapshot row`);
+-  assert.ok(row.toLowerCase().includes(match[1].toLowerCase()), `orchestrator ${tier} row lacks ${match[1]}`);
+-}
+-
+ for (const path of ['CLAUDE.md', 'AGENTS.md']) {
+   const text = read(path);
+   assert.match(text, /model-routing\.yaml/, `${path} lacks the model-routing truth pointer`);
+@@ -45,18 +34,36 @@ for (const path of ['CLAUDE.md', 'AGENTS.md']) {
+     `${path} must not duplicate the model tier table`);
+ }
+ assert.match(yaml, /effort_rejected_by_model:\s*\[minimal\]/, 'Codex rejected effort guard missing');
+-const codex = (yaml.split(/^codex:/m)[1] || '').split(/^new_scenario_protocol:/m)[0] || '';
++const codex = topLevelBlock(yaml, 'codex');
+ assert.doesNotMatch(codex, /^\s{2}model_routing:/m, 'Codex must not own a second model policy');
+ assert.doesNotMatch(codex, /^\s{2}tier_to_effort:/m, 'Codex must not map model tiers to effort');
+ assert.match(codex, /\n\s{4}preflight-agent:\s*low\b/,
+   'Codex fixed preflight-agent effort must remain low');
+-console.log('PASS common model-routing SSOT, legacy compatibility, and thin-root pointers');
++console.log('PASS common model-routing SSOT, Codex guards, and thin-root pointers');
+ 
+ // Parse the new shared role and its real adapters; prose snapshots alone are insufficient.
+ const collector = spawnSync('python3', ['-P', '-c', `
+ import pathlib, sys, tomllib, yaml
+ root = pathlib.Path(sys.argv[1])
+ p = yaml.safe_load((root/'.claude/skill-os/model-routing.yaml').read_text())
++for retired in ('known_lineup', 'default_tier', 'tiers', 'fable_whitelist', 'agents_no_pin', 'non_dispatchable', 'dispatch_rules', 'new_scenario_protocol'):
++    assert retired not in p, f'Claude retired tier policy restored: {retired}'
++expected_claude = {'strategy':'native-first', 'default_model':'inherit', 'skill_tiers':'ignored', 'explicit_model':'user-request-or-agent-frontmatter', 'automatic_fallback':'none', 'critical_review':'independent-required'}
++assert p.get('claude') == expected_claude, 'Claude native-first policy drift'
++for name, model in {'quality-gate':'opus', 'muse-proto-judge':'opus', 'fact-collector':'sonnet', 'preflight-agent':'haiku'}.items():
++    assert (p.get('agents') or {}).get(name) == model, f'Claude intentional pin registration drift: {name}'
++    agent_file = root/'.claude/agents'/f'{name}.md'
++    assert agent_file.is_file(), f'Claude intentional pin file missing: {name}'
++    agent_body = agent_file.read_text()
++    assert agent_body.startswith('---\\n'), f'Claude intentional pin frontmatter missing: {name}'
++    frontmatter = yaml.safe_load(agent_body.split('---', 2)[1]) or {}
++    assert frontmatter.get('model') == model, f'Claude intentional pin drift: {name}'
++common = p['model_routing']
++assert common['roles'] == {'anchor':'root-effective-selection', 'peak':'user-approved-higher-selection', 'light':'user-approved-lower-selection'}, 'common role authority drift'
++for scene in ('MR-002', 'MR-003', 'MR-004', 'MR-005'):
++    assert common['scenes'][scene]['critical'] is True and common['scenes'][scene]['role'] == 'peak', f'common critical scene drift: {scene}'
++assert common['critical_failure'] == 'refuse-no-fallback', 'common critical failure boundary drift'
++assert common['evidence'] == 'trusted-runtime-adoption-and-same-invocation-success', 'common invocation evidence boundary drift'
+ a = tomllib.loads((root/'.codex/agents/fact-collector.toml').read_text())
+ body = (root/'.claude/agents/fact-collector.md').read_text()
+ f = yaml.safe_load(body.split('---', 2)[1])
+@@ -71,6 +78,6 @@ assert '.claude/agents/fact-collector.md' in a['developer_instructions']
+ assert a['developer_instructions'].split('\\n\\n', 1)[1].strip() == body.split('---', 2)[2].strip()
+ assert f['tools'] == 'Read, Glob, Grep'
+ `, root], {encoding: 'utf8'});
+-assert.equal(collector.status, 0, `bounded collector adapter drift: ${collector.stderr}`);
++assert.equal(collector.status, 0, `model policy or native adapter drift: ${collector.stderr}`);
+ assert.match(orchestrator, /fact-collector/, 'collector needs a real caller selection instruction');
+-console.log('PASS bounded collector shared contract and native adapter registration');
++console.log('PASS Claude native-first/pins, common critical guards, and bounded collector adapters');
+diff --git a/scripts/check-registration-sync.mjs b/scripts/check-registration-sync.mjs
+index cf1a1e4..daeb17a 100644
+--- a/scripts/check-registration-sync.mjs
++++ b/scripts/check-registration-sync.mjs
+@@ -3,7 +3,7 @@
+ // 补 check-routing-map SSOT-1..9 未覆盖的三面（对方 resolving-merge-conflicts 漏登记 drift 实证：
+ // 散文契约必漂移，须已提交 checker）：
+ //   REG-1 每个带 invoke 的一级 skill 在 CLAUDE.md skill 表有行（/name 出现）
+-//   REG-2 其 SKILL.md frontmatter 申报 recommended-model（model-routing 三问的落点证据）
++//   REG-2 已退役：Claude native-first 不消费 recommended-model，不要求新 skill 申报档位。
+ //   REG-3 office/SKILL.md 展示面提及该 skill（warn 级——office 可能按向导组织）
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -48,13 +48,6 @@ for (const name of uniq) {
+   if (isLocal && !catalogSkills.has(name)) {
+     errors.push(`REG-1 generated skill catalog 缺一级 local skill: ${name}`);
+   }
+-  // REG-2: recommended-model 申报（office 本地 skill 才有 SKILL.md；外部/内置跳过）
+-  if (isLocal) {
+-    const fm = read(skillMd).split(/^---$/m)[1] || '';
+-    if (!/recommended-model:\s*\S+/.test(fm)) {
+-      errors.push(`REG-2 ${skillMd} frontmatter 未申报 recommended-model（new_scenario_protocol 三问未落）`);
+-    }
+-  }
+   // REG-3: office 展示面（warn）
+   if (officeMd && !officeMd.includes(name)) {
+     warns.push(`REG-3 office/SKILL.md 展示面未提及: ${name}`);
+@@ -67,4 +60,4 @@ if (errors.length) {
+   console.error(`FAIL registration sync (${errors.length} issues, ${uniq.length} skills checked)`);
+   process.exit(1);
+ }
+-console.log(`PASS registration sync (${uniq.length} first-level skills × REG-1/2 green, ${warns.length} warn)`);
++console.log(`PASS registration sync (${uniq.length} first-level skills × REG-1 green; REG-2 retired (native-first); REG-3 checked, ${warns.length} warn)`);
+diff --git a/scripts/fusion-preflight.py b/scripts/fusion-preflight.py
+index a3b974e..c1da4f0 100644
+--- a/scripts/fusion-preflight.py
++++ b/scripts/fusion-preflight.py
+@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
+ SELF_MODEL = ROOT / ".claude" / "skill-os" / "evolution" / "self-model.yaml"
+ 
+ IMPLICIT_COUPLING = [
+-    "4 路 model 一致：SKILL.md recommended-model ↔ model-routing.yaml ↔ CLAUDE.md 快照 ↔ orchestrator.md 快照",
++    "模型边界：Claude native-first 继承/原生 agent pin；不消费 recommended-model；Codex common policy 与固定 effort 保持不变",
+     "observability/rules.yaml 按 skill 名 scope 的规则（skill 改名 → 静默孤儿化）",
+     "路由 5 文件同步：skill-routing-map / input-modes / optional-workflow-graph / rules.yaml / CLAUDE.md+AGENTS.md",
+     "受保护区：framework/ 只读、SKILL.md P1-P7、当前项目明确提供的设计约束",
+@@ -25,8 +25,8 @@ IMPLICIT_COUPLING = [
+ GATE_SEQUENCE = [
+     "④ 静态+契约：bash scripts/verify.sh + npm run check:hooks/check:routing-map/check:quality-gates/check:coding-discipline/check:self-model",
+     "⑤ 漂移：npm run check:routing-map + daily_governance.check_model_routing()",
+-    "⑥ 行为A/B（prose 改动必做）：behavioral_ab.py --skill-tier <候选 skill 档：reasoning-heavy=fable/opus · guided-execution=sonnet · mechanical=haiku>，在该档上 baseline vs candidate（勿固定 Sonnet，否则给 reasoning-heavy skill 测错模型，见 GAP-behavioral-ab-tier）",
+-    "⑦ 对抗：preflight-agent + quality-gate(Sonnet) + redteam(Fable)",
++    "⑥ 行为A/B（prose 改动必做）：baseline vs candidate 使用相同的用户批准模型与 effort；记录实际采用，不从 skill recommended-model 推导模型（按 BENCHMARK-RUNBOOK 当前驱动与授权运行）",
++    "⑦ 对抗：preflight-agent + 独立 quality-gate + redteam；Claude 使用原生继承/有意 pin，Codex 使用 common role；不可用时停止，不自动降级",
+     "⑧ 回滚就绪：git tag pre-fuse-<id> → worktree squash-merge 单提交",
+     "⑨ 反馈：append adoption-log.jsonl",
+ ]
+diff --git a/scripts/verify.sh b/scripts/verify.sh
+index 425b55c..0afd9f3 100755
+--- a/scripts/verify.sh
++++ b/scripts/verify.sh
+@@ -284,7 +284,7 @@ check S62 "原件回收授权、取消、漂移与桌面拒绝 fixture" "node sc
+ check S45 "六项集成 runtime candidate manifest denominator/blob 闭合（对发布提交求证）" "node scripts/candidate-manifest.mjs --verify-at framework-audit/2026-08-30-mattpocock-six-skills-integration/CANDIDATE-MANIFEST.tsv"
+ check S31 "旧 mega-appendix 已退出 runtime context" "node scripts/check-appendix-pointers.mjs"
+ check S32 "CONTEXT.md 红线门（节内 ≥6 条+三 id+D1/D2 内容断言，C2；locale 无关定界）" "awk '/^## 红线/{f=1;next} /^## /{f=0} f' CONTEXT.md | { c=\$(cat); echo \"\$c\" | grep -c '^[0-9]\.' | grep -qE '^[6-9]|^[0-9]{2}' && echo \"\$c\" | grep -q 'SF-002' && echo \"\$c\" | grep -q 'SC-20260523-002' && echo \"\$c\" | grep -q 'SC-20260523-003' && echo \"\$c\" | grep -q 'Surgical' && ! echo \"\$c\" | grep -q '见上「激活条件」'; }"
+-check S33 "model-routing 单真值源 + 双 root 薄指针" "node scripts/check-model-table.mjs"
++check S33 "model-routing 单真值源 + Claude 原生边界反例 + 双 root 薄指针" "node scripts/check-model-table.mjs && node scripts/test-claude-native-routing.mjs"
+ check S33b "候选原文出处检查与内容验收边界" "node --test scripts/test-fact-candidates.mjs"
+ # S34 的 Claude 回归子集只有在同一轮 C11 与 S30 已通过后才可显式委托；
+ # 委托不是 PASS，且旧环境变量不再具有授权语义。单独运行 wiring 时仍执行完整 S10。
+diff --git a/scripts/test-claude-native-routing.mjs b/scripts/test-claude-native-routing.mjs
+new file mode 100644
+index 0000000..6d3e087
+--- /dev/null
++++ b/scripts/test-claude-native-routing.mjs
+@@ -0,0 +1,109 @@
++#!/usr/bin/env node
++// Run the real gates against disposable files. Never mutate the working tree for negative tests.
++import assert from 'node:assert/strict';
++import { spawnSync } from 'node:child_process';
++import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { dirname, join } from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++const source = fileURLToPath(new URL('..', import.meta.url));
++const root = mkdtempSync(join(tmpdir(), 'claude-native-routing-'));
++const policyPath = '.claude/skill-os/model-routing.yaml';
++const pins = { 'quality-gate': 'opus', 'muse-proto-judge': 'opus', 'fact-collector': 'sonnet', 'preflight-agent': 'haiku' };
++const write = (path, text) => {
++  mkdirSync(dirname(join(root, path)), { recursive: true });
++  writeFileSync(join(root, path), text);
++};
++const originals = new Map();
++let cases = 0;
++const run = (command, args) => spawnSync(command, args, {
++  cwd: root, encoding: 'utf8', timeout: 30_000,
++  env: { ...process.env, MEMORY_ROOT: root, GLOBAL_MEMORY_DIR: join(root, 'global-memory'), PYTHONDONTWRITEBYTECODE: '1' },
++});
++const governance = () => {
++  const result = run('python3', ['-P', '-c',
++    "import json, runpy; m=runpy.run_path('memory/scripts/daily_governance.py'); print(json.dumps(m['check_model_routing'](), ensure_ascii=False))"]);
++  assert.equal(result.status, 0, `governance must fail open: ${result.stderr}`);
++  return JSON.parse(result.stdout);
++};
++const model = () => run(process.execPath, ['scripts/check-model-table.mjs']);
++const green = (label) => {
++  const result = model();
++  assert.equal(result.status, 0, `${label}: ${result.stdout}${result.stderr}`);
++  assert.deepEqual(governance(), [], `${label}: governance drift`);
++};
++const mutate = (label, path, change, expected) => {
++  const original = originals.get(path);
++  assert.equal(typeof original, 'string', `missing original for ${path}`);
++  const changed = change(original);
++  assert.ok(changed !== original, `${label}: mutation did not change fixture`);
++  if (changed === null) rmSync(join(root, path));
++  else write(path, changed);
++  try {
++    const result = model();
++    assert.notEqual(result.status, 0, `${label}: model gate accepted bad fixture`);
++    assert.match(`${result.stdout}${result.stderr}`, expected, `${label}: unrelated checker failure`);
++    assert.match(governance().join('\n'), expected, `${label}: governance missed drift`);
++  } finally { write(path, original); }
++  green(`${label} restored`);
++  cases++;
++  console.log(`PASS ${label}: rejected and restored`);
++};
++
++try {
++  for (const path of [policyPath, 'CLAUDE.md', 'AGENTS.md', '.claude/agents/orchestrator.md',
++    '.codex/agents/fact-collector.toml', 'scripts/check-model-table.mjs',
++    'scripts/check-registration-sync.mjs', 'memory/scripts/daily_governance.py', 'memory/scripts/_memroot.py',
++    ...Object.keys(pins).map(name => `.claude/agents/${name}.md`)]) {
++    mkdirSync(dirname(join(root, path)), { recursive: true });
++    copyFileSync(join(source, path), join(root, path));
++    originals.set(path, readFileSync(join(root, path), 'utf8'));
++  }
++  // Ordinary agents and skills require neither a central tier nor recommended-model.
++  write('.claude/agents/ordinary.md', '---\nname: ordinary\n---\nInherit the caller.\n');
++  write('.claude/skills/office/sample/SKILL.md', '---\nname: sample\n---\nA sample skill.\n');
++  write('.claude/skill-os/skill-routing-map.yaml', 'project_skills:\n  sample:\n    invoke: "/sample"\n');
++  write('.claude/skill-os/agent-context-state.json', '{"phase":"projected"}\n');
++  write('.claude/skill-os/generated/skill-catalog.md', '| `sample` | `.claude/skills/office/sample/SKILL.md` |\n');
++  write('.claude/skills/office/references/office-wizard.md', 'sample\n');
++  green('native-first without skill metadata or no-pin registration');
++  const registration = run(process.execPath, ['scripts/check-registration-sync.mjs']);
++  assert.equal(registration.status, 0, registration.stderr);
++  assert.match(registration.stdout, /REG-2 retired/);
++  console.log('PASS native-first without recommended-model/no-pin registration');
++  // Stale metadata is also inert, even when it names a nonexistent tier.
++  write('.claude/skills/office/sample/SKILL.md', '---\nname: sample\nrecommended-model: obsolete-unknown-tier\n---\nA sample skill.\n');
++  green('legacy metadata ignored');
++  assert.equal(run(process.execPath, ['scripts/check-registration-sync.mjs']).status, 0);
++  cases += 2;
++
++  for (const field of ['known_lineup', 'default_tier', 'tiers', 'fable_whitelist', 'agents_no_pin', 'non_dispatchable', 'dispatch_rules', 'new_scenario_protocol']) {
++    mutate(`retired ${field}`, policyPath, text => `${text}\n${field}: {}\n`, /retired tier policy restored/);
++  }
++  for (const [name, value] of Object.entries(pins)) {
++    const path = `.claude/agents/${name}.md`;
++    mutate(`${name} pin drift`, path, text => text.replace(new RegExp(`^model: ${value}\\b[^\\n]*`, 'm'), 'model: inherit'), /intentional pin drift/);
++    mutate(`${name} file missing`, path, () => null, /intentional pin file missing/);
++    mutate(`${name} registry missing`, policyPath, text => text.replace(new RegExp(`^  ${name}: ${value}[^\\n]*\\n`, 'm'), ''), /intentional pin registration drift/);
++  }
++  mutate('Claude fallback forbidden', policyPath, text => text.replace('automatic_fallback: none', 'automatic_fallback: opus'), /Claude native-first policy drift/);
++  mutate('common critical failure', policyPath, text => text.replace('critical_failure: refuse-no-fallback', 'critical_failure: fallback'), /common critical failure boundary drift/);
++  mutate('common critical scene', policyPath, text => text.replace(/(MR-004:[\s\S]*?critical:) true/, '$1 false'), /common critical scene drift/);
++  mutate('common evidence', policyPath, text => text.replace('evidence: trusted-runtime-adoption-and-same-invocation-success', 'evidence: model-self-report'), /common invocation evidence boundary drift/);
++  mutate('common role authority', policyPath, text => text.replace('peak: user-approved-higher-selection', 'peak: automatic-selection'), /common role authority drift/);
++  mutate('common effort', policyPath, text => text.replace('effort: user-owned-not-a-routing-input', 'effort: scene-owned'), /effort/);
++  mutate('Codex fixed effort', policyPath, text => text.replace(/(    preflight-agent:) low/, '$1 minimal'), /preflight-agent/);
++  // A later top-level block cannot supply a missing common role (the old split swallowed it).
++  mutate('common boundary decoy', policyPath, text => text.replace('    light: user-approved-lower-selection\n', '') + '\ndecoy:\n  roles:\n    light: user-approved-lower-selection\n', /light|role authority/);
++
++  // Malformed YAML remains a governance issue, never a governance crash.
++  write(policyPath, 'model_routing: [\n');
++  assert.match(governance().join('\n'), /校验异常/);
++  write(policyPath, originals.get(policyPath));
++  green('malformed YAML restored');
++  cases++;
++  console.log(`PASS Claude native routing: ${cases} cases; actual checker/governance rejection + restoration`);
++} finally {
++  rmSync(root, { recursive: true, force: true });
++}

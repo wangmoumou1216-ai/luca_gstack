@@ -1,0 +1,40 @@
+{
+  "source": "/Users/luca/.codex/sessions/2026/10/12/rollout-2026-10-12T10-54-39-01a12e08-9f05-7a63-bcb4-36f0a89e23a7.jsonl",
+  "entry": {
+    "timestamp": "2026-10-12T02:57:00.820Z",
+    "ordinal": 118,
+    "type": "response_item",
+    "payload": {
+      "type": "message",
+      "id": "msg_053f79cfe8047bdb016acc4c708f948199a63291f55b34e4f8",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "## Standards — U002-local-patch\n\n**PASS (7/7)** — local candidate only.\n\n- **PASS — Admission/identity:** main completion is DONE, without blockers/skipped outputs. All 30 file hashes, baseline, input and actual diff matched before/after review. Diff SHA: `f4235acb63361d118e3d8219ce073785f602643bf027ad469d8ade8b9e584eac`.\n- **PASS — Repository standards:** scope preserves `framework/` protection and governance fail-open (`daily_governance.py:579`); CHANGELOG includes the change and outstanding native verification.\n- **PASS — Blocking regression:** `node scripts/test-claude-native-routing.mjs` exited 0; 31 cases exercise actual checker/governance rejection and restoration, including pins, critical failure, evidence, effort and section-boundary decoys.\n- **PASS — Whitespace:** `git diff --check` exited 0.\n- **PASS — Legacy assertions:** five migrated tests remove tier obligations while retaining authority/quality checks: wait-what:22; writing-for-agents:36; domain-modeling:46–60; motion-polish:80–96; prototype-notes:45–57.\n- **PASS — Mechanical A/B boundary:** `PYTHONDONTWRITEBYTECODE=1 python3 memory/tests/test_behavioral_ab_gate.py` passed 18 tests, including invalid fixtures and metadata that cannot establish adoption.\n- **PASS — Smell review:** twelve baseline lenses reviewed; no actionable new smell established.\n\nActual standards violations: **0**. Possible smells: **0**. Worst: **none**.\n\nNative acceptance remains the parent’s responsibility. No live/deployment/ROI verdict.\n\nEVAL_ENVELOPE_JSON\n{\"schema_version\":1,\"producer\":\"quality-gate\",\"eval_run_id\":\"routing-standards-20261012-r2\",\"subject\":{\"skill\":\"U002-local-patch\",\"topic\":\"Claude native routing local candidate — Standards\",\"scene\":\"unknown\",\"input_summary\":\"Cold read-only code-hygiene Mode D Standards review of 30 frozen files and exact implementation diff; local candidate only.\",\"output_paths\":[\"/tmp/luca-routing-review-20261012-ag6QvS/implementation.diff\"],\"duration\":\"medium\"},\"verdict\":{\"status\":\"PASS\",\"passed\":7,\"total\":7,\"findings\":[]}}"
+        }
+      ],
+      "phase": "final_answer",
+      "internal_chat_message_metadata_passthrough": {
+        "turn_id": "01a12e08-9f72-7e72-807f-2e30a5e4bf92",
+        "create_time": 1791773808.5749614,
+        "content_item_kinds": [
+          "unknown"
+        ]
+      }
+    },
+    "metadata": {
+      "retained_source": {
+        "id": {
+          "message_id": "msg_053f79cfe8047bdb016acc4c708f948199a63291f55b34e4f8",
+          "turn_id": "01a12e08-9f72-7e72-807f-2e30a5e4bf92",
+          "role": "assistant"
+        },
+        "revision": "retained_01a12e0a-c794-7ff0-ae7c-e01997ac48fd",
+        "complete": true
+      },
+      "client_authored": false,
+      "user_input_order": 4
+    }
+  }
+}

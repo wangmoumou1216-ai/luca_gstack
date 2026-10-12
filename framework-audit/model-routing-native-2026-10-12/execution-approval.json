@@ -1,0 +1,15 @@
+{
+  "plan_id": "routing-native-first-20261012",
+  "plan_path": "/Users/luca/.codex/worktrees/c252/luca_gstack/framework-audit/plans/2026-10-12-model-routing-strategy.md",
+  "plan_sha256": "7d6b00e10e8f8c9491c2ed64b66e3a347b421f12da90da2dcf5adb29f119bf51",
+  "scope": "NO_PIN/framework/model-routing-strategy",
+  "approved": true,
+  "confirmed_by": "user",
+  "confirmed_at": "2026-10-12T02:29:31.552Z",
+  "effects": [
+    "scoped-local-edits",
+    "local-tests",
+    "independent-review"
+  ],
+  "human_source": "Latest actual user message in current conversation: 按照你的计划，改造，执行; after frozen plan presentation. Observed directly by controlling agent."
+}

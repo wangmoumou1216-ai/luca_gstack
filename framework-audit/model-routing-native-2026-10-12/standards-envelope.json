@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "routing-standards-20261012-r1",
+  "subject": {
+    "skill": "U002-local-patch",
+    "topic": "Claude native routing — Standards only",
+    "scene": "unknown",
+    "input_summary": "Cold Mode D Standards review of frozen 25-file local candidate diff; completion admission, protected rules, twelve smells, runtime mutation fixture and whitespace verification.",
+    "output_paths": [
+      "/tmp/luca-routing-review-20261012-ag6QvS/implementation.diff"
+    ],
+    "duration": "medium"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 5,
+    "total": 5,
+    "findings": []
+  }
+}

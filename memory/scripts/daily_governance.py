@@ -483,7 +483,7 @@ def recent_episodes(today: str):
 
 
 def check_model_routing():
-    """模型路由真值源 ↔ skill frontmatter 一致性 + 复核期限。
+    """Claude 原生策略/pin 与 Codex common policy 检测 + 复核期限。
 
     只做检测并列入 digest 待裁决，不自动改映射（重映射是判断题，留给人）。
     fail-open：任何异常折叠成一条 issue，绝不打断治理。
@@ -495,11 +495,8 @@ def check_model_routing():
         if not routing_path.exists():
             return ["model-routing.yaml 不存在（模型路由真值源缺失）"]
         data = yaml.safe_load(routing_path.read_text(encoding="utf-8")) or {}
-        tiers = data.get("tiers", {}) or {}
-        lineup = data.get("known_lineup", []) or []
 
-        # 新的模型选择真值只能在顶层 common v2。下方 Claude tier 与 Codex
-        # fixed-effort 段在过渡期仍做兼容检查，但不得重新成为第二份模型 policy。
+        # common v2 仍由 Codex adapter 消费；Claude 使用原生继承/显式 pin。
         common = data.get("model_routing") or {}
         if common.get("version") != 2:
             issues.append("model-routing: 公共 model_routing 必须是 v2")
@@ -532,85 +529,45 @@ def check_model_routing():
         if ((data.get("codex") or {}).get("agents") or {}).get("preflight-agent") != "low":
             issues.append("model-routing: Codex preflight-agent 固定 effort 必须为 low")
 
-        registered = {}
-        for name, t in tiers.items():
-            t = t or {}
-            if t.get("resolves_to") not in lineup:
-                issues.append(f"model-routing: tier {name} 的 resolves_to={t.get('resolves_to')} 不在 known_lineup {lineup} 内")
-            for s in t.get("skills", []) or []:
-                registered[s] = name
-
-        declared = {}
-        skills_dir = CODE_ROOT / ".claude" / "skills" / "office"
-        if skills_dir.is_dir():
-            for sk in sorted(skills_dir.iterdir()):
-                f = sk / "SKILL.md"
-                if not f.is_file():
-                    continue
-                for line in f.read_text(encoding="utf-8").splitlines():
-                    ls = line.strip()
-                    if ls.startswith("recommended-model:"):
-                        declared[sk.name] = ls.split(":", 1)[1].split("#", 1)[0].strip()
-                        break
-        for skill, tier in declared.items():
-            if tier not in tiers:
-                issues.append(f"model-routing: {skill}/SKILL.md recommended-model={tier} 不是已定义 tier")
-            elif registered.get(skill) != tier:
-                issues.append(f"model-routing: {skill} frontmatter={tier} 与真值源登记={registered.get(skill, '未登记')} 不一致")
-        for skill in registered:
-            if skill not in declared:
-                issues.append(f"model-routing: 真值源登记了 {skill} 但其 SKILL.md 无 recommended-model 声明")
-
-        # 新场景入场 tripwire（2026-07-10 new_scenario_protocol）：
-        # ① office skill 目录既无 frontmatter 声明也未在真值源登记 → 待评估档位
-        non_dispatch = set(data.get("non_dispatchable") or [])
-        if skills_dir.is_dir():
-            for sk in sorted(skills_dir.iterdir()):
-                if not (sk / "SKILL.md").is_file():
-                    continue
-                if sk.name in non_dispatch:
-                    continue  # 只读参考资产目录等非可调度项，无模型档
-                if sk.name not in declared and sk.name not in registered:
-                    issues.append(f"model-routing: 新场景待评估档位——office/{sk.name} 未声明 recommended-model 且未在真值源登记（按 new_scenario_protocol 三问定档）")
-        # ② agents/*.md（有 frontmatter 的）：pin 值须与 agents: 登记一致；无 pin 须在 agents_no_pin
-        agents_dir = CODE_ROOT / ".claude" / "agents"
-        pinned = {k: str(v) for k, v in (data.get("agents") or {}).items()}
-        no_pin = set(data.get("agents_no_pin") or [])
-        if agents_dir.is_dir():
-            for af in sorted(agents_dir.glob("*.md")):
-                text = af.read_text(encoding="utf-8")
-                if not text.startswith("---") or text.count("---") < 2:
-                    continue  # 无 frontmatter 的行为模式文档（如 plan-agent）不在机检范围
-                fm = text.split("---", 2)[1]
-                fm_model = None
-                for l in fm.splitlines():
-                    if l.strip().startswith("model:"):
-                        fm_model = l.split(":", 1)[1].split("#", 1)[0].strip()
-                        break
-                stem = af.stem
-                if fm_model:
-                    if stem not in pinned:
-                        issues.append(f"model-routing: agents/{af.name} 有 pin={fm_model} 但真值源 agents: 未登记")
-                    elif pinned[stem] != fm_model:
-                        issues.append(f"model-routing: agents/{af.name} pin={fm_model} 与真值源登记={pinned[stem]} 不一致")
-                elif stem not in no_pin:
-                    issues.append(f"model-routing: 新场景待评估档位——agents/{af.name} 无 model pin 且未在 agents_no_pin 登记（按 new_scenario_protocol 三问定档）")
-
-        # 模型档速查只在 orchestrator 保留；两个 root adapter 仅保留 model-routing.yaml 指针。
-        for md_rel in (".claude/agents/orchestrator.md",):
-            md_path = CODE_ROOT / md_rel
-            if not md_path.is_file():
+        # 退役字段重新出现即漂移；旧 skill metadata 完全不消费。
+        for retired in ("known_lineup", "default_tier", "tiers", "fable_whitelist",
+                        "agents_no_pin", "non_dispatchable", "dispatch_rules", "new_scenario_protocol"):
+            if retired in data:
+                issues.append(f"model-routing: Claude retired tier policy restored: {retired}")
+        expected_claude = {
+            "strategy": "native-first", "default_model": "inherit", "skill_tiers": "ignored",
+            "explicit_model": "user-request-or-agent-frontmatter", "automatic_fallback": "none",
+            "critical_review": "independent-required",
+        }
+        if data.get("claude") != expected_claude:
+            issues.append("model-routing: Claude native-first policy drift")
+        for name, model in {"quality-gate": "opus", "muse-proto-judge": "opus",
+                            "fact-collector": "sonnet", "preflight-agent": "haiku"}.items():
+            if (data.get("agents") or {}).get(name) != model:
+                issues.append(f"model-routing: Claude intentional pin registration drift: {name}")
+            af = CODE_ROOT / ".claude" / "agents" / f"{name}.md"
+            if not af.is_file():
+                issues.append(f"model-routing: Claude intentional pin file missing: {name}")
                 continue
-            md_lines = md_path.read_text(encoding="utf-8").splitlines()
-            for name, t in tiers.items():
-                alias = str((t or {}).get("resolves_to", ""))
-                for line in md_lines:
-                    if line.strip().startswith(f"| {name} "):
-                        if alias and alias.lower() not in line.lower():
-                            issues.append(f"model-routing: {md_rel} 速查快照 {name} 行未含当前解析 {alias}，快照漂移")
-                        break
-                else:
-                    issues.append(f"model-routing: {md_rel} 速查快照缺少 {name} 行（表被改动或删除）")
+            body = af.read_text(encoding="utf-8")
+            if not body.startswith("---\n") or len(body.split("---", 2)) != 3:
+                issues.append(f"model-routing: Claude intentional pin frontmatter missing: {name}")
+                continue
+            fm = yaml.safe_load(body.split("---", 2)[1]) or {}
+            if fm.get("model") != model:
+                issues.append(f"model-routing: Claude intentional pin drift: {name}")
+        expected_roles = {"anchor": "root-effective-selection", "peak": "user-approved-higher-selection",
+                          "light": "user-approved-lower-selection"}
+        if roles != expected_roles:
+            issues.append("model-routing: common role authority drift")
+        for scene in ("MR-002", "MR-003", "MR-004", "MR-005"):
+            entry = scenes.get(scene) or {}
+            if entry.get("critical") is not True or entry.get("role") != "peak":
+                issues.append(f"model-routing: common critical scene drift: {scene}")
+        if common.get("critical_failure") != "refuse-no-fallback":
+            issues.append("model-routing: common critical failure boundary drift")
+        if common.get("evidence") != "trusted-runtime-adoption-and-same-invocation-success":
+            issues.append("model-routing: common invocation evidence boundary drift")
 
         updated = data.get("updated")
         review_days = int(data.get("review_after_days", 90))
@@ -618,7 +575,7 @@ def check_model_routing():
             updated_date = updated if hasattr(updated, "year") else datetime.strptime(str(updated), "%Y-%m-%d").date()
             age = (datetime.now(timezone.utc).date() - updated_date).days
             if age > review_days:
-                issues.append(f"model-routing: 已 {age} 天未复核（>{review_days}），模型阵容可能已变化，建议核对档位映射")
+                issues.append(f"model-routing: 已 {age} 天未复核（>{review_days}），建议复核原生 pin 与 Codex policy")
     except Exception as e:  # noqa: BLE001 — 校验绝不打断治理
         issues.append(f"model-routing 校验异常：{e}")
     return issues

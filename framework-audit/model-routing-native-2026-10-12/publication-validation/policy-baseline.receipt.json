@@ -1,0 +1,27 @@
+{
+  "kind": "policy-baseline",
+  "argv": [
+    "claude",
+    "-p",
+    "--tools",
+    "",
+    "--output-format",
+    "json",
+    "--session-id",
+    "635e15a4-c0b6-4e38-9940-7c8d6831628d",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--max-budget-usd",
+    "1",
+    "--no-session-persistence"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/c252/luca_gstack",
+  "session_id": "635e15a4-c0b6-4e38-9940-7c8d6831628d",
+  "pid": 19006,
+  "started_at": 1791775811.059475,
+  "ended_at": 1791775825.1207502,
+  "exit_code": 0,
+  "prompt_sha256": "8f8849a343879bc125c7ec2a72aec3e7c42611dffb2b40c43e25a9cbe617d98d",
+  "manifest_sha256": "c2b5037f485d1408683d53e39fe9d845c21a2b39efc0ae89ccba3d04f7e429a1"
+}

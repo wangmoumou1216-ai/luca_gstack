@@ -97,7 +97,7 @@ NONE 后丢掉原任务。项目切换重核 pin/权限及相关来源，SWITCH_
 | 设计决策文档 / 提案 / 计划 | `redteam`（按名调用） | 有显式 target 即以 target 为对象；框架治理场景产出落 `framework-audit/` |
 | 渲染页面 / 原型 | `/ux-audit` | 截图为强制输入（其 Phase 0 自拦） |
 | workflow 中的 skill 产出 | `quality-gate` Skill Mode | 需 skill_name / output_path / handoff_path |
-| 用户质疑我已给的结论（翻案） | fable 复审官 | 档位依据 `model-routing.yaml` P2 |
+| 用户质疑我已给的结论（翻案） | 独立复审官 | 按 `model-routing.yaml` 的当前 harness 合同派发；用户明确指定模型时保留其选择 |
 | **跨产物交付验收**（PRD ↔ 原型 ↔ figma 三方对齐） | **自建独立评审编排** | 无单一 skill 覆盖三方一致性；**验证者须独立于各产物的生产者**（证据标准①）——任何产出工具自身的自检不算独立复审 |
 
 *证据标准（**下限非上限**——做得更多永远合法；严禁用打勾替代"针对这个场景该攻什么"的思考）*：
@@ -113,7 +113,7 @@ observability active rules，看有没有重犯用户已明确指出过的问题
 **不宣称已握手**，带未决项交用户裁决，而不是自行加轮。判断值得多跑一轮时说明理由再跑。
 
 *退场条件*：harness 原生具备评审分流能力，或实测显示本索引的判断劣于直接语义判断 → 分流部分退场，
-只留资产索引与证据标准（比照 `model-routing.yaml` 的 `native_precedence` 活规则）。
+只留资产索引与证据标准；模型选择边界继续以 `model-routing.yaml` 的当前 harness 合同为准。
 
 **R5 · engineering-delivery preset（只认显式选择）**
 仅当用户明确说选择/启用/按 `engineering-delivery preset` 执行时，才把该 preset 作为 routing metadata

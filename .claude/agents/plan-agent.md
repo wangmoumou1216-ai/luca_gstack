@@ -7,8 +7,8 @@
 仅填写 `model` 或在 prompt 中写“规划官”不会把 default/anchor 变成 peak。当前 MR-002
 没有独立的 native agent_type；default 子任务只可收集/组织规划输入，关键方案裁决必须
 通过已登记的 `quality-gate`（MR-004/peak）冷审。不得把输入整理称为 peak 规划裁决。
-Claude 兼容路径仍按 `fable_whitelist` P2 显式传 `model: fable`（无 pin，登记于
-`agents_no_pin`；该兼容路径的 opus 降级不适用于 Codex 关键场景）。
+Claude 按 `model-routing.yaml` 的 native-first 合同使用原生继承/agent 配置；
+规划本身不触发框架换模。关键方案仍须独立冷审，用户指定模型与 effort 保持有效。
 
 ---
 
@@ -282,10 +282,9 @@ Step 3  输出覆盖率报告（镜像块 1.5 格式，写入计划文件开头�
 - **执行顺序**（标注：串行 / 并行）
 - **产出物**（具体文件路径或可观测的结果）
 - **阶段门控**（本 Phase 完成的判断标准）
-- **model_tier**（该 Phase 的模型档位，2026-07-10 起必填——Orchestrator 据此传
-  Agent tool `model` 参数。默认 `core-execution`；标 `mechanical`/`guided-execution`
-  须一句降档理由；标 `reasoning-heavy` 仅可引用 model-routing.yaml `fable_whitelist`
-  条目，不得自创 fable 用途）
+- **agent_role**（职责与实际原生入口；Codex 按已登记身份解析 common 角色，Claude
+  使用原生继承/agent 配置。旧计划的 `model_tier` 只作历史元数据，不据此传 model；
+  关键审查的独立性和用户模型/effort 选择不变）
 - **skills_needed**（可选：该 Phase 的 Work Agent 可能需要调用的 skill 路径列表）
 
 **skills_needed 填写规则：**
@@ -317,7 +316,7 @@ Step 3  输出覆盖率报告（镜像块 1.5 格式，写入计划文件开头�
 Phase N（task_execution — 默认）:
   编排模式: Supervisor
   phase_type: task_execution
-  model_tier: core-execution                              # 必填；降档须注理由，fable 须引白名单
+  agent_role: worker                                      # 实际入口；模型按当前 harness 合同解析
   任务: <描述>
   产出物: <文件路径（用户选择 MagicPath 时为 canvas job_id）>
   阶段门控: <判断标准>
@@ -330,7 +329,7 @@ Phase N（skill_execution — 执行某个 skill）:
   编排模式: Supervisor
   phase_type: skill_execution
   skill: deepresearch
-  model_tier: core-execution                              # 按该 skill 的 recommended-model 填
+  agent_role: worker                                      # skill 元数据不强制换模
   execution_context: subagent                             # subagent | main_agent
   任务: 深度研究目标领域（核心概念、关键机制、技术约束）
   产出物: docs/handoff/YYYY-MM-DD-deepresearch-handoff.md
@@ -543,7 +542,7 @@ RECOMMENDATION: <下一步建议动作，给用户可选项>
 - [ ] 每个 U-block / Phase 任务有 Source 溯源（无凭空任务）
 - [ ] 每个不可逆操作配 [BLOCKING] 断言 + 用户确认点
 - [ ] 复杂且新颖 → 研究 Phase 已排入，或跳过理由已显式写出待确认
-- [ ] 每个 Phase 的 model_tier 已填（fable 仅可引白名单条目）
+- [ ] 每个 Phase 的 agent_role 已明确；关键审查使用实际可用的独立入口，用户模型/effort 不被覆盖
 - [ ] 设计产出 Phase 走 open-design 首选，或用户明确选择的工具（按 Gap 2 核验，不因故障静默换工具）
 
 ---

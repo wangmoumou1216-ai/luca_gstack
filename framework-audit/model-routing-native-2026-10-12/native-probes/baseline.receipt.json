@@ -1,0 +1,24 @@
+{
+  "arm": "baseline",
+  "argv": [
+    "claude",
+    "-p",
+    "--tools",
+    "",
+    "--output-format",
+    "json",
+    "--no-session-persistence",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "{\"mcpServers\":{}}",
+    "--max-budget-usd",
+    "1"
+  ],
+  "cwd": "/Users/luca/.codex/worktrees/c252/luca_gstack",
+  "started_at_epoch": 1791772562.681133,
+  "ended_at_epoch": 1791772570.2382689,
+  "exit_code": 1,
+  "prompt_sha256": "8f8849a343879bc125c7ec2a72aec3e7c42611dffb2b40c43e25a9cbe617d98d",
+  "stdout_sha256": "d01aeb8235e4b0db023f1a80ed3b6530ca73af3617169498f96c7f4004b6f2b9",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
