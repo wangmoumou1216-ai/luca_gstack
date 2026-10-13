@@ -1,6 +1,6 @@
 # OD/CD 原任务闭环核对
 
-状态：IN_PROGRESS。本报告不把已回收、已发布旧版本或失败的下发任务当作全部完成。
+状态：BLOCKED（实际启动等待 macOS 桌面文件夹访问提示响应）。源码发布、安装与字节验收已完成；新正常调用和真人 Export/recover 尚未闭环。本报告不把已回收、已发布或失败的下发任务当作全部完成。
 
 ## 闭环定义和当前范围
 
@@ -147,3 +147,31 @@ Source and deployment remain framework main `4f5186c`, Muse main `3c7520f`, inst
 Current actual full host suite: 44/44. MCP 42/42; original unrelated protocol/partition tests preserved. Native authority in these tests is simulated fixture context and cannot prove production calls. Original failed logs plus RED/GREEN and mutation traces retained under `/private/tmp/cd-no-effect-repair-20261013/`. Final deployment will splice only host + external MCP shim into current ee4444, preserving installed selected-object-priority text and every other bundle member. No internal MCP shim exists. Installed canonical decoder is byte-identical to reviewed source. Root remains sole publisher/installer; peer remains sole normal-account UI owner pending explicit handback. Final actual tests will freeze one source/installation version; source drift invalidates affected evidence.
 
 R6 source gate closed on exact subject `source-subject-r6.json` SHA `01f4e37556f66ae177955e267de4c65a8b27ac2b9c70f106a0751624efc212c5`: Standards 5/5, Spec 6/6. Host `b1b2b7587f432140a2b2797963cc78f4cff2bd091c5e2306f0b19b46a9afa24e`; full host 55/55 and MCP 42/42, framework verify 124 PASS/0 FAIL/0 WARN/1 delegated. Final independent runtime matrices 36/36 terminal +18/18 evidence fields and mutations. Original proposal, Standards r1/r2/r3/r5 and Spec r4 FAIL reports remain; expired Standards r4 PASS is not consumed for final bytes. Ten exact native completed envelopes were read back and recorded, including failures. Current accepted Standards native `01a13522-c2c7-7160-9638-97924461123c` /turn `01a13535-1006-7872-8ea4-6b7a6ca2ae39`; Spec native `01a1352b-8e9a-7000-98b6-18388bbaae76` /turn `01a13536-a477-7370-8c0c-d78c6574323f`. Actual parent readback `/private/tmp/cd-no-effect-repair-20261013/source-parent-acceptance.json`. No publication/install/native/manual completion is inferred from these source tickets.
+
+## 最终源码发布与新安装（实际执行；2026-10-13 21:20 后）
+
+Muse main 已普通提交/推送到 `34953a7e89d31759659e4e984b408c300f16ab7d`，仅最终 host/MCP 和两条原有测试文件。母工作区只同步这四文件，其他 227 个原保护成员完整元数据未变。框架 [PR #37](https://github.com/wangmoumou1216-ai/luca_gstack/pull/37) 六项 CI 全部 SUCCESS，按 exact head `2c05ecb` 正常合并 main `2028258ec1446f27e257d6fa8652c13bb6052bf8`，与审核 head 完整树一致，`807775c` 和 `4f5186c` 均保留为祖先。当前 root 与 `/Users/luca/Desktop/luca_gstack` 已普通 fast-forward 到该 main；两条旧日志及两个其他 session 新建的 CLI-switch 审计文件，其 SHA/inode/size/mtime 全部未变。没有 force-push 或母工作区整仓提交。
+
+新 prepared 包 ASAR `2d21004189a4ed1bc5d46d0a16ed2bf19816f48ccc9065e22add882a033c2c07`，基于实际 installed `ee4444d4`。准备包 gate R1 FAIL 6/8 原票保留：缺预冻结行为分母/进程探针、成功时丢 inner Electron 原始输出、浏览器 light/dark 截图相同。新隔离验证副本在执行前冻结 manifest、全部源码/driver/hash/cases，保留真实 before/after PID/source/userData/webContents、分离 stdout/stderr、生成 entry/preload、cleanup 和 PTY 收件。补充 r2 的验证脚本变量错误保留，r3 实际重跑四套 55/42/18/288 全部 exit0；三张浏览器截图区分真实主题，148 个数值行由判官独立复算，最低 4.764。产品源码和 candidate 均未因此改字节。
+
+准备包 R2 独立 PASS 8/8；393 非任务归档文件、492 全包比较、394 integrity records/block arrays、208 packed offsets、304-member inventory 和 selected-object wording 全部核验。实际原生 completed reviewer `01a1354a-2243-7ae1-837f-6cbb80a396a3` /turn `01a13558-a887-7a11-8a08-583234e50710`，final message `msg_02585ad6745d7c81016ace2bffce0c87d0a4e7fcf210a1847e`。两票均保留并由父级 recorder 登记。证据 `/private/tmp/cd-no-effect-repair-20261013/{prepared-completion-r2.json,package-gate-r1-native.json,package-gate-r2-native.json,package-parent-acceptance.json,behavior-r3/manifest.json,behavior-r3/results.json,behavior-r3/receipt.json}`。这是 prepared-only 票，不冒充正常账户调用。
+
+紧邻安装重新核 `ee4444d4`/`2d210041`/当前 installer `0421bcd5` 后，root 通过 CUA 真实应用 Quit 菜单正常退出旧 main42566；实际 ps 证明退出。当前母仓 `node install.mjs --local --no-build` 21:17:14–21:17:31，exit0。复制候选两套行为门、签名、替换前 CAS、rollback 与安装后签名全部通过，实际 EE 回滚点 `/Users/luca/.luca/rollback/luca-20261013-211731`；installer 按其已验单代保留合同删除 dist/ 和前代 rollback。原前代证据早已完整留存。
+
+安装 readback 初版 r6 的冻结脚本误将 `Contents/MacOS/luca` 内嵌重签列为非签名漂移，原失败保留。只在不启动的本次验证副本上使用 codesign 去除签名，原签前/现签后可执行文件的剩余字节完全一致，SHA `25284aa81d6ff6a5fe1e145564dc3a869a98cf8ab7e4dd6da818a3e22215ba3a`；原安装和回滚签名未修改。r7 新冻结 driver 重跑完整 304 包成员/393 非任务归档文件、实际 published Muse main blob、ASAR/header/plist/external shim 和 deep/strict signature，全部 PASS。只有执行文件嵌入签名与 CodeResources 改变。实际安装 host `b1b2b758…`、external shim `004ec4a1…`；这是 local ad-hoc 更新，不声称 Developer ID/公证。证据 `installed-r7-readback.json`、`verify-installed-r7-{operation.json,stdout,stderr}`、`mach-o-signature-proof/receipt.json`、`install-r6-operation.json` 及原始 stdout/stderr。
+
+## 当前外部阻塞、协同所有权与剩余门
+
+新 main66402 本地 21:20:44 已启动，实际 ps/ASAR 再核正确。CUA 初次 AX cannotComplete、第二次 timeoutReached、第三次 inventory 30 秒超时并 kernel reset；三次相同观察边界失败已停止盲重试。实际主线程 sample 停在同步 `uv_fs_open/open`，项目列表 child66771 停在 `uv_cwd/getcwd/open`，renderer 主线程空闲。peer 独立 sample 同样命中，因此不把这当作纯工具缓存或已验证就绪。
+
+peer 严格只读 tccd 日志并按请求 ID 查询：本地 21:20:48 旧 code requirement 与新 ad-hoc 签名不匹配，随后 `AUTHREQ_PROMPTING`，service `kTCCServiceSystemPolicyDesktopFolder`，subject Luca/PID66402，msgID `17655.1738`；近 20 分钟无该 ID 的 RESULT/REPLY。实际日志 `/Users/luca/.codex/worktrees/6a95/luca_gstack/framework-audit/muse-native-closure-2026-10-13/startup-tcc-luca-01.log` SHA `3e45e8e139384b7365ce9c87bca1da57cca7180ac90c82daef45eda8b542cdbb`。主控读回了真实 peer 原生执行记录和该日志。CUA 对系统 `com.apple.UserNotificationCenter` 的只读访问因安全限制被拒，没有换接口绕过。已向真人请求处理现有“桌面文件夹”提示并回复实际结果；没有修改 TCC、授予磁盘权限、改 ledger、kill 当前进程或重新安装。
+
+root 继续持有独占 UI/source/publisher/installer；peer 已收到新阻塞和准确安装证据并保持无 GUI/native prompt/安装行为，仅协助只读诊断。只有权限响应后的新实例真实 UI/readback 成功，才正式交回其正常账户调用责任。最新 source/package main 不再修改，受影响的实际验证与最终全部闭环声明保持 BLOCKED。
+
+| 剩余项 | 真实状态与恢复门 |
+| --- | --- |
+| R14 新安装实际 UI / restored ownership | BLOCKED：等待现有 DesktopFolder 系统提示响应；需要真实 UI 恢复、当前实例/原 canonical native key 与 workspace 读回。安装字节/签名/main/local sync 已完成。 |
+| R13 老 no-effect lease 退休 | OPEN：仅由真实恢复原 native SID 的认证 caller 公共 abandon 观察 digest，再显式未知历史确认；普通 status 必须保留跨实例拒绝，不读 token/config、不 patch ledger。 |
+| R13 两正常 Claude/Codex positive/refusal | OPEN：新 02 handoff 的实际 stage/status、跨会话拒绝、各自准确的人类 Send/Generate/Export 和 recover；旧 ZIP 不替代新 Export。 |
+| 隔离 Codex 登录 | DEFERRED：人类明确暂缓；不是 PASS，也不擅自重开。 |
+| 最终 aggregate / all-original-task closure | OPEN：当前源与安装证据不能替代上述原生/人类门。旧失败和修订处置、原14项分母保持，全部实际完成后才作最终声明。 |
