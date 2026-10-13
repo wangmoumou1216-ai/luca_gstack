@@ -4,7 +4,7 @@ preamble-tier: 1
 version: 1.0.0
 description: |
   CEO/创始人视角挑战需求范围，寻找 10 星产品。四种模式：范围扩张/选择性扩张/
-  保持范围/范围缩减。仅场景A（新功能）适用。在 /brainstorm 之后、/ux-research
+  保持范围/范围缩减。默认用于场景A（新功能）；B/C/D 必须真实确认。在 /brainstorm 之后、/ux-research
   之前运行。来源：gstack plan-ceo-review。(luca_gstack)
 allowed-tools:
   - Read
@@ -22,9 +22,9 @@ context-cost:
 
 ```bash
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-_PRD=$(ls -t docs/prd/*-prd.md 2>/dev/null | head -1)
 echo "BRANCH: $_BRANCH"
-echo "PRD: ${_PRD:-none}"
+# Exact PRD, scene and topic come from the verified caller scope in Phase 0.
+python3 .claude/observability/scripts/get_rules.py challenge "*" 2>/dev/null || true
 ```
 
 ---
@@ -34,9 +34,7 @@ echo "PRD: ${_PRD:-none}"
 启动时只热加载短规则，不读长日志（与 office 共享 Observability Protocol 一致，
 防用户曾纠正写成 active rule 后再次运行本 skill 时复犯）：
 
-```bash
-python3 .claude/observability/scripts/get_rules.py challenge "*" 2>/dev/null || true
-```
+上述 preamble 加载本 skill 的短规则。
 
 ---
 
@@ -44,17 +42,10 @@ python3 .claude/observability/scripts/get_rules.py challenge "*" 2>/dev/null || 
 
 **【L-04 修复】场景检查：**
 
-```bash
-_SCENE=$(python3 -c "
-import yaml
-try:
-    s = yaml.safe_load(open('.claude/workflow-state.yaml'))
-    print(s.get('scene', 'unknown'))
-except:
-    print('unknown')
-" 2>/dev/null || echo "unknown")
-echo "SCENE: $_SCENE"
-```
+从用户或本次已验证项目交接取得精确 PRD 路径、topic 和已确认场景 `_SCENE`。
+读取前按 root/office 验证实际作用域；不访问 shared docs、workflow-state 或 current-topic 别名，
+不从最新文件猜来源。缺 PRD/topic 或来源含糊返回 NEEDS_CONTEXT；场景未确认时询问真实用户并等待。
+NO_PIN 框架输入仅消费用户授权的精确审计材料，不据此创建项目身份或写项目状态。
 
 如果 `_SCENE` 为 B、C 或 D：
 ```
@@ -68,7 +59,7 @@ A）继续（我确认需要在当前场景做范围挑战）
 B）停止
 ```
 
-如果 `PRD: none`：
+如果缺少本次精确 PRD：
 ```
 ⚠️ 未找到 PRD 文件。/challenge 需要先有 PRD。
 建议运行：/idea → /brainstorm → /challenge
@@ -141,7 +132,7 @@ AskUserQuestion：
 
 ## Phase 3：产出记录
 
-将范围审查结论写入（`<topic>` 用下方 workflow-state 段解析出的实际 topic slug，日期取当天，
+将范围审查结论写入（`<topic>` 用上述实际确认的 topic slug，日期取当天，
 不得把字面 `*` 或 `<topic>` 写进文件名；docs/prd/ 目录与 -challenge.md 后缀约定不变）：
 `docs/prd/YYYY-MM-DD-<topic>-challenge.md`
 
@@ -171,9 +162,8 @@ AskUserQuestion：
 **完成分支（先判再执行下方代码）：** 受管 workflow（completion_owner=Orchestrator）以「受管回交」替代下方 writer：完成本 skill 必需产物、自检及适用 handoff 校验后，按 `references/handoff-protocol.md`「受管节点提交」回交精确产物身份、原输出字段和提交请求；不在这里写 DONE。下方原代码仅供已验收后的 O 合法提交，或非受管且确有本节点/写权限的既有完成路径；standalone 无节点不写状态，保留原 handoff 豁免。实际调用必须晚于本 skill 必需 handoff（idea 的下节也先完成）；NO_PIN 框架不写项目状态。
 
 
-Claude 在执行前必须确定实际 `_TOPIC`（优先读 `current-topic.txt`；为空时**从 Preamble 已取到的
-PRD 文件名 `docs/prd/*-prd.md` 推断 topic slug**，而非从 brainstorm-first 流程下常为空的
-`docs/idea/` 推断——challenge 恒有 PRD 前置，PRD 才是本 skill 的可靠 topic 源），然后执行：
+执行前必须取得本次已确认的实际 `_TOPIC`，与精确 PRD/输出身份一致；缺失返回 NEEDS_CONTEXT，
+不从 current-topic 或最新 PRD 文件推断。仅有合法节点及实际写权限时执行下方状态块：
 
 状态块运行前按 office 合同从已验证项目绑定冻结 canonical `_PROJECT_ROOT`；下方路径检查不授予项目权限。写入失败须保留产物、报告状态尚未同步并停止依赖后继，不能继续宣称 DONE 或 handoff 成功。
 
@@ -186,11 +176,7 @@ if [ ! -d "$_PROJECT_ROOT" ] || [ "$(cd "$_PROJECT_ROOT" && pwd -P)" != "$_PROJE
   printf '%s\n' 'ERROR: _PROJECT_ROOT 必须是已验证且已解析的项目根目录。' >&2
   exit 1
 fi
-export _TOPIC="${_TOPIC:-$(cat "$_PROJECT_ROOT/.luca/current-topic.txt" 2>/dev/null)}"
-if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ]; then
-  _TOPIC=$(ls -t "$_PROJECT_ROOT"/docs/prd/*-prd.md 2>/dev/null | head -1 | \
-    xargs basename 2>/dev/null | sed 's/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-//' | sed 's/-prd\.md$//')
-fi
+export _TOPIC="${_TOPIC:-}"
 if [ -z "$_TOPIC" ] || [ "$_TOPIC" = "<topic>" ] || [ "$_TOPIC" = "unknown" ] || [ "$_TOPIC" = "none" ]; then
   printf '%s\n' 'ERROR: 缺少本次产出的真实 topic；状态尚未同步，保留产物并停止依赖后继。' >&2
   exit 1
@@ -209,7 +195,7 @@ python3 .claude/skills/office/references/write_state.py || {
 
 ## ⚠️ 末尾核心约束
 
-1. **仅场景A适用** — 场景B/C不运行此 skill
+1. **默认用于场景A** — 场景B/C/D 必须先取得 Phase 0 的真实继续确认
 2. **模式选择不可跳过**
 3. **逐一提出扩展机会** — 不批量推送，每次 AskUserQuestion 只提一个机会
 4. **用户决策权** — 每个扩展机会由用户决定，不强制纳入

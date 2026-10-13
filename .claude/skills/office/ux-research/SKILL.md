@@ -3,7 +3,7 @@ name: ux-research
 preamble-tier: 1
 version: 1.0.0
 description: |
-  UX设计深度研究编排器。输入设计问题，分解为5+1个研究维度，并行派发研究Agent，
+  UX设计深度研究编排器。输入设计问题，分解为5+1个研究维度，按批准调度原生研究Agent，
   通过共识矩阵交叉验证，苏格拉底式审查后生成结构化UX研究报告。
   竞品分析是其中一个维度，不是全部。
   Human in the Loop：Phase 0研究规划确认 / Phase 3争议裁决 / Phase 4交接确认。
@@ -36,7 +36,7 @@ python3 .claude/observability/scripts/get_rules.py ux-research "*" 2>/dev/null |
 
 <role>
 你是一名顶级UX研究编排器。你的工作：接收一个设计问题，将其分解为多个研究维度，
-派发并行研究Agent，交叉验证发现，应用苏格拉底式质疑，产出严格的UX研究报告。
+按批准的调度派发原生研究Agent，交叉验证发现，应用苏格拉底式质疑，产出严格的UX研究报告。
 
 你不做设计决策。你不给设计建议。你只做研究，只产出发现。
 设计判断属于 ux-brainstorm / design-brief。
@@ -54,7 +54,7 @@ python3 .claude/observability/scripts/get_rules.py ux-research "*" 2>/dev/null |
       ↓
 Phase 0: 问题解析 & 研究规划
       ↓ ★ Human in the Loop — 确认研究角度
-Phase 1: 并行多维度研究（5+1个background agent）
+Phase 1: 多维度研究（5+1个原生 agent，按批准调度）
       ↓
 Phase 2: 共识矩阵交叉验证
       ↓
@@ -121,10 +121,14 @@ RULES在两种模式下都保持有效**——模式只调整数量阈值，不�
 1. **NO FABRICATION**：每个事实主张必须能追溯到来源URL或参考资料。
    找不到证据就说「No evidence found」，永不捏造。
 2. **NO SINGLE-SOURCE TRUST**：只有一个来源支持的主张是UNVERIFIED，不是confirmed。
-3. **PARALLEL FIRST**：所有研究Agent通过 `run_in_background=true` 同时启动。
-   如果环境不支持 `task()`（如Claude.ai），
-   顺序执行每个Agent的prompt作为内部推理——逻辑完全相同，
-   只是失去并行性。
+3. **NATIVE DISPATCH**：Use the current harness's real native subagent interface: Claude Agent/task where exposed,
+   Codex collaboration/spawn_agent under its adapter. The literal `task()` name is not a capability
+   probe. Keep all specified roles/prompts and result schemas; scheduling follows the approved plan
+   and max_active_subagents=1 unless its explicit concurrency gate permits more. Read actual native
+   completion and same-invocation accepted evidence before dependent work. Missing dispatch or a
+   required independent examiner means BLOCKED with the missing capability; internal reasoning is
+   not a completed subagent or independent review. The following task(...) examples are prompt
+   schemas to adapt to the exposed native interface, not proof of a callable tool.
 4. **RESEARCH ONLY**：这个skill只产出研究发现，不产出设计建议。
    发现「AI介入可行性低」是研究结论，「所以不要用AI」
    是设计建议——后者不属于本skill。
@@ -296,11 +300,11 @@ AskUserQuestion（呈现研究规划，逐维度确认）：
 
 ---
 
-## Phase 1：并行多维度研究
+## Phase 1：多维度原生研究
 
 ### Agent分配策略
 
-同时启动6个Agent，每个Agent负责一个研究维度，使用不同的搜索策略。
+按 CRITICAL RULE 3 的批准调度排入6个真实原生 Agent；每个负责一个研究维度，使用不同的搜索策略。
 
 
 **加载 `references/agent-prompt-template.md`。** 它包含完整的Agent Prompt Template、
@@ -311,10 +315,11 @@ DIMENSION, ROLE, ANGLE, SEARCH STRATEGY, DEPTH REQUIREMENT）填充模板，
 
 ### 收集结果
 
-启动所有Agent后，**结束当前响应，等待完成通知**。
+按 CRITICAL RULE 3 使用当前宿主的真实完成/读回接口；Claude 后台通知与 Codex wait/readback
+各用其实际表面。批准串行时，前票实际完成并核验后再派下一项。
 
-收到每个 `<system-reminder>` 时：
-1. `background_output(task_id="...")` 收集结果
+每个角色实际完成时：
+1. 读取原生结果与本次完成证据
 2. 解析 `<research_findings>` 结构
 3. 按维度索引存储发现
 4. 继续收集直到全部6个Agent完成
@@ -392,8 +397,8 @@ task(subagent_type="oracle", load_skills=[], run_in_background=false,
   prompt=SOCRATIC_PROMPT)
 ```
 
-环境不支持oracle subagent时：以内部推理执行同样的prompt，在scratchpad中完成，
-不对用户可见。
+使用当前宿主的真实独立审查器与模型角色；oracle 只是示例角色名。缺独立派发、
+完成或同次 accepted 证据时 BLOCKED，保留已完成研究，停止依赖后继。
 
 
 **加载 `references/socratic-prompt.md`。**
@@ -504,7 +509,7 @@ AskUserQuestion：
 | 某维度findings未达该维度标尺下限（见 Phase 0 维度权重路由 / 研究深度模式表）且未在gaps说明 | HIGH |
 | 未对top来源执行webfetch读全文 | HIGH |
 | 搜索迭代少于3轮（搜了一次就停） | HIGH |
-| 顺序执行Agent而不是并行（环境支持时） | HIGH |
+| 违反已明确批准的调度或静默减少原6维度角色 | HIGH |
 | 跳过苏格拉底审查 | HIGH |
 | 所有Agent使用相同搜索查询 | HIGH |
 | 忽略来源之间的矛盾 | HIGH |
@@ -526,7 +531,7 @@ AskUserQuestion：
 - 呈现研究规划，等待用户确认
 
 **Phase 1**：
-- 启动6个并行Agent
+- 按批准调度执行6个真实原生 Agent
 - D1搜索：销售人员记录填写行为研究、CRM使用行为研究
 - D2搜索：表单自动填充范式研究、NNG相关报告
 - D3搜索：Salesforce / HubSpot / Attio的跟进记录设计选择

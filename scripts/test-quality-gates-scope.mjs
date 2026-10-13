@@ -103,6 +103,38 @@ try {
   passes(run(['--handoff', exact], unrelated));
   writeFileSync(exact, strictFixture);
   passes(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated));
+  // Consume the actual producer template, not a second hand-written approximation.
+  const protocol = readFileSync(join(source, '.claude/skills/office/references/handoff-protocol.md'), 'utf8');
+  const templateCriteria = protocol.match(/^criteria:\n((?:  - .*\n){3})/m)?.[1];
+  assert.ok(templateCriteria, 'official handoff template must expose three criterion examples');
+  const allPassCriteria = templateCriteria.replace(/\b(?:FAIL|UNKNOWN)\b/g, 'PASS')
+    .replace(/原因:/g, '证据:').replace(/<二元判定句>/g, 'Source preserved')
+    .replace(/<引用\/行号\/输出>|\.\.\./g, 'source.md:12');
+  const withCriteria = (criteria) => strictFixture.replace(/^criteria:\n(?:  - .*\n){3}/m, `criteria:\n${criteria}`);
+  for (const criteria of [allPassCriteria, allPassCriteria.replace(/（/g, '(').replace(/）/g, ')'),
+    allPassCriteria.replace(/证据:/g, 'evidence：'), allPassCriteria.replace(/"/g, "'")]) {
+    writeFileSync(exact, withCriteria(criteria));
+    passes(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated));
+  }
+  for (const verdict of ['FAIL', 'UNKNOWN']) {
+    writeFileSync(exact, withCriteria(allPassCriteria.replace('PASS（证据:', `${verdict}（证据:`)));
+    rejects(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated), /criterion.*must be PASS/);
+  }
+  for (const replacement of [
+    '[C3] External result FAIL PASS evidence: observed',
+    '[C3] External result PASS PASS（证据: observed）',
+    '[C3] External result（证据: PASS）',
+    '[C3] External result FAIL（证据: example says PASS）',
+    '[C3] External result UNKNOWN（原因: example says PASS）',
+    '[C3] External result PASS evidence: ',
+    '[C3] External result PASS（证据: ）',
+  ]) {
+    writeFileSync(exact, strictFixture.replace('[C3] External result PASS evidence: observed', replacement));
+    rejects(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated), /every criteria bullet|criterion.*must be PASS/);
+  }
+  writeFileSync(exact, strictFixture);
+  passes(run(['--handoff', exact, '--require-gate', 'PASS'], unrelated));
+  console.log('PASS producer template and legacy grammar; failed/unknown/duplicate verdicts and evidence decoys refused; recovery');
   rejects(run(['--handoff', exact, '--require-gate', 'FAIL'], unrelated), /only accepts PASS/);
   for (const bad of [
     strictFixture.replace('gate_result: PASS', 'gate_result: PASS\ngate_result: BROKEN'),

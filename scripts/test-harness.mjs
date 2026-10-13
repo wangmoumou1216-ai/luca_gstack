@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// harness 检测 + 能力探针回归（P0 / WS-A0，2026-07-25）。
+// harness 检测 + 静态宿主声明回归（P0 / WS-A0，2026-07-25）。
 // 核心不变量：当前 Codex 与 Claude 均原生接受 decision:block、permissionDecision:deny
 // 与 updatedInput（后者需 permissionDecision:allow）。能力表必须反映实测事实，不再把
 // 历史方言假设钉成永久降级。
@@ -22,7 +22,7 @@ ok('H5 codex → canEmitControlVerb=true（实测共享控制动词）', canEmit
 // （Stop 不再拦、PreToolUse 不再 deny），比在未知 harness 多吐一行 JSON 严重得多 → 失效方向偏向保住强制。
 ok('H6 unknown → canEmitControlVerb=true（失效方向偏向保住强制）', canEmitControlVerb({}) === true);
 
-// ③ 能力表：两家共享控制原语；Workflow/AskUser widget 仍是 Claude 专有。
+// ③ 静态声明：控制原语有独立实测；扩展字段只保留宿主分类，不验证部署。
 {
   const c = capabilities(HARNESS.CODEX);
   ok('H7a codex: block/write hook/input mutation 均可用，Workflow/AskUser 关闭',
@@ -35,7 +35,45 @@ ok('H6 unknown → canEmitControlVerb=true（失效方向偏向保住强制）',
 }
 {
   const c = capabilities(HARNESS.CLAUDE);
-  ok('H8 claude: CC 专有原语全开', c.blockVerb && c.writeHook && c.inputMutation && c.workflow && c.askUserWidget);
+  ok('H8 claude: 历史扩展宿主分类保留，非部署证明', c.blockVerb && c.writeHook && c.inputMutation && c.workflow && c.askUserWidget);
+}
+
+// Defaults must use actual host identity even when the adapter speaks Claude's hook protocol.
+{
+  const {spawnSync} = await import('node:child_process');
+  const {mkdtempSync,mkdirSync,writeFileSync,rmSync} = await import('node:fs');
+  const {join} = await import('node:path');
+  const {tmpdir} = await import('node:os');
+  const helper = new URL('../.claude/hooks/lib/harness.mjs', import.meta.url).href;
+  const result = spawnSync(process.execPath,['--input-type=module','-e',
+    `import {detectHarness,actualHarness,capabilities} from ${JSON.stringify(helper)};
+     console.log(JSON.stringify({protocol:detectHarness(),actual:actualHarness(),caps:capabilities()}));`],
+    {encoding:'utf8',env:{PATH:process.env.PATH,CLAUDE_PROJECT_DIR:'/fixture',LUCA_ACTUAL_HARNESS:'codex',LUCA_HARNESS_ADAPTED:'1'}});
+  const observed = JSON.parse(result.stdout || '{}');
+  ok('H9 adapted Codex default separates actual capability from Claude protocol',
+    result.status===0 && observed.protocol==='claude' && observed.actual==='codex'
+    && observed.caps?.harness==='codex' && !observed.caps.workflow && !observed.caps.askUserWidget,
+    result.stderr || result.stdout);
+
+  const hook = new URL('../.claude/hooks/session-restore.mjs',import.meta.url).pathname;
+  for(const host of ['claude','codex','unknown']) {
+    const root=mkdtempSync(join(tmpdir(),`harness-startup-${host}-`));
+    try {
+      for(const dir of ['.claude/skill-os/evolution','memory/episodic','projects','global'])mkdirSync(join(root,dir),{recursive:true});
+      writeFileSync(join(root,'.claude/skill-os/evolution/self-model.yaml'),'enabled: true\n');
+      const env={PATH:process.env.PATH,HOME:join(root,'home'),LANG:'C',MEMORY_ROOT:root,
+        GLOBAL_MEMORY_DIR:join(root,'global'),LUCA_PROJECTS_ROOT:join(root,'projects'),LUCA_GSTACK_ROOT:root};
+      if(host!=='unknown')env.CLAUDE_PROJECT_DIR=root;
+      if(host==='codex'){env.LUCA_ACTUAL_HARNESS='codex';env.LUCA_HARNESS_ADAPTED='1';}
+      const r=spawnSync(process.execPath,[hook],{cwd:root,encoding:'utf8',env,input:'{}',timeout:10000});
+      const positive=host==='claude'?/Workflow\(\{name:'framework-evolution-scout'/:
+        host==='codex'?/node \.codex\/workflow-runner\.mjs framework-evolution-scout/:/未知宿主/;
+      const negative=host==='codex'||host==='unknown'?/Workflow\(\{name:/:/node \.codex\/workflow-runner/;
+      const discoveredOrRefused=host!=='claude'||(/先确认当前会话实际提供 Workflow 工具/.test(r.stdout)
+        && /缺失或未验证则报告 BLOCKED/.test(r.stdout) && /仅确认可用后/.test(r.stdout));
+      ok(`H10-${host} real SessionStart distinguishes invocation from verified availability`,r.status===0&&positive.test(r.stdout)&&!negative.test(r.stdout)&&discoveredOrRefused,r.stderr+r.stdout);
+    } finally {rmSync(root,{recursive:true,force:true});}
+  }
 }
 
 // ── V2 template discovery: the internal Phase-A primitive must degrade to NO_HINT per harness ──

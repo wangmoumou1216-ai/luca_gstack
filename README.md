@@ -59,7 +59,7 @@ luca_gstack 的取舍在两者之间，靠的是下面这几条刻意的选择�
 - **环境与项目彻底分离。** 这个仓是"运行环境"，本身不存任何项目产出；项目产出与状态放在独立目录，
   会话级项目绑定决定实际读写目标，symlink 只用于兼容展示。框架维护保持 `NO_PIN`，经验层不随项目切换而丢失。
 - **原生优先（native-first）。** 优先使用各宿主的 hooks、subagent 等原生能力；缺少原语时提供明确适配或降级。
-  Codex 的共享 Workflow 脚本由 `.codex/workflow-runner.mjs` 执行，不声称具有 Claude 的原生 Workflow 工具。
+  Codex 的共享 Workflow 脚本由 `.codex/workflow-runner.mjs` 执行；Claude 原生 `Workflow` 是否可用须在当前会话实际确认，缺失或未验证时报告阻塞。
 - **不臆造是硬性质量门。** "没有数据支撑就不编"在所有 skill 里恒定生效——宁可标注"信息缺口"也不
   产出看起来合理的假事实。
 - **框架自己会进化，但只提议。** 内置的自进化侦察会定期扫描外部生态、比对自身能力缺口、给出采纳建议，
@@ -456,7 +456,8 @@ standalone 不强制启动整条流程，但仍遵守 skill 自身的输入、�
 
 ### 先决条件
 
-- Claude Code 或 Codex 已安装并可访问此工作区
+- Claude Code ≥ 2.1.295 或 Codex 已安装并可访问此工作区；Claude 的最低版本用于
+  `onFailure: block`，确保项目隔离 hook 启动失败或超时时拒绝当前工具调用
 - macOS / Linux
 - Git、Node.js ≥ 20.19.0、npm 与 Python 3；完整检查建议使用与 CI 一致的 Node.js 22
 - 完整检查还需 PyYAML、zsh、ripgrep，以及当前锁定 Playwright 对应的 Chromium 和 Firefox

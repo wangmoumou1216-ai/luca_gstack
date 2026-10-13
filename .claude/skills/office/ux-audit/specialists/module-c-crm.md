@@ -21,14 +21,21 @@ echo "AGENT: module-c-crm"
 
 **来源：UX-EVALUATION-FRAMEWORK.md 模块C + business-evaluator/SKILL.md，直接迁移**
 
-你是纷享销客 CRM 业务审查员。
-只检查 CRM 场景独有的问题。通用可用性 → Module B。视觉规范 → Module A。
+你是当前已确认业务 profile 的专项审查员。以下 C1–C4 为 CRM profile，
+只有实际领域与业务标准适用时使用；纷享销客标准须有本次明确采用依据。
+其他领域按调用方确认的业务标准和角色检查，沿用证据/评分接口，不能凭框架示例编造业务要求。
+通用可用性 → Module B。视觉规范 → Module A。
 
 ---
 
 ## 执行前
 
-读取 `.claude/skills/office/references/crm-business-criteria.md`，只读 §1.2 + §1.3 + §1.4 + §1.5。
+读取调用方绑定的实际 profile/角色、标准来源/版本、页面状态与视口、截图及实际交互记录。
+明确选择纷享销客 CRM 时，读取 crm-business-criteria.md §1.2–1.5 并核对适用范围。
+缺少领域标准返回 BLOCKED，不猜 profile。逐项记录 PASS/FAIL/UNKNOWN/N/A 和证据位置：
+截图仅能证明该视口/状态下可见内容；点击深度、入口不存在、筛选保持等须实际操作或可核实现证据，
+截图未显示入口不能独自证明不存在。无证据记 UNKNOWN，不填通过或0分。
+N/A 需业务范围依据，移出适用分母；UNKNOWN 保留在适用分母，说明补证据所需动作。
 
 ---
 
@@ -37,8 +44,9 @@ echo "AGENT: module-c-crm"
 ```
 ### [UX-C-P{0/1/2}-{三位编号}] {标题}
 - **位置：** {标准位置名}
-- **发现：** {具体描述，从深度用户（B2B高级销售经理）视角}
-- **业务影响：** {对销售用户的具体工作影响}
+- **发现：** {具体描述，从实际已确认用户角色视角}
+- **证据：** {观察记录/来源、PASS/FAIL/UNKNOWN/N/A及原因}
+- **业务影响：** {对已确认用户的具体工作影响}
 - **严重程度：** P0 / P1 / P2
 - **优化方向：** {1句话}
 ```
@@ -114,12 +122,17 @@ echo "AGENT: module-c-crm"
 写入 `docs/evaluation/YYYY-MM-DD-<topic>-ux-audit-module-c.md`。
 
 **得分计算：** C1通过率×40 + C2通过率×30 + C3通过率×20 + C4通过率×10
-（不适用的节按满分计）
+（保留原 40/30/20/10 权重，N/A 不计满分）。每节通过率=PASS/(PASS+FAIL)，
+只在有已判定适用项时计算；按实际纳入权重归一化到100，并报告纳入权重。
+有 UNKNOWN、跳过项或未判定适用节时标「不完整评分」，不外推完整覆盖。
+所有适用项有充分证据才标完整；无可判定适用项时得分 UNKNOWN，禁止零分母计算。
+报告每节 PASS/FAIL/UNKNOWN/N/A 数、已判定/适用总数、标准来源/版本和缺证据原因。
 
 最后输出：
 ```
 STATUS: DONE
-Module C 得分：{N}/100
+Module C 得分：{N}/100（完整/不完整评分）或 UNKNOWN
+证据覆盖：{已判定/适用项、UNKNOWN/N/A原因、计入权重}
 P0：{N}条 | P1：{N}条 | P2：{N}条
 文件：docs/evaluation/YYYY-MM-DD-<topic>-ux-audit-module-c.md
 ```

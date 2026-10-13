@@ -23,10 +23,11 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+# 本次输入提示由调用方提供；Phase 0 在已获准 canonical 范围内发现/验证，不从共享别名取最新。
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH"
-_TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
+_TOPIC="${_TOPIC:-none}"
 echo "CURRENT_TOPIC: $_TOPIC"
 python3 .claude/observability/scripts/get_rules.py idea "*" 2>/dev/null || true
 ```

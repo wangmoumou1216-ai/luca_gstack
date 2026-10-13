@@ -85,7 +85,7 @@ YC-style interrogation questions are sacrosanct.
 ```
 deepresearch*.md (or idea)
 → Phase 0: Ingest & Classify Scope — • Read deepresearch*.md (or enter cold-start mode) • Classify: Lightweight / Standard / Deep-feature / Deep-product • Route question set by tier
-→ Phase 1: Context & Gap Scan (parallel background agents) — • Agent A: extract stated requirements from research • Agent B: identify implicit assumptions • Agent C: find gaps vs PRD checklist • Optional: additional research if gaps are severe
+→ Phase 1: Context & Gap Scan (three native roles, approved scheduling) — • Agent A: extract stated requirements from research • Agent B: identify implicit assumptions • Agent C: find gaps vs PRD checklist • Optional: additional research if gaps are severe
 → Phase 1.5: Research & Decision Coverage Index — • Inventory high-confidence research claims • Inventory selected/rejected approach decisions • Assign every core item a PRD disposition + target
 → Phase 2: Internal Pressure Test (self-directed) — • Run tier-appropriate pressure-test questions on the research itself — scratchpad, not surfaced to user • Output: which forcing questions to sharpen
 → Phase 2.5: AI Native Assessment (self-directed) — • Decision path analysis (execution vs judgment steps) • Path compression viability (N→N', delta ≥ 2?) • Landing judgment (fully/partially/assisted/not) • Agent involvement check • Output: routing signals for Phase 4 + Phase 6
@@ -102,7 +102,7 @@ deepresearch*.md (or idea)
 | Output | One markdown PRD file + conditional `prd-ai-spec.md` (when AI Native) + handoff summary (heavy skill) + verbal next-step menu |
 | Code editing | **NONE** — this skill never writes code |
 | User interaction | MANDATORY in Phase 3; optional gate in Phase 5 (manual findings) and Phase 7 |
-| Subagent dispatch | 3 parallel background (Phase 1) + 1 foreground Oracle (Phase 5) |
+| Subagent dispatch | 3 native roles (Phase 1, approved scheduling) + 1 independent blocking Oracle (Phase 5) |
 | Language | Instructions are English; output PRD auto-matches user's input language |
 
 ## CRITICAL RULES
@@ -233,20 +233,24 @@ Slug rules: lowercase, hyphen-separated, strip non-alphanumeric, max 50 chars.
 
 ## Phase 1: Context & Gap Scan
 
-Fire **three parallel background agents** to extract structured knowledge from the input material.
+Queue **three real native agents** to extract structured knowledge from the input material; use the approved scheduling below.
 Do NOT read `references/prd-template.md` yet — it's not needed until Phase 6.
 
 **Subagent dispatch compatibility:**
-- If the environment supports `task()` (e.g., Claude Code with subagent API): use `task()` with
-  `run_in_background=true` as shown in `references/phase1-dispatch-prompts.md`.
-- If the environment does NOT support `task()` (e.g., Claude.ai chat): execute each agent's prompt
-  sequentially as internal reasoning, wrapping output in the same XML format. The skill's logic is
-  identical — only parallelism is lost.
+Use the current harness's real native subagent interface: Claude Agent/task where exposed,
+Codex collaboration/spawn_agent under its adapter. The literal `task()` name is not a capability
+probe. Keep all specified roles/prompts and result schemas; scheduling follows the approved plan
+and max_active_subagents=1 unless its explicit concurrency gate permits more. Read actual native
+completion and same-invocation accepted evidence before dependent work. Missing dispatch or a
+required independent examiner means BLOCKED with the missing capability; internal reasoning is
+not a completed subagent or independent review. The following task(...) examples are prompt
+schemas to adapt to the exposed native interface, not proof of a callable tool.
 
 **Load `references/phase1-dispatch-prompts.md`** now — it contains the verbatim dispatch prompt templates for Agents A/B/C. Read it fully before firing the three tasks.
 
-**End your response** after firing these three tasks. Wait for the `<system-reminder>` notification
-that all three have completed, then continue with `background_output(task_id="...")` for each.
+Collect each real native result through the current harness's completion/readback interface;
+Claude background notifications and Codex wait/readback are distinct surfaces. All three roles
+remain required; completion of one does not substitute for the others.
 
 Once results are in, assemble a consolidated `<phase1_synthesis>` scratchpad combining
 stated_requirements + implicit_assumptions + gaps. Do NOT surface this to the user — it's
@@ -728,7 +732,7 @@ deterministic reach; the reader decides applicability from the line.
 - State: "Scope: Deep-feature. I'll ask 5 forcing questions, present 3 approaches with a
   non-obvious angle, and run one adversarial review pass before writing the PRD."
 
-**Phase 1** (parallel background):
+**Phase 1** (three native roles, approved scheduling):
 - Agent A extracts S1-S7 stated requirements (conflict UI, sync indicator, offline queue, etc.)
 - Agent B surfaces 4 implicit assumptions (users willing to resolve conflicts manually, mobile battery tolerable, etc.)
 - Agent C flags 3 gaps (no Status Quo section, no Success Criteria, no Distribution Plan)

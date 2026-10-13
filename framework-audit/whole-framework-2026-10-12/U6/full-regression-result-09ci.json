@@ -1,0 +1,22 @@
+{
+  "command": "bash scripts/verify.sh --ci",
+  "validation_root": "/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-integration-final-09-v5j0q0pz/checkout",
+  "validation_head": "ad522b30ea8bbbfce434693146d7dd8bb78a063d",
+  "tree": "6bf966d7cd227220b80f6db4a89a6e00f456483b",
+  "terminal_session_id": 64261,
+  "terminal_exit_code": 0,
+  "PASS": 124,
+  "FAIL": 0,
+  "WARN": 0,
+  "DELEGATED": 1,
+  "log_ref": {
+    "path": "/Users/luca/.codex/worktrees/6a95/luca_gstack/framework-audit/whole-framework-2026-10-12/U6/full-verify-09ci.log",
+    "sha256": "49786dee18187fbe764e7bdf350d92e39169126d5dd85d0b10e6508ba9303ac3"
+  },
+  "same_run_delegation": "S34/S10 only after this run C11 and S30 passed",
+  "environment_diagnosis_ref": {
+    "path": "/Users/luca/.codex/worktrees/6a95/luca_gstack/framework-audit/whole-framework-2026-10-12/U6/environment-diagnosis-09.json",
+    "sha256": "e92f15d9dd0d86dc03716fe0ae7bf08c16fcd5c20c7c1ede7f6891f20df1adb4"
+  },
+  "claim": "Complete supported clean CI regression; native live/static/capability limits stay separate."
+}

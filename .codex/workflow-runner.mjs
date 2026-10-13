@@ -44,6 +44,7 @@ import { tmpdir } from 'os';
 import { dirname, resolve, join, basename, isAbsolute } from 'path';
 import { fileURLToPath } from 'url';
 import { modelRoutingPolicyDigest, resolve as resolveModelRoute, resolveDispatchScene } from '../scripts/model-route.mjs';
+import { adoptionSnapshot } from '../scripts/evolution-adoption-snapshot.mjs';
 import {
   acceptInvocationEvidence, beginCriticalPreparation, latchCriticalFailure, prepareInvocation, readActivation, releaseDigestForPolicy,
 } from '../scripts/model-route-host.mjs';
@@ -84,6 +85,37 @@ if (rawName !== basename(rawName) || !/^[A-Za-z0-9._-]+$/.test(rawName) || rawNa
 }
 const WF = join(ROOT, '.claude', 'workflows', `${rawName}.js`);
 if (!existsSync(WF)) { console.error(`找不到 workflow: ${WF}`); process.exit(2); }
+// framework-evolution-scout's sweep denominator must be frozen by the caller
+// and re-checked against the live ledger before any policy read or agent starts.
+// Shape validation alone is insufficient: a forged hash/entries object must fail
+// closed at the runner boundary. Punctual evaluation is a separate mode and may
+// not smuggle a snapshot into the target-repo path.
+if (rawName === 'framework-evolution-scout') {
+  const argsRecord = ARGS_JSON !== null && typeof ARGS_JSON === 'object' && !Array.isArray(ARGS_JSON);
+  const failFreeze = (message) => {
+    process.stderr.write(`[runner] ${message}\n`);
+    process.stderr.write('\n── runner: agent ok=0 fail=0 (preflight) ──\n');
+    process.exit(1);
+  };
+  if (!argsRecord) failFreeze('workflow args must be an object');
+  const hasTargets = Object.hasOwn(ARGS_JSON, 'target_repos');
+  const hasSnapshot = Object.hasOwn(ARGS_JSON, 'adoption_snapshot');
+  if (hasTargets && hasSnapshot) failFreeze('target_repos 与 adoption_snapshot 不得混用');
+  if (!hasTargets) {
+    const snap = ARGS_JSON?.adoption_snapshot;
+    try {
+      const live = adoptionSnapshot(WORK_ROOT);
+      const same = snap && snap.version === live.version && snap.sha256 === live.sha256
+        && snap.byte_length === live.byte_length && Array.isArray(snap.entries)
+        && snap.entries.length === live.entries.length
+        && snap.entries.every((e, i) => e && e.line === live.entries[i].line
+          && e.fused_candidate_id === live.entries[i].fused_candidate_id);
+      if (!same) failFreeze('caller snapshot does not match live ledger');
+    } catch (error) {
+      failFreeze(`无法读取或核对 adoption ledger：${error.message}`);
+    }
+  }
+}
 
 // Model choice is the shared v2 policy's job. Existing agent/user effort remains untouched and is
 // deliberately absent from every route input, digest, app-server request and evidence envelope.

@@ -3,7 +3,7 @@ name: deepresearch
 preamble-tier: 2
 argument-hint: "[研究主题或问题]"
 description: >
-  Deep research orchestrator. Launches 5-8 parallel research agents across web, docs, code, and
+  Deep research orchestrator. Dispatches 5-8 native research agents under approved scheduling across web, docs, code, and
   academic sources. Cross-validates findings via consensus matrix. Applies Socratic questioning to
   challenge assumptions and expose gaps. Generates structured markdown report. Triggers: 'deep
   research', 'research [topic]', 'deepresearch'.
@@ -26,7 +26,7 @@ python3 .claude/observability/scripts/get_rules.py deepresearch "*" 2>/dev/null 
 
 <role>
 You are a deep research orchestrator. Your job: take a research topic, decompose it into multiple
-angles, launch parallel research agents, cross-validate findings, apply Socratic questioning, and
+angles, dispatch native research agents under approved scheduling, cross-validate findings, apply Socratic questioning, and
 produce a rigorous markdown report. You NEVER guess. You NEVER fabricate. Every claim must trace to
 a source.
 </role>
@@ -38,7 +38,7 @@ User Topic
     ↓
 Phase 0: Topic Analysis & Research Planning
     ↓
-Phase 1: Parallel Multi-Source Research (5-8 background agents)
+Phase 1: Multi-Source Research (approved native scheduling) (5-8 background agents)
     ↓
 Phase 2: Cross-Validation via Consensus Matrix
     ↓
@@ -49,7 +49,7 @@ Phase 4: Report Generation → Write .md file
 
 | Rule | Value |
 |------|-------|
-| Research agents | 5-8 per topic, ALL `run_in_background=true` (or sequential if environment doesn't support task()) |
+| Research agents | 5-8 real native agents per topic; scheduling follows the approved concurrency gate |
 | Search depth | 3-round structured protocol per agent: Round 1 broad search → Round 2 deep read (≥3 webfetch) → Round 3 targeted verification |
 | Search log | MANDATORY — every agent must output `<search_log>` recording all queries, webfetch URLs, and verification actions |
 | Minimum findings | ≥5 per angle, each with evidence_strength rating |
@@ -108,9 +108,14 @@ All other rules apply identically in both modes.
 1. **NO FABRICATION**: Every factual claim must trace to a source URL or reference. If you cannot
    find evidence, say "No evidence found" — never invent.
 2. **NO SINGLE-SOURCE TRUST**: A claim backed by only one source is UNVERIFIED, not confirmed.
-3. **PARALLEL FIRST**: All research agents launch simultaneously via `run_in_background=true`. If
-   the environment does NOT support `task()` (e.g., Claude.ai chat), execute each agent's prompt
-   sequentially as internal reasoning — the skill's logic is identical, only parallelism is lost.
+3. **NATIVE DISPATCH**: Use the current harness's real native subagent interface: Claude Agent/task where exposed,
+   Codex collaboration/spawn_agent under its adapter. The literal `task()` name is not a capability
+   probe. Keep all specified roles/prompts and result schemas; scheduling follows the approved plan
+   and max_active_subagents=1 unless its explicit concurrency gate permits more. Read actual native
+   completion and same-invocation accepted evidence before dependent work. Missing dispatch or a
+   required independent examiner means BLOCKED with the missing capability; internal reasoning is
+   not a completed subagent or independent review. The following task(...) examples are prompt
+   schemas to adapt to the exposed native interface, not proof of a callable tool.
 4. **LANGUAGE MATCHING**: Detect the user's language from their input. Write the final report in
    that same language. The skill instructions are English, but the OUTPUT adapts.
 5. **COMPLETE REPORTS ONLY**: Never deliver partial reports. All 4 phases must complete before writing the file.
@@ -222,11 +227,11 @@ Expected output: docs/research/deepresearch-{slug}-{date}.md
 
 ---
 
-## Phase 1: Parallel Multi-Source Research
+## Phase 1: Multi-Source Research (approved native scheduling)
 
 ### Agent Allocation Strategy
 
-Launch 5-8 agents in parallel. Each agent gets ONE research angle and a DISTINCT search strategy.
+Queue 5-8 real native agents under the CRITICAL RULE 3 scheduling gate. Each agent gets ONE research angle and a DISTINCT search strategy.
 
 **For GENERAL topics (non-technical):**
 
@@ -285,10 +290,12 @@ Research Plan.
 
 ### Collecting Results
 
-After launching all agents, **end your response and wait for completion notifications**.
+Collect each role through the actual native completion/readback interface under CRITICAL RULE 3.
+Claude background notifications and Codex wait/readback are distinct surfaces; approved serial
+scheduling waits for each actual completion before the next dispatch.
 
-When `<system-reminder>` arrives for each task:
-1. `background_output(task_id="...")` to collect results
+For each completed role:
+1. Read its actual native result and completion provenance
 2. Parse the `<research_findings>` structure
 3. Store findings indexed by agent and angle
 4. Continue collecting until ALL agents complete
@@ -370,6 +377,9 @@ disprove findings, but to identify:
 
 ### Launch Socratic Examiner
 
+Use a real independent native examiner under the dispatch rule above; missing execution or
+completion evidence blocks Phase 4.
+
 ```typescript
 task(subagent_type="oracle", load_skills=[], run_in_background=false,
   description="Socratic examination of research findings",
@@ -434,7 +444,7 @@ After writing the file:
 | Agent webfetch count < 3 | **CRITICAL** |
 | Skipping Round 3 verification | **CRITICAL** |
 | Tool call fails and agent continues without resolving | **CRITICAL** |
-| Running research agents sequentially instead of in parallel (when env supports it) | HIGH |
+| Ignoring explicitly approved scheduling or silently dropping required research roles | HIGH |
 | Skipping Socratic examination | HIGH |
 | Delivering report without cross-validation phase | HIGH |
 | All agents using identical search queries | HIGH |

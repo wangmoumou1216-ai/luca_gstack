@@ -9,14 +9,33 @@ import { existsSync, readFileSync, writeFileSync, rmSync, mkdtempSync, mkdirSync
 import { tmpdir } from 'os';
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
+import { createHash } from 'crypto';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RUNNER = join(ROOT, '.codex', 'workflow-runner.mjs');
 const WF_DIR = join(ROOT, '.claude', 'workflows');
+const callerFixtures = [];
+const freezeCaller = () => {
+  const root = mkdtempSync(join(tmpdir(),'workflow-runner-freeze-')); callerFixtures.push(root);
+  const dir = join(root,'.claude/skill-os/evolution'); mkdirSync(dir,{recursive:true});
+  writeFileSync(join(dir,'adoption-log.jsonl'),'{"fused_candidate_id":"same/id"}\n\n{"fused_candidate_id":"same/id"}\n');
+  const argv = [join(ROOT,'scripts/evolution-adoption-snapshot.mjs'),'--root',root,'--workflow-args','--date','2026-10'];
+  const started_at = new Date().toISOString();
+  const r = spawnSync(process.execPath,argv,{cwd:ROOT,encoding:'utf8',timeout:10000});
+  const ended_at = new Date().toISOString();
+  if (r.status !== 0) throw new Error(`caller CLI freeze failed: ${r.stderr}`);
+  const path = join(root,'caller-args.json'); writeFileSync(path,r.stdout);
+  const actual = readFileSync(path,'utf8'); if (actual !== r.stdout) throw new Error('caller freeze readback mismatch');
+  console.log(JSON.stringify({kind:'CALLER_CLI_FREEZE_NOT_NATIVE',argv:[process.execPath,...argv],cwd:ROOT,started_at,ended_at,exit_code:r.status,path,sha256:createHash('sha256').update(actual).digest('hex'),root}));
+  return {args:actual,root};
+};
 let pass = 0, fail = 0;
 const ok = (n, c, extra = '') => { c ? (console.log(`PASS ${n}`), pass++) : (console.log(`FAIL ${n}${extra ? ' — ' + extra : ''}`), fail++); };
-const runDry = (name, timeout = 240000) =>
-  spawnSync('node', [RUNNER, name, '--dry-run'], { cwd: ROOT, encoding: 'utf8', timeout });
+const runDry = (name, timeout = 240000) => {
+  const freeze = name === 'framework-evolution-scout' ? freezeCaller() : null;
+  return spawnSync('node', [RUNNER, name, '--dry-run',...(freeze ? ['--args',freeze.args] : [])],
+    { cwd: ROOT, encoding: 'utf8', timeout, env:{...process.env,...(freeze ? {LUCA_WF_WORK_ROOT:freeze.root} : {})} });
+};
 const parse = (s) => { try { return JSON.parse(s); } catch { return null; } };
 
 ok('W0 runner 存在且语法合法',
@@ -46,7 +65,7 @@ ok('W0 runner 存在且语法合法',
 {
   const fixtureRoot = mkdtempSync(join(tmpdir(), 'workflow-runner-dry-'));
   for (const dir of ['.codex', 'scripts', '.claude/workflows']) mkdirSync(join(fixtureRoot, dir), {recursive: true});
-  for (const file of ['.codex/workflow-runner.mjs', 'scripts/model-route.mjs', 'scripts/model-route-host.mjs']) copyFileSync(join(ROOT, file), join(fixtureRoot, file));
+  for (const file of ['.codex/workflow-runner.mjs', 'scripts/model-route.mjs', 'scripts/model-route-host.mjs', 'scripts/evolution-adoption-snapshot.mjs']) copyFileSync(join(ROOT, file), join(fixtureRoot, file));
   const probe = join(fixtureRoot, '.claude/workflows/__probe_tmp.js');
   // 与真实 workflow 同形：带 export、带顶层 return
   writeFileSync(probe, `
@@ -164,9 +183,40 @@ for (const tail of [['--args'], ['--args','--dry-run'], ['--args','{bad'], ['--a
   const r=spawnSync('node',[RUNNER,'framework-evolution-scout','--dry-run',...tail],{encoding:'utf8',timeout:10000});
   ok(`W6 reject malformed args ${JSON.stringify(tail)}`,r.status===2 && !/runner: agent/.test(r.stderr),r.stderr);
 }
-for (const [name,value] of [['framework-evolution-scout',{}],['external-skill-scout','testing']]) {
-  const r=spawnSync('node',[RUNNER,name,'--dry-run','--args',JSON.stringify(value)],{encoding:'utf8',timeout:10000});
+for (const raw of ['null', '[]', '1']) {
+  const r=spawnSync('node',[RUNNER,'framework-evolution-scout','--dry-run','--args',raw],{encoding:'utf8',timeout:10000});
+  ok(`W6 reject non-object args ${raw}`,r.status===1 && /workflow args must be an object/.test(r.stderr)
+    && /agent ok=0 fail=0/.test(r.stderr) && !r.stdout.trim(),r.stderr);
+}
+for (const [name,value] of [['framework-evolution-scout',null],['external-skill-scout','testing']]) {
+  const freeze=name==='framework-evolution-scout'?freezeCaller():null;
+  const r=spawnSync('node',[RUNNER,name,'--dry-run','--args',freeze?freeze.args:JSON.stringify(value)],
+    {encoding:'utf8',timeout:10000,env:{...process.env,...(freeze?{LUCA_WF_WORK_ROOT:freeze.root}:{})}});
   ok(`W6 valid args ${name}`,r.status===0 && parse(r.stdout)!==null,r.stderr);
+}
+{
+  const r=spawnSync('node',[RUNNER,'framework-evolution-scout','--dry-run','--args','{}'],{encoding:'utf8',timeout:10000});
+  ok('W6 missing caller freeze refuses before any agent',r.status===1 && /caller snapshot does not match live ledger|requires caller CLI freeze/.test(r.stderr)
+    && /agent ok=0 fail=0/.test(r.stderr) && !r.stdout.trim(),r.stderr);
+}
+{
+  const freeze = freezeCaller();
+  const make = () => JSON.parse(freeze.args);
+  const forgedHash = make(); forgedHash.adoption_snapshot.sha256 = 'f'.repeat(64);
+  const forgedEntries = make(); forgedEntries.adoption_snapshot.entries = [];
+  const mixed = make(); mixed.target_repos = ['owner/one'];
+  for (const [label, args] of [['forged hash', forgedHash], ['forged entries', forgedEntries], ['mixed punctual+sweep', mixed]]) {
+    const r = spawnSync('node', [RUNNER, 'framework-evolution-scout', '--dry-run', '--args', JSON.stringify(args)], {
+      cwd: ROOT, encoding: 'utf8', timeout: 10000, env: { ...process.env, LUCA_WF_WORK_ROOT: freeze.root },
+    });
+    ok(`W7 ${label} rejected before agent`, r.status === 1 && /agent ok=0 fail=0/.test(r.stderr)
+      && /does not match live ledger|不得混用/.test(r.stderr), r.stderr);
+  }
+  callerFixtures.push(freeze.root);
+}
+for(const root of callerFixtures) {
+  if(fail || process.env.U3_KEEP_TEST_ROOT) console.log('RETAINED_CALLER_FIXTURE='+root);
+  else rmSync(root,{recursive:true,force:true});
 }
 console.log(`\n=== test-workflow-runner summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail === 0 ? 0 : 1);

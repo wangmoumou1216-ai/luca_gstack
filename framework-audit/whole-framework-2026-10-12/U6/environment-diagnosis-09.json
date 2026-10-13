@@ -1,0 +1,59 @@
+{
+  "kind": "environment-failure-diagnosis",
+  "source": "candidate-09.json",
+  "initial_full_local": {
+    "command": "bash scripts/verify.sh",
+    "exit_code": 1,
+    "PASS": 122,
+    "FAIL": 2,
+    "WARN": 0,
+    "DELEGATED": 1,
+    "log_ref": {
+      "path": "/Users/luca/.codex/worktrees/6a95/luca_gstack/framework-audit/whole-framework-2026-10-12/U6/full-verify-09.log",
+      "sha256": "2de7d0711242eed8e3624d62c36d44c20798624d84a095799fc5e0aa74bd71b9"
+    },
+    "failures": [
+      "G2 temporary checkout had no repo-local core.hooksPath",
+      "S34 personal trust binds the deployed Git directory, not a new temporary checkout"
+    ]
+  },
+  "narrow_local_red": {
+    "exit_code": 1,
+    "log_ref": {
+      "path": "/Users/luca/.codex/worktrees/6a95/luca_gstack/framework-audit/whole-framework-2026-10-12/U6/wiring09-local-red.log",
+      "sha256": "319c7d599d46faeca07f2faa8359acdb5c0e65990503cb591f48c88fe7db4ded"
+    }
+  },
+  "repair": {
+    "scope": "only owned temporary snapshot Git configuration",
+    "command": "git config --local core.hooksPath .githooks",
+    "source_changed": false,
+    "global_config_changed": false,
+    "personal_trust_changed": false
+  },
+  "ci_wiring": {
+    "exit_code": 0,
+    "PASS": 22,
+    "FAIL": 0,
+    "BLOCKED": 1,
+    "DELEGATED": 1,
+    "log_ref": {
+      "path": "/Users/luca/.codex/worktrees/6a95/luca_gstack/framework-audit/whole-framework-2026-10-12/U6/wiring09-ci-green.log",
+      "sha256": "5436b4b1a752e9843b74ba1ea5b801d0684f7661c104fd8d8307ac8e22183ff3"
+    }
+  },
+  "actual_deployment_wiring": {
+    "work_root": "/Users/luca/.codex/worktrees/6a95/luca_gstack",
+    "exit_code": 0,
+    "PASS": 22,
+    "FAIL": 0,
+    "BLOCKED": 1,
+    "DELEGATED": 1,
+    "S12": "actual deployed Git root exact hook trust PASS",
+    "log_ref": {
+      "path": "/Users/luca/.codex/worktrees/6a95/luca_gstack/framework-audit/whole-framework-2026-10-12/U6/wiring09-deployment.log",
+      "sha256": "6376a4ed1452108dc456fc3d38db415f2af2363188dfac12812555a45a571651"
+    }
+  },
+  "meaning": "Static mode intentionally blocks native L1-L3; separate retained actual CLI runs are the native boundary evidence. Delegated Claude subset needs same full-run C11/S30 execution, not this command alone."
+}

@@ -1,6 +1,7 @@
-// Harness 检测 + 能力探针（P0 / WS-A0，2026-07-25 跨-agent 适配）。
+// Harness 检测 + 静态宿主能力声明（P0 / WS-A0，2026-07-25 跨-agent 适配）。
 //
-// 职责：告诉调用方"当前跑在哪个 agent harness 上、它具备哪些能力"，让框架能**报告**降级面，
+// 职责：告诉调用方当前宿主与已知协议能力；本模块不枚举当前会话工具，不能证明扩展已部署。
+// 让框架能**报告**降级面，
 // 而不是静默失效。与 memroot.mjs（store 解析）/ project-substrate.mjs（项目身份）分属不同
 // concern，保持 deep-module 边界。
 //
@@ -93,8 +94,8 @@ export function isEditTool(toolName) {
   return /^(Write|Edit|MultiEdit|NotebookEdit|apply_patch)$/.test(String(toolName || ''));
 }
 
-// 能力表。控制原语是共享能力；厂商差异留在工具分发面与上层交互原语。
-export function capabilities(harness = detectHarness()) {
+// 静态宿主声明，不是当前会话的工具可用性探针。控制原语有独立实测；扩展仍需会话发现。
+export function capabilities(harness = actualHarness()) {
   const notCodex = harness !== HARNESS.CODEX;
   return {
     harness,
@@ -107,8 +108,8 @@ export function capabilities(harness = detectHarness()) {
     blockVerb: true,            // Stop hook 的 decision:block（两家原生接受）
     writeHook: true,            // Codex 以 apply_patch 分发，adapter 做目标特定归一化
     inputMutation: true,        // Codex 需同发 permissionDecision:allow（adapter 补齐）
-    // 以下两项**没有安全的兜底方向**（吐一个 Codex 执行不了的 Workflow(...)/AskUserQuestion
-    // 调用不会"多一层保护"，只会让 agent 卡住），故仍门于 claude 正向确定。
+    // 以下两项仅保留历史宿主分类/API兼容，不证明 Claude 当前会话已提供该工具。
+    // 调用前必须实际发现；缺失/未验证时报告 BLOCKED，不能凭 true 发起原生调用。
     workflow: harness === HARNESS.CLAUDE,
     askUserWidget: harness === HARNESS.CLAUDE,
     // 跨 harness 通常都有（Codex 侧工具名未核验 → 计划 §2b）

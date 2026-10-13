@@ -26,15 +26,16 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+# 本次输入提示由调用方提供；Phase 0 在已获准 canonical 范围内发现/验证，不从共享别名取最新。
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH"
 echo "SESSION: $_SESSION_ID"
 ls framework/*.html 2>/dev/null && echo "FRAMEWORK_OK" || echo "FRAMEWORK_MISSING"
 ls framework/tokens.css 2>/dev/null && echo "TOKENS_OK" || echo "TOKENS_MISSING"
-_TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
+_TOPIC="${_TOPIC:-none}"
 echo "CURRENT_TOPIC: $_TOPIC"
-_EXISTING_BLUEPRINT=$(ls -t docs/prototype/*/blueprint.yaml 2>/dev/null | head -1)
+_EXISTING_BLUEPRINT="${_EXISTING_BLUEPRINT:-}"
 echo "EXISTING_BLUEPRINT: ${_EXISTING_BLUEPRINT:-none}"
 python3 .claude/observability/scripts/get_rules.py figma-demo "*" 2>/dev/null || true
 ```
@@ -186,8 +187,10 @@ Preamble 的旧资产探测只供参考，不是生成前置；未采用母版/t
 
 ### 断点恢复
 
+仅消费本次已核验的精确 blueprint 引用；不按共享目录或“最新”文件替换。明确要求恢复但缺引用时先定位获准当前任务的来源，无法唯一核验则 NEEDS_CONTEXT；不静默当作新建。
+
 ```bash
-_EXISTING_BLUEPRINT=$(ls -t docs/prototype/*/blueprint.yaml 2>/dev/null | head -1)
+_EXISTING_BLUEPRINT="${_EXISTING_BLUEPRINT:-}"
 ```
 
 如果发现已有 blueprint.yaml 且有未完成节点：
@@ -815,7 +818,7 @@ cat .claude/skills/office/figma-demo/templates/demo-template.html
    → "none"：继续
    → 有问题：评估严重度
      → 可自动修复的（CSS 冲突）→ 指示 Assembly SubAgent 修复
-     → 需要回退节点的 → 回退到 Phase 4 重新调度该节点
+     → 需要回退节点的 → 仅未 LOCKED 节点可回 Phase 4；LOCKED 节点须用户明确要求才可改，否则 BLOCKED，保留问题并升级
      → 结构性问题 → BLOCKED，升级给用户
 
 3. 验证 index.html

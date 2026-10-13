@@ -6,6 +6,7 @@ import { homedir } from 'os';
 import { execSync, spawn } from 'child_process';
 import { randomUUID } from 'crypto';
 import { resolveMemoryRoot } from './lib/memroot.mjs';
+import { actualHarness, HARNESS } from './lib/harness.mjs';
 import {
   PROJECTS_ROOT,
   PROJECT_STATE_SCHEMA,
@@ -539,7 +540,7 @@ try {
 } catch { }
 
 // 月度框架自进化：SessionStart 到期探测 + 升级提示（助理式，FM-8）。
-// 不在此 headless 跑 scout——发现需 agent harness（Workflow），纯后台 python 驱动不了；
+// 不在此 headless 跑 scout——发现需当前 harness 的 workflow 执行面，纯后台 python 驱动不了；
 // 这里只「探测到期 + 提示在 session 内运行」。digest 缺失即为待办真值（不另立 marker，遵循最小文件）。
 try {
   const evoDir = join(projectRoot, '.claude', 'skill-os', 'evolution');
@@ -557,7 +558,12 @@ try {
         while (m <= 0) { m += 12; y -= 1; }
         if (!existsSync(join(evoDigests, `${ym(y, m)}-evolution.md`))) missing++;
       }
-      const cmd = `Workflow({name:'framework-evolution-scout', args:{date:'${curMonth}'}})`;
+      const host = actualHarness();
+      const cmd = host === HARNESS.CODEX
+        ? `node .codex/workflow-runner.mjs framework-evolution-scout --args "$(node scripts/evolution-adoption-snapshot.mjs --workflow-args --date '${curMonth}')"`
+        : host === HARNESS.CLAUDE
+          ? `先确认当前会话实际提供 Workflow 工具；缺失或未验证则报告 BLOCKED（workflow 执行面不可用/未验证），不发起调用。仅确认可用后，运行 node scripts/evolution-adoption-snapshot.mjs --workflow-args --date '${curMonth}' 并读回冻结 JSON，再调用 Workflow({name:'framework-evolution-scout', args:<该 CLI 返回的完整 JSON>})`
+          : '先确认当前 harness 的 workflow 执行能力；未知宿主不提供原生调用指令';
       if (missing >= 2) {
         process.stdout.write(`[session-restore] ⚠️ 已跳过 ${missing} 次月度演进扫描（最近含本月 ${curMonth}）。在 session 内运行：${cmd}\n`);
       } else {
@@ -569,7 +575,7 @@ try {
       // scout 是 propose-only 的（workflow 无 fs，只 return 数据）：簿记落盘走确定性脚本
       // evolution-bookkeep.mjs（曾靠人手动追加 candidate-log 而漏做 → 跨月去重失效，故脚本化）；
       // digest 仍人工写，但首节四件套（采纳复盘/opportunities 裁决/addressed 复核/重访到期）是强制项。
-      process.stdout.write(`[session-restore] ↳ 跑完落盘：① 把 Workflow 返回 JSON 存文件后跑 node scripts/evolution-bookkeep.mjs <json路径>（自动追加 candidate-log + 更新 yield_stats/streak，替代手工）；② 写 digests/${curMonth}-evolution.md，首节必含四件套：采纳复盘（返回值 adoption_review）+ 上期 opportunities 逐条裁决（prior_opportunities_to_adjudicate：开 gap/对标深评(高信号 hub→BENCHMARK-RUNBOOK 模式2)/归档/观察）+ addressed 复核（addressed_recheck）+ 重访到期（revisit_due：自设重访条件已满足的 open gap，逐条裁决开工/改条件/关闭）。\n`);
+      process.stdout.write(`[session-restore] ↳ 跑完落盘：① 把本次 workflow 返回 JSON 存文件后跑 node scripts/evolution-bookkeep.mjs <json路径>（自动追加 candidate-log + 更新 yield_stats/streak，替代手工）；② 写 digests/${curMonth}-evolution.md，首节必含四件套：采纳复盘（返回值 adoption_review）+ 上期 opportunities 逐条裁决（prior_opportunities_to_adjudicate：开 gap/对标深评(高信号 hub→BENCHMARK-RUNBOOK 模式2)/归档/观察）+ addressed 复核（addressed_recheck）+ 重访到期（revisit_due：自设重访条件已满足的 open gap，逐条裁决开工/改条件/关闭）。\n`);
     }
   }
 } catch { }

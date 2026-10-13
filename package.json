@@ -24,7 +24,7 @@
     "test:domain-modeling": "node scripts/test-domain-modeling-skill.mjs --all",
     "test:domain-modeling-behavior": "node scripts/test-domain-modeling-behavior.mjs --self-test",
     "test:handoff-validator": "node scripts/test-handoff-validator.mjs",
-    "test:project-scope": "node scripts/test-project-scope-guard.mjs",
+    "test:project-scope": "node scripts/test-project-scope-guard.mjs && node scripts/test-project-scope-fail-closed.mjs",
     "test:project-read-grants": "node scripts/test-project-read-grants.mjs",
     "test:event-authority": "node scripts/test-prompt-attestation.mjs && node scripts/test-event-attestation-negatives.mjs && node scripts/test-event-attestation-mutations.mjs && node scripts/test-event-transaction-faults.mjs && node scripts/test-event-switch-e2e.mjs",
     "test:project-transaction": "node scripts/test-project-transaction.mjs && npm run test:event-authority --silent",

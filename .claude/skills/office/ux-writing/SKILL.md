@@ -26,8 +26,8 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+# 本次输入提示由调用方提供；Phase 0 在已获准 canonical 范围内发现/验证，不从共享别名取最新。
 python3 .claude/observability/scripts/get_rules.py ux-writing "*" 2>/dev/null || true
-cat .claude/current-topic.txt 2>/dev/null || true
 ```
 
 ## 定位（设计段的内容/语言维度）
@@ -55,7 +55,7 @@ cat .claude/current-topic.txt 2>/dev/null || true
 ### 相位 1：语义规范（生产模式，pre-brief）
 
 1. **Load `.claude/skills/office/references/ux-writing.md` now — 必须完整读取**（双层规范）。
-2. 输入：最新 PRD（`ls -t docs/prd/*.md`）/ ux-brainstorm 方案（若有）/ 用户口述的产品语境；
+2. 输入：本次已核验精确 PRD / ux-brainstorm 方案（若有）/ 用户口述的产品语境；发现仅限已获准 canonical 当前任务范围，不按共享目录或“最新”文件代选；
    场景 D 额外读 `references/ai-native-state-coverage.md` 的 7 个 AI 态（hedging 文案主战场）。
 3. 产出 voice-copy-spec，**必含两节**（结构镜像 reference 的双层）：
    - **「语义层结论」**：本产品的内容语义决策——错误三要素怎么落、空态引导策略、hedging 语气线、
@@ -72,8 +72,9 @@ cat .claude/current-topic.txt 2>/dev/null || true
 
 ## Handoff（分级）
 
-相位 1 在 workflow 模式（design-brief 为既定下游）必写；相位 2 standalone 终端交付按
-lightweight 豁免 DONE 合法。
+两个相位在 standalone 与 workflow 均按共享 office/handoff-protocol 完成交接；
+本 skill 的 runtime-estimate=10000，没有已定义的 <=5000 轻量子模式。
+相位 2 的交接记录评审位置、原文/改写、适用规范与未决项；不虚构相位 1 结论。
 
 ```bash
 mkdir -p docs/handoff
@@ -83,7 +84,7 @@ mkdir -p docs/handoff
 `docs/handoff/YYYY-MM-DD-<topic>-ux-writing-handoff.md`，**必含**：语义层结论清单（design-brief
 Step 1.0b 的继承输入）、逐字层适用范围声明（仅本地路径）、未收敛的术语冲突。
 **不写 workflow-state**（原则，非仅循先例）：本 skill 是可选内容规范节点、轻量单文档终端交付，
-无"中断后从此节点续跑"的语义可落——属「不占固定流程节点，故不写 workflow-state」这一类。
+无"中断后从此节点续跑"的固定节点语义——不写 workflow-state 仍保留上述重型 handoff。
 重型多阶段的固定节点（deepresearch/ux-research/design-brief 等）才写。节点状态由编排层维护。
 
 ## 末尾约束

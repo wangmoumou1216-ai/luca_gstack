@@ -154,7 +154,7 @@ function run(env, payload, extraEnv = {}, { addDefaultBoundary = true, viaAdapte
     const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
     if (!env.adapterReady) {
       assert.equal(spawnSync('git', ['init', '-q', env.gstack]).status, 0);
-      for (const file of ['.codex/codex-hook-adapter.mjs', '.claude/hooks/controlled-change-guard.mjs', 'scripts/controlled-change.mjs']) {
+      for (const file of ['.codex/codex-hook-adapter.mjs', '.claude/hooks/controlled-change-guard.mjs', 'scripts/controlled-change.mjs', 'scripts/model-route-host.mjs']) {
         mkdirSync(dirname(join(env.gstack, file)), { recursive: true });
         cpSync(join(repo, file), join(env.gstack, file));
       }
@@ -178,7 +178,7 @@ function run(env, payload, extraEnv = {}, { addDefaultBoundary = true, viaAdapte
     },
     encoding: 'utf8',
   });
-  assert.equal(r.status, 0, 'hook 必须永远 exit 0（fail-open），stderr=' + r.stderr);
+  assert.equal(r.status, 0, '已解析调用应返回正常控制决策，stderr=' + r.stderr);
   return r.stdout.trim() ? JSON.parse(r.stdout) : null; // 空 stdout = pass-through
 }
 const abs = (env, proj, rest) => join(realpathSync(join(env.projects, proj)), rest);
@@ -265,13 +265,13 @@ check('pinned Read docs/ → redirect', () => {
   assert.equal(o.hookSpecificOutput.updatedInput.file_path, abs(env, 'muse', 'docs/PROGRESS.md'));
 });
 
-// 11. fail-open：stdin 非法 JSON → 不崩、exit 0、pass-through
-check('malformed stdin → fail-open pass-through', () => {
+// 11. 输入无法解析时不能证明调用安全；拒绝本次调用，不持久锁定 session。
+check('malformed stdin → fail-closed denial', () => {
   const env = makeEnv({ pins: { S1: 'muse' } });
   const r = spawnSync('node', [HOOK], { input: 'not json{', cwd: env.gstack,
     env: { ...process.env, CLAUDE_PROJECT_DIR: env.gstack, LUCA_GSTACK_ROOT: env.gstack, LUCA_PROJECTS_ROOT: env.projects }, encoding: 'utf8' });
   assert.equal(r.status, 0);
-  assert.equal(r.stdout.trim(), '');
+  assert.equal(JSON.parse(r.stdout).hookSpecificOutput.permissionDecision, 'deny');
 });
 
 // 12. 无 sid（管道/测试）→ 无 pin 视角，docs 写 deny；非项目放行

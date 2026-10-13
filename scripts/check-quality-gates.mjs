@@ -10,8 +10,12 @@ const CRITERIA_BLOCK_RE = /^criteria:[ \t]*\r?\n((?:[ \t]+-[^\r\n]*(?:\r?\n|$))+
 const CRITERION_LINE_RE = /^[ \t]*-[ \t]*["']?\[(C\d+)\].*?(PASS|FAIL|UNKNOWN).*$/gm;
 function strictCriterion(line) {
   // The verdict precedes the first evidence/reason field. Never search its value.
-  const prefix = line.match(/^(.*?)[ \t]+(?:证据|原因|evidence|reason)[ \t]*[:：]/i)?.[1];
-  const match = prefix?.match(/^[ \t]*-[ \t]*["']?\[(C\d+)\][^\r\n]*\b(PASS|FAIL|UNKNOWN)[ \t]*$/);
+  // Accept both the official PASS（证据: ...） template and legacy spaced fields.
+  const field = line.match(/^(.*?)(?:[ \t]+|[（(])[ \t]*(?:证据|原因|evidence|reason)[ \t]*[:：](.*)$/i);
+  if (!field || !field[2].replace(/[ \t）)'"\s]+$/u, '').trim()) return null;
+  const prefix = field[1];
+  if ([...prefix.matchAll(/\b(?:PASS|FAIL|UNKNOWN)\b/g)].length !== 1) return null;
+  const match = prefix.match(/^[ \t]*-[ \t]*["']?\[(C\d+)\][^\r\n]*\b(PASS|FAIL|UNKNOWN)[ \t]*$/);
   return match ? [line, match[1], match[2]] : null;
 }
 

@@ -30,7 +30,8 @@
 
 {用户回答 — 具体到操作层面}
 
-**是否追加到 CONTEXT.md：** {是 / 否}
+**学习候选：** {候选行动与实际证据 / 无候选}
+**治理状态：** {未处理 / QUALIFIED / NO_SIGNAL / UNRESOLVED；实际门据与许可}
 
 ---
 
@@ -41,11 +42,10 @@
 
 ---
 
-## 追加到 CONTEXT.md 的内容
-
-```markdown
-## 来自 YYYY-MM-DD {topic} 复盘的洞察
+## 待治理的学习候选
 
 {问四的具体行动 / 问五的追问节点建议}
-来源：{topic} 项目复盘
-```
+来源：{topic} 项目复盘及实际回答
+
+候选不自动写 CONTEXT.md；由 extraction-bar / learning-actions owner 判定治理，
+项目归因与精确写许可另核。记录实际落点或尚缺的证据/权限。

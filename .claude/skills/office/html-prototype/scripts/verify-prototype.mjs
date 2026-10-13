@@ -207,6 +207,12 @@ if (mode === "figma-demo") {
 } else if (decisionIds.length > 0) {
   const missing = decisionIds.filter((id) => !mappedDecisionIds.includes(id));
   addCheck("Design decisions mapped", missing.length === 0, missing.length ? `Missing: ${missing.join(", ")}` : `${decisionIds.length}/${decisionIds.length} mapped.`);
+} else if (mode === "standalone-brief") {
+  addCheck("Standalone brief source and limitation recorded",
+    !designBrief.trim() && /^Source kind:[ \t]*standalone_brief[ \t]*\r?$/mi.test(prototypeSpec)
+      && /traceability[^\n]*(?:不完整|incomplete)|可追踪[^\n]*不完整/i.test(prototypeSpec)
+      && /^Brief source:[ \t]*\S[^\r\n]*$/mi.test(prototypeSpec),
+    "Record the actual direct brief source and incomplete traceability; an upstream design brief cannot use this branch.");
 } else if (mode === "standalone-mobile") {
   addCheck(
     "Standalone mobile traceability limitation recorded",
@@ -214,7 +220,7 @@ if (mode === "figma-demo") {
     "prototype-spec.md must state carrier choice and incomplete traceability when no design brief is used."
   );
 } else if (purpose === "logic-validation") {
-  addCheck("Logic question source recorded", /Logic Validation Coverage/.test(prototypeSpec) && /^Question source:\s*\S.+$/m.test(prototypeSpec), "Use the actual confirmed brief; do not fabricate D IDs for a standalone question.");
+  addCheck("Logic question source recorded", /Logic Validation Coverage/.test(prototypeSpec) && /^Question source:[ \t]*\S[^\r\n]*$/m.test(prototypeSpec), "Use the actual confirmed brief; do not fabricate D IDs for a standalone question.");
 } else {
   addCheck("Design decisions mapped", mappedDecisionIds.length > 0, `No design brief IDs found; HTML mapped IDs: ${mappedDecisionIds.join(", ") || "none"}.`);
 }
@@ -431,6 +437,10 @@ if (explicitMode?.toLowerCase() === "muse-proto-gen") {
 }
 const designBriefArg = extraArgs.find((arg) => !arg.startsWith("--"));
 const designBriefPath = designBriefArg ? path.resolve(designBriefArg) : null;
+if (designBriefPath && !fs.existsSync(designBriefPath)) {
+  console.error("Supplied design brief is missing; cannot downgrade to a standalone source.");
+  return 2;
+}
 const outDir = path.dirname(htmlPath);
 const reportPath = path.join(outDir, "prototype-qa-report.md");
 const jsonPath = path.join(outDir, "qa-results.json");
@@ -453,8 +463,8 @@ const blueprint = fs.existsSync(blueprintPath)
   : "";
 const inferredMode = /\/figma-demo|figma-demo|Figma Demo Prototype Spec/i.test(prototypeSpec) || Boolean(blueprint)
   ? "figma-demo"
-  : "html-prototype";
-const allowedModes = new Set(["html-prototype", "figma-demo", "standalone-mobile", "ux-audit", "screenshot-delta"]);
+  : /^Source kind:[ \t]*standalone_brief[ \t]*\r?$/mi.test(prototypeSpec) ? "standalone-brief" : "html-prototype";
+const allowedModes = new Set(["html-prototype", "figma-demo", "standalone-mobile", "standalone-brief", "ux-audit", "screenshot-delta"]);
 const mode = explicitMode && allowedModes.has(explicitMode) ? explicitMode : inferredMode;
 
 

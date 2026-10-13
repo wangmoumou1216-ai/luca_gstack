@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "9176ff36565d39520aa6fb31ce40e22c992d00e556f12b93368033dac31ff00e",
+  "source_sha256": "50aec311541e7dff2f090ffd4f6f86bf9edef4e7dacc9c6404d1a6517635e237",
   "skill": "grilling",
   "group": "skills",
   "global": {
@@ -40,10 +40,11 @@
       }
     },
     "quality_gates": [
-      "one_decision_question_per_turn",
+      "all_ready_independent_frontier_questions_per_round",
       "facts_retrieved_before_asking",
+      "real_answers_and_closing_confirmation",
       "no_authority_expansion"
     ],
-    "notes": "Direct/semantic/internal 共用一次一个决定规则；internal 只继承父任务 authority。"
+    "notes": "Direct/semantic/internal 共用 ready frontier 规则：同轮询问所有前置已 settled 的独立决定，依赖未决项留到后轮；真实回答与收尾确认不可省略。internal 只继承父任务 authority。"
   }
 }

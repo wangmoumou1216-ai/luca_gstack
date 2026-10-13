@@ -1,11 +1,11 @@
 # Phase 1 Dispatch Prompt Templates — loaded on demand in Phase 1; contains the verbatim dispatch prompts for Agents A/B/C (do not paraphrase when firing tasks).
 
 ```
-Subagent dispatch: 3 parallel background agents
+Subagent dispatch: 3 real native roles; scheduling/completion owned by brainstorm/SKILL.md
 Each agent receives the full research content (or cold-start idea) and produces structured XML output.
 
-# If environment supports task(): use the prompts below with task(run_in_background=true)
-# If environment does NOT support task(): execute each prompt sequentially as internal reasoning
+# Use the actual native interface and approved scheduling from brainstorm/SKILL.md.
+# task(...) is an example envelope; preserve prompts/results, never substitute self-reasoning.
 
 --- Agent A: Extract stated requirements ---
 task(

@@ -34,19 +34,20 @@ context-cost:
 ## Preamble (run first)
 
 ```bash
+# 本次输入提示由调用方提供；Phase 0 在已获准 canonical 范围内发现/验证，不从共享别名取最新。
 _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _SESSION_ID="$$-$(date +%s)"
 echo "BRANCH: $_BRANCH"
-_DECISION=$(ls -t docs/decisions/*-design-brief.md 2>/dev/null | head -1)
-_PRD=$(ls -t docs/prd/*-prd.md 2>/dev/null | head -1)
-_CONSTRAINTS=$(ls docs/prd/*-prd-constraints.md 2>/dev/null | head -1)
-_UX_AUDIT=$(ls -t docs/evaluation/*-ux-audit.md 2>/dev/null | head -1)
+_DECISION="${_DECISION:-}"
+_PRD="${_PRD:-}"
+_CONSTRAINTS="${_CONSTRAINTS:-}"
+_UX_AUDIT="${_UX_AUDIT:-}"
 echo "DECISION: ${_DECISION:-none}"
 echo "PRD: ${_PRD:-none}"
 echo "CONSTRAINTS: ${_CONSTRAINTS:-none}"
 echo "UX_AUDIT: ${_UX_AUDIT:-none}"
 ls framework/*.html 2>/dev/null && echo "FRAMEWORK_OK" || echo "FRAMEWORK_MISSING"
-_TOPIC=$(cat .claude/current-topic.txt 2>/dev/null || echo "none")
+_TOPIC="${_TOPIC:-none}"
 echo "CURRENT_TOPIC: $_TOPIC"
 python3 .claude/observability/scripts/get_rules.py html-prototype "*" 2>/dev/null || true
 ```
@@ -87,7 +88,7 @@ standalone 不全局强制 `/design-brief`；workflow / traceable delivery 必�
 | `ux_audit` | 场景 C，按 UX audit 问题清单改版 | 否 |
 | `screenshot_delta` | 场景 B，用户直接给截图和改动说明 | 否，但必须声明未覆盖区域风险 |
 | `figma_demo_blueprint` | 从 `/figma-demo` 的 `blueprint.yaml` / `prototype-spec.md` 继续 | 否 |
-| `standalone_brief` | 用户直接描述要做的原型，且不是 research / ux-brainstorm / design-brief 这类上游产物 | 否，但必须补齐最小上下文；不得承诺端到端可追踪完整 |
+| `standalone_brief` | 直接口述，非上游产物；分类/QA 前完整读取 [直接 Brief 合同](references/standalone-brief.md) | 否；补齐最小上下文，不承诺完整追踪 |
 | `standalone_mobile_prototype` | 用户直接要求移动端独立原型，且确认不调用 framework 母版 | 否，但必须声明不调用母版原因；不得承诺端到端可追踪完整 |
 
 **Workflow mode**：如果用户明确说“继续流程/进入下一步/按上游产物做”，
@@ -235,7 +236,7 @@ AskUserQuestion：
   → 否：告知用户「请先上传截图再继续」，等待截图
 □ 已读取 design-brief.md（如果存在）
 □ 场景B 建议有 prd-constraints.md（约束防火墙 = Not-Do List）：
-  → _CONSTRAINTS 为 none → ⚠️ 软警告（不 BLOCKED）：当前 skill 集暂无自动生产 prd-constraints.md 的节点，
+  → _CONSTRAINTS 为空或 none → ⚠️ 软警告（不 BLOCKED）：当前 skill 集暂无自动生产 prd-constraints.md 的节点，
     缺它则 Not-Do List 防火墙不生效。可手写一份 docs/prd/*-prd-constraints.md 再跑；否则继续生成，
     但须在产出里显式标注「未受约束防火墙保护」，供人工复核。
 ```
@@ -560,14 +561,14 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 属性。不得只写散落的 `display:none` 而没有 `data-prototype-state`。
 
 **状态覆盖要求：**
-- 必须读取 design-brief 的“体验验证结论”状态覆盖表。
-- 每个“是否需要单独设计 = 是”的状态必须有对应 `data-prototype-state`。
-- 若状态写 N/A 但 HTML 设计中实际引入了该状态，不得静默补充，必须返回询问或回到 design-brief 修正。
+- 有实际上游时读 design-brief 状态表；否则按 Phase 1 真实输入在 spec 记录适用状态与缺口，不造上游 IDs。
+- 已确认的每个必要状态必须有对应 `data-prototype-state`。
+- 实际出现而源标 N/A 或有争议的状态，须返问或回实际源 owner 修正。
 
 ### B2B SaaS 视觉反模式清单（禁用项，零容忍）
 
 **来源借鉴：** ConardLi/web-design-skill 的 anti-cliché 清单 + B2B SaaS 场景专属约束。
-**判定标准：** 以下任一项出现在产出里 → SELF_CHECK_PASSED 不得写 YES，必须返工。
+**适用边界：** 以下 B2B 偏好仅匹配实际项目类型/规范时适用，不覆盖其他领域或已确认 DS。
 
 **字体与颜色核对：**
 - 按实际设计规范检查字体、色彩语义与层级；没有规范时检查可读性和一致性，不伪造规范合规。
@@ -603,7 +604,7 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 
 **数据和文案禁用：**
 - ❌ 编造的用户好评、假客户 logo 墙、虚构统计数字
-- ❌ Lorem Ipsum 填充正文（用真实的 B2B 销售场景文案）
+- ❌ Lorem Ipsum 填充正文（用已确认实际领域文案）
 - ❌ 无意义的 placeholder 数据（如"客户 A"、"订单 1"）
 - ✅ 数据位置用 `[数据]` 或真实感示例（如"北京海淀科技有限公司"）
 
@@ -669,9 +670,9 @@ JS 只负责点击 `[data-show-state]` 后切换对应 `[data-prototype-state]` 
 **AI 专有状态检查（含 AI 功能时必须执行）：**
 
 ```bash
-# 检查 design-brief 里是否有 AI 专有状态需要实现
-grep -A2 "思考中态\|低置信态\|拒答态\|部分完成态\|待 Steer 态\|幻觉兜底态\|Agent 执行中态" \
-  docs/decisions/*-design-brief.md 2>/dev/null | grep -v "N/A" | head -20
+# 仅查已核验实际上游；无上游核本次 spec 的已确认状态
+[ -n "${_DECISION:-}" ] && grep -A2 "思考中态\|低置信态\|拒答态\|部分完成态\|待 Steer 态\|幻觉兜底态\|Agent 执行中态" \
+  "$_DECISION" 2>/dev/null | grep -v "N/A" | head -20
 ```
 
 检查到非 N/A AI 专有状态时，**必须额外生成**下列状态页，用 harness 切换，并各加
@@ -689,7 +690,7 @@ grep -A2 "思考中态\|低置信态\|拒答态\|部分完成态\|待 Steer 态\
 
 **执行顺序：**
 1. 先生成基础 5 状态
-2. 读取 design-brief.md 的"体验验证结论"节的 12 状态覆盖表
+2. 核实际上游状态表；无上游核 Phase 1 已确认源/spec 的适用状态
 3. 对每个"是否需要单独设计 = 是"且非 N/A 的 AI 专有状态，按上表规范生成
 4. 每个 AI 状态页加 `<!-- STATE: {状态名} -->` 注释，供后续高级审查核对
 5. 若状态覆盖表某 AI 状态写 N/A 但本质上应该有（例如：有 agent

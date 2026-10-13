@@ -37,7 +37,8 @@ function fixture(t) {
   mkdirSync(join(gstack, 'scripts'), { recursive: true });
   mkdirSync(join(root, 'projects'));
   for (const file of ['.codex/codex-hook-adapter.mjs', '.claude/hooks/project-scope-guard.mjs',
-    '.claude/hooks/controlled-change-guard.mjs', 'scripts/controlled-change.mjs']) {
+    '.claude/hooks/controlled-change-guard.mjs', 'scripts/controlled-change.mjs',
+    'scripts/model-route-host.mjs']) {
     cpSync(join(repository, file), join(gstack, file));
   }
   cpSync(join(repository, '.claude/hooks/lib'), join(gstack, '.claude/hooks/lib'), { recursive: true });

@@ -16,7 +16,8 @@
 //    非项目路径（.claude/skills、memory/、scripts/、framework/、CLAUDE.md…）→ 原样放行。
 //
 // 边界语义：能解析出项目作用域时 fail-closed（无 pin、失效 identity、宽搜、穿越均 deny）；
-// 只有 stdin/运行时完全不可解析时保留 harness 级 fail-open 并留诊断，避免 hook 自身故障锁死所有工具。
+// stdin/运行时不可解析时拒绝本次调用并留诊断；不写持久锁，修复后下一次调用重新判断。
+// Claude >=2.1.295 的注册项 onFailure:block 另覆盖进程启动失败和超时。
 //
 // Bash 说明（诚实边角）：Bash 命令是任意 shell 字符串，只能对"路径位"的 docs/ token 做保守重写
 // （行首/空白/引号/重定向符 后紧跟 docs/），覆盖 mkdir -p docs/…、cat > docs/…、"docs/…" 等常见形态；
@@ -64,15 +65,34 @@ function out(obj) {
       return;
     }
     process.stdout.write(JSON.stringify(obj) + '\n');
-  } catch { }
+  } catch {
+    // 无法交付控制决策不能被当成放行。两端都将 exit 2 解释为阻断。
+    process.exitCode = 2;
+  }
 }
 function passThrough() { process.exit(0); } // 不输出 = 默认放行
 
-// ── 读 stdin（fail-open：读不到就放行）──
+function failClosed(reason) {
+  const message = `[project-scope-guard] 本次调用未通过隔离检查：${reason}。修复 hook 后可重试；未修改 session 状态。`;
+  try { process.stderr.write(message + '\n'); } catch { }
+  out({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: message } });
+}
+
+// ── 读 stdin（无法判断作用域时拒绝本次调用）──
 let raw = '';
-try { raw = readFileSync(0, 'utf8'); } catch { passThrough(); }
-let data = {};
-try { data = JSON.parse(raw || '{}'); } catch { passThrough(); }
+let inputError = '';
+try { raw = readFileSync(0, 'utf8'); } catch { inputError = '无法读取 hook 输入'; }
+let data;
+if (!inputError) {
+  try { data = JSON.parse(raw); } catch { inputError = 'hook 输入不是合法 JSON'; }
+}
+if (!inputError && (!data || typeof data !== 'object' || Array.isArray(data)
+    || typeof data.tool_name !== 'string' || !data.tool_name
+    || !data.tool_input || typeof data.tool_input !== 'object' || Array.isArray(data.tool_input))) {
+  inputError = 'hook 输入缺少有效 tool_name/tool_input';
+}
+if (inputError) failClosed(inputError);
+else {
 const sid = String(data?.session_id || '').replace(/[^\w-]/g, '').slice(0, 36);
 const toolName = data?.tool_name || '';
 const input = data?.tool_input || {};
@@ -80,17 +100,18 @@ const input = data?.tool_input || {};
 const gstackRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 // WS-B2/FIX-2（2026-07-25 深审）：与 4 个身份解析站点共用同一根，支持 LUCA_PROJECTS_ROOT 覆盖。
 // 半接线（此处硬编码而别处已覆盖）会造成"写落 A 根、身份判 B 根"的分裂——正是本 hook 要消灭的症状。
-// 动态 import 失败时回落硬编码默认，保 fail-open（本 hook 任何异常都不得阻断工具调用）。
+// 身份依赖缺失时无法可靠识别项目根/授权边界，拒绝当前调用。
 let PROJECTS_ROOT = join(process.env.HOME || '', 'Desktop', '项目');
 let substrate = null;
 let readGrants = null;
 let childProjects = null;
+let dependencyError = null;
 try {
   substrate = await import('./lib/project-substrate.mjs');
   if (substrate?.PROJECTS_ROOT) PROJECTS_ROOT = substrate.PROJECTS_ROOT;
-} catch { /* fail-open：用默认根 */ }
-try { readGrants = await import('./lib/project-read-grants.mjs'); } catch { }
-try { childProjects = await import('./lib/codex-child-project.mjs'); } catch { }
+} catch (error) { dependencyError = error; }
+try { readGrants = await import('./lib/project-read-grants.mjs'); } catch (error) { dependencyError = error; }
+try { childProjects = await import('./lib/codex-child-project.mjs'); } catch (error) { dependencyError = error; }
 const claudeDir = join(gstackRoot, '.claude');
 
 function readSessionState() {
@@ -1291,8 +1312,11 @@ function main() {
   return out({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: { ...input, [pathField]: c.redirected } } });
 }
 
-// fail-open 包一层：main() 内任何未预期异常都放行，绝不因 hook bug 阻断工具调用。
-try { main(); } catch (e) {
-  try { process.stderr.write(`[project-scope-guard] fail-open: ${e && e.message}\n`); } catch { }
-  passThrough();
+// 未预期异常只拒绝当前调用；下一次调用必须重新通过真实隔离检查。
+try {
+  if (dependencyError) throw dependencyError;
+  main();
+} catch (e) {
+  failClosed(`运行时异常：${e && e.message}`);
+}
 }

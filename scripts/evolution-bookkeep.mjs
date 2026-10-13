@@ -6,43 +6,55 @@
 // （2026-07 漏追加 candidate-log → 跨月去重失效）。本脚本只碰：
 //   1. .claude/skill-os/evolution/candidate-log.jsonl   （追加 run_summary + 全部候选/机会行）
 //   2. .claude/skill-os/evolution/sources-registry.yaml （只改 yield_stats 行的数值，其余字段不动）
+// POSIX helper 在同目录保留稳定锁与持久事务日志；--force 不绕过幂等/冲突门。
 // 并在 zero_yield_streak ≥ 3 时告警（剪枝提议进 digest，人裁；N=3 定义见 sources-registry 头注）。
 //
 // 用法: node scripts/evolution-bookkeep.mjs <workflow-return.json> [--dry-run] [--force] [--root DIR]
 
-import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { adoptionSnapshot } from './evolution-adoption-snapshot.mjs';
 
 const PRUNE_N = 3;
 
 const argv = process.argv.slice(2);
+const planning = argv[0] === '--plan';
 const dryRun = argv.includes('--dry-run');
-const force = argv.includes('--force');
 const rootIdx = argv.indexOf('--root');
-const root = rootIdx >= 0 ? argv[rootIdx + 1] : process.cwd();
-const jsonPath = argv.find(a => !a.startsWith('--') && a !== (rootIdx >= 0 ? argv[rootIdx + 1] : null));
-
-if (!jsonPath || !existsSync(jsonPath)) {
-  console.error('用法: node scripts/evolution-bookkeep.mjs <workflow-return.json> [--dry-run] [--force] [--root DIR]');
-  process.exit(2);
+const root = resolve(rootIdx >= 0 ? argv[rootIdx + 1] : process.cwd());
+const scriptPath = fileURLToPath(import.meta.url);
+// The Python helper owns the one shared lock. Its child is read-only and emits a plan;
+// no public argument/environment flag grants Node any governance write path.
+if (!planning) {
+  const positional = argv.filter((a,i) => !['--dry-run','--force','--root'].includes(a) && (rootIdx < 0 || i !== rootIdx + 1));
+  if (positional.length !== 1 || argv.some(a => a.startsWith('--') && !['--dry-run','--force','--root'].includes(a))) {
+    console.error('usage: evolution-bookkeep.mjs <return.json> [--dry-run] [--force] [--root DIR]'); process.exit(2);
+  }
+  try {
+    const result = spawnSync('python3', [join(dirname(scriptPath), 'evolution-bookkeep-transaction.py'), process.execPath, scriptPath, root, ...(dryRun ? ['--dry-run'] : [])],
+      {input: readFileSync(positional[0]), encoding: 'utf8', maxBuffer: 32 * 1024 * 1024});
+    if (result.stdout) process.stdout.write(result.stdout);
+    if (result.stderr) process.stderr.write(result.stderr);
+    if (result.error) console.error(result.error.message);
+    process.exit(result.status ?? 2);
+  } catch (e) { console.error(e.message); process.exit(2); }
 }
-
-const logPath = join(root, '.claude/skill-os/evolution/candidate-log.jsonl');
-const registryPath = join(root, '.claude/skill-os/evolution/sources-registry.yaml');
-for (const p of [logPath, registryPath]) {
-  if (!existsSync(p)) { console.error(`缺文件: ${p}（--root 指对了吗？）`); process.exit(2); }
-}
-
+const payload = JSON.parse(readFileSync(0, 'utf8'));
+const inputBytes = Buffer.from(payload.input_b64, 'base64');
+const inputHash = createHash('sha256').update(inputBytes).digest('hex');
 let ret;
-try { ret = JSON.parse(readFileSync(jsonPath, 'utf8')); }
+try { ret = JSON.parse(new TextDecoder('utf-8', {fatal:true}).decode(inputBytes)); }
 catch (e) { console.error(`返回 JSON 解析失败: ${e.message}`); process.exit(2); }
 // 模式1b 单点评估返回（mode:'punctual'）：无 source_yield（没跑发现通道），验 stats+results
-const isPunctual = ret.mode === 'punctual';
+const isPunctual = ret?.mode === 'punctual';
 // G1 fail-closed 门（claude5-unhobble）：run_status !== 'COMPLETE'（含字段缺失=旧版返回）
-// → 整脚本 abort，先于 :134 appendFileSync 与全部登记面（conditional 泄漏路径 R5-③W3）。
+// → 整脚本 abort，先于事务准备与全部登记面（conditional 泄漏路径 R5-③W3）。
 // 两模式统一；07-02 事故（残缺 run 发布 2 APPROVED 终版反转）是本门的正当性证据。
-if (ret.run_status !== 'COMPLETE') {
-  console.error(`run_status=${ret.run_status ?? '(缺失)'} ≠ COMPLETE——残缺 run 拒登记（相位: ${JSON.stringify(ret.phases_completed ?? {})}）。补齐相位后 resume 重跑再 bookkeep。`);
+if (ret?.run_status !== 'COMPLETE') {
+  console.error(`run_status=${ret?.run_status ?? '(缺失)'} ≠ COMPLETE——残缺 run 拒登记（相位: ${JSON.stringify(ret?.phases_completed ?? {})}）。补齐相位后 resume 重跑再 bookkeep。`);
   process.exit(3);
 }
 // COMPLETE is a producer claim, not proof: reconcile original dispatch identities and counts.
@@ -68,6 +80,7 @@ for (const phase of expectedPhases) {
 need(same(ret.phase_coverage.Load.expected,['truth-files']), 'Load identity');
 let candidates, approved, conditional, rejected, killed, opportunities;
 if (isPunctual) {
+  need(ret.adoption_review_excluded === true && ret.adoption_snapshot == null && ret.adoption_review == null, 'punctual excludes adoption review');
   need(Array.isArray(ret.target_repos) && ret.target_repos.length > 0
     && ret.target_repos.every(r => text(r) && /^[\w.-]+\/[\w.-]+$/.test(r)), 'target_repos');
   need(Array.isArray(ret.results), 'results');
@@ -85,7 +98,22 @@ if (isPunctual) {
   killed = ret.killed; rejected = [...ret.rejected_summary,...killed]; opportunities = ret.opportunities;
   candidates = [...approved,...conditional,...rejected];
   need(record(ret.source_yield) && same(Object.keys(ret.source_yield),ret.phase_coverage.Discover.expected), 'source/Discover identity');
-  need(same(ret.phase_coverage.AdoptionReview.expected,['adoption-log']), 'AdoptionReview identity');
+  let actual;
+  try { actual = adoptionSnapshot(root); } catch (e) { need(false, `adoption ledger: ${e.message}`); }
+  const frozen = ret.adoption_snapshot, review = ret.adoption_review;
+  const adoptionId = e => `line:${e.line}:${e.fused_candidate_id}`;
+  need(record(frozen) && frozen.version === actual.version && frozen.sha256 === actual.sha256
+    && frozen.byte_length === actual.byte_length && Array.isArray(frozen.entries)
+    && frozen.entries.length === actual.entries.length && frozen.entries.every((e,i) => record(e)
+      && e.line === actual.entries[i].line && e.fused_candidate_id === actual.entries[i].fused_candidate_id), 'adoption snapshot differs from current ledger');
+  const expected = actual.entries.map(adoptionId);
+  need(same(ret.phase_coverage.AdoptionReview.expected,expected), 'AdoptionReview original ledger identities');
+  need(record(review) && review.ledger_sha256 === actual.sha256 && Array.isArray(review.entries)
+    && review.entries.every(e => record(e) && Number.isSafeInteger(e.line) && text(e.fused_candidate_id)
+      && ['keep','watch','revert'].includes(e.recommendation) && text(e.evidence)
+      && ['yes','no','unknown'].includes(e.helped_update)
+      && (e.evidence.trim().toLowerCase() !== 'unknown' || (e.recommendation === 'watch' && e.helped_update === 'unknown')))
+    && same(review.entries.map(adoptionId),expected), 'adoption review exact coverage/evidence');
   need(candidates.concat(opportunities).every(v=>record(v) && text(v.repo) && text(v.name)
     && Object.hasOwn(ret.source_yield,v.source_id)), 'candidate/source identity');
   let surfaced = 0;
@@ -146,13 +174,7 @@ const run = isPunctual
   ? `punctual-${ret.run_date && ret.run_date !== 'unknown' ? String(ret.run_date) : date}-${repoSlug || 'unnamed'}`
   : (ret.run_date && ret.run_date !== 'unknown' ? String(ret.run_date) : new Date().toISOString().slice(0, 7));
 
-// ── 幂等守卫：同 run 已由本脚本落过盘 → 拒绝重复追加 ──
-// 注意匹配 JSON.stringify 的无空格格式（"run":"…"），手写行的带空格格式不在守卫范围。
-const existingLog = readFileSync(logPath, 'utf8');
-if (!force && existingLog.split('\n').some(l => l.includes(`"run":"${run}"`) && l.includes('"bookkeep":true'))) {
-  console.error(`candidate-log 已含本脚本写入的 run="${run}" 记录；重跑用 --force（会重复追加，慎用）。`);
-  process.exit(1);
-}
+const existingLog = new TextDecoder('utf-8', {fatal:true}).decode(Buffer.from(payload.before.log, 'base64'));
 
 // ── 组装追加行（schema 对齐既有 candidate-log 手写行）──
 const trim = (s, n = 240) => String(s || '').replace(/\s+/g, ' ').slice(0, n);
@@ -193,7 +215,7 @@ const conditionalBySource = {};
 for (const v of ret.conditional || []) {
   if (v.source_id) conditionalBySource[v.source_id] = (conditionalBySource[v.source_id] || 0) + 1;
 }
-let registry = readFileSync(registryPath, 'utf8');
+let registry = new TextDecoder('utf-8', {fatal:true}).decode(Buffer.from(payload.before.registry, 'base64'));
 const yieldUpdates = [];
 const pruneWarnings = [];
 // Locate exact source blocks once. A missing yield line cannot consume the next source.
@@ -204,7 +226,7 @@ for (const [sid, sy] of Object.entries(isPunctual ? {} : ret.source_yield)) {
   const currentStart = matches[0].index;
   const currentBlockEnd = sourceStarts.find(m=>m.index>currentStart && m[1].length<=matches[0][1].length)?.index ?? registry.length;
   const block = registry.slice(currentStart,currentBlockEnd);
-  const yields = [...block.matchAll(/^[ \t]*yield_stats: \{([^}\n]*)\}[ \t]*$/gm)];
+  const yields = [...block.matchAll(/^[ \t]*yield_stats: \{([^}\n]*)\}[ \t]*(?:#.*)?$/gm)];
   need(yields.length===1, `missing or ambiguous yield_stats in source ${sid}`);
   const fields = yields[0][1].split(',').map(f=>f.trim().split(/:\s*/));
   const keys = ['runs','surfaced','approved','zero_yield_streak'];
@@ -214,22 +236,15 @@ for (const [sid, sy] of Object.entries(isPunctual ? {} : ret.source_yield)) {
   const next = {runs:cur.runs+1,surfaced:cur.surfaced+sy.surfaced,approved:cur.approved+sy.approved,
     zero_yield_streak:yieldCount>0?0:cur.zero_yield_streak+1};
   need(Object.values(next).every(count), `registry counter overflow ${sid}`);
-  const nextLine = yields[0][0].replace(/yield_stats:.*/,`yield_stats: { runs: ${next.runs}, surfaced: ${next.surfaced}, approved: ${next.approved}, zero_yield_streak: ${next.zero_yield_streak} }`);
+  const nextLine = yields[0][0].replace(/\{([^}]*)\}/, (_,fields)=>'{'+fields.replace(/(runs|surfaced|approved|zero_yield_streak)(:\s*)\d+/g, (_,key,space)=>key+space+next[key])+'}');
   const at = currentStart + yields[0].index;
   registry = registry.slice(0,at)+nextLine+registry.slice(at+yields[0][0].length);
   yieldUpdates.push(`${sid}: ${yields[0][0].trim()} → ${nextLine.trim()}`);
   if (next.zero_yield_streak >= PRUNE_N) pruneWarnings.push(`⚠️ ${sid} 连续 ${next.zero_yield_streak} 轮零录取（≥${PRUNE_N}）→ 本期 digest 须提议降权/下线（人裁）`);
 }
 
-if (dryRun) {
-  console.log(`── dry-run（零写入）──\n将追加 ${lines.length} 行到 candidate-log.jsonl：\n${appendText}`);
-  console.log(`yield_stats 更新：\n${yieldUpdates.join('\n') || '（无）'}`);
-  pruneWarnings.forEach(w => console.error(w));
-  process.exit(0);
-}
-
-appendFileSync(logPath, appendText);
-if (!isPunctual) writeFileSync(registryPath, registry);
-console.log(`✅ candidate-log.jsonl +${lines.length} 行（run=${run}）`);
-console.log(`✅ yield_stats 已更新：\n${yieldUpdates.map(u => '   ' + u).join('\n') || '   （无）'}`);
-pruneWarnings.forEach(w => console.error(w));
+const separator = existingLog && !existingLog.endsWith('\n') ? '\n' : '';
+console.log(JSON.stringify({run, input_sha256: inputHash, adoption_sha256: isPunctual ? null : ret.adoption_snapshot.sha256,
+  after: {log: Buffer.concat([Buffer.from(payload.before.log,'base64'), Buffer.from(separator + appendText)]).toString('base64'), registry: Buffer.from(registry).toString('base64')},
+  summary: `candidate-log.jsonl +${lines.length} 行（run=${run}）\nyield_stats 更新：\n${yieldUpdates.join('\n') || '（无）'}`,
+  warnings: pruneWarnings}));
