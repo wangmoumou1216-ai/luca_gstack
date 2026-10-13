@@ -3,6 +3,7 @@ import path from 'node:path';
 import { canonicalJson, sha256Bytes } from './carrier-asset-profile.mjs';
 import { readExact } from './design-behavior-preparation.mjs';
 import { packMaterials } from './design-handoff-archive.mjs';
+import { inspectClaudeDesignExportArchive } from './claude-design-export-archive.mjs';
 
 const fail=code=>{throw Object.assign(new Error(code),{code});};
 const same=(a,b)=>canonicalJson(a)===canonicalJson(b);
@@ -85,22 +86,38 @@ function inspectBinding(ref,handoffId,read){
 }
 
 function inspectRequest(request,options,requireSelection=true){
- exact(request,['requestId','manifestRef','handoffId','downloadRef','selectionRef','directory','implementationManifestRef']);
- if(!safeId(request.requestId)||!safeId(request.handoffId))fail('CD_MANUAL_REQUEST');const read=reader(options),bound=inspectBinding(request.manifestRef,request.handoffId,read),bytes=html(request.downloadRef,read);witness(request.selectionRef,read);
- if(requireSelection&&(typeof options.authenticateSelection!=='function'||options.authenticateSelection({requestId:request.requestId,handoffId:request.handoffId,manifestRef:request.manifestRef,packet:bound.manifest.packet,materialRefs:bound.refs,downloadRef:request.downloadRef,selectionRef:request.selectionRef,scope:bound.manifest.scope,target:bound.manifest.target??null,artifactAssurance:'user-attested'})!==true))fail('CD_MANUAL_SELECTION_REQUIRED');
+ const zip=typeof request.downloadRef?.path==='string'&&/\.zip$/i.test(request.downloadRef.path);
+ if(zip&&typeof request.exportEntryPath!=='string')fail('CD_EXPORT_ENTRY_SELECTION_REQUIRED');
+ exact(request,['requestId','manifestRef','handoffId','downloadRef','selectionRef','directory','implementationManifestRef',...(zip?['exportEntryPath']:[])]);
+ if(!safeId(request.requestId)||!safeId(request.handoffId))fail('CD_MANUAL_REQUEST');const read=reader(options),bound=inspectBinding(request.manifestRef,request.handoffId,read),bytes=zip?read(request.downloadRef):html(request.downloadRef,read),archive=zip?inspectClaudeDesignExportArchive(bytes,{entryPath:request.exportEntryPath}):null;witness(request.selectionRef,read);
+ if(requireSelection&&(typeof options.authenticateSelection!=='function'||options.authenticateSelection({requestId:request.requestId,handoffId:request.handoffId,manifestRef:request.manifestRef,packet:bound.manifest.packet,materialRefs:bound.refs,downloadRef:request.downloadRef,selectionRef:request.selectionRef,scope:bound.manifest.scope,target:bound.manifest.target??null,artifactAssurance:'user-attested',...(zip?{exportArchiveRef:request.downloadRef,exportEntryPath:archive.entryPath,exportInventory:archive.inventory}:{})})!==true))fail('CD_MANUAL_SELECTION_REQUIRED');
  const original=bound.manifest.scope.kind!=='new-design';if(original&&!request.implementationManifestRef)fail('CD_MANUAL_EDIT_MANIFEST_REQUIRED');
  if(request.implementationManifestRef){const edits=JSON.parse(read(request.implementationManifestRef));exact(edits,['schema_version','edits']);if(edits.schema_version!==1||!Array.isArray(edits.edits))fail('CD_MANUAL_EDIT_MANIFEST_REQUIRED');}
- return {bound,bytes,original,readRefs:read.refs};
+ return {bound,bytes,archive,original,readRefs:read.refs};
+}
+
+function bundleFor(directory,archive){return {asset_root:path.join(directory,'content'),entry_relative:archive.entryPath,closure:archive.inventory};}
+function writeBundle(directory,archive){
+ const bundle=bundleFor(directory,archive),directories=new Set([directory,bundle.asset_root]);fs.mkdirSync(bundle.asset_root,{mode:0o700});
+ for(const member of archive.files){const file=path.join(bundle.asset_root,member.path);let parent=path.dirname(file);const missing=[];while(!directories.has(parent)){missing.push(parent);parent=path.dirname(parent);}for(const d of missing.reverse()){fs.mkdirSync(d,{mode:0o700});directories.add(d);}writeExact(file,member.bytes);}
+ return {bundle,directories:[...directories].sort((a,b)=>b.length-a.length)};
+}
+function verifyBundleTree(directory,bundle){
+ const expectedFiles=new Set(['recovery.json','export.zip',...bundle.closure.map(f=>'content/'+f.path)]),expectedDirectories=new Set(['content']);
+ for(const file of bundle.closure){const parts=('content/'+file.path).split('/');for(let i=1;i<parts.length;i++)expectedDirectories.add(parts.slice(0,i).join('/'));}
+ if(fs.realpathSync(directory)!==directory||!fs.lstatSync(directory).isDirectory()||fs.lstatSync(directory).isSymbolicLink())fail('CD_EXPORT_RETAINED_INVENTORY');
+ const found=new Set();const walk=(dir,relative='')=>{for(const name of fs.readdirSync(dir)){const r=relative?relative+'/'+name:name,file=path.join(dir,name),stat=fs.lstatSync(file);if(stat.isSymbolicLink())fail('CD_EXPORT_RETAINED_INVENTORY');if(stat.isDirectory()){if(!expectedDirectories.has(r))fail('CD_EXPORT_RETAINED_INVENTORY');walk(file,r);}else if(stat.isFile()){if(!expectedFiles.has(r))fail('CD_EXPORT_RETAINED_INVENTORY');found.add(r);}else fail('CD_EXPORT_RETAINED_INVENTORY');}};walk(directory);
+ if(found.size!==expectedFiles.size||[...expectedFiles].some(f=>!found.has(f)))fail('CD_EXPORT_RETAINED_INVENTORY');
 }
 
 export function recoverClaudeDesignDownload(input,options={}){
- const request={...input,implementationManifestRef:input.implementationManifestRef??null};const {bound,bytes,original}=inspectRequest(request,options);fresh(request.directory);
+ const request={...input,implementationManifestRef:input.implementationManifestRef??null};const {bound,bytes,archive,original}=inspectRequest(request,options);fresh(request.directory);
  const receiptPath=path.join(request.directory,'recovery.json');
  if(fs.existsSync(request.directory)){
   if(!fs.existsSync(receiptPath))fail('CD_MANUAL_DIRECTORY_EXISTS');
   // A scope-aware caller already saved the exact ref from the first import.
   // Never bootstrap its hash by reading bytes before authorizeRead can run.
-  if(options.authorizeRead||options.existingReceiptRef){
+  if(archive||options.authorizeRead||options.existingReceiptRef){
    const receiptRef=options.existingReceiptRef;
    if(!receiptRef||receiptRef.path!==receiptPath)fail('CD_MANUAL_RECEIPT_REFERENCE_REQUIRED');
    const existing=verifyClaudeDesignRecovery(receiptRef,options);
@@ -111,20 +128,30 @@ export function recoverClaudeDesignDownload(input,options={}){
   const receiptRef={path:receiptPath,sha256:sha256Bytes(existingBytes)};const existing=verifyClaudeDesignRecovery(receiptRef,options);
   if(!same(existing.receipt.request,request))fail('CD_MANUAL_RECOVERY_CONFLICT');return existing;
  }
- fs.mkdirSync(request.directory,{mode:0o700});const recoveredHTMLRef=writeExact(path.join(request.directory,'index.html'),bytes);
- const receipt={schema:'claude-design-manual-recovery-v1',source:'claude-design',provenance:'manual-download',status:'IMPORTED',request,
+ fs.mkdirSync(request.directory,{mode:0o700});let recoveredHTMLRef,exportBundle,retainedArchiveRef,directories;
+ if(archive){retainedArchiveRef=writeExact(path.join(request.directory,'export.zip'),bytes);({bundle:exportBundle,directories}=writeBundle(request.directory,archive));recoveredHTMLRef={path:path.join(exportBundle.asset_root,exportBundle.entry_relative),sha256:sha256Bytes(archive.entry.bytes)};}else recoveredHTMLRef=writeExact(path.join(request.directory,'index.html'),bytes);
+ const receipt={schema:archive?'claude-design-manual-recovery-v2':'claude-design-manual-recovery-v1',source:'claude-design',provenance:'manual-download',status:'IMPORTED',request,
   handoffId:request.handoffId,bindingKind:bound.bindingKind,hostStageVerified:false,remoteMaterialAcceptanceVerified:false,
   packet:bound.manifest.packet,materialRefs:bound.refs,materialCount:bound.materialCount,designSystemStatus:bound.designSystemStatus,
   artifact:{assurance:'user-attested',knownTarget:bound.manifest.target??null,selectionRef:request.selectionRef},revisionKind:'export-content',revision:request.downloadRef.sha256,remoteRevisionVerified:false,
-  downloadRef:request.downloadRef,recoveredHTMLRef,implementationManifestRef:request.implementationManifestRef,mechanicalAcceptance:original?'PENDING_FIDELITY':'NOT_APPLICABLE',semanticAcceptance:'PENDING_INDEPENDENT_REVIEW',designComplete:false,scriptsExecuted:false};
- const receiptRef=writeExact(receiptPath,encode(receipt));return verifyClaudeDesignRecovery(receiptRef,options);
+  downloadRef:request.downloadRef,recoveredHTMLRef,implementationManifestRef:request.implementationManifestRef,mechanicalAcceptance:original?'PENDING_FIDELITY':'NOT_APPLICABLE',semanticAcceptance:'PENDING_INDEPENDENT_REVIEW',designComplete:false,scriptsExecuted:false,...(archive?{retainedArchiveRef,exportBundle}:{})};
+ const receiptRef=writeExact(receiptPath,encode(receipt));if(archive)for(const directory of directories)fs.chmodSync(directory,0o500);return verifyClaudeDesignRecovery(receiptRef,options);
 }
 
 export function verifyClaudeDesignRecovery(receiptRef,options={}){
  const read=reader(options),receipt=JSON.parse(read(receiptRef));
- exact(receipt,['schema','source','provenance','status','request','handoffId','bindingKind','hostStageVerified','remoteMaterialAcceptanceVerified','packet','materialRefs','materialCount','designSystemStatus','artifact','revisionKind','revision','remoteRevisionVerified','downloadRef','recoveredHTMLRef','implementationManifestRef','mechanicalAcceptance','semanticAcceptance','designComplete','scriptsExecuted']);
- if(receipt.schema!=='claude-design-manual-recovery-v1'||receipt.source!=='claude-design'||receipt.provenance!=='manual-download'||receipt.status!=='IMPORTED'||receipt.hostStageVerified!==false||receipt.remoteMaterialAcceptanceVerified!==false||receipt.remoteRevisionVerified!==false||receipt.revisionKind!=='export-content'||receipt.revision!==receipt.downloadRef.sha256||receipt.designComplete!==false||receipt.scriptsExecuted!==false||receipt.semanticAcceptance!=='PENDING_INDEPENDENT_REVIEW')fail('CD_MANUAL_RECEIPT');
- const {bound,bytes,original,readRefs}=inspectRequest(receipt.request,options,options.authenticateSelection!==undefined);
- if(receiptRef.path!==path.join(receipt.request.directory,'recovery.json')||receipt.recoveredHTMLRef.path!==path.join(receipt.request.directory,'index.html')||!same(receipt.downloadRef,receipt.request.downloadRef)||!same(receipt.implementationManifestRef,receipt.request.implementationManifestRef)||!same(receipt.packet,bound.manifest.packet)||!same(receipt.materialRefs,bound.refs)||receipt.materialCount!==bound.materialCount||receipt.bindingKind!==bound.bindingKind||receipt.designSystemStatus!==bound.designSystemStatus||receipt.handoffId!==receipt.request.handoffId||!same(receipt.artifact,{assurance:'user-attested',knownTarget:bound.manifest.target??null,selectionRef:receipt.request.selectionRef})||receipt.mechanicalAcceptance!==(original?'PENDING_FIDELITY':'NOT_APPLICABLE')||!read(receipt.recoveredHTMLRef).equals(bytes))fail('CD_MANUAL_RECEIPT');
- return {status:'IMPORTED',source:'claude-design',provenance:'manual-download',receiptRef,receipt,entry:receipt.recoveredHTMLRef.path,sha256:receipt.recoveredHTMLRef.sha256,base:{entry:receipt.recoveredHTMLRef.path,sha256:receipt.recoveredHTMLRef.sha256,origin:'claude-design'},semanticAcceptance:receipt.semanticAcceptance,mechanicalAcceptance:receipt.mechanicalAcceptance,designComplete:false,selectionAuthenticity:options.authenticateSelection?'CALLER_VERIFIED':'NOT_VERIFIED',authority:'NOT_PROVIDED',readRefs:[...read.refs,...readRefs]};
+ const zip=receipt.schema==='claude-design-manual-recovery-v2';
+ exact(receipt,['schema','source','provenance','status','request','handoffId','bindingKind','hostStageVerified','remoteMaterialAcceptanceVerified','packet','materialRefs','materialCount','designSystemStatus','artifact','revisionKind','revision','remoteRevisionVerified','downloadRef','recoveredHTMLRef','implementationManifestRef','mechanicalAcceptance','semanticAcceptance','designComplete','scriptsExecuted',...(zip?['retainedArchiveRef','exportBundle']:[])]);
+ if(!['claude-design-manual-recovery-v1','claude-design-manual-recovery-v2'].includes(receipt.schema)||receipt.source!=='claude-design'||receipt.provenance!=='manual-download'||receipt.status!=='IMPORTED'||receipt.hostStageVerified!==false||receipt.remoteMaterialAcceptanceVerified!==false||receipt.remoteRevisionVerified!==false||receipt.revisionKind!=='export-content'||receipt.revision!==receipt.downloadRef.sha256||receipt.designComplete!==false||receipt.scriptsExecuted!==false||receipt.semanticAcceptance!=='PENDING_INDEPENDENT_REVIEW')fail('CD_MANUAL_RECEIPT');
+ const {bound,bytes,archive,original,readRefs}=inspectRequest(receipt.request,options,options.authenticateSelection!==undefined);
+ const expectedEntry=archive?path.join(receipt.request.directory,'content',archive.entryPath):path.join(receipt.request.directory,'index.html');
+ if(zip!==Boolean(archive)||receiptRef.path!==path.join(receipt.request.directory,'recovery.json')||receipt.recoveredHTMLRef.path!==expectedEntry||!same(receipt.downloadRef,receipt.request.downloadRef)||!same(receipt.implementationManifestRef,receipt.request.implementationManifestRef)||!same(receipt.packet,bound.manifest.packet)||!same(receipt.materialRefs,bound.refs)||receipt.materialCount!==bound.materialCount||receipt.bindingKind!==bound.bindingKind||receipt.designSystemStatus!==bound.designSystemStatus||receipt.handoffId!==receipt.request.handoffId||!same(receipt.artifact,{assurance:'user-attested',knownTarget:bound.manifest.target??null,selectionRef:receipt.request.selectionRef})||receipt.mechanicalAcceptance!==(original?'PENDING_FIDELITY':'NOT_APPLICABLE'))fail('CD_MANUAL_RECEIPT');
+ if(archive){
+  const expectedBundle=bundleFor(receipt.request.directory,archive),expectedArchive={path:path.join(receipt.request.directory,'export.zip'),sha256:receipt.downloadRef.sha256};
+  if(!same(receipt.exportBundle,expectedBundle)||!same(receipt.retainedArchiveRef,expectedArchive)||receipt.recoveredHTMLRef.sha256!==sha256Bytes(archive.entry.bytes))fail('CD_MANUAL_RECEIPT');
+  verifyBundleTree(receipt.request.directory,expectedBundle);
+  if(!read(receipt.retainedArchiveRef).equals(bytes))fail('CD_MANUAL_RECEIPT');
+  for(const member of archive.files){const ref={path:path.join(expectedBundle.asset_root,member.path),sha256:sha256Bytes(member.bytes)};if(!read(ref).equals(member.bytes))fail('CD_MANUAL_RECEIPT');}
+ }else if(!read(receipt.recoveredHTMLRef).equals(bytes))fail('CD_MANUAL_RECEIPT');
+ return {status:'IMPORTED',source:'claude-design',provenance:'manual-download',receiptRef,receipt,entry:receipt.recoveredHTMLRef.path,sha256:receipt.recoveredHTMLRef.sha256,base:{entry:receipt.recoveredHTMLRef.path,sha256:receipt.recoveredHTMLRef.sha256,origin:'claude-design'},semanticAcceptance:receipt.semanticAcceptance,mechanicalAcceptance:receipt.mechanicalAcceptance,designComplete:false,selectionAuthenticity:options.authenticateSelection?'CALLER_VERIFIED':'NOT_VERIFIED',authority:'NOT_PROVIDED',readRefs:[...read.refs,...readRefs],...(archive?{bundle:receipt.exportBundle,runtime_requirements:archive.dependencyProof.runtime_requirements}:{})};
 }
