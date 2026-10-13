@@ -10,12 +10,12 @@ Each call supplies actual `read_paths`, allowed `read_roots`, and optional exact
 source/scope/base/recovery/spec/method/evidence file must pass. `base.asset_root` grants nothing. Native
 messages require exact `source_refs`/`scope_refs`; CLI has files only, no message attestation.
 
-CD manual download binds `base.origin='claude-design'` to typed `recovery_ref`; every consumer rereads the
-receipt, Packet, materials, original and `recoveredHTMLRef`. API callers need synchronous
-`authenticateClaudeDesignSelection` (else `CD_SELECTION_CONTEXT_REQUIRED`/NEEDS_CONTEXT); original copies
-also need `verifyClaudeDesignFidelity` for `PENDING_FIDELITY`. Callbacks grant no effect or replace semantic
-PASS. Receipt is `provenance=manual-download`, user-attested, `remoteRevisionVerified=false`; raw entry/hash
-must match Packet. OD and legacy resolution stay unchanged.
+CD `base.origin='claude-design'`: typed `recovery_ref`; recheck receipt/Packet/materials/original/HTML.
+ZIP rechecks both archives/all members and raw root/entry/closure. API: synchronous
+`authenticateClaudeDesignSelection`; absent: NEEDS_CONTEXT. Originals: `verifyClaudeDesignFidelity`.
+Manual-download/user-attested, remoteRevisionVerified=false; raw entry/hash match Packet. Callbacks grant
+no effects/PASS. `material-dependencies.mjs` refuses unsupported DC; supported DC requires
+independent `RUNTIME:DC_EXPORT_V1` environment/self-refetch identity. Generic/v1/parent/OD gates remain.
 
 Production needs a verified pin and canonical `<project>/docs/prototype/YYYY-MM-DD-topic`. Caller verifies
 `effects{verified_active_project,canonical_project_root,authorized_delivery_root,copy,edit,metadata,edit_paths}`;

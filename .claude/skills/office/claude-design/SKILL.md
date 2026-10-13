@@ -86,16 +86,26 @@ stage 的发送次数必须为零，不点击发送、不按 Enter 触发发送�
 CD 由用户在同一件作品正式 Export HTML，下载后说“可以回收了”或“拉回来”。
 继承有效工具/规范/模板确认；准确路径和作品归属已确认不重问。未给路径时只在授权范围
 找候选并请用户选准，不从 filename、mtime、最近文件自动采用，不要求用户填 hash/UUID。
-当前仅回收 HTML；ZIP 不能自动解包改作另一入口，需要用户正式导出 HTML。
+回收用户正式导出的单个 HTML，或官方 HTML 导出 ZIP 中的准确 HTML 入口与完整依赖。
+先只读列出 ZIP 成员，核用户对准确下载包的采用；唯一 HTML 可机械定位，多入口须请用户选准。
+由 `scripts/claude-design-export-archive.mjs` 校验已支持的官方包结构，再用回收 API 隔离保存；
+路径逃逸、符号链接、重名、损坏、超限或未支持的 ZIP 结构停止，不以通用解压命令兜底。
+资源检查共用纯 owner `scripts/material-dependencies.mjs`，每次回收和消费都检查完整成员与依赖。
+已识别的 DC 导出只有已审运行库字节、顺序和受限模板/业务语法可进入专用检查；未知版本或
+不支持语法直接拒绝，不回落通用检查。通用材料保留原严格分析，预算耗尽不是成功。
 
 先完整读取 `scripts/claude-design-recover.mjs`。已有 stage manifest 直接继承；旧实际材料缺
 host stage 时 `createClaudeDesignManualBinding` 绑定真实 Packet/全部材料/原指令/观察目标，
 明确 hostStageVerified=false，不补造新的 DS、上传或生成记录。
 `recoverClaudeDesignDownload` 接准确 requestId/manifestRef/handoffId/downloadRef/selectionRef/
-directory；Agent 计算 refs，caller 的 authenticateSelection 核真实人选文件/作品/范围来源，
+directory；ZIP 另绑定已选 `exportEntryPath`。Agent 计算 refs，caller 的 authenticateSelection
+核真实人选下载包、包内入口与成员集合、作品及范围来源，
 authorizeRead 在每个依赖读取前核当前许可。文本 actor=user、可读 JSON 或 hash 不证明采用。
-保留原件，独占落点写 immutable index.html/recovery.json；同次重试继承 Agent 保存的
-existingReceiptRef，不重下、不覆盖未知输出。`verifyClaudeDesignRecovery` 重验完整材料和原件。
+单 HTML 保留原件，独占落点写 immutable index.html/recovery.json；ZIP 保留原包与全部成员的
+原字节、文件名和相对路径，入口绑定实际包内 HTML，不内联或重写其业务代码。
+同次重试继承 Agent 保存的 existingReceiptRef，不重下、不覆盖未知输出。
+`verifyClaudeDesignRecovery` 重验完整材料和原件；ZIP 另重验原包、保留包及全部成员，资源缺失、
+新增或漂移拒绝。完整包回收不等于原 Packet 的单文件内嵌要求通过，独立语义验收仍按全部来源判断。
 source=claude-design、provenance=manual-download，artifact assurance=user-attested，
 revisionKind=export-content、remoteRevisionVerified=false；不宣称服务器版本或原生下载事件证明。
 不执行脚本、不安装依赖、不重做 CD 输出；漂移/损坏保留证据并停止依赖后继。
@@ -118,6 +128,9 @@ PREACCEPT 后 sealAccepted；每次消费传 authenticateClaudeDesignSelection�
 accepted motion→notes 使用 deriveFromAccepted 绑定父 final，仍重验同一 raw 收据和采用依据；
 不调用 OD 专用授权包装。CLI 缺上述真实 API 上下文时 NEEDS_CONTEXT，不走 raw/旧证书兜底。
 独立浏览器验全部原 D/STATE/AC/KEEP；机械 PASS、用户生成报告和下载均不等于 DONE。
+支持的 DC 运行库额外冻结 `RUNTIME:DC_EXPORT_V1`：独立核真实顶层环境、本地运行库加载、
+自重取请求/响应的同入口字节、无重定向/外部请求与配置覆写。缺该项或 FAIL/UNKNOWN 不 seal；
+运行库 hash 只标识审过版本，不能代替环境证明。不注入配置或改 raw 来跳过自重取。
 有已授权 motion 时按 motion-polish 的 internal 合同在同一未完成父 Phase 内处理；
 交互 HTML 按 prototype-notes 合同继承/等待精确当前业务版本真人确认，再执行适用 notes。
 缺真实 processor/独立 review seam 时 BLOCKED，不能借 OD caller 伪造 CD 完成。

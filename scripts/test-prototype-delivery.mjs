@@ -8,6 +8,7 @@ import { createHash } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import * as delivery from './prototype-delivery.mjs';
 import { createClaudeDesignManualBinding, recoverClaudeDesignDownload } from './claude-design-recover.mjs';
+import { packMaterials } from './design-handoff-archive.mjs';
 
 const workRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -164,7 +165,7 @@ async function main() {
     '--sha256', item.sha256, '--delivery-root', fixture.deliveryRoot, ...ctxArgs(fixture)];
   const rejects = (fn, pattern, label) => {
     let error;
-    assert.throws(() => { try { return fn(); } catch (caught) { error = caught; throw caught; } }, pattern, label);
+    assert.throws(() => { try { return fn(); } catch (caught) { error = caught; if (!pattern.test(caught.message)) console.error('Unexpected rejection:', caught.message); throw caught; } }, pattern, label);
     rejections.push({ label: label || fn.toString(), expected: String(pattern), observed: error.message });
   };
   // Generic public resource consumers; source strings are inert until the helper analyzes them.
@@ -1872,6 +1873,129 @@ async function main() {
         raw: recovered.receiptRef, candidate: fixture.resolved.candidate_ref, accepted: accepted.accepted_ref,
         derived_parent: derived.parent_accepted_ref, semantic_acceptance: 'NOT_TESTED', original_preserved: true });
     },
+    'cd-export-bundle': () => {
+      const root = path.join(evidenceRoot, 'cd-export-bundle'); fs.mkdirSync(root);
+      const write = (name, bytes) => { const file = path.join(root, name); fs.writeFileSync(file, bytes); return fileRef(file); };
+      const packet = write('packet.md', 'SIMULATED CD bundle source. R-1: preserve every exported member.');
+      const instructions = write('instructions.txt', 'SIMULATED bundle fixture; no native approval.');
+      const witness = write('selection.md', 'SIMULATED exact ZIP and entry selection.');
+      const selectionRef = { ...witness, excerpt: 'SIMULATED exact ZIP and entry selection.' };
+      const files = [
+        { path: 'views/artboard.html', bytes: Buffer.from('<!doctype html><html><head><script src="../assets/runtime.js"></script></head><body><button>Fixture</button></body></html>') },
+        { path: 'assets/runtime.js', bytes: Buffer.from('window.fixtureBundleLoaded=true;') },
+        { path: 'README.md', bytes: Buffer.from('Unreferenced original export member; KEEP exact bytes.') },
+      ];
+      const downloadRef = write('official-export.zip', packMaterials(files));
+      const binding = createClaudeDesignManualBinding({ handoffId: 'CD-bundle', packet, materials: [],
+        instructionsRef: instructions, scope: { kind: 'new-design' }, directory: path.join(root, 'binding') });
+      const authenticated = subject => subject.downloadRef.path === downloadRef.path && subject.downloadRef.sha256 === downloadRef.sha256 &&
+        subject.exportEntryPath === 'views/artboard.html' && subject.selectionRef.sha256 === witness.sha256;
+      const recovered = recoverClaudeDesignDownload({ requestId: 'CD-bundle-recovery', manifestRef: binding, handoffId: 'CD-bundle',
+        downloadRef, selectionRef, exportEntryPath: 'views/artboard.html', directory: path.join(root, 'raw') }, { authenticateSelection: authenticated });
+      assert.equal(recovered.bundle.closure.length, files.length);
+      const scope = write('scope.md', 'SIMULATED NO_PIN fixture; raw bundle copy and metadata only.');
+      const method = write('method.md', 'SIMULATED integrity method; no independent semantic acceptance.');
+      const context = { read_roots: [root], authenticateClaudeDesignSelection: authenticated };
+      const input = { source: { locator: packet.path, version: 'simulated-export-bundle', sha256: packet.sha256 },
+        base: { entry: recovered.entry, sha256: recovered.sha256, ...recovered.bundle, origin: 'claude-design', recovery_ref: recovered.receiptRef },
+        scope: { reference: scope.path, sha256: scope.sha256, preserved_expectations: ['R-1'] },
+        methods: [{ ...method, pin_or_version: 'simulated' }], authority_ref: scope.path };
+      const omit = structuredClone(input); omit.base.closure = omit.base.closure.filter(item => item.path !== 'README.md');
+      rejects(() => helper.bindBase(omit, context), /CD_EXPORT_BUNDLE_MISMATCH/, 'Unreferenced members stay mandatory');
+      const rootAlias = structuredClone(input); rootAlias.base.asset_root = root;
+      rootAlias.base.entry_relative = path.relative(root, recovered.entry).split(path.sep).join('/');
+      rootAlias.base.closure = rootAlias.base.closure.map(item => ({ ...item,
+        path: path.relative(root, path.join(recovered.bundle.asset_root, item.path)).split(path.sep).join('/') }));
+      rejects(() => helper.bindBase(rootAlias, context), /CD_EXPORT_BUNDLE_MISMATCH/, 'Same entry/hash does not authorize another asset root');
+      const extra = write('extra.js', 'window.unselectedExportMember=true;');
+      fs.chmodSync(recovered.bundle.asset_root, 0o700);
+      fs.copyFileSync(extra.path, path.join(recovered.bundle.asset_root, 'extra.js'));
+      rejects(() => helper.bindBase(input, context), /CD_.*(?:BUNDLE|MEMBER|INVENTORY|DRIFT|EXPORT)/, 'Recovered bundle cannot acquire an unselected member');
+      fs.unlinkSync(path.join(recovered.bundle.asset_root, 'extra.js'));
+      fs.chmodSync(recovered.bundle.asset_root, 0o500);
+      const runtime = path.join(recovered.bundle.asset_root, 'assets/runtime.js'), original = fs.readFileSync(runtime);
+      fs.chmodSync(runtime, 0o600); fs.writeFileSync(runtime, 'window.changedExportResource=true;');
+      rejects(() => helper.bindBase(input, context), /HASH_DRIFT|CD_SOURCE_DRIFT|CD_.*(?:BUNDLE|MEMBER|EXPORT)/);
+      fs.writeFileSync(runtime, original); fs.chmodSync(runtime, 0o400);
+      const bound = helper.bindBase(input, context);
+      const deliveryRoot = path.join(root, 'delivery'); fs.mkdirSync(deliveryRoot);
+      context.effects = { framework_fixture: true, authorized_delivery_root: deliveryRoot, copy: true, edit: true, metadata: true };
+      const attempt = helper.prepareCopy(bound, { delivery_root: deliveryRoot, attempt_id: 'CD-bundle-copy', kind: 'adequate-copy' }, context);
+      for (const file of files) assert.ok(fs.readFileSync(path.join(attempt.content_root, file.path)).equals(file.bytes));
+      const allowed = [...new Set(recovered.readRefs.map(item => item.path)), scope.path, method.path];
+      rejects(() => helper.bindBase(input, { read_paths: allowed.filter(file => file !== path.join(recovered.bundle.asset_root, 'README.md')),
+        authenticateClaudeDesignSelection: authenticated }), /READ_SCOPE_REFUSED/);
+      assert.equal(recovered.designComplete, false);
+      writeJSON(path.join(evidenceRoot, 'cd-export-bundle-integrity.json'), { recovery_ref: recovered.receiptRef,
+        bundle: recovered.bundle, copy: attempt, scope: 'SIMULATED_ONLY_NOT_HUMAN_OR_NATIVE_ACCEPTANCE' });
+    },
+    'cd-official-runtime': () => {
+      const root = path.join(evidenceRoot, 'cd-official-runtime'); fs.mkdirSync(root);
+      const write = (name, bytes) => { const file = path.join(root, name); fs.writeFileSync(file, bytes); return fileRef(file); };
+      const official = path.join(workRoot, 'scripts/fixtures/claude-design-official-export-v1/export.zip');
+      assert.equal(fileRef(official).sha256, 'b5385e882008374f0f8a16cd3af43299dad9b3c05cb2cf8541b25ff0121d7231');
+      const downloadRef = write('selected.zip', fs.readFileSync(official));
+      const packet = write('packet.md', 'SIMULATED consumer fixture. R-1: retain exact official members. Runtime environment needs independent observation.\n');
+      const instructions = write('instructions.txt', 'SIMULATED local fixture only; no generation or native user proof.');
+      const witness = write('selection.md', 'SIMULATED precise archive selection for public API integrity checks only.');
+      const selectionRef = { ...witness, excerpt: 'SIMULATED precise archive selection' };
+      const binding = createClaudeDesignManualBinding({ handoffId: 'CD-runtime-fixture', packet, materials: [],
+        instructionsRef: instructions, scope: { kind: 'new-design' }, directory: path.join(root, 'binding') });
+      const authenticated = subject => subject.requestId === 'CD-runtime-fixture' && subject.handoffId === 'CD-runtime-fixture' &&
+        subject.downloadRef.path === downloadRef.path && subject.downloadRef.sha256 === downloadRef.sha256 &&
+        subject.manifestRef.sha256 === binding.sha256 && subject.selectionRef.sha256 === witness.sha256 && subject.exportEntryPath === 'Main.dc.html';
+      const recovered = recoverClaudeDesignDownload({ requestId: 'CD-runtime-fixture', manifestRef: binding,
+        handoffId: 'CD-runtime-fixture', downloadRef, selectionRef, exportEntryPath: 'Main.dc.html', directory: path.join(root, 'raw') },
+      { authenticateSelection: authenticated });
+      const scope = write('scope.md', 'SIMULATED NO_PIN fixture. Exact bundle copy and metadata; no production semantic claim.');
+      const method = write('method.md', 'SIMULATED integrity method; runtime PASS payload below is fabricated test data, not independent proof.');
+      const context = { read_roots: [root], authenticateClaudeDesignSelection: authenticated };
+      const bound = helper.bindBase({ source: { locator: packet.path, sha256: packet.sha256, version: 'simulated-official-runtime' },
+        base: { entry: recovered.entry, sha256: recovered.sha256, ...recovered.bundle, origin: 'claude-design', recovery_ref: recovered.receiptRef },
+        scope: { reference: scope.path, sha256: scope.sha256, preserved_expectations: ['R-1'] },
+        methods: [{ ...method, pin_or_version: 'simulated-runtime-integrity' }], authority_ref: scope.path }, context);
+      const deliveryRoot = path.join(root, 'delivery'); fs.mkdirSync(deliveryRoot);
+      context.effects = { framework_fixture: true, authorized_delivery_root: deliveryRoot, copy: true, edit: true, metadata: true };
+      const candidateFor = (attemptId, required) => {
+        const attempt = helper.prepareCopy(bound, { delivery_root: deliveryRoot, attempt_id: attemptId, kind: 'adequate-copy' }, context);
+        const spec = path.join(attempt.attempt_dir, 'prototype-spec.md'); fs.writeFileSync(spec, 'SIMULATED observation spec; no native acceptance.\n');
+        const patchData = { base_sha256: bound.base.sha256, operations: [], content_changed: false };
+        const patch = path.join(attempt.attempt_dir, 'patch.json'); writeJSON(patch, patchData);
+        const candidate = { ...bound, attempt_id: attemptId, delivery_root: deliveryRoot, required_behavior_refs: required,
+          delivery: { id: attemptId, kind: 'adequate-copy', entry: path.relative(deliveryRoot, attempt.entry), sha256: recovered.sha256,
+            closure: recovered.bundle.closure.map(item => ({ ...item, path: path.relative(deliveryRoot, path.join(attempt.content_root, item.path)) })), spec: fileRef(spec) },
+          patch: { ...fileRef(patch), ...patchData } };
+        return { root, deliveryRoot, context, bound, attempt, candidate };
+      };
+      const missing = candidateFor('missing-runtime', ['R-1']);
+      rejects(() => helper.checkCandidate(missing.candidate, context), /RUNTIME|PROFILE|REQUIRED/, 'Specialized profile cannot omit its runtime observation requirement');
+      const fixture = candidateFor('complete-runtime', ['R-1', 'RUNTIME:DC_EXPORT_V1']);
+      fixture.resolved = helper.checkCandidate(fixture.candidate, context);
+      const local = createLocalIntegrityReport(fixture, { helper, seal: false });
+      for (const state of ['UNKNOWN', 'FAIL']) {
+        const report = structuredClone(local.report); report.status = state;
+        report.required_behavior_results.find(item => item.id === 'RUNTIME:DC_EXPORT_V1').status = state;
+        writeJSON(local.reportRef.path, report);
+        rejects(() => helper.sealAccepted({ ...local.input, report_ref: fileRef(local.reportRef.path) }, context), /REQUIRED_NOT_PASS/);
+        assert.equal(fs.existsSync(path.join(fixture.attempt.attempt_dir, 'accepted-delivery.json')), false);
+      }
+      writeJSON(local.reportRef.path, local.report);
+      const accepted = helper.sealAccepted(local.input, context);
+      const exact = { ...accepted.accepted_ref, delivery_root: deliveryRoot };
+      assert.equal(helper.resolveFinal(exact, context).final_sha256, recovered.sha256);
+      for (const consumer of ['tech-spec', 'task-plan', 'compile']) {
+        assert.deepEqual(helper.resolveFinal(exact, context).raw_provenance, recovered.receiptRef, consumer);
+        rejects(() => helper.resolveFinal(exact, { read_roots: [root] }), /CD_SELECTION_CONTEXT_REQUIRED/, consumer);
+      }
+      const resource = path.join(fixture.attempt.content_root, 'support.js'), original = fs.readFileSync(resource);
+      fs.writeFileSync(resource, Buffer.concat([original, Buffer.from('\nwindow.unreviewedRuntime=true;')]));
+      rejects(() => helper.resolveFinal(exact, context), /HASH_DRIFT|CD_SOURCE_DRIFT|RUNTIME|PROFILE/);
+      fs.writeFileSync(resource, original);
+      assert.equal(helper.resolveFinal(exact, context).final_sha256, recovered.sha256);
+      writeJSON(path.join(evidenceRoot, 'cd-official-runtime-integrity.json'), { scope: 'SIMULATED_ONLY_NOT_HUMAN_OR_NATIVE_ACCEPTANCE',
+        recovery_ref: recovered.receiptRef, required_behavior_refs: fixture.resolved.required_behavior_refs,
+        exact_final: accepted.accepted_ref, runtime_report: 'SYNTHETIC_INTEGRITY_PAYLOAD_NOT_SEMANTIC_PROOF', original_preserved: fileRef(official).sha256 === downloadRef.sha256 });
+    },
     'native-resource-entrypoints': () => runResourceRows('native-resource-entrypoints'),
     'inert-resource-entrypoints': () => runResourceRows('inert-resource-entrypoints'),
 
@@ -2497,29 +2621,32 @@ async function main() {
         rejection_layer:'REPORT_LOCATION singleton before certificate publication',preserved_accepted_ref:exact,preserved_accepted_resolution:helper.resolveFinal({...exact,delivery_root:fixture.deliveryRoot},fixture.context)});
       // Mutate actual production guard lines only in an owned mirror, then run the same case RED and restored GREEN.
       const original = fs.readFileSync(helperPath, 'utf8');
-      for (const [guard, name] of [['read-context','read-context'], ['hash','drift'], ['closure','closure'], ['required-set','required-set'], ['adequate-bytes','adequate-bytes'], ['no-replace','no-replace'], ['cli-entry','cli-entry'], ['attempt-id','attempt-path'], ['parent-base','derived-refusals'], ['parent-required','notes-manifest'], ['notes-set','notes-manifest']]) {
+      for (const [guard, name] of [['read-context','read-context'], ['hash','drift'], ['closure','closure'], ['required-set','required-set'], ['adequate-bytes','adequate-bytes'], ['no-replace','no-replace'], ['cli-entry','cli-entry'], ['attempt-id','attempt-path'], ['parent-base','derived-refusals'], ['parent-required','notes-manifest'], ['notes-set','notes-manifest'], ['cd-export-bundle','cd-export-bundle'], ['cd-runtime-required','cd-official-runtime']]) {
         const mirror = path.join(evidenceRoot, `mutation-${guard}`); fs.mkdirSync(path.join(mirror, 'scripts'), { recursive: true }); fs.mkdirSync(path.join(mirror, '.claude/skill-os'), { recursive: true });
         fs.symlinkSync(path.join(workRoot, 'node_modules'), path.join(mirror, 'node_modules'), 'dir');
         fs.copyFileSync(path.join(workRoot, '.claude/skill-os/prototype-delivery.schema.json'), path.join(mirror, '.claude/skill-os/prototype-delivery.schema.json'));
-        for (const file of ['claude-design-recover.mjs', 'carrier-asset-profile.mjs', 'design-behavior-preparation.mjs', 'original-composition.mjs', 'design-handoff-archive.mjs']) {
+        for (const file of ['claude-design-recover.mjs', 'claude-design-export-archive.mjs', 'material-dependencies.mjs', 'carrier-asset-profile.mjs', 'design-behavior-preparation.mjs', 'original-composition.mjs', 'design-handoff-archive.mjs']) {
           fs.copyFileSync(path.join(workRoot, 'scripts', file), path.join(mirror, 'scripts', file));
         }
-        const mutant = path.join(mirror, 'scripts/prototype-delivery.mjs');
+        const mirrorHelper = path.join(mirror, 'scripts/prototype-delivery.mjs');
+        fs.writeFileSync(mirrorHelper, original);
+        const mutant = guard === 'closure' ? path.join(mirror, 'scripts/material-dependencies.mjs') : mirrorHelper;
+        const guardSource = guard === 'closure' ? fs.readFileSync(path.join(workRoot, 'scripts/material-dependencies.mjs'), 'utf8') : original;
         const matcher = guard === 'required-set'
           ? /^  requireThat\(ids\.length ===[^\n]*\n[^\n]*\/\/ guard:required-set\n/m
           : guard === 'notes-set' ? /^  requireThat\(ids\.length === candidate[^\n]*\n[^\n]*\n[^\n]*\/\/ guard:notes-set\n/m
           : new RegExp('^.*// guard:' + guard + '\\n', 'm');
-        assert.ok(matcher.test(original));
+        assert.ok(matcher.test(guardSource));
         const replacement = guard === 'cli-entry' ? "if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {\n"
           : guard === 'no-replace' ? "    try { fs.copyFileSync(temp, file); } catch (error) {\n" : '  // isolated removed guard\n';
-        fs.writeFileSync(mutant, original.replace(matcher, replacement));
+        fs.writeFileSync(mutant, guardSource.replace(matcher, replacement));
         const syntaxStart = new Date().toISOString(), syntax = spawnSync(process.execPath, ['--check', mutant], { encoding: 'utf8', cwd: workRoot });
         const syntaxOut = path.join(evidenceRoot, guard + '-syntax.stdout');
         const syntaxErr = path.join(evidenceRoot, guard + '-syntax.stderr');
         fs.writeFileSync(syntaxOut, syntax.stdout || ''); fs.writeFileSync(syntaxErr, syntax.stderr || '');
         recordProcess(guard + '-syntax', [process.execPath, '--check', mutant], syntax, syntaxStart);
         assert.equal(syntax.status, 0, guard + ' mutant must parse before behavior testing');
-        for (const [label, sourcePath, expected] of [['removed',mutant,1],['restored',helperPath,0]]) {
+        for (const [label, sourcePath, expected] of [['removed',mirrorHelper,1],['restored',helperPath,0]]) {
           const argv = [fileURLToPath(import.meta.url), '--helper', sourcePath, '--case', name, '--output', path.join(evidenceRoot, guard + '-' + label + '-evidence')];
           const runStart = new Date().toISOString(), result = spawnSync(process.execPath, argv, { encoding: 'utf8', cwd: workRoot });
           fs.writeFileSync(path.join(evidenceRoot, `${guard}-${label}.stdout`), result.stdout); fs.writeFileSync(path.join(evidenceRoot, `${guard}-${label}.stderr`), result.stderr);
@@ -2561,6 +2688,13 @@ async function main() {
         writeJSON(item.path, commands);
       }
       writeJSON(path.join(retainedRoot, 'retention-index.json'), { mappings, scope: 'Copied evidence only; no certificate path edits or re-signing' });
+      const unlockOwnedDirectories = directory => {
+        fs.chmodSync(directory, 0o700);
+        for (const item of fs.readdirSync(directory, { withFileTypes: true })) {
+          if (item.isDirectory() && !item.isSymbolicLink()) unlockOwnedDirectories(path.join(directory, item.name));
+        }
+      };
+      unlockOwnedDirectories(evidenceRoot);
       fs.rmSync(evidenceRoot, { recursive: true });
       writeJSON(path.join(retainedRoot, 'cleanup.json'), { temporary_root: evidenceRoot, removed: !fs.existsSync(evidenceRoot), processes: 'All synchronous or awaited close events; no live publishers',
         retained_root: retainedRoot, runtime_paths: 'Historical exact absolute paths are not rewritten in copied certificates. Replay through this same consumer for current fixtures.' });
