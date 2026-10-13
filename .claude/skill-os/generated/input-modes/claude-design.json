@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "source_sha256": "50aec311541e7dff2f090ffd4f6f86bf9edef4e7dacc9c6404d1a6517635e237",
+  "skill": "claude-design",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "frozen_packet"
+        ],
+        "optional": [
+          "bound_tool_selection",
+          "confirmed_template",
+          "postprocess_plan"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "design_brief_artifact",
+          "frozen_packet"
+        ],
+        "optional": [
+          "bound_tool_selection",
+          "postprocess_plan"
+        ]
+      }
+    },
+    "entry_modes": {
+      "chain": "frozen complete design source; inherit tool choice and scope",
+      "recover": "frozen handoff and exact user-selected official HTML download; skip compilation and generation"
+    },
+    "quality_gates": [
+      "frozen_packet_and_selection_match",
+      "full_attachment_inventory",
+      "template_tac_bundle_adopted_when_applicable",
+      "reviewed_frozen_behavior_when_composition",
+      "trusted_muse_caller_for_stage_and_host_ack",
+      "actual_design_mode",
+      "exclusive_lease",
+      "stage_zero_sends",
+      "tool_scoped_design_system_in_actual_materials",
+      "real_user_selected_exact_html",
+      "typed_manual_receipt_and_current_read_scope",
+      "original_fidelity_when_applicable",
+      "independent_full_source_semantics",
+      "applicable_processors_and_exact_final",
+      "orchestrator_single_completion"
+    ],
+    "notes": "recover继承冻结交接与真实人选准确HTML，不重问工具/规范/模板。CD人工生成并由用户正式下载HTML；本地导入无需Muse caller，真实host已stage才确认同owner收据并释放lease。stage/查询/host收尾缺可信caller或部署模块为NEEDS_CONTEXT，不借token/Chrome。CD规范实际进入v2材料；typed manual-download/user-attested收据remoteRevisionVerified=false。API消费核真人采用与适用保真；机械PASS非DONE，源码/fixture不证明部署。"
+  }
+}

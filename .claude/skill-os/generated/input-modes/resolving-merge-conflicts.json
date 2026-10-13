@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "f376734671c1151a6f50b87500f221d6acf8ff1f35e1c85b261809ff53ea5839",
+  "source_sha256": "50aec311541e7dff2f090ffd4f6f86bf9edef4e7dacc9c6404d1a6517635e237",
   "skill": "resolving-merge-conflicts",
   "group": "skills",
   "global": {

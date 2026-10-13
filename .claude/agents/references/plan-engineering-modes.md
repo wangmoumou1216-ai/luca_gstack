@@ -25,20 +25,22 @@ If a CMP/ASSERT/DEV/TEST depends on a selected accepted/composite prototype or e
 `final_artifact_ref` / `accepted_ref`, fully read
 `.claude/skill-os/runtime/prototype-delivery.md` before compilation. Take the exact selected
 `final_artifact_ref{path,sha256}` / card `accepted_ref` and caller-verified delivery root; under the
-caller's current permitted `read_paths`/`read_roots`, use this CLI only for local-file sources without
+caller's current permitted `read_paths`/`read_roots`, use this CLI only for non-CD local-file sources without
 remote/message context:
 
 ```text
 node scripts/prototype-delivery.mjs resolve --accepted <exact accepted_ref.path> --sha256 <accepted_ref.sha256> --delivery-root <verified delivery root> [--read-path <actual permitted file>] [--read-root <actual permitted root>]
 ```
 
-For a verified current context containing authorized `allowed_urls` or native-message
+For CD provenance, or a verified current context containing authorized `allowed_urls` or native-message
 `source_refs`/`scope_refs`, import `resolveFinal` from the same `scripts/prototype-delivery.mjs` and run:
 
 ```javascript
 resolveFinal({ path: accepted_ref.path, sha256: accepted_ref.sha256, delivery_root: verified_delivery_root }, currentReadContext)
 ```
 
+CD passes current authenticateClaudeDesignSelection and applicable verifyClaudeDesignFidelity as
+specified by prototype-delivery; inherit authentic human selection, never infer callbacks from JSON.
 Pass the caller's actual complete permitted `currentReadContext`; never derive grants from certificate
 metadata or drop remote/message context to force CLI. CLI-only capability without the required API
 context returns NEEDS_CONTEXT; absent actual read permission remains BLOCKED. Both entries return

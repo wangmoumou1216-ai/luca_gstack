@@ -102,22 +102,24 @@ project-session 核验当前 pin 或子会话关联及有限读取范围，Codex
    - §7「页面与交互位置映射」（`page_interaction_mapping`）：页面/语义位置、交互职责、D-ID、适用 STATE、来源与 AC、约束及下游目标
    - `可追踪完整矩阵`
    - （若原型 prototype-spec.md 有"开发交接补全"节）**组件 props / 响应式断点 / design token 清单 / 动效** 四维——作 `CMP-NNN` 合同的实现规格附加字段读入（见 `references/dev-handoff-dimensions.md`）
-   - 若本次 CMP 依赖交接所选 motion-polish/OD composite 实际原型，intake 前完整读取
+   - 若本次 CMP 依赖交接所选 motion-polish/OD/CD composite 实际原型，intake 前完整读取
      `.claude/skill-os/runtime/prototype-delivery.md`，使用交接精确 `final_artifact_ref{path,sha256}`
-     与 caller 验证的 delivery root。仅本地文件来源且无 remote/message context 时，在当前
+     与 caller 验证的 delivery root。仅非 CD 本地文件来源且无 remote/message context 时，在当前
      真实获准 `read_paths`/`read_roots` 下实际执行以下 CLI：
 
      ```text
      node scripts/prototype-delivery.mjs resolve --accepted <final_artifact_ref.path> --sha256 <final_artifact_ref.sha256> --delivery-root <verified root> [--read-path <actual permitted file>] [--read-root <actual permitted root>]
      ```
 
-     当前已验证读上下文含已授权 `allowed_urls` 或原生消息 `source_refs`/`scope_refs` 时，从同一
+     当前来源为 CD，或已验证读上下文含已授权 `allowed_urls` 或原生消息 `source_refs`/`scope_refs` 时，从同一
      `scripts/prototype-delivery.mjs` 导入 `resolveFinal`，实际调用：
 
      ```javascript
      resolveFinal({ path: final_artifact_ref.path, sha256: final_artifact_ref.sha256, delivery_root: verified_delivery_root }, currentReadContext)
      ```
 
+     CD 按 prototype-delivery owner 传当前 authenticateClaudeDesignSelection 与适用
+     verifyClaudeDesignFidelity；继承真实采用依据，不重复问用户，不从收据自报生成回调。
      传入 caller 实际提供的完整获准 `currentReadContext`，不从 metadata 构造授权，不丢掉
      remote/message context 后强制 CLI。只有 CLI 能力且缺所需 API 上下文时返回 NEEDS_CONTEXT；
      缺真实读取许可仍 BLOCKED。两入口返回相同 resolved final，再执行下列读取与合同绑定。

@@ -100,6 +100,31 @@ skills:
         optional: ["ux_brainstorm_artifact"]
     quality_gates: ["design_generation_packet", "tool_consumption_contract", "page_interaction_mapping", "state_coverage", "no_packet_fact_drift", "component_rendered", "react_canvas_valid"]
 
+  design-output:
+    modes:
+      standalone:
+        required: ["frozen_packet", "full_task"]
+        optional: ["explicit_tool_choice", "bound_tool_selection"]
+      workflow:
+        required: ["frozen_packet", "full_task"]
+        optional: ["explicit_tool_choice", "bound_tool_selection"]
+    quality_gates: ["real_choice_inherited_or_asked_once", "packet_identity_bound", "full_task_preserved", "frozen_tool_conflict_returns_brief", "actual_adapter_only_no_duplicate_done"]
+    notes: "薄入口没有独立workflow节点/handoff/writer；未选工具用旁车，不修改冻结正文。已有OD单点/历史recover不迁移。选择不授模板采用/传输权。"
+
+  claude-design:
+    modes:
+      standalone:
+        required: ["frozen_packet"]
+        optional: ["bound_tool_selection", "confirmed_template", "postprocess_plan"]
+      workflow:
+        required: ["design_brief_artifact", "frozen_packet"]
+        optional: ["bound_tool_selection", "postprocess_plan"]
+    entry_modes:
+      chain: "frozen complete design source; inherit tool choice and scope"
+      recover: "frozen handoff and exact user-selected official HTML download; skip compilation and generation"
+    quality_gates: ["frozen_packet_and_selection_match", "full_attachment_inventory", "template_tac_bundle_adopted_when_applicable", "reviewed_frozen_behavior_when_composition", "trusted_muse_caller_for_stage_and_host_ack", "actual_design_mode", "exclusive_lease", "stage_zero_sends", "tool_scoped_design_system_in_actual_materials", "real_user_selected_exact_html", "typed_manual_receipt_and_current_read_scope", "original_fidelity_when_applicable", "independent_full_source_semantics", "applicable_processors_and_exact_final", "orchestrator_single_completion"]
+    notes: "recover继承冻结交接与真实人选准确HTML，不重问工具/规范/模板。CD人工生成并由用户正式下载HTML；本地导入无需Muse caller，真实host已stage才确认同owner收据并释放lease。stage/查询/host收尾缺可信caller或部署模块为NEEDS_CONTEXT，不借token/Chrome。CD规范实际进入v2材料；typed manual-download/user-attested收据remoteRevisionVerified=false。API消费核真人采用与适用保真；机械PASS非DONE，源码/fixture不证明部署。"
+
   open-design:
     modes:
       standalone:
@@ -117,7 +142,7 @@ skills:
       exported: ["same_source_body_and_reference_materials", "no_claim_of_external_import"]
       staged: ["od_daemon_reachable", "exact_project_readback", "brief_and_all_reference_bytes_match", "no_claim_of_generation"]
       recovered: ["bound_project_only", "actual_nonempty_prototype_recovered", "all_related_artifacts_recovered", "prototype_spec_written", "honest_traceability", "project_handoff_when_pinned"]
-    notes: "Brief在冻结前完成模板选择/语义适配，OD复用有效选择并在冻结后核验正式绑定/采用，不重做产品定义。未指定模板且无高置信匹配可reference=none；指定原件/未决冲突不能降级绕过。原始需求/原型先由Brief归一化，原型实际bytes可作不可变证据附件。页确认不代替工具写入权。用户在OD配置DS；仅委托时绑定验证。默认桌面端生成，headless显式opt-in，普通carrier/reference_only原请求最多重试1次后回同一staged项目桌面端；original_copy v1 HEADLESS_ONLY，任何profile/外部stage/run前必须真实headless opt-in与独立run授权，否则STOP等真人选择；原件失败不能桌面恢复，原重试计数耗尽/缺授权/终态不明停交付并保留证据。Claude Design只导出同包，不探测OD。EXPORTED/STAGED不是生成完成或节点DONE。"
+    notes: "Brief在冻结前完成模板选择/语义适配，OD复用有效选择并在冻结后核验正式绑定/采用，不重做产品定义。未指定模板且无高置信匹配可reference=none；指定原件/未决冲突不能降级绕过。原始需求/原型先由Brief归一化，原型实际bytes可作不可变证据附件。页确认不代替工具写入权。用户在OD配置DS；未确认才问，已确认直接继承。消费共用design-execution-defaults，自动安全命名、冻结平台/保真继承，缺值responsive-web/high；真实设计冲突回Brief。已选OD完整生成默认headless，不再询问自动模式许可，明确桌面/仅stage继承。普通carrier/reference_only原请求最多重试1次后回同一staged项目桌面端；original_copy v1 HEADLESS_ONLY，任何profile/外部stage/run前核默认headless与独立当前run授权，明确桌面或缺授权STOP于受影响动作；原件失败不能桌面恢复，原重试计数耗尽/缺授权/终态不明停交付并保留证据。Claude Design请求转独立claude-design adapter，保留同包与完整任务，不探测OD；旧明确仅导出请求仍只导出。EXPORTED/STAGED不是生成完成或节点DONE。"
 
   motion-polish:
     modes:

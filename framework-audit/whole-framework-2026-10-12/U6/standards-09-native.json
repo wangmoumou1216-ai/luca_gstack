@@ -1,0 +1,11 @@
+{
+  "invocation_id": "7923be60-2ab8-428d-9847-744f78045f20",
+  "status": "accepted",
+  "input_sha": "3920e84aceffdf4442c1ad574052bdd7ddd3467abb42c1949df74f5b4b16db27",
+  "external_identity": {
+    "tool_use_id": "call_b040dd5439b942f588a31e81bd05d967",
+    "agent_type": "quality-gate",
+    "agent_id": "01a13403-c405-7073-9cc8-4e48980f32e2"
+  },
+  "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/13/rollout-2026-10-13T14-47-04-01a13403-c405-7073-9cc8-4e48980f32e2.jsonl:01a13403-c486-7dc1-8469-09532d82f77b"
+}

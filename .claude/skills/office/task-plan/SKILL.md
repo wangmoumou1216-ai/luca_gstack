@@ -104,20 +104,22 @@ tech-spec handoff 必须存在；缺失时 NEEDS_CONTEXT，提示先完成 tech-
 4. 如果 design-brief handoff 指向“可追踪完整矩阵”，读取该矩阵所在节；不读全文
 5. 若 TS CMP 的 `artifact_evidence` 依赖 actual final，intake 前完整读取
    `.claude/skill-os/runtime/prototype-delivery.md`，以同一 exact `final_artifact_ref` / `accepted_ref`
-   和已验证 delivery root。仅本地文件来源且无 remote/message context 时，在 caller 当前真实
+   和已验证 delivery root。仅非 CD 本地文件来源且无 remote/message context 时，在 caller 当前真实
    获准 read context 下实际执行以下 CLI：
 
    ```text
    node scripts/prototype-delivery.mjs resolve --accepted <accepted_ref.path> --sha256 <accepted_ref.sha256> --delivery-root <verified root> [--read-path <actual permitted file>] [--read-root <actual permitted root>]
    ```
 
-   当前已验证读上下文含已授权 `allowed_urls` 或原生消息 `source_refs`/`scope_refs` 时，从同一
+   当前来源为 CD，或已验证读上下文含已授权 `allowed_urls` 或原生消息 `source_refs`/`scope_refs` 时，从同一
    `scripts/prototype-delivery.mjs` 导入 `resolveFinal`，实际调用：
 
    ```javascript
    resolveFinal({ path: accepted_ref.path, sha256: accepted_ref.sha256, delivery_root: verified_delivery_root }, currentReadContext)
    ```
 
+   CD 按 prototype-delivery owner 传当前 authenticateClaudeDesignSelection 与适用
+   verifyClaudeDesignFidelity；继承真实采用依据，不重复问用户，不从收据自报生成回调。
    传入 caller 实际提供的完整获准 `currentReadContext`，不从 metadata 构造授权，不丢掉
    remote/message context 后强制 CLI。只有 CLI 能力且缺所需 API 上下文时返回 NEEDS_CONTEXT；
    缺真实读取许可仍 BLOCKED。两入口返回相同 resolved final，再执行下列 TS 身份核对。

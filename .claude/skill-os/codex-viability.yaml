@@ -20,6 +20,8 @@ skills:
   challenge: {tier: 1}
   compare: {tier: 1}
   design-brief: {tier: 1}
+  design-output: {tier: 1}
+  claude-design: {tier: report, degrade: "专用Muse可信caller与Design stage/status/recover未验证时NEEDS_CONTEXT；外部Codex不借token/Chrome，保留材料，不声称上传/生成/回收/完成。恢复需本harness真实宿主和exact export证据"}
   evals: {tier: 1}
   handoff: {tier: 1}
   idea: {tier: 1}

@@ -155,7 +155,11 @@ VM 同源码检查仅证明 factory 可在无 Node I/O 的 JS global 消费，�
 
 `assisted_ids` 是实际 caller 绑定的明确单条人工协助授权，仅接受一个已存在 manual ID；不是 AI 候选自报的许可。该条可以 scope_unit_id=null，已有唯一绑定目标从 source 实际核验，已有无锚点整体规则保持其 null anchor。候选只可提出文本/依据建议，不换身份、目标、scope、kind 或删除状态；其它条目须完全保持，不能新增 AI/人工条目。此协助项不充当 AI required behavior coverage，缺项仍拒绝。无授权时原人工项保持。该条原文本和人工历史受保护，建议可随同 HTML 完整往返。
 
-本版本静态资源检查不支持 CSS 转义 token，任何 CSS 中的反斜杠均以 UNSUPPORTED_ASSET 具体拒绝，包括 style 属性、本地或 data CSS；不删除资源来通过，也不声称这些输入已离线自包含。含 image-set/-webkit-image-set/image/src/cross-fade/-webkit-cross-fade/paint 的资源函数同样具体拒绝；不能只检查 url()/@import 而将引号型依赖当作闭包。普通未转义且无这些不支持资源函数的 CSS 仍按原闭包规则支持。
+静态 CSS 检查保留 qualified selector 中的简单标点转义原字节，例如 `[\:has\(\%2b\%20\:hover\)]`；支持顶层及 media/supports/container/layer/scope/starting-style 分组内的普通规则。selector 转义检查跳过注释；既有资源扫描仍保守检查原文本，注释中的 url()/资源函数也可能具体拒绝。声明、style 属性、URL/资源 token、十六进制转义、未知或不完整上下文仍以 UNSUPPORTED_ASSET 具体拒绝，本地或 data CSS 共用同一检查。此有限支持不删除反斜杠、不重新序列化业务样式，也不宣称任意 CSS 语法已支持。含 image-set/-webkit-image-set/image/src/cross-fade/-webkit-cross-fade/paint 的资源函数仍具体拒绝；不能只检查 url()/@import 而将引号型依赖当作闭包。
+
+CSP 首批仅支持单个、直接位于显式 head、先于业务脚本/样式入口的离线 inline profile：http-equiv 必须为大小写不敏感的 `Content-Security-Policy`，前后不得带空白；default-src/connect-src/form-action/base-uri 均为 `'none'`，img-src/font-src 均为 `data:`，script-src/style-src 均为 `'unsafe-inline'`；八项必须齐全且各只有该值，policy 的顺序和 ASCII 空白可变化。未知/重复 directive、多个或迟置 meta、nonce/hash/strict-dynamic 及其它覆盖策略具体拒绝。原 policy 保留，固定 bootstrap 插在 meta 结束后、全部业务 script 前；build/extract/rebase 共用此确定性位置。没有 CSP 的既有 head 起点行为保持。组包资格不证明实际浏览器、下载、原业务行为或最终独立验收通过。
+
+带该 CSP 的输入不进行本地或外部资源的 data 内联转换，即使 closure 中资产齐全也具体拒绝：转换可能激活原策略限制的资源，或在另一浏览器中抑制原可加载资源，不能默认为业务等价。已有 data 与 fragment 仍走原检查；无 CSP 的获准普通闭包内联保持。CSP 不能代替静态资源闭包，特别不能因缺文件未加载而断言策略禁用了该依赖。缺资产或 image-set 等不支持语法保持具体拒绝，不通过删除源声明、补造图像或保留缺失路径取得离线 PASS。
 
 修复03：同一 scope/merge seam 的内存参数 `request_kind` 可为 assist-only / generation / mixed，不增加持久字段。assist-only 只绑定一个旧且未删除的 manual ID，null generation_scope 可用，返回独立 assistance_coverage；普通 coverage 为空，generation_valid=false，assistance_valid=true，合并保留 current 的 generation_scope，不要求假AI条目或暂缓。generation 走原完整 scope/behaviors 分母且无 assisted_ids。mixed 明确允许已批准 scope 内 AI 更新并另协助该 manual ID，但普通 coverage 完整核验，assisted item 不填普通分母。缺省的纯人工原输入识别为单条协助；旧含AI的缺省 assisted 输入保持原严格单条保护及原完整 scope 分母兼容。许可只来自冻结caller参数，不来自候选字段。
 

@@ -89,7 +89,7 @@
 **生成目标**
 - 页面 / 组件名称：{name}
 - 目标平台：{实际 desktop / mobile / embedded 平台；不从模板推断产品}
-- 输出目标：{用户所选工具 / 尚未选择；Open Design 为默认推荐}
+- 输出目标：{用户所选工具 / 尚未选择；未选交 design-output}
 - 目标依据：{正文 Phase 6 的来源记录}
 
 **产品与用户目标**
@@ -145,7 +145,8 @@
 > **冻结与模板运输边界**：唯一执行合同是 `.claude/skill-os/runtime/page-context.md`。先冻结本 Packet，才由交接入口执行最终 `carrier-binding`；Brief冻结前的模板选择/语义适配草稿可迭代；Phase-A `CandidateHint` 从不进入 Packet 或代替 adoption。冻结后重核版本与全量事实，不重做已确认选型。有效 binding、`page-reference.json`、TAC 和 hash 是指向冻结 Packet 的**独立运输元数据**，不反写正文/第 7 节，也不复制出第二套需求。用户明确不用/拒绝模板，或未指定模板且没有最终绑定时用互斥 `reference_only` bundle；已指定原件或未决适配冲突不得借此跳过。它没有 base template、TAC、carrier hash 或模板衍生承诺。
 > **carrier 的视觉边界**：`structural_carrier` 只借 DOM、登记模块和内容结构；CSS/token/assets 不是视觉验收标准，OD 的设计系统仍由用户配置。只有显式 `visual_carrier` 且同时有 viewport、截图基线与允许差异阈值，才能把模板视觉作为约束。
 > **授权与可达材料**：最终 binding/adoption 不授予 OD stage；stage、run、recover 分别需要自己的授权。接收方可达的参考材料须通过 control files/实际附件提供，本机路径不是附件。已有原型由 prototypeEvidence 以 inert evidence 实际bytes附加，并纳入manifest/完整读回；行为保持事实在Packet正文，附件不当第二事实源。
-> **目标与设计系统**：工具及平台继承正文来源；设计系统由用户在 OD / Claude Design 内配置，本包不注入旧 token 或组件技术映射。Claude Design 使用同包人工附加，导出、外部接收、生成完成分别记录。
+> **目标与设计系统**：工具及平台继承正文来源；设计系统由用户在 OD / Claude Design 内配置，本包不注入旧 token 或组件技术映射。Claude Design 由独立 claude-design adapter 专用宿主上传/预填同包，用户手动生成；导出、外部接收、生成完成分别记录。
+> **冻结后工具选择**：尚未选择工具的 Packet 可由 design-output 用 Packet path/hash + 完整任务 + 真实选择来源的旁车绑定 OD/CD，正文不变。已硬绑定另一工具必须回 Brief 修订重冻。选择不是模板采用或传输授权。
 
 ---
 

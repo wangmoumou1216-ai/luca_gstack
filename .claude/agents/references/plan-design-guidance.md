@@ -45,7 +45,9 @@ Use skills according to evidence, not a fixed script:
 | `ux-research` | systematic UX/competitor evidence | subagent |
 | `ux-brainstorm` | live exploration of UX alternatives | main_agent |
 | `design-brief` | convert an agreed solution into interaction specification | main_agent |
-| `open-design` | preferred design output; desktop by default, headless opt-in | main_agent |
+| `design-output` | inherit choice or ask OD/CD once; no separate node | main_agent |
+| `claude-design` | trusted Muse Design staging; manual generation; exact export/recovery | main_agent |
+| `open-design` | explicitly selected OD; headless by default, preserve explicit desktop/stage-only scope | main_agent |
 | `motion-polish` | refine motion in actual existing HTML within confirmed scope | main_agent |
 | `magicpath` | user-selected React component prototype alternative | subagent |
 | `html-prototype` | user-selected local HTML alternative | subagent |
@@ -76,20 +78,27 @@ contains target users and core features, and no blocking `[待确认]` remains. 
 
 ## Design output choice and authority
 
-Prefer `open-design`, but only the user's actual choice or an already approved named fallback plan
-authorizes a different tool. A daemon, authentication, platform, or framework failure does not
+Use `design-output` to inherit the actual tool or ask once between OD/CD. It retains the full task,
+binds an unselected frozen Packet via sidecar, and returns conflicting frozen targets to Brief.
+Replace the entry with the actual adapter node; it has no second DONE/handoff. Only the user's
+actual choice or an already approved named fallback plan authorizes a different tool. A daemon, authentication, platform, or framework failure does not
 grant permission to switch tools. `skills_needed` must match the approved choice. Tool switching
 does not waive the upstream handoff gate or expand external write authority.
 
 - `open-design`: use its Phase 0 daemon check. Completion requires actual non-empty generated HTML
   recovered from the exact bound project; `EXPORTED` or `STAGED` is not generated/DONE.
   original_copy v1 is HEADLESS_ONLY: before any profile choice or external stage/run, require actual
-  user headless opt-in plus independent run grant under OD Phase 0; otherwise STOP for a real choice.
+  OD default headless plus independent current run grant under OD Phase 0; no extra mode permission
+  question. Explicit desktop or missing run authority means STOP at the affected action.
   After original-copy headless failure, desktop generation/recovery is unsupported; retain failure
   and stop when the existing one-retry budget is exhausted, terminal evidence is missing or authority
   is absent. For ordinary carrier/reference_only, after an authorized headless retry fails, recover
   through the same staged project's desktop UI. OD owns the counter; no WA restart may reset it or
   authorize a tool switch.
+- `claude-design`: main_agent with trusted Muse caller only; stage has zero sends, the user generates.
+  Missing host/recovery/processor capability stops the dependent gate; formal exact artifact/revision
+  export, original-copy integrity, independent full-source semantics and final resolution precede DONE.
+  OD headless/desktop receipts cannot stand in for CD manual-generation provenance.
 - `magicpath`: use its own availability and execution contract. Require the job status to be
   `completed` and inspect the actual generated filename; platform casing must not be hard-coded.
 - `html-prototype`: use its input/output and QA contract. Require the exact output and Phase 4.5 QA.
