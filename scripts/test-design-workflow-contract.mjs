@@ -164,7 +164,7 @@ for (const skill of ['brainstorm', 'ux-brainstorm']) {
 // U-003: written execution branches; this does not simulate an agent or Human Gate.
 const autoDispatch = section(sources.auto, '#### 3.1', '#### 3.2');
 check('auto declares execution_context per phase', () => has(sources.auto, /每个 Phase.*execution_context/));
-for (const skill of ['brainstorm', 'ux-brainstorm', 'design-brief', 'open-design']) {
+for (const skill of ['brainstorm', 'ux-brainstorm', 'design-brief', 'open-design', 'design-output', 'claude-design']) {
   check(`auto interactive ${skill} main_agent`, () => has(sources.auto, new RegExp('^\\| `'+skill+'` \\| main_agent \\|', 'm')));
 }
 for (const skill of ['deepresearch', 'ux-research']) {
@@ -220,23 +220,23 @@ const odIntake = section(sources.od, '## Phase 0', '## Phase 1');
 const odStage = section(sources.od, '## Phase 3D', '## Phase 3H');
 const odHeadless = section(sources.od, '## Phase 3H', '## Phase 4');
 check('OD original-copy HEADLESS_ONLY in intake before profile/stage', () => has(odIntake, /original_copy.*HEADLESS_ONLY.*profile.*stage.*run/s));
-check('OD original-copy opt-in AND run grant required', () => has(odIntake, /original_copy.*显式 headless opt-in.*run.*授权.*STOP.*真实.*选择/s));
-check('OD original-copy generic desktop default excluded', () => has(odIntake, /普通.*carrier.*reference_only.*默认.*3D.*original_copy.*不适用/s));
-check('OD stage gate already headless chosen and run granted', () => has(odStage, /original_copy.*Phase 0.*opt-in.*run.*未满足.*STOP/s));
+check('OD default headless retains independent current run authority', () => has(odIntake, /original_copy.*默认 headless.*不新增自动模式许可提问.*独立授权.*真实依据.*STOP/s));
+check('OD ordinary automatic path preserves explicit desktop or stage scope', () => has(odIntake, /普通.*carrier.*reference_only.*默认.*3D.*3H 自动生成.*明确桌面生成或仅 stage.*继承/s));
+check('OD stage gate requires headless capability and run grant', () => has(odStage, /original_copy.*Phase 0.*默认 headless 能力.*独立 run 授权门.*未满足.*STOP/s));
 check('OD stage completion message conditional', () => has(odStage, /普通 carrier\/reference_only.*桌面端.*original_copy.*headless/s));
 check('OD failed original headless never desktop', () => has(odHeadless, /original_copy.*失败.*不.*Phase 3D.*桌面.*STOP/s));
 check('OD normal retry counter retained', () => has(odHeadless, /重试上限 1.*普通 carrier\/reference_only.*再次失败.*桌面端/s));
-check('OD no headless fallback respects original mode', () => has(odHeadless, /original_copy.*未.*opt-in.*STOP/s));
+check('OD original rejects explicit desktop or absent run grant', () => has(odHeadless, /original_copy.*明确桌面生成或缺 run grant.*STOP.*不得改走桌面/s));
 check('OD completion original desktop iteration excluded', () => has(section(sources.od,'## Phase 5','## Phase 6'), /普通 carrier\/reference_only.*桌面端.*original_copy.*不.*桌面/s));
-check('OD core default exception retained', () => has(section(sources.od,'## ⚠️ 末尾核心约束','## 完成协议'), /普通 carrier\/reference_only.*默认桌面.*original_copy.*HEADLESS_ONLY/s));
-check('page original-copy capability ahead of operation sequence', () => has(section(sources.page,'## 7.'), /HEADLESS_ONLY.*profile.*stage.*run.*opt-in.*run.*STOP/s));
+check('OD core automatic default retains original capability', () => has(section(sources.od,'## ⚠️ 末尾核心约束','## 完成协议'), /已选 OD.*默认自动 headless.*original_copy.*HEADLESS_ONLY.*不询问自动模式许可.*独立 run grant/s));
+check('page original-copy capability ahead of operation sequence', () => has(section(sources.page,'## 7.'), /HEADLESS_ONLY.*profile.*stage.*run.*默认 headless.*独立 run grant.*不再询问自动模式许可.*STOP/s));
 check('page original-copy failure stops desktop recovery', () => has(section(sources.page,'## 7.'), /失败.*桌面.*不支持.*STOP/s));
-check('auto W9 original exception precedes generic retry', () => has(section(sources.auto,'#### Phase 失败处理','#### 3.4'), /original_copy.*HEADLESS_ONLY.*opt-in.*run.*STOP.*失败.*桌面.*不支持/s));
+check('auto W9 original exception precedes generic retry', () => has(section(sources.auto,'#### Phase 失败处理','#### 3.4'), /original_copy.*HEADLESS_ONLY.*默认 headless.*独立当前 run grant.*STOP.*失败.*桌面.*不支持/s));
 check('auto keeps normal desktop recovery retry counter', () => has(sources.auto, /普通 carrier\/reference_only.*一次 retry.*桌面端恢复.*W9.*重置/s));
-check('Plan direct consumer original-copy capability exception', () => has(sources.guidance, /original_copy.*HEADLESS_ONLY.*opt-in.*run grant.*STOP.*desktop.*unsupported/s));
+check('Plan direct consumer original-copy capability exception', () => has(sources.guidance, /original_copy.*HEADLESS_ONLY.*default headless.*independent current run grant.*STOP.*desktop.*unsupported/s));
 check('Plan direct consumer normal desktop recovery retained', () => has(sources.guidance, /ordinary carrier\/reference_only.*headless retry fails.*desktop/s));
 const odNotes = JSON.parse(sources.odMode).contract.notes;
-check('OD metadata original-copy exception', () => has(odNotes, /original_copy.*HEADLESS_ONLY.*opt-in.*run.*STOP.*失败.*桌面/s));
+check('OD metadata original-copy exception', () => has(odNotes, /original_copy.*HEADLESS_ONLY.*默认headless.*独立当前run授权.*STOP.*失败.*桌面/s));
 check('OD metadata source hash current', () => assert.equal(JSON.parse(sources.odMode).source_sha256,sha(sources.modes)));
 check('adapter existing desktop hard refusal preserved', () => has(section(sources.original, 'export function reportOriginalGeneration', 'export async function recoverOriginalOutput'), /ORIGINAL_DESKTOP_UNSUPPORTED/));
 check('adapter existing successful exact run prerequisite preserved', () => has(sources.original, /readback[.]run[.]status !== 'succeeded'.*ORIGINAL_RUN_NOT_SUCCEEDED/));
@@ -258,6 +258,18 @@ check('all research kit modes use actual shared handoff threshold', () => {
   has(sources.researchKit, /runtime-estimate=12000.*standalone 终端交付也必须写 handoff/);
   lacks(sources.researchKit, /standalone 终端交付免写|按 lightweight 豁免 DONE 合法/);
 });
+// OD/CD v2 entry and adapter completion contract; no live host claim.
+const entry = readFileSync(resolve(root, '.claude/skills/office/design-output/SKILL.md'), 'utf8');
+const cd = readFileSync(resolve(root, '.claude/skills/office/claude-design/SKILL.md'), 'utf8');
+check('thin entry retains no parallel completion node', () => has(entry, /没有独立 workflow 节点、DONE、handoff 或 writer/));
+check('Orchestrator replaces entry with actual node', () => has(sources.orchestrator, /入口替换成实际.*open-design.*claude-design.*节点/s));
+check('CD separates trusted stage/ack and local import context', () => { has(cd, /claude_design_stage.*claude_design_status.*claude_design_recover/s); has(cd, /本地导入.*不依赖 Muse caller/s); has(cd, /源码\/fixture 不证明安装版或全链完成/); });
+check('CD manual stage zero sends and safe unknown retry', () => { has(cd, /发送次数必须为零/); has(cd, /未知结果先.*status.*不盲重试/s); });
+check('CD original adoption and independent frozen behavior', () => { has(cd, /TAC、原件及完整 bundle 的真实采用/); has(cd, /独立代码审查与隔离.*行为验证后冻结/s); });
+check('CD exact human official HTML import and typed provenance', () => { has(cd, /用户.*正式 Export HTML.*filename、mtime/s); has(cd, /recoverClaudeDesignDownload.*authenticateSelection.*authorizeRead/s); has(cd, /provenance=manual-download.*remoteRevisionVerified=false/s); });
+check('OD/CD common tool-scoped system and continuation order', () => { has(entry, /选工具 → 确认该工具设计规范 → 材料就位 → 生成\/迭代 → 回收验收/); has(cd, /designSystemRef.*实际 designSystemAssets.*buildClaudeDesignHandoff/s); has(cd, /recover 不命名.*不创建、不再询问 DS/s); });
+check('CD complete denominator and actual adapter single commit', () => { has(cd, /独立浏览器验全部原 D\/STATE\/AC\/KEEP/); has(cd, /completion_owner=Orchestrator.*仅由 Orchestrator 一次提交/s); });
+check('CD downstream exact resolution and no false DONE', () => { has(cd, /下游 tech-spec\/task-plan\/compile 必须重新 resolve exact final_artifact_ref/); has(cd, /EXPORTED\/STAGED\/下载\/机械验收绝不提前完成/); });
 for (const [key, path] of Object.entries(paths)) check(`source stable ${path}`, () => assert.equal(sha(readFileSync(resolve(root, path), 'utf8')), hashes[path]));
 process.stdout.write(`RESULT ${passed}/${total} PASS; STATIC_ONLY_NOT_NATIVE\n`);
 process.exitCode = passed === total ? 0 : 1;

@@ -1,7 +1,7 @@
 # Routing Chain-Check — dispatch 前链路检查（唯一真值源）
 
 > **Defining constraint：只补被逐 skill 契约调查证实的缝隙——两个裸奔点的研究前置、设计产出的
-> OD-first 执行面、端到端意图的确认门、评审请求的对象分流、显式工程 preset 的非授权接线；其余 skill 自带硬门禁
+> OD-first/CD 选择执行面、端到端意图的确认门、评审请求的对象分流、显式工程 preset 的非授权接线；其余 skill 自带硬门禁
 > （`NEEDS_CONTEXT`/`BLOCKED`/`⛔`），路由层不重复拦。** CLAUDE.md 语义路由契约只放速记指针，
 > 勿在别处复制全文。
 > 背景：2026-07-13 luca——单 skill 命中会坍缩链路意图（写 PRD 前该不该先调研？出设计该走 OD 全链），
@@ -36,19 +36,24 @@ research_default`，与 Plan Agent 研究默认门同一把尺子）→ dispatch
 「这题复杂且没有成熟先例，先调研（/deepresearch 或 /ux-research）还是直接开始？」
 简单或有成熟先例 → 直接进，不问。
 
-**R2 · OD-first（设计产出执行面）**
+**R2 · 设计产出工具选择（design-output）**
 对明确已有 HTML 增改交互说明或标注的意图，语义路由到 `prototype-notes`，先核当前文件、确认与范围；
 泛词“说明/侧栏/交互”、画新页面或改业务侧栏不属于此例外，仍由原生成/设计 owner 承接。
 该例外不改变 Project Gate 与 Plan 优先级，不授予工具切换或新业务设计权限。
 已有实际 HTML 的动效/微交互完善可语义路由到 `motion-polish`；动画概念解释、代码评审仍由各自
-owner 承接。该入口不授权新界面生成或工具切换，输入/权限见其 SKILL；新 UI 产出仍按下列 OD-first。
+owner 承接。该入口不授权新界面生成或工具切换，输入/权限见其 SKILL；新 UI 产出仍按下列 design-output。
 已有原型的 UI 重设计、模板植入/适配或视觉精修 → 先由 `design-brief` 的成熟输入入口承接；
 读取其 SKILL 与适用 input-contract，按实际资料进入，不强塞研究/PRD。模板未定时按其 Phase 0.5
 与 `.claude/skill-os/runtime/page-context.md` 在已授权范围读取完整目录及实际源，再推荐/消歧；
 不得先要求用户提供本可发现的模板路径。发现不等于采用，有效确认可复用，无匹配按 owner 无参考分支处理。
 HTML/Figma/链接是输入格式，不是目标设计工具选择；明确整体流程诉求同时应用 R3，Brief 不吞交付范围。
-意图 = 设计 / 原型 / 界面产出 → 最终设计工具默认 `open-design`（`design_output.primary` 的 standalone 执行面）：
-有 design-brief 产物走 chain 入口；用户点名单点产物走 adhoc 交接；无源且要可追踪交付 → 建议先
+意图 = 设计 / 原型 / 界面产出 → `design-output` 薄入口（`design_output.primary`）：
+已选 OD/CD 直接继承；未选只问一次 OD 或 Claude Design，等待真实选择，不用推荐代答。
+冻结 Packet 未选工具时用 path/hash 绑定的选择旁车，正文不变；已硬绑定另一工具回 Brief 重冻。
+入口保留完整原任务/范围/下游与执行方式，只展开实际 adapter 节点，不建第二个 DONE；
+OD 的 standalone 与历史 recover 直接调用仍兼容：有 design-brief 产物走 chain 入口，
+用户点名单点产物走 OD adhoc 交接。CD 按独立 claude-design 的冻结 Packet chain / 精确 recover 合同；
+adhoc 不扩展到 CD。无源且要可追踪交付 → 建议先
 `/design-brief`。工具选择按 `design_output.fallback_trigger`：用户明确选择本地 HTML / MagicPath，
 或已批准包含该具名备用工具的执行计划，才转交相应独立能力。daemon 不可达、鉴权失败或非 React
 本身只报告阻塞，不自动替用户换工具；OD headless 失败的同项目桌面恢复仍按 OD 合同执行。

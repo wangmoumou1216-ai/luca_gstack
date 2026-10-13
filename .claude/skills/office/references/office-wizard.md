@@ -29,6 +29,7 @@ AskUserQuestion：
 
 ### Step 2：根据选择推荐 workflow
 
+设计产出经 design-output 继承已选 OD/CD；未选只问一次并保留完整原任务，入口无独立完成节点。
 下列原型工具均是推荐选项，以用户已选工具为准；「备选」不表示故障后自动切换。
 OD 不可达、认证失败或非 React/Canvas 场景只报告阻塞并暂停；只有用户明确选择 MagicPath / 本地 HTML，
 或明确批准包含相应备用路径的计划且触发条件满足，才启用对应能力。缺授权则 `BLOCKED` 交还用户；
@@ -50,7 +51,7 @@ OD 不可达、认证失败或非 React/Canvas 场景只报告阻塞并暂停；
 4. /ux-research    → UX多维度深度研究（5+1并行agent，共识矩阵，苏格拉底审查）
 5. /ux-brainstorm  → UX设计方案编排器（7个UX逼问，2-3方案，Oracle审查）
 6. /design-brief    → 轻量交互文档与原型决策（不跑 ux-brainstorm 时可独立使用）
-7. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
+7. /design-output   → 继承已选工具，未选时选 OD 或 Claude Design；实际 adapter 负责回收和验收
    /html-prototype → （备选）生成 HTML 原型
 
 从哪里开始都可以。/deepresearch 的报告可以直接传给 /brainstorm 作为输入。
@@ -79,7 +80,7 @@ AskUserQuestion：
 4. /ux-research    → UX多维度深度研究（竞品+范式+用户行为+AI可行性）
 5. /ux-brainstorm  → UX设计方案编排器
 6. /design-brief    → 轻量交互文档与原型决策
-7. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
+7. /design-output   → 继承已选工具，未选时选 OD 或 Claude Design；实际 adapter 负责回收和验收
    /html-prototype → （备选）生成改版原型
 /brainstorm 可以直接用，不需要先跑 /idea。需求范围明确时可用 superpowers:brainstorming 替代。
 ```
@@ -98,7 +99,7 @@ AskUserQuestion：
 1. /idea       → 记录要评审的页面信息和截图
 2. /ux-audit   → 系统评审页面（视觉/交互/业务三个维度）
 3. /design-brief → 基于评审结论生成轻量交互文档
-4. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
+4. /design-output   → 继承已选工具，未选时选 OD 或 Claude Design；实际 adapter 负责回收和验收
    /html-prototype → （备选）按评审清单逐条生成改版原型
 从 /idea 开始？
 ```
@@ -121,7 +122,7 @@ AskUserQuestion：
 5. /ux-research    → UX多维度深度研究（含AI Native/Agent Native可行性维度）
 6. /ux-brainstorm  → UX设计方案编排器（含Agent控制边界逼问）
 7. /design-brief → 轻量交互文档与原型决策（Cursor 锚点强制通过：可见/暂停/接管/撤销）
-8. /open-design     → **首选**：交互文档 → OD 桌面端生成 HTML（默认，含 Agent 专有状态 / headless opt-in）→「拉回来」落盘
+8. /design-output   → 继承已选工具，未选时选 OD 或 Claude Design；实际 adapter 负责回收和验收
    /html-prototype → （备选）生成原型
 Agent 化设计的核心红线：用户必须始终能 看见 / 暂停 / 接管 / 撤销 AI 的动作。
 ```
@@ -268,9 +269,14 @@ luca_gstack — 一级可见 Skill 列表
 
 ── 原型实现 ────────────────────────────────────────────────────
 
-/open-design   A B C D **设计产出首选**：交互文档 → OD 桌面端生成 HTML（默认 / headless opt-in）→「拉回来」落盘
+/design-output A B C D 冻结 Packet 工具选择薄入口；未选问一次 OD/CD，继承已选；无独立 DONE
+
+/claude-design A B C D Luca app Design 专用上传/预填；用户手动生成，精确导出回收与独立验收
+               缺可信 Muse caller 或能力时停门；stage 零发送，不借 OD provenance
+
+/open-design   A B C D **已选 OD 独立入口**：交互文档 → 默认自动 headless 生成 HTML →「拉回来」落盘
                输入模式：standalone 或 workflow。输入 design-brief 交互文档；
-               默认在 OD 桌面端生成 + 在 OD UI 内判断「是否符合需求」，说「拉回来」落盘 docs/prototype/（headless 为 opt-in）
+               继承显式 desktop / stage-only 范围；模式与实际执行授权按 open-design Phase 0/2/3 合同，回收后独立验收。
                说明：设计系统由用户在 OD 配置；交接需求与已确认参考，OD 不可达或认证失败时报告并暂停。
                隐藏 skill `magicpath` 仅按用户明确选择或已批准备用路径内部 dispatch，非一级入口
 

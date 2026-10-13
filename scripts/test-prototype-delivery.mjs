@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { spawn, spawnSync } from 'node:child_process';
 import * as delivery from './prototype-delivery.mjs';
+import { createClaudeDesignManualBinding, recoverClaudeDesignDownload } from './claude-design-recover.mjs';
 
 const workRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -1782,6 +1783,95 @@ async function main() {
     assert.equal(failures.length, 0, group + ': actual failures ' + failures.join(','));
   }
   const cases = {
+    'cd-manual-recovery': () => {
+      const root = path.join(evidenceRoot, 'cd-manual'); fs.mkdirSync(root);
+      const write = (name, text) => { const file = path.join(root, name); fs.writeFileSync(file, text); return fileRef(file); };
+      const packet = write('packet.md', '# SIMULATED CD source\nR-1: Keep the confirmed task.\nAC-1: The button remains present.\n');
+      const material = write('data.json', '{"label":"Fixture"}');
+      const instructions = write('instructions.txt', 'SIMULATED: preserve exact Packet and material.');
+      const witness = write('selection.md', 'SIMULATED human selection boundary for this fixture only.');
+      const selectionRef = { ...witness, excerpt: 'SIMULATED human selection boundary' };
+      const downloadRef = write('download.html', '<!doctype html><html><head><title>Fixture</title></head><body><button>Fixture</button></body></html>');
+      const binding = createClaudeDesignManualBinding({ handoffId: 'CD-fixture', packet, materials: [material],
+        instructionsRef: instructions, scope: { kind: 'new-design' }, directory: path.join(root, 'binding') });
+      const authenticated = subject => subject.selectionRef.path === witness.path && subject.selectionRef.sha256 === witness.sha256 &&
+        subject.downloadRef.path === downloadRef.path && subject.downloadRef.sha256 === downloadRef.sha256;
+      const recovered = recoverClaudeDesignDownload({ requestId: 'CD-recover', manifestRef: binding, handoffId: 'CD-fixture',
+        downloadRef, selectionRef, directory: path.join(root, 'raw') }, { authenticateSelection: authenticated });
+      const scope = write('scope.md', 'SIMULATED NO_PIN fixture: preserve raw; copy and metadata here only.');
+      const method = write('method.md', 'SIMULATED method for mechanical candidate integrity, not native acceptance.');
+      const context = { read_roots: [root], authenticateClaudeDesignSelection: authenticated };
+      const input = { source: { locator: packet.path, version: 'simulated-cd-fixture', sha256: packet.sha256 },
+        base: { entry: recovered.entry, sha256: recovered.sha256, asset_root: path.dirname(recovered.entry), entry_relative: 'index.html',
+          closure: [{ path: 'index.html', sha256: recovered.sha256, bytes: fs.statSync(recovered.entry).size }],
+          origin: 'claude-design', recovery_ref: recovered.receiptRef },
+        scope: { reference: scope.path, sha256: scope.sha256, preserved_expectations: ['R-1'] },
+        methods: [{ ...method, pin_or_version: 'simulated' }], authority_ref: scope.path };
+      const missing = structuredClone(input); delete missing.base.recovery_ref;
+      rejects(() => helper.bindBase(missing, context), /CD_RECOVERY_REQUIRED/);
+      rejects(() => helper.bindBase(input, { read_roots: [root] }), /CD_SELECTION_CONTEXT_REQUIRED/);
+      rejects(() => helper.bindBase(input, { ...context, authenticateClaudeDesignSelection: () => false }), /CD_MANUAL_SELECTION_REQUIRED/);
+      const wrongEntry = structuredClone(input); wrongEntry.base.entry = downloadRef.path; wrongEntry.base.asset_root = root;
+      wrongEntry.base.entry_relative = 'download.html'; wrongEntry.base.closure[0].path = 'download.html';
+      rejects(() => helper.bindBase(wrongEntry, context), /CD_RAW_IDENTITY_MISMATCH/);
+      const wrongPacket = structuredClone(input); const anotherPacket = write('other-packet.md', fs.readFileSync(packet.path, 'utf8'));
+      wrongPacket.source.locator = anotherPacket.path;
+      rejects(() => helper.bindBase(wrongPacket, context), /CD_PACKET_MISMATCH/);
+      const paths = [...new Set(recovered.readRefs.map(item => item.path)), scope.path, method.path];
+      rejects(() => helper.bindBase(input, { read_paths: paths.filter(file => file !== material.path),
+        authenticateClaudeDesignSelection: authenticated }), /READ_SCOPE_REFUSED/);
+      const bound = helper.bindBase(input, context);
+      const deliveryRoot = path.join(root, 'delivery'); fs.mkdirSync(deliveryRoot);
+      context.effects = { framework_fixture: true, authorized_delivery_root: deliveryRoot, copy: true, edit: true, metadata: true };
+      const attempt = helper.prepareCopy(bound, { delivery_root: deliveryRoot, attempt_id: 'CD-copy', kind: 'adequate-copy' }, context);
+      const spec = path.join(attempt.attempt_dir, 'prototype-spec.md'); fs.writeFileSync(spec, 'source=claude-design\nSIMULATED integrity spec only.\n' + fs.readFileSync(packet.path));
+      const patch = path.join(attempt.attempt_dir, 'patch.json'), patchData = { base_sha256: bound.base.sha256, operations: [], content_changed: false };
+      writeJSON(patch, patchData);
+      const candidate = { ...bound, attempt_id: attempt.attempt_id, delivery_root: deliveryRoot, required_behavior_refs: ['R-1', 'AC-1'],
+        delivery: { id: attempt.attempt_id, kind: attempt.kind, entry: path.relative(deliveryRoot, attempt.entry),
+          sha256: fileRef(attempt.entry).sha256, closure: [{ path: path.relative(deliveryRoot, attempt.entry), sha256: recovered.sha256,
+            bytes: fs.statSync(attempt.entry).size }], spec: fileRef(spec) }, patch: { ...fileRef(patch), ...patchData } };
+      const fixture = { root, deliveryRoot, context, bound, attempt, resolved: helper.checkCandidate(candidate, context) };
+      const local = createLocalIntegrityReport(fixture, { helper, seal: false });
+      const pending = { ...local.report, status: 'UNKNOWN' }; writeJSON(local.reportRef.path, pending);
+      rejects(() => helper.sealAccepted({ ...local.input, report_ref: fileRef(local.reportRef.path) }, context), /REQUIRED_NOT_PASS/);
+      assert.equal(fs.existsSync(path.join(attempt.attempt_dir, 'accepted-delivery.json')), false);
+      writeJSON(local.reportRef.path, local.report);
+      const accepted = helper.sealAccepted(local.input, context);
+      const exact = { ...accepted.accepted_ref, delivery_root: deliveryRoot };
+      assert.equal(helper.resolveFinal(exact, context).final_entry, attempt.entry);
+      rejects(() => helper.resolveFinal(exact, { ...context, authenticateClaudeDesignSelection: undefined }), /CD_SELECTION_CONTEXT_REQUIRED/);
+      assert.match(command('cd-cli-needs-verified-api', ['resolve', '--accepted', exact.path, '--sha256', exact.sha256,
+        '--delivery-root', deliveryRoot, '--read-root', root], 1).stderr, /CD_SELECTION_CONTEXT_REQUIRED/);
+      // Same runtime seam as TS/TP/compile, with actual current caller context; metadata supplies no callback.
+      for (const consumer of ['tech-spec', 'task-plan', 'compile']) {
+        const result = helper.resolveFinal(exact, context); assert.deepEqual(result.accepted_ref, accepted.accepted_ref);
+        assert.deepEqual(result.raw_provenance, recovered.receiptRef);
+        rejects(() => helper.resolveFinal(exact, { read_roots: [root] }), /CD_SELECTION_CONTEXT_REQUIRED/, consumer + ' requires caller context');
+      }
+      const derived = helper.deriveFromAccepted({ accepted_ref: accepted.accepted_ref, delivery_root: deliveryRoot,
+        attempt_id: 'CD-notes', processor_id: 'prototype-notes', scope: bound.scope, methods: bound.methods, authority_ref: scope.path }, context);
+      assert.equal(derived.bound.base.entry, accepted.final_entry);
+      assert.deepEqual(derived.bound.base.recovery_ref, recovered.receiptRef);
+      const old = fs.readFileSync(material.path); fs.writeFileSync(material.path, 'drift');
+      rejects(() => helper.resolveFinal(exact, context), /CD_SOURCE_DRIFT/); fs.writeFileSync(material.path, old);
+      assert.equal(helper.resolveFinal(exact, context).final_sha256, recovered.sha256);
+      const originalBinding = createClaudeDesignManualBinding({ handoffId: 'CD-original', packet, materials: [material],
+        instructionsRef: instructions, scope: { kind: 'template-insertion' }, directory: path.join(root, 'original-binding') });
+      const edits = write('edits.json', '{"schema_version":1,"edits":[]}');
+      const original = recoverClaudeDesignDownload({ requestId: 'CD-original', manifestRef: originalBinding, handoffId: 'CD-original',
+        downloadRef, selectionRef, implementationManifestRef: edits, directory: path.join(root, 'original-raw') }, { authenticateSelection: authenticated });
+      const originalInput = structuredClone(input); originalInput.base.entry = original.entry; originalInput.base.asset_root = path.dirname(original.entry);
+      originalInput.base.recovery_ref = original.receiptRef;
+      rejects(() => helper.bindBase(originalInput, context), /CD_FIDELITY_REQUIRED/);
+      rejects(() => helper.bindBase(originalInput, { ...context, verifyClaudeDesignFidelity: () => false }), /CD_FIDELITY_REQUIRED/);
+      helper.bindBase(originalInput, { ...context, verifyClaudeDesignFidelity: subject => subject.recoveryRef.sha256 === original.receiptRef.sha256 });
+      assert.equal(original.designComplete, false); assert.equal(recovered.receipt.remoteRevisionVerified, false);
+      assert.ok(fs.readFileSync(downloadRef.path).equals(fs.readFileSync(recovered.entry)));
+      writeJSON(path.join(evidenceRoot, 'cd-consumer-integrity.json'), { scope: 'SIMULATED_ONLY_NOT_HUMAN_OR_NATIVE_ACCEPTANCE',
+        raw: recovered.receiptRef, candidate: fixture.resolved.candidate_ref, accepted: accepted.accepted_ref,
+        derived_parent: derived.parent_accepted_ref, semantic_acceptance: 'NOT_TESTED', original_preserved: true });
+    },
     'native-resource-entrypoints': () => runResourceRows('native-resource-entrypoints'),
     'inert-resource-entrypoints': () => runResourceRows('inert-resource-entrypoints'),
 
@@ -2411,6 +2501,9 @@ async function main() {
         const mirror = path.join(evidenceRoot, `mutation-${guard}`); fs.mkdirSync(path.join(mirror, 'scripts'), { recursive: true }); fs.mkdirSync(path.join(mirror, '.claude/skill-os'), { recursive: true });
         fs.symlinkSync(path.join(workRoot, 'node_modules'), path.join(mirror, 'node_modules'), 'dir');
         fs.copyFileSync(path.join(workRoot, '.claude/skill-os/prototype-delivery.schema.json'), path.join(mirror, '.claude/skill-os/prototype-delivery.schema.json'));
+        for (const file of ['claude-design-recover.mjs', 'carrier-asset-profile.mjs', 'design-behavior-preparation.mjs', 'original-composition.mjs', 'design-handoff-archive.mjs']) {
+          fs.copyFileSync(path.join(workRoot, 'scripts', file), path.join(mirror, 'scripts', file));
+        }
         const mutant = path.join(mirror, 'scripts/prototype-delivery.mjs');
         const matcher = guard === 'required-set'
           ? /^  requireThat\(ids\.length ===[^\n]*\n[^\n]*\/\/ guard:required-set\n/m

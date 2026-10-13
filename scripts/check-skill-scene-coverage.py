@@ -50,6 +50,8 @@ TABLE = {
     "html-prototype": ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/prototype-spec.md"], "weak"),
     "open-design":    ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/index.html"], "weak"),
     "motion-polish":  ([f"{D}/prototype/*/index.html"],            [f"{D}/handoff/*-motion-polish-handoff.md"], "weak"),
+    "design-output":  (None,                                    [], "unobservable"),
+    "claude-design":  (None,                                    [], "unobservable"),
     "prototype-notes": ([f"{D}/prototype/*/index.html"],            [f"{D}/handoff/*-prototype-notes-handoff.md"], "weak"),  # Product-neutral; an HTML artifact is not proof that a notes request occurred
     # 链头/多形态：代理口径未定，显式 UNMAPPED（诚实优于全覆盖）
     "brainstorm": (None, [f"{D}/prd/*-prd.md"], "unmapped"),
@@ -93,6 +95,8 @@ TABLE = {
 
 
 UNOBSERVABLE_REASONS = {
+    "design-output": "薄选择入口不拥有独立产物；实际设计文件归所选 OD/CD adapter 统计",
+    "claude-design": "产物由外部 Claude Design/Luca 交接与用户下载产生，无唯一项目 docs glob；不把回收文件倒归项目场景",
     "writing-workshop": "作者批准的 output_path 可在不同 workspace，无唯一项目产物 glob；不把普通文章归本技能",
     "loop-me": "只写用户批准的 workflow_spec_path，workspace 不由项目 docs 决定；无唯一项目产物 glob",
     "issue-triage": "离线预览、条件 tracker effects 与可选 KB 分属批准范围，无唯一项目产物 glob",

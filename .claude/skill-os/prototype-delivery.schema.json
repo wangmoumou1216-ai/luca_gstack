@@ -106,6 +106,7 @@
         "origin": {
           "enum": [
             "open-design",
+            "claude-design",
             "external-html",
             "local-html",
             "framework-fixture"

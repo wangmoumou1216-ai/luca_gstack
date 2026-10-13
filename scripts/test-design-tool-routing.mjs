@@ -9,7 +9,8 @@ import { readAuthority } from './lib/semantic-projection.mjs';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const graph = readAuthority(root, '.claude/skill-os/optional-workflow-graph.yaml#design_output');
 function verifySelectionGate(value) {
-  assert.equal(value.primary, 'open-design', 'keep the default OD entry');
+  assert.equal(value.primary, 'design-output', 'keep the thin selection entry');
+  assert.deepEqual(value.adapters, ['open-design', 'claude-design']);
   assert.deepEqual(value.fallback, ['magicpath', 'html-prototype'], 'keep independent local capabilities');
   assert.equal(value.requires_explicit_tool_choice, true, 'explicit tool choice is required');
   assert.deepEqual(value.fallback_trigger, [
@@ -21,7 +22,7 @@ function verifySelectionGate(value) {
     'headless recovery stays in OD');
 }
 verifySelectionGate(graph);
-console.log('PASS OD default, user-selected alternatives, same-tool desktop recovery');
+console.log('PASS OD/CD selection entry, user-selected alternatives, same-tool desktop recovery');
 
 const route = readFileSync(join(root, '.claude/skill-os/routing-chain-check.md'), 'utf8');
 const plan = readFileSync(join(root, '.claude/agents/plan-agent.md'), 'utf8');
@@ -61,7 +62,7 @@ for (const [label, before, after] of [
   ['ambiguous flow auto-selected', '等待真实选择', '自动选择推荐流程'],
 ]) {
   assert.ok(route.includes(before), `${label}: mutation target missing`);
-  assert.throws(() => verifyEntryContract(route.replace(before, after)), undefined, label);
+  assert.throws(() => verifyEntryContract(route.replaceAll(before, after)), undefined, label);
   console.log(`PASS contract mutation: ${label}`);
 }
 console.log('PASS mature entry, template discovery and flow-choice contracts (static, not native behaviour)');
@@ -77,4 +78,51 @@ for (const [name, mutate, message] of [
   assert.throws(() => verifySelectionGate(changed), message, name);
   verifySelectionGate(graph);
   console.log(`PASS mutation: ${name} -> exact assertion fails -> original passes`);
+}
+
+// A1: execute the production selection seam against exact on-disk Packet bytes.
+const { mkdtempSync, writeFileSync, rmSync, realpathSync } = await import('node:fs');
+const { tmpdir } = await import('node:os');
+const { createHash } = await import('node:crypto');
+const { resolveDesignOutput } = await import('./design-output-selection.mjs');
+const dir = realpathSync(mkdtempSync(join(tmpdir(), 'design-selection-')));
+try {
+  const path = join(dir, 'packet.md');
+  const body = 'Complete frozen Packet: D-1 STATE-1 AC-1 KEEP-1\n';
+  writeFileSync(path, body);
+  const sha256 = createHash('sha256').update(body).digest('hex');
+  const packet = { path, sha256, tool: null };
+  const task = { source_ref: 'test-user-turn:full', scope: { template: 'original', preserve: ['KEEP-1'], downstream: ['notes','engineering'] }, execution_mode: 'workflow', unresolved: ['template-adoption'] };
+  const missing = resolveDesignOutput({ packet, task });
+  assert.equal(missing.status, 'NEEDS_CONTEXT'); assert.equal(missing.node, null);
+  const selected = resolveDesignOutput({ packet, task, choice: { tool: 'claude-design', source_ref: 'test-user-turn:choice' } });
+  assert.equal(selected.node, 'claude-design'); assert.deepEqual(selected.task, task);
+  assert.equal(readFileSync(path, 'utf8'), body);
+  const resumed = resolveDesignOutput({ packet, task, selection: selected.selection });
+  assert.equal(resumed.status, 'SELECTED'); assert.equal(resumed.question, undefined);
+  assert.deepEqual(resumed, selected);
+  assert.throws(() => resolveDesignOutput({ packet, task, selection: selected.selection, choice: { tool: 'open-design', source_ref: 'test-user-turn:change' } }), /CONFLICT_RETURN_BRIEF/);
+  for (const tool of ['open-design', 'claude-design', 'html-prototype', 'magicpath']) {
+    const bound = { ...packet, tool, choice_source_ref: 'test-user-turn:existing' };
+    assert.equal(resolveDesignOutput({ packet: bound, task }).tool, tool);
+    assert.throws(() => resolveDesignOutput({ packet: bound, task, choice: { tool: tool === 'open-design' ? 'claude-design' : 'open-design', source_ref: 'test-user-turn:conflict' } }), /FROZEN_TOOL_CONFLICT_RETURN_BRIEF/);
+  }
+  assert.throws(() => resolveDesignOutput({ packet, task: { ...task, scope: 'short reply only' }, selection: selected.selection }), /SELECTION_DRIFT/);
+  assert.throws(() => resolveDesignOutput({ packet, task, choice: { tool: 'claude-design' } }), /REAL_CHOICE_SOURCE_REQUIRED/);
+  assert.throws(() => resolveDesignOutput({ packet: { ...packet, tool: undefined }, task }), /UNKNOWN_DESIGN_TOOL/);
+  const altered = structuredClone(selected.selection); altered.packet.sha256 = 'a'.repeat(64);
+  assert.throws(() => resolveDesignOutput({ packet, task, selection: altered }), /SELECTION_DRIFT/);
+  writeFileSync(path, body + 'drift');
+  assert.throws(() => resolveDesignOutput({ packet, task, selection: selected.selection }), /PACKET_DRIFT/);
+  console.log('PASS A1 real selection seam: unresolved, once/inherit, full-task retention, frozen/sidecar conflict, drift, old OD choice');
+} finally { rmSync(dir, { recursive: true, force: true }); }
+for (const skill of ['design-output', 'claude-design']) {
+  const authority = join(root, '.claude/skills/office', skill, 'SKILL.md');
+  const command = readFileSync(join(root, '.claude/commands', skill + '.md'), 'utf8');
+  assert.ok(command.includes('.claude/skills/office/' + skill + '/SKILL.md'));
+  assert.equal(realpathSync(join(root, '.agents/skills', skill, 'SKILL.md')), realpathSync(authority));
+  assert.ok(readFileSync(join(root,'.claude/skill-os/generated/skill-catalog.md'),'utf8').includes('`'+skill+'`'));
+  const view = JSON.parse(readFileSync(join(root,'.claude/skill-os/generated/input-modes',skill+'.json'),'utf8'));
+  assert.equal(view.skill,skill);
+  console.log('PASS Claude command + Codex alias + catalog + input discoverability: ' + skill + ' (not live host parity)');
 }

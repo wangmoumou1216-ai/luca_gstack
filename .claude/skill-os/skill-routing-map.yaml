@@ -154,6 +154,16 @@ project_skills:
   # command 入口；仍可被 open-design/design-brief/html-prototype 等内部 Skill 工具按
   # 名 dispatch，如 open-design 的界面产出备选链）。见 CLAUDE.md「隐藏/高级 skill」。
 
+  design_output:
+    invoke: "/design-output"
+    weight: 8
+    triggers: [design-output, 选择设计生成工具, 设计产出工具选择]
+
+  claude_design:
+    invoke: "/claude-design"
+    weight: 8
+    triggers: [Claude Design, claude design, claude-design, 用CD做设计]
+
   open_design:
     invoke: "/open-design"
     weight: 8

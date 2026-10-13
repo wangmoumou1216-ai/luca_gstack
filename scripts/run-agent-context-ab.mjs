@@ -2993,7 +2993,7 @@ try:
         "auto", "handoff", "wait-what", "domain-modeling", "writing-for-agents", "magicpath",
         "open-design", "motion-polish", "prototype-notes", "idea", "deepresearch", "quick-research", "brainstorm",
         "superpowers-brainstorming", "ux-research", "ux-brainstorm", "design-brief",
-        "html-prototype", "figma-demo", "tech-spec", "task-plan", "grilling", "diagnosing-bugs",
+        "html-prototype", "figma-demo", "claude-design", "design-output", "tech-spec", "task-plan", "grilling", "diagnosing-bugs",
         "resolving-merge-conflicts", "to-spec", "to-tickets", "wayfinder", "implement",
         "code-hygiene", "code-review", "codebase-design", "code-recon", "muse-req-triage",
         "insight-synthesis", "research-kit", "ux-writing", "compare", "ux-audit", "redteam",

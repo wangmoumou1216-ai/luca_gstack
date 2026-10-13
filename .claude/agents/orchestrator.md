@@ -304,6 +304,8 @@ Step 7  记录 eval（每个 skill 各记一条）
 | `ux-research` | `.claude/skills/office/ux-research/SKILL.md` |
 | `ux-brainstorm` | `.claude/skills/office/ux-brainstorm/SKILL.md` |
 | `design-brief` | `.claude/skills/office/design-brief/SKILL.md` |
+| `design-output` | `.claude/skills/office/design-output/SKILL.md`（薄入口） |
+| `claude-design` | `.claude/skills/office/claude-design/SKILL.md` |
 | `open-design` | `.claude/skills/office/open-design/SKILL.md` |
 | `motion-polish` | `.claude/skills/office/motion-polish/SKILL.md` |
 | `html-prototype` | `.claude/skills/office/html-prototype/SKILL.md` |
@@ -352,9 +354,13 @@ Step 7  记录 eval（每个 skill 各记一条）
 ### 3.1 适用场景
 
 专用于 luca_gstack 设计工作流 skill 链路：
-`idea → brainstorm → ux-research → ux-brainstorm → design-brief → open-design`
+`idea → brainstorm → ux-research → ux-brainstorm → design-brief → design-output`
 
-`open-design` 是设计产出首选（optional-workflow-graph.yaml `design_output.primary`）；
+`design-output` 是薄选择入口（optional-workflow-graph.yaml `design_output.primary`）：
+已选直接继承，未选只问一次 OD/CD；保留完整任务，冻结未选包用绑定旁车，异工具硬绑定回 Brief。
+在节点派发/写 state 前把入口替换成实际 `open-design` 或 `claude-design` 节点，
+不建立 design-output DONE/handoff；completion_owner=Orchestrator，验收后 adapter 一次提交。
+历史 OD 调用/节点保持，不迁移为 CD；CD 缺可信宿主/处理能力时停门，零发送、人工生成。
 `magicpath` / `html-prototype` 是独立备选能力，按 `design_output.fallback_trigger` 的真实用户选择
 或已批准的具名备用计划调用；故障不自动授予换工具权。OD 同项目桌面恢复不属于跨工具切换。
 
@@ -389,11 +395,11 @@ Step 6  执行技能循环（见 §3.4）
 | 信息量 | 详细需求文档 | 一句话需求 |
 
 ```
-Scene A 高复杂度 → [idea → deepresearch → brainstorm → ux-research → ux-brainstorm → design-brief → open-design]
-Scene A 中复杂度 → [idea → brainstorm → design-brief → open-design]
-Scene B 高复杂度 → [brainstorm → ux-audit → ux-research → ux-brainstorm → design-brief → open-design]
-Scene B 低复杂度 → [ux-audit → design-brief → open-design]
-Scene C            → [ux-audit → design-brief → open-design]
+Scene A 高复杂度 → [idea → deepresearch → brainstorm → ux-research → ux-brainstorm → design-brief → design-output]
+Scene A 中复杂度 → [idea → brainstorm → design-brief → design-output]
+Scene B 高复杂度 → [brainstorm → ux-audit → ux-research → ux-brainstorm → design-brief → design-output]
+Scene B 低复杂度 → [ux-audit → design-brief → design-output]
+Scene C            → [ux-audit → design-brief → design-output]
 Scene D            → 全量路径（Agent化本身是高复杂度）
 ```
 

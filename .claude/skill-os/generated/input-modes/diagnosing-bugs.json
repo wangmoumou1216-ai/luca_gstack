@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "b342a8b5647c46a8e1f1c18dcb258589df720c47a6bd5c7ad26dc0a1370d37a2",
+  "source_sha256": "9176ff36565d39520aa6fb31ce40e22c992d00e556f12b93368033dac31ff00e",
   "skill": "diagnosing-bugs",
   "group": "skills",
   "global": {

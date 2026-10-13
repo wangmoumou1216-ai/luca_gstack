@@ -122,11 +122,14 @@ node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-handoff.
 
 ## 下游 skill 的读取协议
 
-当交接选择了 motion-polish/prototype-notes/OD composite 最终原型时，在 intake/完成前完整读取
+当交接选择了 motion-polish/prototype-notes/OD/CD composite 最终原型时，在 intake/完成前完整读取
 `.claude/skill-os/runtime/prototype-delivery.md`，传递并实际 resolve 精确
 `final_artifact_ref{path,sha256}` 和返回的 final/spec/source/raw provenance；当前 caller 读界限
 必须真实获准，handoff 不授读权。standalone 按当前 processor 写普通 motion-polish 或 prototype-notes handoff；内部子单元在既有
 outputs 返回 certificate，由同一 OD caller 最终交接一次，不要求未来 raw OD DONE handoff。
+CD 由 claude-design adapter 回交一次；手动下载收据是真实采用来源和原件的 provenance，
+不借 OD caller。消费 CD 时使用上述 runtime 的 API，传当前真人采用及适用保真回调；
+仅 CLI/收据自报不足为 NEEDS_CONTEXT，回调不序列化为证书权限，也不重新询问有效确认。
 承诺原型引用无效时不按时间或旧 raw 路径回退；下列摘要读取纪律不免除该精确证据重验。
 
 notes-enabled OD 的唯一固定 caller 位于 open-design Phase 4–6；原 owner 在真实精确版本确认、

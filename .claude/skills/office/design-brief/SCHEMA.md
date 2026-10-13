@@ -6,13 +6,14 @@
 交付模式：{traceable_delivery / design_generation / standalone_light}
 追踪范围：{prd_end_to_end / design_source / limited}
 输入来源：{精确文档/消息/原型版本及观察证据；缺项写原因}
-输出目标：{用户指定工具 / 尚未选择；Open Design 为默认推荐}
+输出目标：{用户指定工具 / 尚未选择；未选交 design-output}
 目标平台与范围：{desktop / mobile / embedded；整页 / 局部位置}
 参考策略：{用户已有选择记录 / 明确不用参考 / 待交接入口执行页面匹配}
 依据：{PRD 字段 / 已对齐方案位置 / 用户确认来源}
 下游约束：{已确认的交互、修改/保留范围及平台约束}
 来源 PRD：{实际路径 / N/A — 本轮为设计源追踪，不代表工程ready}
 原型保持与自由度：{可变 / 不可变 / 须确认；来源证据}
+工具选择旁车：{未选工具冻结后由 design-output 绑定 Packet path/hash；已硬绑定另一工具回 Brief 重冻；非需求事实}
 模板适配旁车：{选择/非绑定草稿/冲突与能力核对的索引，非Packet事实}
 来源 constraints：{路径，场景 B/D 专有}
 来源 ux-audit：{路径，场景 C 专有}

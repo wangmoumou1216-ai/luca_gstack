@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "source_sha256": "9176ff36565d39520aa6fb31ce40e22c992d00e556f12b93368033dac31ff00e",
+  "skill": "design-output",
+  "group": "skills",
+  "global": {
+    "version": 1,
+    "principle": "Skill-first, Graph-optional"
+  },
+  "contract": {
+    "modes": {
+      "standalone": {
+        "required": [
+          "frozen_packet",
+          "full_task"
+        ],
+        "optional": [
+          "explicit_tool_choice",
+          "bound_tool_selection"
+        ]
+      },
+      "workflow": {
+        "required": [
+          "frozen_packet",
+          "full_task"
+        ],
+        "optional": [
+          "explicit_tool_choice",
+          "bound_tool_selection"
+        ]
+      }
+    },
+    "quality_gates": [
+      "real_choice_inherited_or_asked_once",
+      "packet_identity_bound",
+      "full_task_preserved",
+      "frozen_tool_conflict_returns_brief",
+      "actual_adapter_only_no_duplicate_done"
+    ],
+    "notes": "薄入口没有独立workflow节点/handoff/writer；未选工具用旁车，不修改冻结正文。已有OD单点/历史recover不迁移。选择不授模板采用/传输权。"
+  }
+}
