@@ -79,6 +79,15 @@ v2 把规范与确认来源写入实际材料、inventory、manifest 和生成�
 实际上传完整附件并核正文、附件名/数量/大小/接受状态；不得声称远端逐字节读回。
 stage 的发送次数必须为零，不点击发送、不按 Enter 触发发送。成功仅 STAGED，用户自己生成和迭代。
 调用未知结果先用 exact status 核已完成效果与终态，不盲重试、不重建任务、不重放上传。
+仅 host 明确证明 locating、无绑定/上传/预填/回收、无进行中动作时，才可显式
+`claude_design_abandon` 保留失败和原 owner、持久化退休后释放 lease；它不接触网页或材料。
+普通工具 ownership 不变；仅此本地入口允许重启后同 canonical 原生 key 且同 browser workspace。
+旧记录缺存储历史时，先鉴权返回 `RECONCILIATION_REQUIRED` 与精确 snapshot digest，不写入；
+明确确认该 UNKNOWN 历史后带 digest 与 `acknowledgeLegacyHistoryUnknown=true` 再提交。
+存储未知与远端派发未知分开：后者或部分效果一律拒绝；落盘失败保留 lease/失败记录。
+启动见 COMMITTED 也须重新 durable 确认；PENDING 等原 owner 显式续接。旧 ID 永不重放，
+页面就绪后另行显式创建新交接。该退休不等于生成、回收或设计完成。
+
 
 ## 3. “拉回来”：用户下载，Agent 精确回收
 
