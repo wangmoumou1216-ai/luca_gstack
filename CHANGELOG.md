@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+没有尚未发布的变更。
+
+## [0.3.0] - 2026-10-14
+
 ### Fixed（2026-10-13 · Claude Code / Codex 框架集成）
 
 - 项目作用域守卫在输入损坏、启动失败、异常与超时时拒绝当前调用，并保留正常调用与后续恢复。为什么：安全边界不能把自身故障当作放行依据。
