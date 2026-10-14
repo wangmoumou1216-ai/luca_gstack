@@ -1,6 +1,6 @@
 # OD/CD 原任务闭环核对
 
-状态：BLOCKED（实际启动等待 macOS 桌面文件夹访问提示响应）。源码发布、安装与字节验收已完成；新正常调用和真人 Export/recover 尚未闭环。本报告不把已回收、已发布或失败的下发任务当作全部完成。
+状态：IN_PROGRESS（2026-10-14 权限阻塞已解除，真实 Luca 界面恢复，操作权已正式交回协同 session）。源码发布、安装与字节验收已完成；新正常调用和真人 Export/recover 尚未闭环。本报告不把已回收、已发布或失败的下发任务当作全部完成。以下旧节点保留其当时状态，当前门以末节为准。
 
 ## 闭环定义和当前范围
 
@@ -175,3 +175,39 @@ root 继续持有独占 UI/source/publisher/installer；peer 已收到新阻塞�
 | R13 两正常 Claude/Codex positive/refusal | OPEN：新 02 handoff 的实际 stage/status、跨会话拒绝、各自准确的人类 Send/Generate/Export 和 recover；旧 ZIP 不替代新 Export。 |
 | 隔离 Codex 登录 | DEFERRED：人类明确暂缓；不是 PASS，也不擅自重开。 |
 | 最终 aggregate / all-original-task closure | OPEN：当前源与安装证据不能替代上述原生/人类门。旧失败和修订处置、原14项分母保持，全部实际完成后才作最终声明。 |
+
+## 2026-10-14 权限响应、真实界面与正式交接
+
+用户在两个协同聊天均回复“可以了”。peer 实际只读查询原请求 `17655.1738`，本地 09:26:26.573 返回 `AUTHREQ_RESULT authValue2/authReason2`，且有 semaphore/reply；旧 child66771 已退出。这是响应证据，原三次失败继续保留。
+
+root 独占 UI 时 fresh CUA `getApp('/Applications/luca.app')` 0.6903 秒成功，完整 AX 树显示真实 renderer、正常会话列表、Terminal input 和当前 AIHOT 网页；截图 0.3882 秒确认同一界面。只观察，未导航会话、未输入、未发送、未安装。当前 Claude 面板尚未选中，因此本节点仅证明启动恢复，未声称 CD 面板或旧 caller 身份就绪。
+
+同次 readback：main PID66402/start `2026-10-13 21:20:44`；安装 ASAR `2d210041…`、external shim `004ec4a1…`；三 framework helper 仍为 `49e4b03a…`/`3dc3cc3d…`/`0c3ca39c…`。当前 root 与 framework 母仓 HEAD 均 `0637db1e4700c98782483e20d622c55b4358b8f3`，Muse release HEAD `34953a7e89d31759659e4e984b408c300f16ab7d`。
+
+正式 handback `/private/tmp/cd-no-effect-repair-20261013/final-native-handoff-20261014.json`，SHA `10119ed00278c8c85a91ad8ab853254ad40c6e4f0f64aabf72c758d8700363e3`；原 prepared 文件未覆盖。已通过实际 `send_message_to_thread` 交付，peer 新 turn 确认接收。现由 `01a133e8` 独占 UI/native input，root 停止 GUI，保持源码/安装冻结并负责证据、独立验收、下游与最终发布。没有并行重启或覆盖发布。
+
+剩余门：真实恢复原 Claude canonical native key 与 browser workspace；ordinary status 的跨实例拒绝；原 no-effect lease 的公共两步 abandon；fresh02 两正常 Claude/Codex 正向/拒绝；各自新目标的真人 Send/Generate/official Export、精确 owned recover、独立原要求验收及实际下游。旧 ZIP、旧失败和 private isolated Codex login 的 DEFERRED 处置保持，不将这些替代当前新目标证据。
+
+同日原生续接第一门已验：真实原 Claude transcript 的 `workspace_state`、普通 `status` 与首次两字段 `abandon` 均有同 ID 的实际 result。原 SID `63e83c89…`、canonical provider/source/key 与工作区 `c9e6cb3d…` 恢复；新 instance `eaab687a…`/runtime `55923780…`。普通 status 拒绝 `cd_handoff_not_owned`；abandon 返回 `RECONCILIATION_REQUIRED`、digest `9fd5f68f…`、`historicalPersistence=UNKNOWN`、`committed=false`、`noRemoteEffect=true`、send0。父级对 peer receipt 的七条完整 raw line（含换行）、三组实际 tool ID/input/result 文本 SHA 逐一读回通过：`/private/tmp/cd-no-effect-repair-20261013/parent-native-resume-readback-20261014.json`，SHA `992d5ce0bd94158a57a10cd1b6cc7bf6cf846f0d34b68b5388b753a6e6b50ee4`。这只闭合原身份恢复和第一步无写握手；第二步 durable 退休、外国 caller 拒绝及新 stage/recover 仍待实际结果。
+
+后续实际门已推进：正常 Codex 同新 instance、原 canonical SID/key，实际 foreign abandon 返回 `cd_handoff_not_owned`，无 digest；Claude 显式提交返回 `ABANDONED/COMMITTED/durable/noRemoteEffect=true/send0`，原 owner/preimage 和历史 UNKNOWN 保留。父级核对两份 receipt 的十二条完整 raw line 和原实际 tool 对象通过：`parent-native-retirement-readback-20261014.json` SHA `9c9a33a88c115b74805c9df61597d4319308957ddac7dcdec7e1e0b563c7bab2`，位于上述 no-effect 证据目录。原无效锁的修复实际闭合，未代替新交接成功。
+
+fresh02 真实 stage/status 发现新的阻塞：空 Design 上 `PAUSED cd_not_design`，binding=null、operation=locating、not-dispatched、四文件 selected/accepted=false、prefill=false、send0，durable/storageError=null。失败 SHA `167ed34700c9057a1a029eea192c5fcda038ada97006c017c4012791931e6673`，peer native audit `claude-native-stage-02-paused.json`；原始 AX/图片与原调用都保留。peer 随后通过同 instance/原 caller 公共 abandon 将此 fresh02 零派发记录 durable 退休并保留失败 preimage，不重放原 ID。
+
+根因诊断：当前 driver `fe92825f…` 强制固定可见 Claude Design badge；当前空态真实有专属 heading/Design-system chooser/同 artifact 官方 iframe/Design canvas，但无 badge。原已生成目标的只读结构仍有 badge。隔离真实 Electron 结构回放（不是 live DOM/native proof）在同 PID45538/WC1/URL 上，仅加/移除 badge 即形成 error→inspect true→同 error；current source 未改。R1 driver API 失误与精准本任务 PID 清理保留，r2 完整 stdout/stderr、结果、源/driver/fixture freeze 及清理后证据哈希在 `/private/tmp/cd-design-detection-20261014/`。
+
+实际 peer handback 后，root `01a133ee` 现重新独占 source/publisher/installer/UI，peer `01a133e8` 停止 GUI。仅修原 U-002/R5 检测和 U-005 同版本复验；单独计划 `framework-audit/plans/2026-10-14-cd-design-recognition.md` SHA `e6af86aa9068aa01a3119783a88fe9053444bab8b0e6f728930d6f90dbfd15d3`，原计划和旧 accepted methods 字节保持。计划冷审正在运行，尚未改产品源码或安装。剩余门为有界 Design 识别修复/负例与独立两轴/新最小包及实际安装/新 fresh03 两正常 native/人类新 Export/recover/完整独立验收下游及最终元数据发布；原分母、历史失败和隔离登录 DEFERRED 保留。
+
+## 2026-10-14 最新真人范围：只做核心（IN_PROGRESS）
+
+真人最新明确“就做核心，只做核心，要快速收敛，懂不懂”。该指令收窄以上扩展待办：只修当前 Design 识别，完成同安装版本的正常 Claude/Codex 公共 stage/status/isolation、必要真人正式 Export 与 owned recovery、核心输出打开/三稳定测试记录/公共消费边界，再统一发布同步。旧原型语义和下游有效验收保留；重复全14/11审计、颜色/PTY/UI扩展扫、下游压力和账户测试均 DEFERRED，不算 PASS。私有隔离 Codex 登录继续 DEFERRED。
+
+修订提案 SHA `1f668699ff23078da1c1981edd0b8cb697a5ad002305cd628cd1eead564287d8` 的独立票 PASS6/6 已实际消费；首轮提案 FAIL 保留。首版两文件修复 subject `456a858c…` 实跑 stage35/35、host55/55、MCP42/42；guard 弱化镜像13反例失败、恢复35通过。Standards PASS5/5，而冷 Spec FAIL4/5 实际发现 `visibility:hidden` 官方 frame 仍被宽高判断为可见，原失败已留存和登记，不发布此版。
+
+仅相同两文件补 CSS visibility 和透明祖先识别，旧 generated badge 路径、host/shim/API/Send/Export 不变。实际新反例36案中1 FAIL，修复后40/40、exit0/stderr空；当前冻结 subject `39e49b3b95a2e4c0be3e504438dbd4e332e79946c308ff01f62b298ca9a0e001`、driver `8065ba21add267178c9816d18da6f3b29d72afaa438259fffd1f31441e86bd41`、fixture `ba21ec3d01b0bb90807016e3d608576cbbdf7554fb2bca24d7eb702021940f94`。证据在 `/private/tmp/cd-design-detection-20261014/`；新同字节两轴票、driver-only包、安装与正常账户正向调用尚待完成。root 独占发布/安装/UI，peer 只读等待正式新版本 handback；旧01/02均已公共 durable 退休，不重放。
+
+同字节两轴现已实际消费：Standards5/5、Spec5/5；native `01a1384a-caf3-7c80-8cd3-31e78225bc13` /turn `01a1384a-cb4c-7170-99fc-f5f41b412768` 和 `01a1384e-3578-7c61-a1c2-94f5b6b1550c` /turn `01a1384e-35dc-7de0-a2ad-68c30e7e335c`。原 Spec FAIL 仍保留。Muse main 普通推送/实际 remote readback 为 `e269c639f37dd139f4da9f2cd12e771bd82a2761`，parent `34953a7e`，仅 driver/test 两文件；母仓仅这两文件 CAS 同步，229 其他 dirty/untracked 成员的 SHA/inode/size/mtime/mode 全未变，未整仓拉取或提交用户工作。
+
+基于 current `2d210041…` 仅替换 driver 的 ASAR `be250e1e169e054cd17b7d631cc9b05f736a483c9fc7201791ea6d23e817b603`；393 其他归档 payload/flags/integrity、外部 MCP shim 和304包成员保持。候选实际提取 driver/dependencies 实跑40/40。正常 CUA Quit 旧 main66402、ps确认退出后，当前 installer `0421bcd5…` 的 local/no-build 流程实际 exit0；复制候选门、签名、CAS、rollback通过。新回滚 `/Users/luca/.luca/rollback/luca-20261014-105257`；完整304包成员/ASAR/header/plist/shim/published-source/strict signature读回PASS。仅本次 scratch copies 去签名的 main payload仍同SHA `25284aa8…`，原 app/rollback未改。证据 `stage-driver.json`、`candidate-test-freeze.json`、`candidate-stage.stdout/.stderr`、`immediate-driver-install-preflight.json`、`install-driver.stdout/.stderr`、`installed-driver-readback.json`。这是本地ad-hoc安装，不冒称Developer ID/公证。
+
+新 main81265 本地10:53:32。初次 AX cannotComplete 保留；TCC 请求1938的 DesktopFolder 提示在10:54:15实际返回authValue2/authReason2/reply。随后当前 CUA screenshot显示真实项目/最近会话/正常Codex/浏览器界面；AX只返窗口菜单，不冒称完整AX或Design页就绪。正式 handback `core-native-handoff-20261014.json` SHA `701f510aac5b11b9475bba250e1dbc89231baad5bf3ea27bd9194c98e2c47d71` 已发送：peer独占GUI/native，root停止GUI和改源/安装。fresh03正向交接、必要真人新Export/owned回收和核心输出验证仍OPEN，当前整体核心任务保持IN_PROGRESS。
