@@ -314,6 +314,24 @@ schema_discovery_type_ok:{type:'boolean'},sources:{type:'array',items:{type:'obj
     const peakCalls = parse(readFileSync(peakDump, 'utf8'))?.record || [];
     ok('R2 critical review selects approved peak model', peakCalls.find(call => call.method === 'thread/start')?.params?.model === 'gpt-6-astra');
   }
+  {
+    const prefixed = 'aihub-firstshare-cn/gpt-6.1-sol';
+    const original = readFileSync(bindingsPath, 'utf8');
+    const binding = JSON.parse(original);
+    binding.harnesses.codex.inherit_prefixes = ['aihub-firstshare-cn/'];
+    writeFileSync(bindingsPath, `${JSON.stringify(binding, null, 2)}\n`, {mode: 0o600});
+    try {
+      for (const [phaseName, label] of [['Verify', 'R2b critical review'], ['Light', 'R2c light task']]) {
+        const dump = join(sandbox, `prefix-${phaseName}.json`);
+        const result = runWF(`phase('${phaseName}'); const x=await agent('hi'); return {x}`, {FAKE_DUMP: dump}, prefixed);
+        const calls = parse(readFileSync(dump, 'utf8'))?.record || [];
+        ok(`${label} stays on the listed provider-prefixed root`, result.status === 0
+          && calls.find(call => call.method === 'thread/start')?.params?.model === prefixed);
+      }
+    } finally {
+      writeFileSync(bindingsPath, original, {mode: 0o600});
+    }
+  }
 
   {
     const stalePolicyPath = join(sandbox, 'stale-policy.json');

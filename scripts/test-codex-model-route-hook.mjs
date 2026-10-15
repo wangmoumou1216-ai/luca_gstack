@@ -1091,6 +1091,29 @@ try {
   equal('model' in pre('root-six-anchor', {task_name: 'six-anchor', message: 'work'}, 'tool-six-anchor')
     .hookSpecificOutput.updatedInput, false, '6-series normal execution inherits sol');
 
+  const prefixBinding = JSON.parse(readFileSync(bindingsPath, 'utf8'));
+  prefixBinding.harnesses.codex.inherit_prefixes = ['aihub-firstshare-cn/'];
+  writeFileSync(bindingsPath, `${JSON.stringify(prefixBinding)}\n`, {mode: 0o600});
+  const prefixed = 'aihub-firstshare-cn/gpt-6.1-sol';
+  const prefixSession = 'root-provider-prefix-anchor';
+  start(prefixSession, prefixed);
+  const prefixReview = pre(prefixSession,
+    {task_name: 'prefix-review', message: 'judge', agent_type: 'quality-gate'}, 'tool-prefix-review');
+  equal(prefixReview.hookSpecificOutput.permissionDecision, 'allow', 'a listed provider prefix keeps critical review dispatchable');
+  equal('model' in prefixReview.hookSpecificOutput.updatedInput, false,
+    'a listed provider prefix reviews on the inherited same-tier root model, never the bare peak');
+  subStart(prefixSession, 'agent-prefix-review', 'quality-gate');
+  equal(subStop(prefixSession, 'agent-prefix-review', 'quality-gate', transcript({
+    sessionId: prefixSession, agentId: 'agent-prefix-review', agentType: 'quality-gate', model: prefixed,
+  })), {}, 'same-tier prefixed review closes with matching adopted evidence');
+  const prefixLight = pre(prefixSession, {task_name: 'prefix-light', message: 'check', agent_type: 'preflight-agent'},
+    'tool-prefix-light').hookSpecificOutput.updatedInput;
+  equal(prefixLight.model ?? prefixed, prefixed, 'a listed provider prefix never rewrites a light task to a bare model');
+  const otherPrefixSession = 'root-unlisted-prefix-anchor';
+  start(otherPrefixSession, 'claude/claude-opus-5');
+  equal(pre(otherPrefixSession, {task_name: 'other-review', message: 'judge', agent_type: 'quality-gate'}, 'tool-other-review')
+    .hookSpecificOutput.permissionDecision, 'deny', 'an unlisted provider prefix still fails closed for critical review');
+
   run({hook_event_name: 'SessionEnd', session_id: lightSession, reason: 'other', cwd: ROOT});
   equal(state(lightSession).status, 'paused', 'SessionEnd pauses activation');
   }

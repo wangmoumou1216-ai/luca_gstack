@@ -62,9 +62,21 @@ export function resolve(input, {verifyCapability} = {}) {
   if (v2 && config.light !== undefined && (!record(config.light) || !text(config.light.model) || !text(config.light.source))) {
     return fail('REFUSE', 'INVALID_LIGHT');
   }
+  const inheritPrefixes = v2 ? config.inherit_prefixes : undefined;
+  if (inheritPrefixes !== undefined && (!Array.isArray(inheritPrefixes)
+      || !inheritPrefixes.every(prefix => text(prefix) && /^[^\s/][^\s]*\/$/.test(prefix)))) {
+    return fail('REFUSE', 'INVALID_INHERIT_PREFIXES');
+  }
+  // A provider-qualified root listed in the private binding is its own tier: peak and light
+  // stay on it, so a bare binding name never sends the turn to a different provider.
+  const inheritsAnchor = scene.role !== 'anchor' && Array.isArray(inheritPrefixes)
+    && inheritPrefixes.some(prefix => config.anchor.model.startsWith(prefix));
   let choice = config[scene.role];
   let adaptation = scene.role === 'anchor' ? 'ANCHOR_SELECTED' : `${scene.role.toUpperCase()}_SELECTED`;
-  if (v2 && scene.role !== 'anchor') {
+  if (v2 && inheritsAnchor) {
+    choice = config.anchor;
+    adaptation = 'INHERIT_PREFIX_ANCHOR';
+  } else if (v2 && scene.role !== 'anchor') {
     const order = Array.isArray(config.approved_order) && config.approved_order.every(text)
       && new Set(config.approved_order).size === config.approved_order.length ? config.approved_order : null;
     const anchorRank = order?.indexOf(config.anchor.model) ?? -1;
@@ -145,6 +157,8 @@ export function resolve(input, {verifyCapability} = {}) {
     peak: config.peak ? {model: config.peak.model, source: config.peak.source, approved: config.peak.approved} : null,
     light: v2 && config.light ? {model: config.light.model, source: config.light.source, approved: config.light.approved} : null,
     approved_order: v2 ? config.approved_order ?? null : null,
+    // Bound only when configured, so routes without the optional field keep their digests.
+    ...(v2 && config.inherit_prefixes !== undefined ? {inherit_prefixes: config.inherit_prefixes} : {}),
     security: config.security,
   });
   route.capability_evidence_sha = digest({harness: input.harness, capabilities});

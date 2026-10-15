@@ -167,6 +167,7 @@ function routeForAgent(payload, agentType) {
         peak: {model: binding.peak_model, source: 'user-approved-private-binding', approved: true},
         light: {model: binding.light_model, source: 'user-approved-private-binding', approved: true},
         approved_order: binding.approved_order,
+        inherit_prefixes: binding.inherit_prefixes,
         security: {
           provider: 'openai', sandbox: 'inherit-parent',
           approval_policy: payload.permission_mode || 'inherit-parent', network: false,

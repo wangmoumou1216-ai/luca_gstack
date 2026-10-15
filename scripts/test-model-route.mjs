@@ -43,7 +43,8 @@ policy.version = 1; policy.status = 'parser-only'; policy.scope = 'codex';
 policy.roles = {anchor: 'effective-default', peak: 'user-approved-selection'};
 delete policy.scenes['MR-008']; delete policy.dispatch; delete policy.effort;
 
-const {resolve, resolveDispatchScene, createRouteManifest, validateDecision} = await import('./model-route.mjs');
+const {resolve, resolveDispatchScene, createRouteManifest, validateDecision, modelRoutingPolicyDigest}
+  = await import('./model-route.mjs');
 let passed = 2;
 function test(name, run) {
   run();
@@ -341,6 +342,68 @@ test('v2 resolve: complete 6-series binding routes all roles; missing root names
   assert.match(denied.diagnostic, /approved_order: gpt-6-sol$/);
   assert.equal('requested_model' in denied, false, 'unknown root relation must not silently select peak');
 });
+test('v2 resolve: a private-binding provider prefix keeps peak and light on the root model; others stay fail-closed', () => {
+  const prefixed = 'aihub-firstshare-cn/gpt-6.1-sol';
+  const sixSeries = input => {
+    input.effective_config.anchor.model = prefixed;
+    input.effective_config.peak.model = 'gpt-6-astra';
+    input.effective_config.light.model = 'gpt-6-luna';
+    input.effective_config.approved_order = ['gpt-6-luna', 'gpt-6-sol', 'gpt-6.1-sol', 'gpt-6-astra'];
+    return input;
+  };
+  // Premise: without a listed prefix the provider-qualified root cannot be ranked.
+  assert.equal(resolve(sixSeries(requestV2('MR-004')), trusted).reason, 'UNKNOWN_MODEL_RELATION');
+  for (const harness of ['codex-native', 'codex-cli']) {
+    for (const scene of ['MR-002', 'MR-003', 'MR-004', 'MR-005', 'MR-008', 'MR-009']) {
+      const input = sixSeries(requestV2(scene, harness));
+      input.effective_config.inherit_prefixes = ['aihub-firstshare-cn/'];
+      const route = resolve(input, trusted);
+      assert.equal(route.disposition, 'READY', `${harness} ${scene} prefix route`);
+      assert.equal(route.requested_model, prefixed, `${harness} ${scene} stays on the prefixed root`);
+      assert.equal(route.adaptation, 'INHERIT_PREFIX_ANCHOR');
+    }
+  }
+  const otherPrefix = sixSeries(requestV2('MR-004'));
+  otherPrefix.effective_config.inherit_prefixes = ['claude/'];
+  assert.equal(resolve(otherPrefix, trusted).reason, 'UNKNOWN_MODEL_RELATION', 'an unlisted provider prefix still fails closed');
+  const nested = sixSeries(requestV2('MR-004'));
+  nested.effective_config.anchor.model = `evil/${prefixed}`;
+  nested.effective_config.inherit_prefixes = ['aihub-firstshare-cn/'];
+  assert.equal(resolve(nested, trusted).reason, 'UNKNOWN_MODEL_RELATION', 'a prefix only matches at the start of the root model');
+  const anchorScene = sixSeries(requestV2('MR-001'));
+  anchorScene.effective_config.inherit_prefixes = ['aihub-firstshare-cn/'];
+  assert.equal(resolve(anchorScene, trusted).adaptation, 'ANCHOR_SELECTED', 'anchor scenes keep their own adaptation');
+  const absent = sixSeries(requestV2('MR-004'));
+  absent.effective_config.anchor.model = 'gpt-6.1-sol';
+  const absentRoute = resolve(absent, trusted);
+  const legacy = absent.effective_config;
+  // Rebuilt from the pre-field key set, so the comparison is pinned to the legacy payload.
+  const legacyDigest = modelRoutingPolicyDigest({
+    policy_sha: absentRoute.policy_sha, harness: absent.harness,
+    anchor: {model: legacy.anchor.model, source: legacy.anchor.source},
+    peak: {model: legacy.peak.model, source: legacy.peak.source, approved: legacy.peak.approved},
+    light: {model: legacy.light.model, source: legacy.light.source, approved: legacy.light.approved},
+    approved_order: legacy.approved_order, security: legacy.security,
+  });
+  assert.equal(absentRoute.routing_config_sha, legacyDigest, 'an absent field keeps the legacy digest payload');
+  absent.effective_config.inherit_prefixes = undefined;
+  assert.equal(resolve(absent, trusted).routing_config_sha, legacyDigest, 'an explicitly undefined field keeps the legacy digest payload');
+  for (const bad of [['aihub-firstshare-cn'], [''], 'aihub-firstshare-cn/', [7], ['/'], [' /'], ['a b/'], null]) {
+    const invalid = sixSeries(requestV2('MR-004'));
+    invalid.effective_config.inherit_prefixes = bad;
+    assert.equal(resolve(invalid, trusted).reason, 'INVALID_INHERIT_PREFIXES');
+  }
+  for (const [scene, expected] of [['MR-004', 'gpt-6-astra'], ['MR-008', 'gpt-6-luna'], ['MR-001', 'gpt-6.1-sol']]) {
+    const bare = sixSeries(requestV2(scene));
+    bare.effective_config.anchor.model = 'gpt-6.1-sol';
+    const baseline = resolve(structuredClone(bare), trusted);
+    bare.effective_config.inherit_prefixes = ['aihub-firstshare-cn/'];
+    const withPrefix = resolve(bare, trusted);
+    assert.equal(withPrefix.requested_model, expected, `bare root ${scene} keeps its normal route`);
+    assert.equal(withPrefix.adaptation, baseline.adaptation, `bare root ${scene} keeps its adaptation`);
+    assert.notEqual(withPrefix.routing_config_sha, baseline.routing_config_sha, 'listed prefixes are bound into routing evidence');
+  }
+});
 test('v2 dispatch: exact caller identity maps to scenes and unknown callers never guess', () => {
   assert.equal(resolveDispatchScene(policyV2, {kind: 'native-agent', agent_type: 'quality-gate'}), 'MR-004');
   assert.equal(resolveDispatchScene(policyV2, {kind: 'native-agent', agent_type: 'preflight-agent'}), 'MR-008');
@@ -583,6 +646,18 @@ if (process.argv.includes('--mutation')) {
     ['v2-light-upgrade-guard-removed', 'module', source => replace(source,
       '} else if (!order || anchorRank < 0 || selectedRank < 0 || selectedRank >= anchorRank) {',
       '} else if (false) {'), 'NO_MODEL_DOWNGRADE'],
+    ['v2-inherit-prefix-ignored', 'module', source => replace(source,
+      "const inheritsAnchor = scene.role !== 'anchor'",
+      "const inheritsAnchor = false && scene.role !== 'anchor'"), 'prefix route'],
+    ['v2-inherit-prefix-validation-removed', 'module', source => replace(source,
+      "return fail('REFUSE', 'INVALID_INHERIT_PREFIXES');", ''), 'INVALID_INHERIT_PREFIXES'],
+    ['v2-inherit-prefix-substring', 'module', source => replace(source,
+      'config.anchor.model.startsWith(prefix)', 'config.anchor.model.includes(prefix)'), 'only matches at the start'],
+    ['v2-inherit-prefix-anchor-guard-removed', 'module', source => replace(source,
+      "const inheritsAnchor = scene.role !== 'anchor' && ", 'const inheritsAnchor = '), 'keep their own adaptation'],
+    ['v2-inherit-prefix-digest-always-present', 'module', source => replace(source,
+      '...(v2 && config.inherit_prefixes !== undefined ? {inherit_prefixes: config.inherit_prefixes} : {}),',
+      'inherit_prefixes: v2 ? config.inherit_prefixes ?? null : null,'), 'legacy digest payload'],
   ];
   try {
     mkdirSync(join(scratch, 'scripts'));

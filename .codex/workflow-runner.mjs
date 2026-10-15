@@ -168,6 +168,7 @@ function routeForPhase({policy, scene}, state) {
       peak: {model: binding.peak_model, source: 'user-approved-private-binding', approved: true},
       light: {model: binding.light_model, source: 'user-approved-private-binding', approved: true},
       approved_order: binding.approved_order,
+      inherit_prefixes: binding.inherit_prefixes,
       security: {provider: 'openai', sandbox: SANDBOX, approval_policy: 'never', network: SANDBOX === 'workspace-write'},
     },
     runtime_capabilities: {
