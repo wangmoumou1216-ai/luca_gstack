@@ -145,8 +145,17 @@ try {
     { code: 'SPAWN_WITNESS' });
     writeRows(rootRollout, rootRows);
   });
+  // Some providers (aihub-direct) echo a per-request ID as the passthrough turn_id;
+  // the spawn witness is owned by its enclosing runtime turn_context instead.
+  const spawnRow = rootRows.at(-1);
+  writeRows(rootRollout, [...rootRows.slice(0, -1), { ...spawnRow, payload: { ...spawnRow.payload,
+    internal_chat_message_metadata_passthrough: { turn_id: 'provider-request-01' } } }]);
   const bound = bindCodexChildProject({ gstackRoot: gstack,
     parentSessionId: rootSid, turnId, agentId: childSid, agentType, toolUseId, codexHome });
+  check('bind witnesses a spawn whose provider passthrough turn ID is a request ID', () => {
+    assert.match(bound.receiptDigest, /^[a-f0-9]{64}$/);
+  });
+  writeRows(rootRollout, rootRows);
   writeRows(childRollout, childRows());
   check('native child ancestry resolves the frozen physical project', () => {
     const resolved = resolveCodexChildProject({ gstackRoot: gstack,

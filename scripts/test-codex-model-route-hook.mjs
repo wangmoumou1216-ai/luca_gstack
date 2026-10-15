@@ -103,7 +103,7 @@ function subStart(sessionId, agentId, agentType) {
     agent_id: agentId, agent_type: agentType, agent_transcript_path: path, permission_mode: 'default', cwd: ROOT,
   });
 }
-function transcript({sessionId, agentId, agentType, model, complete = true}) {
+function transcript({sessionId, agentId, agentType, model, complete = true, providerTurnId = null}) {
   const file = join(transcriptRoot, `${agentId}.jsonl`);
   const turnId = `turn-${agentId}`;
   const events = [
@@ -113,7 +113,7 @@ function transcript({sessionId, agentId, agentType, model, complete = true}) {
     {type: 'turn_context', payload: {turn_id: turnId, model}},
     {type: 'response_item', payload: {type: 'message', role: 'assistant',
       content: [{type: 'output_text', text: 'done'}],
-      internal_chat_message_metadata_passthrough: {turn_id: turnId}}},
+      internal_chat_message_metadata_passthrough: {turn_id: providerTurnId || turnId}}},
   ];
   if (complete) events.push({type: 'event_msg', payload: {type: 'task_complete', turn_id: turnId}});
   writeFileSync(file, `${events.map(event => JSON.stringify(event)).join('\n')}\n`, {mode: 0o600});
@@ -748,6 +748,33 @@ try {
       equal(pre(session, {task_name: 'later', message: 'work'}, `tool-later-${shape}-${scope}`)
         .hookSpecificOutput.permissionDecision, scope === 'historical' ? 'allow' : 'deny',
       'only a successful current turn permits subsequent dispatch');
+    }
+  }
+
+  // Some providers (aihub-direct) echo a per-request ID as the passthrough turn_id.
+  // Turn membership comes from the enclosing runtime turn_context instead.
+  for (const variant of ['provider-request-id', 'assistant-before-turn']) {
+    const session = `root-${variant}`;
+    const agentId = `agent-${variant}`;
+    start(session);
+    pre(session, {task_name: 'review', message: 'judge', agent_type: 'quality-gate'}, `tool-${variant}`);
+    subStart(session, agentId, 'quality-gate');
+    const file = transcript({sessionId: session, agentId, agentType: 'quality-gate',
+      model: 'gpt-6-astra', complete: false, providerTurnId: 'provider-request-01'});
+    if (variant === 'assistant-before-turn') {
+      const events = readFileSync(file, 'utf8').trim().split('\n').map(line => JSON.parse(line));
+      const context = events.findIndex(event => event.type === 'turn_context');
+      const [assistant] = events.splice(context + 1, 1);
+      events.splice(context, 0, assistant);
+      writeFileSync(file, `${events.map(event => JSON.stringify(event)).join('\n')}\n`);
+    }
+    const stopped = subStop(session, agentId, 'quality-gate', file);
+    if (variant === 'provider-request-id') {
+      equal(stopped, {}, 'a provider per-request passthrough ID does not reject current-turn completion');
+      equal(state(session).critical_failure, false, 'provider passthrough IDs do not latch the activation');
+    } else {
+      equal(stopped.continue, false, 'an assistant item outside the current turn_context is refused');
+      equal(state(session).critical_failure, true, 'out-of-turn evidence retains the critical latch');
     }
   }
 
