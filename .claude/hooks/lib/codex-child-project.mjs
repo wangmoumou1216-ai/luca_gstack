@@ -338,7 +338,9 @@ function nativeSpawn(records, toolUseDigest, turnId, agentType, taskName) {
     if (row?.type === 'turn_context') currentTurn = row.payload?.turn_id || '';
     if (row?.type !== 'response_item' || row?.payload?.type !== 'function_call') continue;
     const call = row.payload;
-    const callTurn = call.internal_chat_message_metadata_passthrough?.turn_id || currentTurn;
+    // The enclosing runtime turn_context owns the call. The passthrough turn_id is
+    // provider-echoed and is a per-request ID on some providers (aihub-direct).
+    const callTurn = currentTurn;
     if (typeof call.call_id !== 'string' || sha(Buffer.from(call.call_id)) !== toolUseDigest
         || callTurn !== turnId) continue;
     if (!SPAWN_NAMES.has(call.name)) fail('SPAWN_WITNESS', 'matching native call is not a spawn tool');

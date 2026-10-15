@@ -324,13 +324,16 @@ function reconcileNativeStarted(payload, state) {
   const calls = events.filter(row => row.type === 'response_item' && row.payload?.call_id === tool);
   // function_call_output also has call_id; it is not a second invocation.
   const invocations = calls.filter(row => row.payload.type === 'function_call');
+  // Same provider caveat as transcriptEvidence: the call's turn is its enclosing turn_context.
+  const callTurn = row => events.slice(0, events.indexOf(row))
+    .findLast(event => event.type === 'turn_context')?.payload?.turn_id;
   const starts = events.filter(row => row.type === 'event_msg' && row.payload?.type === 'item_completed'
     && row.payload.item?.type === 'SubAgentActivity' && row.payload.item.kind === 'started' && row.payload.item.id === tool);
   if (invocations.length !== 1 || starts.length !== 1) return state;
   const nativeCall = invocations[0].payload, started = starts[0].payload;
   if (!SPAWN_TOOLS.has(String(nativeCall.name || '').toLowerCase())
       || (nativeCall.namespace && nativeCall.namespace !== 'collaboration')
-      || nativeCall.internal_chat_message_metadata_passthrough?.turn_id !== payload.turn_id
+      || callTurn(invocations[0]) !== payload.turn_id
       || started.thread_id !== payload.session_id || started.turn_id !== payload.turn_id
       || events.indexOf(starts[0]) <= events.indexOf(invocations[0])) return state;
   let args;
@@ -537,13 +540,13 @@ function transcriptEvidence(path, rootSessionId, agentId, agentType,
   const meta = events.find(event => event.type === 'session_meta')?.payload;
   const contexts = events.filter(event => event.type === 'turn_context').map(event => event.payload);
   const context = contexts.at(-1);
-  const assistant = events.filter(event => event.type === 'response_item'
-    && event.payload?.type === 'message' && event.payload?.role === 'assistant')
-    .map(event => event.payload).at(-1);
+  const contextIndex = events.findLastIndex(event => event.type === 'turn_context');
+  const assistantIndex = events.findLastIndex(event => event.type === 'response_item'
+    && event.payload?.type === 'message' && event.payload?.role === 'assistant');
+  const assistant = assistantIndex >= 0 ? events[assistantIndex].payload : undefined;
   const assistantText = (assistant?.content || [])
     .filter(item => item?.type === 'output_text' && typeof item.text === 'string')
     .map(item => item.text).join('');
-  const assistantTurnId = assistant?.internal_chat_message_metadata_passthrough?.turn_id;
   // A resumed subagent may retain cancelled earlier turns. Only a cancellation
   // of this evidence turn (or one lacking an attributable turn) blocks success.
   const aborted = events.some(event => {
@@ -556,9 +559,12 @@ function transcriptEvidence(path, rootSessionId, agentId, agentType,
     && meta?.source?.subagent?.thread_spawn?.agent_role === agentType;
   // SubagentStop runs before Codex appends task_complete. Treat the hook event as
   // the trusted stop boundary and bind it to the last assistant item in this turn.
+  // Turn membership is the runtime-written turn_context that encloses the item;
+  // the passthrough turn_id is provider-echoed and is a per-request ID on some
+  // providers (aihub-direct), so it cannot identify the Codex turn.
   const complete = identityOk && !aborted && stopHookActive === false
     && text(context?.model) && text(lastAssistantMessage)
-    && assistantTurnId === context?.turn_id && assistantText === lastAssistantMessage;
+    && contextIndex >= 0 && assistantIndex > contextIndex && assistantText === lastAssistantMessage;
   return {
     adopted_model: context?.model || '',
     status: complete ? 'completed' : 'failed',
