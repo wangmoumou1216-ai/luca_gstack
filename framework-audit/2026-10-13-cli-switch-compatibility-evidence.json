@@ -1,0 +1,355 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-13T17:39:56.834124+08:00",
+  "purpose": "source assessment and isolated offline evidence, not live Muse/Grok validation",
+  "temporary_source": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cli-review-20261013-cr6sjkcp",
+  "json_records": {
+    "plan-and-baseline.json": {
+      "plan_id": "cli-switch-compatibility-review-20261013",
+      "source": [
+        "你做深度的评估。可以经过专家会审。",
+        "我的想法是我可以切claude codex 和muse，然后就可以打开他们的cli。"
+      ],
+      "mode": "bounded independent assessment, no implementation",
+      "scope": "Claude/Codex/Muse native CLI switching plus gstack capability assessment; Grok future comparison",
+      "effects": [
+        "read repository source",
+        "read public official documentation",
+        "run isolated offline checks",
+        "write assessment evidence and local framework-audit report"
+      ],
+      "excluded": [
+        "install CLI",
+        "model calls",
+        "credential reads",
+        "production configuration changes",
+        "code mutation",
+        "git publication"
+      ],
+      "expected_evidence": [
+        "app launcher minimum and optional capabilities separated",
+        "shared gstack skill entry and native enforcement assessed independently",
+        "current Muse official startup/config/hooks contracts versioned",
+        "reproductions of unsupported-provider paths",
+        "independent panel findings and unresolved live checks"
+      ],
+      "baselines": {
+        "app": {
+          "root": "/Users/luca/Desktop/项目/muse",
+          "head": "3dfea6b09a252e6d6549b60cea23e4fab5daa99e",
+          "status": " M app/browser-host.js\n M app/browser-interaction.js\n M app/browser-sessions.js\n M app/browser-turn-context.js\n M app/host-hook-ready.js\n M app/install.mjs\n M app/main.js\n M app/mcp-shim.cjs\n M app/package.json\n M app/preload.cjs\n M app/probes/browser-turn-native.mjs\n M app/renderer/app.js\n M app/renderer/browser-drafts.js\n M app/renderer/index.html\n M app/renderer/styles.css\n M app/session-catalog.js\n M app/session-index.js\n M app/test-auxiliary-chat-e2e.mjs\n M app/test-browser-context-e2e.mjs\n M app/test-browser-host.mjs\n M app/test-browser-linkage-e2e.mjs\n M app/test-browser-sessions.mjs\n M app/test-browser-workflows.mjs\n M app/test-host-hook-ready.mjs\n M app/test-mcp-shim.mjs\n M app/test-session-catalog.mjs\n M app/test-session-history-e2e.mjs\n M app/test-session-index.mjs\n?? app/claude-design-archive.js\n?? app/claude-design-diagnostic.mjs\n?? app/claude-design-download.js\n?? app/claude-design-driver.js\n?? app/claude-design-host.js\n?? app/claude-design-manifest.js\n?? app/claude-design-observation.js\n?? app/probes/native-color.mjs\n?? app/session-visibility-gate.mjs\n?? app/test-browser-element-e2e.mjs\n?? app/test-claude-design-archive.mjs\n?? app/test-claude-design-download-e2e.mjs\n?? app/test-claude-design-host.mjs\n?? app/test-claude-design-observation.mjs\n?? app/test-claude-design-stage-e2e.mjs\n?? app/test-color-contrast-e2e.mjs\n?? app/test-session-visibility-gate.mjs\n?? docs/evaluation/2026-10-09-color-refinement.md\n?? docs/evaluation/2026-10-09-element-task-context.md\n?? docs/evaluation/2026-10-10-session-memory-closure.md\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/contrast.json\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/dark-browser.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/dark-cli.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/dark-preview.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/dark-selection.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/installed-app.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/installed-dark-new.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/installed-dark-restart.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/installed-dark-verified.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/installed-dark.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/installed-final.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/light-browser.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/light-cli.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/light-preview.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/light-selection.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/native-codex-dark.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/native-codex-light.png\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/native/codex-dark.ansi\n?? docs/evaluation/evidence/2026-10-09-codex-composer-theme/native/codex-light.ansi\n?? docs/evaluation/evidence/2026-10-09-color-refinement/\n?? docs/evaluation/evidence/2026-10-09-element-task-context/\n?? docs/evaluation/evidence/2026-10-10-session-memory-closure/\n?? docs/evaluation/evidence/2026-10-13-session-pollution/\n?? docs/research/2026-10-09-agent-workbench-color-plan.md\n",
+          "files": {
+            "app/main.js": "1c425041c06ffe6c4ebe051e9317e8bdbb4c652749b610d2045bb83de5a17846",
+            "app/cli-providers.js": "893c6bd0948222843c74067c5dfd27e1eae52dcc55defbcc19f10151bfd1948f",
+            "app/session-source.js": "7149ec92818be67a183fc3fb2048eaa1adac91c897ad17ab724a6031549f69fa",
+            "app/settings-store.js": "1f108ca2622174f7d24a5c01595103ecc92b4c402c7660fd596cb66b72aeb099",
+            "app/session-runtime.js": "e39eb212fbb7f3eda0900b161a7ff900be23752bf1259529962c0ea056036952",
+            "app/renderer/app.js": "457b9802ea3abb4cab4794876f2de7438de5eb830f2dee013b624063b2086533",
+            "app/mcp-shim.cjs": "13405d4f60afbad1e80257fdd3c9c5dcd14e3eef8e52f99ed8f22d29fa0a849b",
+            "app/browser-native-hooks.js": "79418046bfcd43fcc39d48d39d286411e952fd38074906353abc59f8a3dd6ea6",
+            "app/session-index.js": "4be3cc75e008f681d7d570a83b5ab77d0cf2ad9c2cdd9e8ed258c4e3e816be97"
+          }
+        },
+        "gstack": {
+          "root": "/Users/luca/Desktop/luca_gstack",
+          "head": "807775c5762da07807c1a9fccdca7c4976a4723f",
+          "status": " M .claude/observability/observations.jsonl\n M memory/retrieval-log.jsonl\n",
+          "files": {
+            "AGENTS.md": "db5ea430452a32cf5d98fac04917ae2ef2da5ae46ca2ea775423fb434336d8d8",
+            ".claude/hooks/lib/harness.mjs": "1e314bb529db8985d025a7ee04b8efd3b9409529a81fb614682636cb32a99329",
+            ".claude/hooks/lib/event-attestation.mjs": "fa46750b6e1323af5e5dc1445a9f7df4999ba9a59691f8df4443daf1540bc5f6",
+            ".claude/hooks/session-restore.mjs": "408e88919fcb5f6e440146f78d543049e9d27be5329cca45076ff6c41bfbd80a",
+            ".claude/skill-os/model-routing.yaml": "b5cc85b62d0238afcfd03f6ce2c361f949918a793cd8509097f905084f3fc001",
+            ".codex/workflow-runner.mjs": "b738e8eaffe4d0f9ad5d685ba7f495910c1fe844cde908b13fd197cc9ef5fedf",
+            ".claude/settings.json": "922dec72c21a667e50a400bcf1b9f561e2383e81b835043a57d23fe382d39540"
+          }
+        }
+      }
+    },
+    "contract-probes.json": {
+      "scope": "isolated current public-function contracts, no real CLI/model/config changes",
+      "count": 19,
+      "observed": [
+        {
+          "probe": "known-provider-control",
+          "provider": "claude",
+          "result": "correct provider and round-trip session key"
+        },
+        {
+          "probe": "known-provider-control",
+          "provider": "codex",
+          "result": "correct provider and round-trip session key"
+        },
+        {
+          "probe": "unknown-provider-lookup",
+          "provider": "muse",
+          "mapped": "claude"
+        },
+        {
+          "probe": "unknown-session-provider",
+          "provider": "muse",
+          "error": "invalid_provider"
+        },
+        {
+          "probe": "unknown-draft-source",
+          "provider": "muse",
+          "result": null
+        },
+        {
+          "probe": "unknown-provider-lookup",
+          "provider": "grok",
+          "mapped": "claude"
+        },
+        {
+          "probe": "unknown-session-provider",
+          "provider": "grok",
+          "error": "invalid_provider"
+        },
+        {
+          "probe": "unknown-draft-source",
+          "provider": "grok",
+          "result": null
+        },
+        {
+          "probe": "unknown-provider-lookup",
+          "provider": "misspelled-cli",
+          "mapped": "claude"
+        },
+        {
+          "probe": "unknown-session-provider",
+          "provider": "misspelled-cli",
+          "error": "invalid_provider"
+        },
+        {
+          "probe": "unknown-draft-source",
+          "provider": "misspelled-cli",
+          "result": null
+        },
+        {
+          "probe": "muse-preference-write",
+          "error": "invalid_preferences_patch",
+          "storage_or_credential_access": false
+        },
+        {
+          "probe": "known-preference-control",
+          "result": "codex",
+          "storage": "in-memory-only"
+        },
+        {
+          "probe": "muse-resume",
+          "result": {
+            "ok": false,
+            "reason": "Unsupported session provider."
+          }
+        },
+        {
+          "probe": "muse-process-inspection",
+          "result": "rejected before process scan"
+        },
+        {
+          "probe": "third-harness-model-route",
+          "harness": "muse-native",
+          "result": {
+            "disposition": "REFUSE",
+            "reason": "UNSUPPORTED_HARNESS"
+          }
+        },
+        {
+          "probe": "third-harness-model-route",
+          "harness": "grok-native",
+          "result": {
+            "disposition": "REFUSE",
+            "reason": "UNSUPPORTED_HARNESS"
+          }
+        },
+        {
+          "probe": "third-harness-identity-and-static-capabilities",
+          "provider": "muse",
+          "actual": "unknown",
+          "caps": {
+            "harness": "unknown",
+            "denyVerb": true,
+            "stopVerbDialect": "shared",
+            "preToolScope": null,
+            "contextInjection": true,
+            "subagents": true,
+            "blockVerb": true,
+            "writeHook": true,
+            "inputMutation": true,
+            "workflow": false,
+            "askUserWidget": false,
+            "fanout": true,
+            "web": true
+          }
+        },
+        {
+          "probe": "third-harness-identity-and-static-capabilities",
+          "provider": "grok",
+          "actual": "unknown",
+          "caps": {
+            "harness": "unknown",
+            "denyVerb": true,
+            "stopVerbDialect": "shared",
+            "preToolScope": null,
+            "contextInjection": true,
+            "subagents": true,
+            "blockVerb": true,
+            "writeHook": true,
+            "inputMutation": true,
+            "workflow": false,
+            "askUserWidget": false,
+            "fanout": true,
+            "web": true
+          }
+        }
+      ]
+    },
+    "terminal-session-settings-receipt.json": {
+      "argv": [
+        "node",
+        "--test",
+        "app/test-terminal-login-launch.mjs",
+        "app/test-session-source.mjs",
+        "app/test-settings-store.mjs"
+      ],
+      "cwd": "/Users/luca/Desktop/项目/muse",
+      "exit_code": 0,
+      "stdout_log": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cli-review-20261013-cr6sjkcp/terminal-session-settings.log"
+    },
+    "gstack-harness-receipt.json": {
+      "argv": [
+        "node",
+        "scripts/test-harness.mjs"
+      ],
+      "cwd": "/Users/luca/Desktop/luca_gstack",
+      "exit_code": 0,
+      "stdout_log": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cli-review-20261013-cr6sjkcp/gstack-harness.log"
+    },
+    "argv-mutation-receipt.json": {
+      "scope": "temporary source copy; production file unchanged",
+      "mutation": "drop forwarded positional argv by replacing \"$@\" with \"$1\"",
+      "exit_code": 1,
+      "detected_by_existing_behavior_test": true,
+      "original_main_sha256": "1c425041c06ffe6c4ebe051e9317e8bdbb4c652749b610d2045bb83de5a17846",
+      "mutated_main_sha256": "c172780a77b218190b7ef2d3f89ca908e22c5be106ea9ec7b7ff610e5b363cbe",
+      "log": "/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cli-review-20261013-cr6sjkcp/argv-mutation.log"
+    },
+    "source-drift-check.json": {
+      "selected_source_drift": [],
+      "selected_source_count": 16,
+      "framework_head": "807775c5762da07807c1a9fccdca7c4976a4723f"
+    },
+    "instruction-inventory.json": {
+      "scope": "canonical office child SKILL.md files; lexical search only, not unsupported capability counts",
+      "skill_files": 50,
+      "primitive_mentions": {
+        "Workflow": {
+          "matched_skill_files": 0,
+          "sample": []
+        },
+        "AskUserQuestion": {
+          "matched_skill_files": 33,
+          "sample": [
+            ".claude/skills/office/domain-modeling/SKILL.md",
+            ".claude/skills/office/design-output/SKILL.md",
+            ".claude/skills/office/muse-req-triage/SKILL.md",
+            ".claude/skills/office/design-brief/SKILL.md",
+            ".claude/skills/office/evals/SKILL.md",
+            ".claude/skills/office/wayfinder/SKILL.md",
+            ".claude/skills/office/code-recon/SKILL.md",
+            ".claude/skills/office/brainstorm/SKILL.md"
+          ]
+        },
+        "native Agent or Task": {
+          "matched_skill_files": 26,
+          "sample": [
+            ".claude/skills/office/design-output/SKILL.md",
+            ".claude/skills/office/design-brief/SKILL.md",
+            ".claude/skills/office/wayfinder/SKILL.md",
+            ".claude/skills/office/code-recon/SKILL.md",
+            ".claude/skills/office/brainstorm/SKILL.md",
+            ".claude/skills/office/redteam/SKILL.md",
+            ".claude/skills/office/auto/SKILL.md",
+            ".claude/skills/office/code-review/SKILL.md"
+          ]
+        },
+        "Codex invocation": {
+          "matched_skill_files": 0,
+          "sample": []
+        }
+      },
+      "root_adapter_lines": 176
+    },
+    "review-input.json": {
+      "path": "/Users/luca/Desktop/luca_gstack/framework-audit/2026-10-13-cli-switch-compatibility-review.md",
+      "sha256": "e263668e9c30117588942dc45979f8d63dd2a4c9dbaafec05ef0874e425b5d18",
+      "bytes": 16384
+    }
+  },
+  "retained_text": {
+    "probe-current-contracts.mjs": "import assert from 'node:assert/strict';\nimport {pathToFileURL} from 'node:url';\nimport {spawnSync} from 'node:child_process';\nimport {writeFileSync} from 'node:fs';\nconst appRoot='/Users/luca/Desktop/项目/muse';\nconst gstackRoot='/Users/luca/Desktop/luca_gstack';\nconst from=(root,rel)=>import(pathToFileURL(`${root}/${rel}`).href);\nconst {getProvider}=await from(appRoot,'app/cli-providers.js');\nconst {encodeSessionKey,decodeSessionKey,resolveDraftSource}=await from(appRoot,'app/session-source.js');\nconst {createSettingsStore,createEmptySettings}=await from(appRoot,'app/settings-store.js');\nconst {validateSessionResumeAtSource,inspectProviderLive}=await from(appRoot,'app/session-runtime.js');\nconst {actualHarness,capabilities}=await from(gstackRoot,'.claude/hooks/lib/harness.mjs');\nconst {resolve}=await from(gstackRoot,'scripts/model-route.mjs');\nconst policyProcess=spawnSync('python3',['-c','import json,yaml,sys; print(json.dumps(yaml.safe_load(open(sys.argv[1]))[\"model_routing\"]))',`${gstackRoot}/.claude/skill-os/model-routing.yaml`],{encoding:'utf8'});\nassert.equal(policyProcess.status,0);\nconst policy=JSON.parse(policyProcess.stdout);\nlet state=createEmptySettings(),ioCalls=0;\nconst settings=createSettingsStore({\n  writer:{read:async()=>{ioCalls++;return structuredClone(state);},transaction:async(spec,mutate)=>{ioCalls++;const next=structuredClone(state);mutate(next);state=next;return {state:structuredClone(state)};}},\n  credentialBackend:{status:async()=>{throw Error('unexpected credential access');},set:async()=>{throw Error('unexpected credential access');},remove:async()=>{throw Error('unexpected credential access');}}\n});\nconst observed=[];\nfor(const provider of ['claude','codex']){\n  assert.equal(getProvider(provider).id,provider);\n  const key=encodeSessionKey({provider,sourceId:'src_fixture_0001',nativeSessionId:'fixture-session'});\n  assert.equal(decodeSessionKey(key).provider,provider);\n  observed.push({probe:'known-provider-control',provider,result:'correct provider and round-trip session key'});\n}\nfor(const provider of ['muse','grok','misspelled-cli']){\n  const mapped=getProvider(provider).id;\n  assert.equal(mapped,'claude');\n  observed.push({probe:'unknown-provider-lookup',provider,mapped});\n  let error=null;\n  try{encodeSessionKey({provider,sourceId:'src_fixture_0001',nativeSessionId:'fixture-session'});}catch(e){error=e.code;}\n  assert.equal(error,'invalid_provider');\n  observed.push({probe:'unknown-session-provider',provider,error});\n  assert.equal(resolveDraftSource([],{provider,profileId:`${provider}:native`,canonicalRealpath:gstackRoot}),null);\n  observed.push({probe:'unknown-draft-source',provider,result:null});\n}\nconst beforeIo=ioCalls;\nlet settingsError=null;\ntry{await settings.preferencesPatch({patch:{defaultProvider:'muse'},basePreferenceRevision:0,operationId:'probe-muse'});}catch(e){settingsError=e.code;}\nassert.equal(settingsError,'invalid_preferences_patch');\nassert.equal(ioCalls,beforeIo);\nobserved.push({probe:'muse-preference-write',error:settingsError,storage_or_credential_access:false});\nconst accepted=await settings.preferencesPatch({patch:{defaultProvider:'codex'},basePreferenceRevision:0,operationId:'probe-known'});\nassert.equal(accepted.preferences.defaultProvider,'codex');\nobserved.push({probe:'known-preference-control',result:accepted.preferences.defaultProvider,storage:'in-memory-only'});\nconst resumed=await validateSessionResumeAtSource({home:'/nonexistent-fixture',cwd:gstackRoot,provider:'muse',sid:'fixture',sourceRoot:'/nonexistent-fixture'});\nassert.equal(resumed.ok,false);\nassert.equal(resumed.reason,'Unsupported session provider.');\nobserved.push({probe:'muse-resume',result:resumed});\nawait assert.rejects(inspectProviderLive('/nonexistent-fixture','muse',new Map()),/invalid provider/);\nobserved.push({probe:'muse-process-inspection',result:'rejected before process scan'});\nfor(const harness of ['muse-native','grok-native']){\n  const route=resolve({harness,scene:'MR-001',role_config:policy});\n  assert.deepEqual(route,{disposition:'REFUSE',reason:'UNSUPPORTED_HARNESS'});\n  observed.push({probe:'third-harness-model-route',harness,result:route});\n}\nfor(const provider of ['muse','grok']){\n  const actual=actualHarness({LUCA_ACTUAL_HARNESS:provider});\n  assert.equal(actual,'unknown');\n  const caps=capabilities(actual);\n  assert.equal(caps.contextInjection,true);\n  assert.equal(caps.inputMutation,true);\n  observed.push({probe:'third-harness-identity-and-static-capabilities',provider,actual,caps});\n}\nconst evidence={scope:'isolated current public-function contracts, no real CLI/model/config changes',count:observed.length,observed};\nwriteFileSync(new URL('./contract-probes.json',import.meta.url),JSON.stringify(evidence,null,2));\nconsole.log(JSON.stringify(evidence,null,2));\n",
+    "terminal-session-settings.log": "TAP version 13\n# Subtest: draft source selection ignores stale compatible roots and binds the configured physical root\nok 1 - draft source selection ignores stale compatible roots and binds the configured physical root\n  ---\n  duration_ms: 0.732125\n  type: 'test'\n  ...\n# Subtest: canonical codec separates sources and rejects non-canonical or invalid tuples\nok 2 - canonical codec separates sources and rejects non-canonical or invalid tuples\n  ---\n  duration_ms: 1.86725\n  type: 'test'\n  ...\n# Subtest: runtime SID reconciliation only accepts one canonical provider match\nok 3 - runtime SID reconciliation only accepts one canonical provider match\n  ---\n  duration_ms: 1.171375\n  type: 'test'\n  ...\n# Subtest: realpath/profile aliases reuse one physical source while different roots stay separate\nok 4 - realpath/profile aliases reuse one physical source while different roots stay separate\n  ---\n  duration_ms: 94.771583\n  type: 'test'\n  ...\n# Subtest: profile selection requires steering, preserves config revision, and enforces source CAS\nok 5 - profile selection requires steering, preserves config revision, and enforces source CAS\n  ---\n  duration_ms: 64.132542\n  type: 'test'\n  ...\n# Subtest: catalog CAS and unknown catalog fields survive source mutations\nok 6 - catalog CAS and unknown catalog fields survive source mutations\n  ---\n  duration_ms: 92.176792\n  type: 'test'\n  ...\n# Subtest: same canonical path with a changed device/inode creates a clean opaque replacement\nok 7 - same canonical path with a changed device/inode creates a clean opaque replacement\n  ---\n  duration_ms: 101.317333\n  type: 'test'\n  ...\n# Subtest: a profile repointed to another physical root fails closed for the old source\nok 8 - a profile repointed to another physical root fails closed for the old source\n  ---\n  duration_ms: 54.40875\n  type: 'test'\n  ...\n# Subtest: configuration hashes may decrease on the same source in warm and cold registries\nok 9 - configuration hashes may decrease on the same source in warm and cold registries\n  ---\n  duration_ms: 60.773541\n  type: 'test'\n  ...\n# Subtest: explicit repoints with decreasing or equal hashes survive restart and never authorize the old root\n    # Subtest: repoint hash 2\n    ok 1 - repoint hash 2\n      ---\n      duration_ms: 66.165875\n      type: 'test'\n      ...\n    # Subtest: repoint hash 9\n    ok 2 - repoint hash 9\n      ---\n      duration_ms: 84.770708\n      type: 'test'\n      ...\n    1..2\nok 10 - explicit repoints with decreasing or equal hashes survive restart and never authorize the old root\n  ---\n  duration_ms: 151.375542\n  type: 'test'\n  ...\n# Subtest: legacy duplicate roots require observation and availability changes cannot revive a displaced binding\nok 11 - legacy duplicate roots require observation and availability changes cannot revive a displaced binding\n  ---\n  duration_ms: 122.064375\n  type: 'test'\n  ...\n# Subtest: retiring a legacy duplicate synchronizes immediate resolution and conflicting profile hashes are rejected\nok 12 - retiring a legacy duplicate synchronizes immediate resolution and conflicting profile hashes are rejected\n  ---\n  duration_ms: 86.7895\n  type: 'test'\n  ...\n# Subtest: baseline calls status only, creates exact confirmed/external activation tuples, and never reads a secret\nok 13 - baseline calls status only, creates exact confirmed/external activation tuples, and never reads a secret\n  ---\n  duration_ms: 49.647542\n  type: 'test'\n  ...\n# Subtest: legacy baseline preserves an existing pending operation and cannot activate it\nok 14 - legacy baseline preserves an existing pending operation and cannot activate it\n  ---\n  duration_ms: 59.817334\n  type: 'test'\n  ...\n# Subtest: connection save performs nested merge, optional clear, required validation, CAS conflict, and concurrent serialization\nok 15 - connection save performs nested merge, optional clear, required validation, CAS conflict, and concurrent serialization\n  ---\n  duration_ms: 95.443666\n  type: 'test'\n  ...\n# Subtest: connection apply atomically saves and activates merged fields with one observable commit\nok 16 - connection apply atomically saves and activates merged fields with one observable commit\n  ---\n  duration_ms: 63.264708\n  type: 'test'\n  ...\n# Subtest: mode switching uses saved fields, rejects unsupported modes, and replay cannot roll back the current activation\nok 17 - mode switching uses saved fields, rejects unsupported modes, and replay cannot roll back the current activation\n  ---\n  duration_ms: 100.620375\n  type: 'test'\n  ...\n# Subtest: unavailable Sidecar switching preserves the current saved and activated connection\nok 18 - unavailable Sidecar switching preserves the current saved and activated connection\n  ---\n  duration_ms: 41.062833\n  type: 'test'\n  ...\n# Subtest: replaying an older credential effect projects a newer Direct activation without invalidating it\nok 19 - replaying an older credential effect projects a newer Direct activation without invalidating it\n  ---\n  duration_ms: 225.317791\n  type: 'test'\n  ...\n# Subtest: connection apply rejects stale, invalid, or unavailable candidates without changing saved configuration or activation\nok 20 - connection apply rejects stale, invalid, or unavailable candidates without changing saved configuration or activation\n  ---\n  duration_ms: 54.623541\n  type: 'test'\n  ...\n# Subtest: connection apply checks readiness again under the lock and serializes conflicting changes\nok 21 - connection apply checks readiness again under the lock and serializes conflicting changes\n  ---\n  duration_ms: 113.244834\n  type: 'test'\n  ...\n# Subtest: credential effects publish durable pending, serialize late set/remove, and replay operationIds without another effect\nok 22 - credential effects publish durable pending, serialize late set/remove, and replay operationIds without another effect\n  ---\n  duration_ms: 116.9785\n  type: 'test'\n  ...\n# Subtest: set and remove failures are separate durable receipts and never manufacture activation\nok 23 - set and remove failures are separate durable receipts and never manufacture activation\n  ---\n  duration_ms: 72.337458\n  type: 'test'\n  ...\n# Subtest: activation requires exact confirmed revisions; partial success keeps independent config and credential receipts\nok 24 - activation requires exact confirmed revisions; partial success keeps independent config and credential receipts\n  ---\n  duration_ms: 157.097209\n  type: 'test'\n  ...\n# Subtest: a killed writer leaves pending durable, a contender is read-only, and the successor resumes the same operationId\nok 25 - a killed writer leaves pending durable, a contender is read-only, and the successor resumes the same operationId\n  ---\n  duration_ms: 153.21925\n  type: 'test'\n  ...\n# Subtest: Claude legacy shell: long resume argv survives slow login and CLI exits to usable shell\nok 26 - Claude legacy shell: long resume argv survives slow login and CLI exits to usable shell\n  ---\n  duration_ms: 955.693625\n  type: 'test'\n  ...\n# Subtest: Direct and host/auxiliary launch retain exact binary argv and child env\nok 27 - Direct and host/auxiliary launch retain exact binary argv and child env\n  ---\n  duration_ms: 0.8605\n  type: 'test'\n  ...\n1..27\n# tests 29\n# suites 0\n# pass 29\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1359.665917\n",
+    "gstack-harness.log": "PASS H1 CLAUDE_PROJECT_DIR 在 → claude\nPASS H2 CODEX_* 在 → codex\nPASS H3 都不在 → unknown（不猜）\nPASS H4 claude → canEmitControlVerb=true\nPASS H5 codex → canEmitControlVerb=true（实测共享控制动词）\nPASS H6 unknown → canEmitControlVerb=true（失效方向偏向保住强制）\nPASS H7a codex: block/write hook/input mutation 均可用，Workflow/AskUser 关闭\nPASS H7b unknown: 强制动词保留（保住强制），但 workflow/askUser 仍关（吐了也没人能执行）\nPASS H8 claude: 历史扩展宿主分类保留，非部署证明\nPASS H9 adapted Codex default separates actual capability from Claude protocol\nPASS H10-claude real SessionStart distinguishes invocation from verified availability\nPASS H10-codex real SessionStart distinguishes invocation from verified availability\nPASS H10-unknown real SessionStart distinguishes invocation from verified availability\nPASS V2-claude discovery invokes phase-a-discovery without binding\nPASS V2-claude unavailable discovery primitive degrades to NO_HINT without writes\nPASS V2-codex discovery invokes phase-a-discovery without binding\nPASS V2-codex unavailable discovery primitive degrades to NO_HINT without writes\nPASS E1 [接线] session-sync @claude → stdout 仍是 decision:block JSON（零回归）\nPASS E2 [接线] session-sync @codex → stdout 保留 decision:block JSON\nPASS E3 [接线] project-scope-guard @codex → stdout 保留 permissionDecision\nPASS E4 [接线] project-scope-guard @claude → 仍吐 permissionDecision（零回归）\n\n=== test-harness summary: PASS=21 FAIL=0 ===\n",
+    "argv-mutation.log": "TAP version 13\n# Subtest: Claude legacy shell: long resume argv survives slow login and CLI exits to usable shell\nnot ok 1 - Claude legacy shell: long resume argv survives slow login and CLI exits to usable shell\n  ---\n  duration_ms: 6011.923458\n  type: 'test'\n  location: '/private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cli-review-20261013-cr6sjkcp/argv-mutation/test-terminal-login-launch.mjs:35:1'\n  failureType: 'testCodeFailure'\n  error: 'CLI never received complete resume argv through slow login'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  operator: 'fail'\n  stack: |-\n    until (file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cli-review-20261013-cr6sjkcp/argv-mutation/test-terminal-login-launch.mjs:33:10)\n    async TestContext.<anonymous> (file:///private/var/folders/6l/df04c0js1k7113s6bq7qfltr0000gn/T/luca-cli-review-20261013-cr6sjkcp/argv-mutation/test-terminal-login-launch.mjs:52:5)\n    async Test.run (node:internal/test_runner/test:1054:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: Direct and host/auxiliary launch retain exact binary argv and child env\nok 2 - Direct and host/auxiliary launch retain exact binary argv and child env\n  ---\n  duration_ms: 0.972709\n  type: 'test'\n  ...\n1..2\n# tests 2\n# suites 0\n# pass 1\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 6070.101292\n"
+  },
+  "official_source_cache_identity": [
+    {
+      "path": "/tmp/muse-facts-stable-home.txt",
+      "url": "https://meta-models.github.io/muse-code-sdk/1.4/",
+      "sha256": "a08c1c83640c742ce6e32db087da56f7bac1b00a20b2e7a9d1eb6d3996797789",
+      "bytes": 3477
+    },
+    {
+      "path": "/tmp/muse-facts-stable-hooks.txt",
+      "url": "https://meta-models.github.io/muse-code-sdk/1.4/guides/extend/hooks/",
+      "sha256": "f6b99a650305a01c90891bd226dda6d4e76013f5a5e3ca5d9c4a3fbd00b06154",
+      "bytes": 42930
+    },
+    {
+      "path": "/tmp/muse-facts-stable-skills.txt",
+      "url": "https://meta-models.github.io/muse-code-sdk/1.4/guides/extend/skills/",
+      "sha256": "31e454f75521da1a29635d45a2cf6173774022eedc8a546cdfe3571ab45b79d3",
+      "bytes": 35886
+    },
+    {
+      "path": "/tmp/muse-facts-stable-mcp.txt",
+      "url": "https://meta-models.github.io/muse-code-sdk/1.4/guides/extend/mcp-servers/",
+      "sha256": "1f37cbc17f398941e6f9f0e4dc6d7cfa9b68d8c5774b94afb6f4dfa6592ccd50",
+      "bytes": 41524
+    },
+    {
+      "path": "/tmp/muse-facts-audit.txt",
+      "url": "https://dev.meta.ai/docs/cookbook/audit-agent-sessions",
+      "sha256": "584ab0d74ab8b117d08d9392f71b5f23051c0651ec8004b115c0e249982a8588",
+      "bytes": 23294
+    },
+    {
+      "path": "/tmp/muse-official-msp.schema.json",
+      "url": "https://github.com/meta-models/muse-code-sdk/blob/a0c8611b382584eb5091942b477f30e92e1c8d18/schema/msp/stable/msp.schema.json",
+      "sha256": "9b5c8eb922ecb078c396ad8adac4638d37e50dfe98ace9848be0133a480a27f3",
+      "bytes": 364558
+    }
+  ],
+  "independent_views": [
+    {
+      "task": "/root/terminal_product_expert",
+      "scope": "native terminal product and app launch path",
+      "summary": "A launcher-only creation path is feasible; per-pane provider is immutable; B history/C framework are separate; unknown fallback and unimplemented service participation must be fixed."
+    },
+    {
+      "task": "/root/muse_runtime_facts",
+      "scope": "official Muse CLI and protocol facts",
+      "summary": "Verified official native CLI and rules/hooks/skills/configuration contracts; snapshots and binary versions differ; no verified instruction override; actual Muse runtime untested."
+    },
+    {
+      "task": "/root/gstack_portability_expert",
+      "scope": "shared framework native enforcement",
+      "summary": "Shared material and cwd do not confer native project/event/model/workflow compatibility; Muse is not yet a supported framework harness."
+    }
+  ],
+  "cold_review": {
+    "task": "/root/cold_scope_referee",
+    "status": "in_progress",
+    "subject_sha256": "e263668e9c30117588942dc45979f8d63dd2a4c9dbaafec05ef0874e425b5d18"
+  }
+}
