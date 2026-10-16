@@ -1063,7 +1063,33 @@ function attestClaude(candidate, source, records, bytes, cursor, observation, as
     };
   }
   if (replayVisible) fail('EVENT_REPLAY', 'matching Claude event is behind the durable cursor');
+  if (claudeSyntheticProven(records, cursorOffset, candidate)) {
+    // Diagnostic only: same code, same fail-closed outcome, no state written and no authority
+    // granted. It lets the caller tell "the harness delivered a non-human prompt" from "the human
+    // prompt has not been flushed yet", which look identical otherwise.
+    fail('SOURCE_NOT_VISIBLE',
+      'candidate was a subagent hand-back or background notification, not a user message; project access resumes with the next user message',
+      { synthetic_proven: true });
+  }
   fail('SOURCE_NOT_VISIBLE', 'candidate Claude event is not yet visible');
+}
+
+// The candidate's prompt_id is assigned by the harness, so a transcript row carrying exactly that
+// id with an allowlisted non-human origin proves the prompt was synthetic. Empty ids never match,
+// and an ambiguous id (more than one row) proves nothing.
+function claudeSyntheticProven(records, cursorOffset, candidate) {
+  const promptId = String(candidate.prompt_id || '');
+  if (!promptId) return false;
+  let hits = 0;
+  for (const record of records) {
+    if (record.start < cursorOffset) continue;
+    const row = record.value;
+    if (row?.type !== 'user' || row?.message?.role !== 'user' || isClaudeToolResult(row)) continue;
+    if (String(row.promptId || '') !== promptId) continue;
+    if (!CLAUDE_NON_HUMAN_ORIGIN_KINDS.includes(row.origin?.kind)) return false;
+    hits += 1;
+  }
+  return hits === 1;
 }
 
 

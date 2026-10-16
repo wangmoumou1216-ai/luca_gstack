@@ -1616,6 +1616,65 @@ lifecycleCheck('poisoned queue: a queue holding only synthetic prompts is reject
   }
 });
 
+function queueClaudeWithPromptId(fx, prompt, promptId) {
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: fx.session,
+    boundaryId: fx.session, cwd: fx.gstack, harness: 'claude', prompt, promptId, intent: { kind: 'turn' },
+  });
+}
+
+function appendClaudeNonHumanRow(fx, prompt, promptId, kind) {
+  appendFileSync(fx.transcript, `${JSON.stringify({
+    parentUuid: randomUUID(), isSidechain: false, promptId, type: 'user',
+    message: { role: 'user', content: prompt }, uuid: randomUUID(), timestamp: new Date().toISOString(),
+    userType: 'external', entrypoint: 'cli', cwd: fx.gstack, sessionId: fx.session, version: 'fixture',
+    origin: { kind }, promptSource: undefined,
+  })}\n`);
+}
+
+lifecycleCheck('synthetic proof: a hand-back whose promptId is a peer row is named, still fails closed, writes nothing, and heals', () => {
+  const fx = makeClaudeQueueFixture('synthetic-proven');
+  try {
+    const pid = randomUUID();
+    queueClaudeWithPromptId(fx, '<agent-message from="a1">\nreport\n</agent-message>', pid);
+    appendClaudeNonHumanRow(fx, 'Another Claude session sent a message:\nreport', pid, 'peer');
+    const before = readFileSync(fx.statePath);
+    const error = expectCode('proven synthetic', 'SOURCE_NOT_VISIBLE', () => observeClaude(fx));
+    assert.equal(error.details?.synthetic_proven, true);
+    assert.deepEqual(readFileSync(fx.statePath), before, 'naming the cause must not publish state');
+    const real = 'the user types again';
+    queueClaude(fx, real);
+    const uuid = appendClaudeHuman(fx, real);
+    assert.equal(observeClaude(fx).event.native_id, uuid);
+  } finally {
+    rmSync(fx.root, { recursive: true, force: true });
+  }
+});
+
+lifecycleCheck('synthetic proof: never claimed without a unique matching non-human row', () => {
+  const cases = {
+    'no prompt_id on the candidate': fx => { queueClaude(fx, 'x'); appendClaudeNonHumanRow(fx, 'x', 'p', 'peer'); },
+    'row id differs': fx => { queueClaudeWithPromptId(fx, 'x', 'p1'); appendClaudeNonHumanRow(fx, 'x', 'p2', 'peer'); },
+    'unlisted origin kind': fx => { queueClaudeWithPromptId(fx, 'x', 'p'); appendClaudeNonHumanRow(fx, 'x', 'p', 'brand-new-kind'); },
+    'ambiguous id': fx => {
+      queueClaudeWithPromptId(fx, 'x', 'p');
+      appendClaudeNonHumanRow(fx, 'x', 'p', 'peer'); appendClaudeNonHumanRow(fx, 'x', 'p', 'peer');
+    },
+  };
+  for (const [label, arrange] of Object.entries(cases)) {
+    const fx = makeClaudeQueueFixture('synthetic-unproven');
+    try {
+      arrange(fx);
+      // An unlisted origin kind is rejected even earlier, as an unknown schema: stricter, still closed.
+      const expected = label === 'unlisted origin kind' ? 'UNKNOWN_SCHEMA' : 'SOURCE_NOT_VISIBLE';
+      const error = expectCode(label, expected, () => observeClaude(fx));
+      assert.notEqual(error.details?.synthetic_proven, true, `${label}: must not be claimed synthetic`);
+    } finally {
+      rmSync(fx.root, { recursive: true, force: true });
+    }
+  }
+});
+
 lifecycleCheck('poisoned queue: an integrity failure on an earlier candidate is never skipped', () => {
   const fx = makeLifecycleFixture('poison-integrity');
   try {

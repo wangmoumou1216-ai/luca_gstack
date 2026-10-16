@@ -49,7 +49,7 @@ function normalize(value) {
 // projects on a peer's behalf. Recognition here is display-side only: a miss restores the old hint,
 // never authority, because attestation independently refuses to treat these as human turns.
 function isHarnessMessage(prompt) {
-  return /^\s*<(?:cross-session-message|task-notification)[\s>]/.test(String(prompt || ''));
+  return /^\s*<(?:cross-session-message|task-notification|agent-message)[\s>]/.test(String(prompt || ''));
 }
 
 function promptForRouting(prompt) {
