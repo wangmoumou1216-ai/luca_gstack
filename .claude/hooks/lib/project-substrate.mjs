@@ -484,6 +484,11 @@ function validNativeEventRecord(item, sessionId) {
       || !new RegExp(`^${item.harness}:[0-9a-f]{64}$`).test(String(item.event_id || ''))
       || !String(item.boundary_id || '') || !String(item.native_id || '')) return false;
   if (item.harness === 'codex' ? !String(item.anchor_id || '') : item.anchor_id != null) return false;
+  if (item.synthetic_of != null || item.synthetic_depth != null) {
+    if (item.harness !== 'claude'
+        || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(item.synthetic_of || ''))
+        || !Number.isInteger(item.synthetic_depth) || item.synthetic_depth < 1 || item.synthetic_depth > 64) return false;
+  }
   if (item.stop_witness_id != null) {
     const validWitness = item.harness === 'codex'
       ? /^msg_[\w-]+$/.test(String(item.stop_witness_id))
@@ -586,6 +591,8 @@ function priorClosedState(current, binding, control) {
         boundary_id: prior.boundary_id,
         epoch: binding.epoch,
         outcome: 'next-user-prompt',
+        // Queuing onto an already-closed turn must not erase what it was closed from.
+        prior_state: current.state === 'TURN_CLOSED' ? current.turn?.prior_state : current.state,
       },
     };
   }
@@ -1010,9 +1017,19 @@ export function attestPendingProjectEvent({
     // entry is unwitnessable still fails closed and is retried, and the next real turn
     // makes that entry non-final and heals the queue.
     const unwitnessed = [];
+    // A hand-back or notification may continue the previous user turn only when that turn was a
+    // plain active turn (not a switch/bound/legacy turn) and its binding still validates. The
+    // continuation gets a new event of its own; the closed event is never reopened.
+    let inheritable = false;
+    try {
+      inheritable = state.state === 'TURN_CLOSED' && state.turn?.prior_state === 'TURN_ACTIVE'
+        && Boolean(control.current) && state.turn.event_id === control.current.event_id
+        && validatedBindingForState(state, projectsRoot) != null;
+    } catch { inheritable = false; }
     for (let index = 0; index < candidates.length; index += 1) {
       const pending = candidates[index];
       const final = index === candidates.length - 1;
+      const parentEvent = events.length ? events[events.length - 1] : (inheritable ? control.current : null);
       let evidence;
       try {
         evidence = attestNativeUserEvent({
@@ -1027,6 +1044,7 @@ export function attestPendingProjectEvent({
           allowTestSourceRoot,
           requireNoFollowingUser: final,
           priorEvents: consumed,
+          parentEvent,
         });
       } catch (error) {
         if (final || error?.details?.next_native_turn_differs !== true) throw error;
@@ -1051,15 +1069,23 @@ export function attestPendingProjectEvent({
         harness: pending.harness,
         status: final ? 'active' : 'closed',
         attested_at: new Date().toISOString(),
+        ...(evidence.synthetic_of ? { synthetic_of: evidence.synthetic_of, synthetic_depth: evidence.synthetic_depth } : {}),
         ...(!final ? { outcome: 'superseded-before-observation' } : {}),
         ...(evidence.stop_witness_id ? { stop_witness_id: evidence.stop_witness_id } : {}),
       };
+      // Replay protection for a continuation is the cursor, which has already moved past its row, so
+      // older synthetic entries carry no weight. Pruning keeps a subagent-heavy session from
+      // exhausting the ledger that only human events are meant to fill.
+      if (event.synthetic_of) {
+        for (let at = consumed.length - 1; at >= 0; at -= 1) if (consumed[at].synthetic_of) consumed.splice(at, 1);
+      }
       consumed.push({
         event_id: event.event_id,
         boundary_id: event.boundary_id,
         harness: event.harness,
         native_id: event.native_id,
         anchor_id: event.anchor_id,
+        ...(event.synthetic_of ? { synthetic_of: event.synthetic_of, synthetic_depth: event.synthetic_depth } : {}),
       });
       events.push(event);
       cursor = evidence.cursor_after;
@@ -1070,6 +1096,9 @@ export function attestPendingProjectEvent({
       state.selection, binding, event?.event_id || '', 'NATIVE_EVENT_REPLACED_BEFORE_COMMIT',
     );
     const intent = candidate.intent || {};
+    if (event?.synthetic_of && intent.kind !== 'turn') {
+      throw new ProjectEventAuthorityError('RELEASE_INVALID', 'a non-human continuation cannot release or switch the project');
+    }
     if (intent.kind === 'release' && binding) {
       if (!control.fence || !event || event.status !== 'active') {
         throw new ProjectEventAuthorityError('RELEASE_INVALID', 'native release requires a fenced active event');
@@ -1238,7 +1267,8 @@ export function closeAttestedProjectEvent({
       ...(state.host_launch_source ? { host_launch_source: state.host_launch_source } : {}),
       ...(binding ? {
         binding,
-        turn: { event_id: event, boundary_id: boundary, epoch: binding.epoch, outcome: String(outcome || 'stop') },
+        turn: { event_id: event, boundary_id: boundary, epoch: binding.epoch, outcome: String(outcome || 'stop'),
+          prior_state: state.state },
       } : {}),
       event_control: {
         ...control,
@@ -1425,6 +1455,9 @@ export function validatedBindingForState(value, projectsRoot = PROJECTS_ROOT) {
     : Boolean(String(turn?.turn_id || ''));
   if (!turn || !eventRefValid || turn.epoch !== binding.epoch) {
     throw new Error(`${value.state} turn epoch snapshot is invalid`);
+  }
+  if (turn.prior_state != null && !PROJECT_STATES.has(turn.prior_state)) {
+    throw new Error(`${value.state} turn prior_state is invalid`);
   }
   if (value.schema_version === PROJECT_STATE_SCHEMA && turn.event_id) {
     const current = eventControlFromState(value).current;

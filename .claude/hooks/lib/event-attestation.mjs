@@ -988,8 +988,8 @@ function assertClaudeStopUnambiguous(records, candidate, currentEventId, current
         || claudeEventId(candidate.session_id, prior.native_id) !== prior.event_id) {
       fail('CURSOR_MISMATCH', 'prior Claude event ledger entry is inconsistent');
     }
-    const priorIndex = records.findIndex(record => claudeUserKind(record) === 'human'
-      && String(record.value?.uuid || '') === prior.native_id);
+    const priorIndex = records.findIndex(record => String(record.value?.uuid || '') === prior.native_id
+      && (prior.synthetic_of ? claudeUserKind(record) !== 'human' : claudeUserKind(record) === 'human'));
     if (priorIndex < 0 || priorIndex >= currentIndex) {
       fail('CURSOR_MISMATCH', 'prior Claude event is missing or out of order');
     }
@@ -1010,7 +1010,7 @@ function assertClaudeStopUnambiguous(records, candidate, currentEventId, current
 }
 
 function attestClaude(candidate, source, records, bytes, cursor, observation, assistantText,
-  requireNoFollowingUser, priorEvents) {
+  requireNoFollowingUser, priorEvents, parentEvent = null) {
   const expected = promptBytes(candidate);
   const cursorOffset = validateCursor(cursor, source, records, bytes, 'claude');
   let replayVisible = false;
@@ -1063,33 +1063,158 @@ function attestClaude(candidate, source, records, bytes, cursor, observation, as
     };
   }
   if (replayVisible) fail('EVENT_REPLAY', 'matching Claude event is behind the durable cursor');
+  const continuation = claudeSyntheticContinuation({
+    candidate, source, records, bytes, cursorOffset, observation, assistantText,
+    requireNoFollowingUser, priorEvents, parentEvent,
+  });
+  if (continuation) return continuation;
   if (claudeSyntheticProven(records, cursorOffset, candidate)) {
-    // Diagnostic only: same code, same fail-closed outcome, no state written and no authority
-    // granted. It lets the caller tell "the harness delivered a non-human prompt" from "the human
-    // prompt has not been flushed yet", which look identical otherwise.
+    // Same code, same fail-closed outcome, nothing written: it only lets the caller tell "the
+    // harness delivered a non-human prompt that may not inherit authority" from "the human prompt
+    // has not been flushed yet", which look identical otherwise.
     fail('SOURCE_NOT_VISIBLE',
-      'candidate was a subagent hand-back or background notification, not a user message; project access resumes with the next user message',
+      'candidate was a hand-back or notification that cannot continue the previous user turn; project access resumes with the next user message',
       { synthetic_proven: true });
   }
   fail('SOURCE_NOT_VISIBLE', 'candidate Claude event is not yet visible');
 }
 
+const SYNTHETIC_CHAIN_LIMIT = 64;
+
 // The candidate's prompt_id is assigned by the harness, so a transcript row carrying exactly that
-// id with an allowlisted non-human origin proves the prompt was synthetic. Empty ids never match,
-// and an ambiguous id (more than one row) proves nothing.
-function claudeSyntheticProven(records, cursorOffset, candidate) {
+// id proves which row the hook was told about. Empty ids never match, and an ambiguous id (more
+// than one row) proves nothing.
+function claudeSyntheticRow(records, cursorOffset, candidate) {
   const promptId = String(candidate.prompt_id || '');
-  if (!promptId) return false;
+  if (!promptId) return null;
+  let found = null;
   let hits = 0;
   for (const record of records) {
     if (record.start < cursorOffset) continue;
     const row = record.value;
     if (row?.type !== 'user' || row?.message?.role !== 'user' || isClaudeToolResult(row)) continue;
     if (String(row.promptId || '') !== promptId) continue;
-    if (!CLAUDE_NON_HUMAN_ORIGIN_KINDS.includes(row.origin?.kind)) return false;
     hits += 1;
+    found = record;
   }
-  return hits === 1;
+  return hits === 1 ? found : null;
+}
+
+function claudeSyntheticProven(records, cursorOffset, candidate) {
+  const record = claudeSyntheticRow(records, cursorOffset, candidate);
+  return Boolean(record) && CLAUDE_NON_HUMAN_ORIGIN_KINDS.includes(record.value.origin?.kind);
+}
+
+function messageText(row) {
+  const content = row?.message?.content;
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) return content.map(part => (typeof part?.text === 'string' ? part.text : '')).join('\n');
+  return '';
+}
+
+// A task id counts as "ours" only when this session's own assistant launched it AFTER the user turn
+// being continued: an assistant tool_use of a task-starting tool, whose tool_result names the id as
+// a whole token. Free text from Read/WebFetch/Bash output can never satisfy this, because the
+// tool_result must answer a task-starting tool_use that the assistant itself issued.
+const CLAUDE_TASK_TOOLS = ['Agent', 'Task', 'Bash'];
+
+function claudeTaskLaunchedAfter(records, rootIndex, beforeIndex, taskId) {
+  if (!/^[\w-]{8,64}$/.test(taskId)) return false;
+  const token = new RegExp(`(?<![\\w-])${taskId}(?![\\w-])`);
+  const launched = new Set();
+  for (let index = rootIndex + 1; index < beforeIndex; index += 1) {
+    const row = records[index].value;
+    if (row?.type === 'assistant' && Array.isArray(row.message?.content)) {
+      for (const part of row.message.content) {
+        if (part?.type === 'tool_use' && CLAUDE_TASK_TOOLS.includes(part.name) && typeof part.id === 'string') {
+          launched.add(part.id);
+        }
+      }
+    } else if (isClaudeToolResult(row)) {
+      for (const part of row.message.content) {
+        if (part?.type === 'tool_result' && launched.has(part.tool_use_id)
+            && token.test(JSON.stringify(part.content ?? ''))) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Only two harness-generated shapes may continue the previous user turn: the hand-back of a
+// subagent this session started, and the completion notice of a task this session started.
+// Cross-session messages from other processes carry neither marker and never qualify.
+function claudeInheritableOrigin(records, record, rootIndex) {
+  const origin = record.value.origin;
+  if (origin?.kind === 'peer' && origin.handback === true && typeof origin.senderTaskId === 'string') {
+    return claudeTaskLaunchedAfter(records, rootIndex, record.index, origin.senderTaskId);
+  }
+  if (origin?.kind === 'task-notification') {
+    const taskId = /<task-id>([\w-]{1,64})<\/task-id>/.exec(messageText(record.value))?.[1] || '';
+    return taskId !== '' && claudeTaskLaunchedAfter(records, rootIndex, record.index, taskId);
+  }
+  return false;
+}
+
+function claudeSyntheticProvenance(row, candidate) {
+  const session = String(row.sessionId !== undefined ? row.sessionId : row.session_id);
+  if (session !== candidate.session_id || row.cwd !== candidate.cwd
+      || row.isSidechain !== false || row.userType !== 'external'
+      || !UUID_RE.test(String(row.uuid || ''))) {
+    fail('PROVENANCE_MISMATCH', 'Claude synthetic source is not a root external event of this session');
+  }
+  return String(row.uuid);
+}
+
+// The human row this chain of synthetic continuations hangs from must still be the latest human
+// row of the source: any newer human or unknown row ends the inheritance.
+function claudeRootHumanRow(records, rootNativeId, beforeIndex, candidate, rootCwd, limitOffset = Infinity) {
+  const index = records.findIndex(record => claudeUserKind(record) === 'human'
+    && String(record.value?.uuid || '') === rootNativeId);
+  if (index < 0 || index >= beforeIndex || records[index].end > limitOffset) return null;
+  // The user turn was attested under the cwd recorded on its event; a later `cd` must not void it.
+  validateClaudeUser(records[index].value, { ...candidate, cwd: rootCwd });
+  for (let at = index + 1; at < beforeIndex; at += 1) {
+    const kind = claudeUserKind(records[at]);
+    if (kind === 'human') return null;
+    if (kind === 'unknown') fail('UNKNOWN_SCHEMA', 'Claude user-like row lacks known native provenance');
+  }
+  return records[index];
+}
+
+function claudeSyntheticContinuation({
+  candidate, source, records, bytes, cursorOffset, observation, assistantText,
+  requireNoFollowingUser, priorEvents, parentEvent,
+}) {
+  if (!parentEvent || parentEvent.harness !== 'claude' || candidate.intent?.kind !== 'turn') return null;
+  const record = claudeSyntheticRow(records, cursorOffset, candidate);
+  if (!record) return null;
+  const rootNativeId = String(parentEvent.synthetic_of || parentEvent.native_id || '');
+  const root = claudeRootHumanRow(records, rootNativeId, record.index, candidate,
+    String(parentEvent.cwd || candidate.cwd), cursorOffset);
+  if (!root || !claudeInheritableOrigin(records, record, root.index)) return null;
+  const nativeId = claudeSyntheticProvenance(record.value, candidate);
+  const depth = (parentEvent.synthetic_of ? Number(parentEvent.synthetic_depth || 1) : 0) + 1;
+  if (depth > SYNTHETIC_CHAIN_LIMIT) {
+    fail('SYNTHETIC_CHAIN_LIMIT', 'too many consecutive non-human continuations; the next user message resumes project access');
+  }
+  const eventId = claudeEventId(candidate.session_id, nativeId);
+  const stopWitnessId = observation === 'stop' ? claudeStopWitness(records, record.index, assistantText) : '';
+  if (stopWitnessId) {
+    assertClaudeStopUnambiguous(records, candidate, eventId, record.index, assistantText, priorEvents);
+  }
+  if (requireNoFollowingUser) assertNoNewNativeUser(records, record.index + 1, 'claude');
+  return {
+    event_id: eventId,
+    boundary_id: candidate.boundary_id,
+    native_id: nativeId,
+    anchor_id: null,
+    distance: 0,
+    synthetic_of: rootNativeId,
+    synthetic_depth: depth,
+    ...(stopWitnessId ? { stop_witness_id: stopWitnessId } : {}),
+    cursor_after: cursorAt(source, records, bytes, record.index + 1, record.end, 'claude'),
+    provenance: { user_type: record.value.userType, sidechain: false },
+  };
 }
 
 
@@ -1172,7 +1297,26 @@ function validateCurrentCodexEvent(event, candidate, records, cursor) {
   };
 }
 
+function validateCurrentSyntheticClaudeEvent(event, candidate, records, cursor) {
+  const record = records[cursor.record_index - 1];
+  if (!record || record.end !== cursor.byte_offset || claudeUserKind(record) === 'human') {
+    fail('CURSOR_MISMATCH', 'Claude cursor is not bound to the current synthetic continuation');
+  }
+  const root = claudeRootHumanRow(records, String(event.synthetic_of), record.index, candidate,
+    String(event.cwd || candidate.cwd));
+  if (!root) fail('CURSOR_MISMATCH', 'the user turn this continuation hangs from is no longer the latest');
+  if (!claudeInheritableOrigin(records, record, root.index)) {
+    fail('CURSOR_MISMATCH', 'Claude cursor is not bound to the current synthetic continuation');
+  }
+  const nativeId = claudeSyntheticProvenance(record.value, candidate);
+  if (nativeId !== event.native_id || claudeEventId(candidate.session_id, nativeId) !== event.event_id) {
+    fail('MISMATCH', 'Claude synthetic event identity is inconsistent');
+  }
+  return { afterIndex: record.index, distance: 0, prompt: messageText(record.value) };
+}
+
 function validateCurrentClaudeEvent(event, candidate, records, cursor) {
+  if (event.synthetic_of) return validateCurrentSyntheticClaudeEvent(event, candidate, records, cursor);
   const record = records[cursor.record_index - 1];
   if (!record || record.end !== cursor.byte_offset || claudeUserKind(record) !== 'human') {
     fail('CURSOR_MISMATCH', 'Claude cursor is not bound to the current native human event');
@@ -1289,6 +1433,7 @@ export function attestNativeUserEvent({
   requireNoFollowingUser = true,
   hostSourceScope = null,
   priorEvents = [],
+  parentEvent = null,
 }) {
   validateCandidate(candidate);
   if (!['pre-tool', 'stop'].includes(observation)) fail('CANDIDATE_SCHEMA', 'native observation is invalid');
@@ -1309,7 +1454,7 @@ export function attestNativeUserEvent({
   }
   if (candidate.harness === 'claude') {
     return attestClaude(candidate, source, loaded.records, loaded.bytes, effectiveCursor, observation, assistantText,
-      requireNoFollowingUser === true, priorEvents);
+      requireNoFollowingUser === true, priorEvents, parentEvent);
   }
   fail('UNKNOWN_SCHEMA', `unsupported native harness: ${candidate.harness}`);
 }

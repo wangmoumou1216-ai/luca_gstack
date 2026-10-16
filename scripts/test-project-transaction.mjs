@@ -1675,5 +1675,347 @@ check('stale lease requires explicit exact-handle recovery and rejects replayed 
   assert.equal(jsonOut(runNode(LEASE, ['release', '--root', fx.gstack, '--handle-json', JSON.stringify(current.owner_handle)], fx)).released, true);
 });
 
+
+// ── synthetic continuation: a subagent hand-back continues the previous user turn ──────────────
+function transcriptFor(fx, sid) { return join(fx.transcripts, `${sid}.jsonl`); }
+
+function appendRows(fx, sid, rows) {
+  appendFileSync(transcriptFor(fx, sid), rows.map(row => JSON.stringify(row)).join('\n') + '\n');
+}
+
+// The assistant launches the task, and the tool result that answers it names the task id.
+function startedTaskRows(fx, sid, taskId, tool = 'Agent') {
+  const toolUseId = `toolu_${randomUUID().replace(/-/g, '')}`;
+  return [
+    {
+      type: 'assistant', uuid: randomUUID(), sessionId: sid, cwd: fx.gstack,
+      message: { role: 'assistant', content: [{ type: 'tool_use', id: toolUseId, name: tool, input: {} }] },
+    },
+    {
+      type: 'user', uuid: randomUUID(), sessionId: sid, cwd: fx.gstack, userType: 'external', isSidechain: false,
+      message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: toolUseId, content: `agentId: ${taskId} (internal)` }] },
+    },
+  ];
+}
+
+function peerRow(fx, sid, { taskId, promptId, handback = true, kind = 'peer', text = 'report', sidechain = false }) {
+  return {
+    type: 'user', uuid: randomUUID(), sessionId: sid, cwd: fx.gstack, userType: 'external', isSidechain: sidechain,
+    isMeta: true, promptId, promptSource: 'system',
+    origin: { kind, senderTaskId: taskId, ...(handback ? { handback: true } : {}) },
+    message: { role: 'user', content: `Another Claude session sent a message:\n${text}` },
+  };
+}
+
+function queueSynthetic(fx, sid, promptId, intent = { kind: 'turn' }) {
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: sid, cwd: fx.gstack,
+    harness: 'claude', prompt: '<agent-message from="t1">\nreport\n</agent-message>', promptId, intent,
+  });
+}
+
+function attestWithTestRoot(fx, sid, observation = 'pre-tool') {
+  const previous = process.env.LUCA_EVENT_ATTESTATION_TEST;
+  process.env.LUCA_EVENT_ATTESTATION_TEST = '1';
+  try {
+    return attestPendingProjectEvent({
+      gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: sid, boundaryId: sid, cwd: fx.gstack,
+      observation, transcriptPath: transcriptFor(fx, sid),
+    });
+  } finally {
+    if (previous === undefined) delete process.env.LUCA_EVENT_ATTESTATION_TEST;
+    else process.env.LUCA_EVENT_ATTESTATION_TEST = previous;
+  }
+}
+
+function closedHumanTurn(fx, sid) {
+  makeProject(fx, 'alpha');
+  bind(fx, sid, 'alpha');
+  const human = beginTurn(fx, sid);
+  assert.equal(human.state, 'TURN_ACTIVE');
+  const humanNativeId = readProjectState(fx.gstack, sid, fx.projects).value.event_control.current.native_id;
+  closeCurrentEvent(fx, sid, 'stop');
+  const closed = readProjectState(fx.gstack, sid, fx.projects).value;
+  assert.equal(closed.state, 'TURN_CLOSED');
+  assert.equal(closed.turn.prior_state, 'TURN_ACTIVE');
+  return humanNativeId;
+}
+
+// The shared display alias needs a verified binding to resolve, so it is the sharpest probe of authority.
+function bashOnProject(fx, sid) {
+  return guard(fx, { session_id: sid, tool_name: 'Read', tool_input: { file_path: 'docs/x.md' } });
+}
+
+check('synthetic continuation: a subagent hand-back after Stop continues the user turn with the same binding', () => {
+  const fx = makeEnv();
+  const humanNativeId = closedHumanTurn(fx, 'S');
+  const promptId = randomUUID();
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
+  queueSynthetic(fx, 'S', promptId);
+  appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId })]);
+  const result = attestWithTestRoot(fx, 'S');
+  assert.equal(result.state.state, 'TURN_ACTIVE');
+  assert.equal(result.state.binding.project, 'alpha');
+  assert.equal(result.event.synthetic_of, humanNativeId);
+  assert.equal(result.event.status, 'active');
+  const stored = readProjectState(fx.gstack, 'S', fx.projects).value;
+  assert.equal(stored.event_control.consumed_events.at(-1).synthetic_of, humanNativeId);
+  assert.equal(attestWithTestRoot(fx, 'S').idempotent, true, 'the active continuation must re-validate against the source');
+  const verdict = bashOnProject(fx, 'S');
+  assert.notEqual(verdict?.hookSpecificOutput?.permissionDecision, 'deny', 'the continuation must not be blocked');
+  // Stop closes it like any event, and a following hand-back continues again from the same human row.
+  closeCurrentEvent(fx, 'S', 'stop');
+  const second = randomUUID();
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-2'));
+  queueSynthetic(fx, 'S', second);
+  appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-2', promptId: second })]);
+  const chained = attestWithTestRoot(fx, 'S');
+  assert.equal(chained.event.synthetic_of, humanNativeId);
+  assert.equal(chained.event.synthetic_depth, 2);
+});
+
+check('synthetic continuation: never inherits without the exact structural proof', () => {
+  const cases = {
+    'no handback marker': { make: (fx, id) => peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: id, handback: false }) },
+    'sender task never started here': { started: false, make: (fx, id) => peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: id }) },
+    'unlisted origin kind': { make: (fx, id) => peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: id, kind: 'brand-new-kind' }) },
+    'sidechain row': { make: (fx, id) => peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: id, sidechain: true }) },
+    'prompt id mismatch': { make: (fx) => peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: randomUUID() }) },
+  };
+  for (const [label, spec] of Object.entries(cases)) {
+    const fx = makeEnv();
+    closedHumanTurn(fx, 'S');
+    const promptId = randomUUID();
+    if (spec.started !== false) appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
+    queueSynthetic(fx, 'S', promptId);
+    appendRows(fx, 'S', [spec.make(fx, promptId)]);
+    const before = stateBytes(fx, 'S');
+    assert.throws(() => attestWithTestRoot(fx, 'S'), error => error.code !== undefined, label);
+    assert.deepEqual(stateBytes(fx, 'S'), before, `${label}: a refused continuation must not publish state`);
+    assert.equal(bashOnProject(fx, 'S')?.hookSpecificOutput?.permissionDecision, 'deny', `${label}: must stay blocked`);
+  }
+});
+
+check('synthetic continuation: only a plain active turn is continued, never a switch/bound turn or a newer human turn', () => {
+  // The prior turn was a pending switch (SWITCH_ONLY), which must never widen into project work.
+  {
+    const fx = makeEnv();
+    makeProject(fx, 'alpha');
+    makeProject(fx, 'beta');
+    bind(fx, 'S', 'alpha');
+    beginTurn(fx, 'S');
+    prepare(fx, 'S', 'switch', 'beta');
+    assert.equal(readProjectState(fx.gstack, 'S', fx.projects).value.state, 'SWITCH_ONLY');
+    const promptId = randomUUID();
+    appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
+    queueSynthetic(fx, 'S', promptId);
+    const queued = readProjectState(fx.gstack, 'S', fx.projects).value;
+    assert.equal(queued.turn?.prior_state, 'SWITCH_ONLY');
+    appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId })]);
+    assert.throws(() => attestWithTestRoot(fx, 'S'), error => error.code !== undefined, 'switch turn must not be continued');
+  }
+  // A newer human row after the root ends the inheritance.
+  {
+    const fx = makeEnv();
+    closedHumanTurn(fx, 'S');
+    const promptId = randomUUID();
+    appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
+    queueSynthetic(fx, 'S', promptId);
+    appendRows(fx, 'S', [{
+      type: 'user', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack, userType: 'external', isSidechain: false,
+      origin: { kind: 'human' }, promptSource: 'typed', message: { role: 'user', content: 'a newer user turn' },
+    }, peerRow(fx, 'S', { taskId: 'agent-task-1', promptId })]);
+    assert.throws(() => attestWithTestRoot(fx, 'S'), error => error.code !== undefined, 'newer human row must end inheritance');
+  }
+});
+
+check('synthetic continuation: a real user prompt always wins and clears the marker', () => {
+  const fx = makeEnv();
+  closedHumanTurn(fx, 'S');
+  const promptId = randomUUID();
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
+  queueSynthetic(fx, 'S', promptId);
+  appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId })]);
+  assert.ok(attestWithTestRoot(fx, 'S').event.synthetic_of);
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S', cwd: fx.gstack,
+    harness: 'claude', prompt: 'the user speaks again', promptId: 'S', intent: { kind: 'turn' },
+  });
+  const state = attestCandidate(fx, 'S').state;
+  assert.equal(state.state, 'TURN_ACTIVE');
+  assert.equal(state.event_control.current.synthetic_of, undefined, 'a human event is never marked synthetic');
+});
+
+check('synthetic continuation: the Stop witness works for a continuation and for the human turn after it', () => {
+  const fx = makeEnv();
+  closedHumanTurn(fx, 'S');
+  const promptId = randomUUID();
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
+  queueSynthetic(fx, 'S', promptId);
+  appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId })]);
+  attestWithTestRoot(fx, 'S');
+  appendRows(fx, 'S', [{
+    type: 'assistant', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack,
+    message: { role: 'assistant', content: [{ type: 'text', text: 'handled the hand-back' }] },
+  }]);
+  const previous = process.env.LUCA_EVENT_ATTESTATION_TEST;
+  process.env.LUCA_EVENT_ATTESTATION_TEST = '1';
+  try {
+    const stopped = attestPendingProjectEvent({
+      gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S', cwd: fx.gstack,
+      observation: 'stop', transcriptPath: transcriptFor(fx, 'S'), assistantText: 'handled the hand-back',
+    });
+    assert.ok(stopped.event.stop_witness_id, 'the continuation must be witnessable at Stop');
+  } finally {
+    if (previous === undefined) delete process.env.LUCA_EVENT_ATTESTATION_TEST;
+    else process.env.LUCA_EVENT_ATTESTATION_TEST = previous;
+  }
+  closeCurrentEvent(fx, 'S', 'stop');
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S', cwd: fx.gstack,
+    harness: 'claude', prompt: 'next real prompt', promptId: 'S', intent: { kind: 'turn' },
+  });
+  const next = attestCandidate(fx, 'S', 'pre-tool').state;
+  assert.equal(next.state, 'TURN_ACTIVE', 'a real prompt after a synthetic event in the ledger must still attest');
+});
+
+function taskNotificationRow(fx, sid, { taskId, promptId }) {
+  return {
+    type: 'user', uuid: randomUUID(), sessionId: sid, cwd: fx.gstack, userType: 'external', isSidechain: false,
+    isMeta: true, promptId, promptSource: 'system', origin: { kind: 'task-notification' },
+    message: { role: 'user', content: `<task-notification>\n<task-id>${taskId}</task-id>\n<status>completed</status>\n</task-notification>` },
+  };
+}
+
+function expectRefusal(label, fx, code, proven) {
+  const before = stateBytes(fx, 'S');
+  let caught;
+  try { attestWithTestRoot(fx, 'S'); } catch (error) { caught = error; }
+  assert.ok(caught, `${label}: expected a refusal`);
+  assert.equal(caught.code, code, `${label}: wrong code ${caught.code}: ${caught.message}`);
+  if (proven !== undefined) assert.equal(caught.details?.synthetic_proven === true, proven, `${label}: synthetic_proven`);
+  assert.deepEqual(stateBytes(fx, 'S'), before, `${label}: a refusal must not publish state`);
+  assert.equal(bashOnProject(fx, 'S')?.hookSpecificOutput?.permissionDecision, 'deny', `${label}: must stay blocked`);
+}
+
+check('synthetic continuation: pinned refusals for each way the structural proof can fail', () => {
+  const cases = [
+    ['no handback marker', 'SOURCE_NOT_VISIBLE', true,
+      (fx, id) => [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: id, handback: false })]],
+    ['unlisted origin kind', 'SOURCE_NOT_VISIBLE', false,
+      (fx, id) => [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: id, kind: 'brand-new-kind' })]],
+    ['sidechain row', 'PROVENANCE_MISMATCH', undefined,
+      (fx, id) => [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: id, sidechain: true })]],
+    ['prompt id mismatch', 'SOURCE_NOT_VISIBLE', false,
+      (fx) => [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: randomUUID() })]],
+    ['task id only appears in a Read result', 'SOURCE_NOT_VISIBLE', true,
+      (fx, id) => [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: id })], 'Read'],
+    ['task id is only a substring of the launched id', 'SOURCE_NOT_VISIBLE', true,
+      (fx, id) => [peerRow(fx, 'S', { taskId: 'agent-ta', promptId: id })]],
+    ['task id too short to prove anything', 'SOURCE_NOT_VISIBLE', true,
+      (fx, id) => [peerRow(fx, 'S', { taskId: 'a', promptId: id })]],
+    ['cross-session message with no task marker', 'SOURCE_NOT_VISIBLE', true,
+      (fx, id) => [{ ...peerRow(fx, 'S', { taskId: 'agent-task-1', promptId: id }), origin: { kind: 'peer' } }]],
+  ];
+  for (const [label, code, proven, make, tool] of cases) {
+    const fx = makeEnv();
+    closedHumanTurn(fx, 'S');
+    const promptId = randomUUID();
+    appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1', tool || 'Agent'));
+    queueSynthetic(fx, 'S', promptId);
+    appendRows(fx, 'S', make(fx, promptId));
+    expectRefusal(label, fx, code, proven);
+  }
+});
+
+check('synthetic continuation: a task launched before the user turn cannot re-arm authority', () => {
+  const fx = makeEnv();
+  makeProject(fx, 'alpha');
+  bind(fx, 'S', 'alpha');
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
+  beginTurn(fx, 'S');
+  closeCurrentEvent(fx, 'S', 'stop');
+  const promptId = randomUUID();
+  queueSynthetic(fx, 'S', promptId);
+  appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId })]);
+  expectRefusal('old task', fx, 'SOURCE_NOT_VISIBLE', true);
+});
+
+check('synthetic continuation: a completed background task notification continues the turn', () => {
+  const fx = makeEnv();
+  const humanNativeId = closedHumanTurn(fx, 'S');
+  const promptId = randomUUID();
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'bgtask-0001', 'Bash'));
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S', cwd: fx.gstack,
+    harness: 'claude', prompt: '<task-notification>\n<task-id>bgtask-0001</task-id>\n</task-notification>',
+    promptId, intent: { kind: 'turn' },
+  });
+  appendRows(fx, 'S', [taskNotificationRow(fx, 'S', { taskId: 'bgtask-0001', promptId })]);
+  assert.equal(attestWithTestRoot(fx, 'S').event.synthetic_of, humanNativeId);
+});
+
+check('synthetic continuation: a newer user prompt revokes an active continuation at the next tool call', () => {
+  const fx = makeEnv();
+  closedHumanTurn(fx, 'S');
+  const promptId = randomUUID();
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
+  queueSynthetic(fx, 'S', promptId);
+  appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId })]);
+  attestWithTestRoot(fx, 'S');
+  appendRows(fx, 'S', [{
+    type: 'user', uuid: randomUUID(), sessionId: 'S', cwd: fx.gstack, userType: 'external', isSidechain: false,
+    origin: { kind: 'human' }, promptSource: 'typed', message: { role: 'user', content: 'stop, I changed my mind' },
+  }]);
+  assert.throws(() => attestWithTestRoot(fx, 'S'), error => error.code === 'INTERVENING_USER');
+  assert.equal(bashOnProject(fx, 'S')?.hookSpecificOutput?.permissionDecision, 'deny');
+});
+
+check('synthetic continuation: chain is bounded, and the ledger keeps a single synthetic entry', () => {
+  const fx = makeEnv();
+  closedHumanTurn(fx, 'S');
+  for (let n = 1; n <= 64; n += 1) {
+    const promptId = randomUUID();
+    appendRows(fx, 'S', startedTaskRows(fx, 'S', `agent-task-${n}`));
+    queueSynthetic(fx, 'S', promptId);
+    appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: `agent-task-${n}`, promptId })]);
+    assert.equal(attestWithTestRoot(fx, 'S').event.synthetic_depth, n);
+    closeCurrentEvent(fx, 'S', 'stop');
+  }
+  const ledger = readProjectState(fx.gstack, 'S', fx.projects).value.event_control.consumed_events;
+  assert.equal(ledger.filter(item => item.synthetic_of).length, 1, 'older synthetic ledger entries must be pruned');
+  const promptId = randomUUID();
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-65'));
+  queueSynthetic(fx, 'S', promptId);
+  appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-65', promptId })]);
+  assert.throws(() => attestWithTestRoot(fx, 'S'), error => error.code === 'SYNTHETIC_CHAIN_LIMIT');
+});
+
+check('synthetic continuation: a corrupt synthetic marker or prior_state in state is rejected', () => {
+  const fx = makeEnv();
+  closedHumanTurn(fx, 'S');
+  const path = join(fx.gstack, '.claude', '.session-project-S');
+  const good = JSON.parse(readFileSync(path, 'utf8'));
+  const badPrior = structuredClone(good);
+  badPrior.turn.prior_state = 'NOT_A_STATE';
+  writeFileSync(path, `${JSON.stringify(badPrior)}\n`);
+  assert.throws(() => validatedBindingForState(readProjectState(fx.gstack, 'S', fx.projects).value, fx.projects));
+  const badMarker = structuredClone(good);
+  badMarker.event_control.consumed_events.at(-1).synthetic_of = 'not-a-uuid';
+  badMarker.event_control.consumed_events.at(-1).synthetic_depth = 1;
+  writeFileSync(path, `${JSON.stringify(badMarker)}\n`);
+  assert.throws(() => validatedBindingForState(readProjectState(fx.gstack, 'S', fx.projects).value, fx.projects));
+});
+
+check('synthetic continuation: a release or switch intent can never ride a hand-back', () => {
+  const fx = makeEnv();
+  closedHumanTurn(fx, 'S');
+  const promptId = randomUUID();
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
+  queueSynthetic(fx, 'S', promptId, { kind: 'release' });
+  appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId })]);
+  assert.throws(() => attestWithTestRoot(fx, 'S'), error => error.code !== undefined);
+});
+
 console.log(`\n=== test-project-transaction summary: PASS=${pass} FAIL=${fail} ===`);
 process.exit(fail ? 1 : 0);
