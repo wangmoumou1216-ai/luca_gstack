@@ -14,6 +14,17 @@
 // "Evidence-bearing" = the file has rows the validator actually bites on (counted by presence only).
 // Without that guard a host that dropped `promptSource` would look green: every human row would be
 // treated as a slash-command row and skipped.
+//
+// Known limits (read the report with these in mind):
+//  - The verdict pools both hosts. GREEN is possible with zero Codex evidence; the per-shape breakdown shows it.
+//  - Error codes other than UNKNOWN_SCHEMA / PROVENANCE_MISMATCH (CWD_MISMATCH, SESSION_MISMATCH, EXCEPTION:*) are
+//    listed but do not turn the verdict RED: a session that changed directory mid-way is not field drift.
+//  - "Evidence" is a presence count (Claude: human rows carrying promptSource; Codex: UserMessage events). It
+//    approximates "rows the validator actually checked" and does not measure that exactly.
+//  - Whole-history validation from offset 0 can be stricter than the runtime per-turn path; whether the runtime
+//    path fails on the same session is not verified here.
+//  - Only plain `.jsonl` rollouts are read. Codex compresses older sessions to `.jsonl.zst` (about 87% of the files
+//    on the author's machine when this was written), so the verdict covers the newer, uncompressed sessions only.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { closeSync, existsSync, mkdtempSync, openSync, readSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -148,8 +159,10 @@ if (existsSync(sessionsDir)) {
     try { all = rows(file); } catch { tally.skipped_unreadable++; continue; }
     const evidence = all.filter(r => r.type === 'event_msg' && r.payload?.item?.type === 'UserMessage').length;
     const source = typeof meta.source === 'object' && meta.source ? 'subagent' : (meta.source ?? '?');
+    // The shape carries the session's own cli_version so a failure confined to one version reads as drift
+    // rather than as "a kind of session the module does not support" (the installed CLI version alone cannot tell).
     probe({ harness: 'codex', file, sessionId: meta.id, cwd: meta.cwd, evidence,
-      shape: `codex ${source}/${meta.originator ?? '?'}` });
+      shape: `codex ${source}/${meta.originator ?? '?'} ${meta.cli_version ?? 'unknown-version'}` });
   }
 }
 

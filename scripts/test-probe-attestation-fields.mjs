@@ -46,14 +46,14 @@ function claudeSession(dir, { humanRows = 3, dropOrigin = false, dropPromptSourc
 }
 
 // ---- Codex fixtures (shape taken from test-prompt-attestation.mjs: one source + anchor pair per turn) ----
-function codexSession(home, { parent = null } = {}) {
+function codexSession(home, { parent = null, version = 'fixture' } = {}) {
   const session = randomUUID();
   const boundary = `boundary-${randomUUID()}`;
   const dir = join(home, 'sessions', '2026', '09', '08');
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, `rollout-2026-09-08T00-00-00-${session}.jsonl`), jsonl([
     { type: 'session_meta', payload: { id: session, session_id: session, cwd, source: 'cli', thread_source: 'user',
-      originator: 'codex-tui', parent_thread_id: parent, forked_from_id: null, cli_version: 'fixture' } },
+      originator: 'codex-tui', parent_thread_id: parent, forked_from_id: null, cli_version: version } },
     { type: 'response_item', payload: { type: 'message', role: 'user', id: `msg_${randomUUID()}`,
       content: [{ type: 'input_text', text: 'fixture prompt' }], internal_chat_message_metadata_passthrough: { turn_id: boundary } } },
     { type: 'turn_context', payload: { turn_id: boundary } },
@@ -118,14 +118,16 @@ try {
 
   // 5. Codex: three root threads pass; a child thread is outside the population (skipped, not a failure)
   const home = join(work, 'codex-home');
-  for (let i = 0; i < 3; i++) codexSession(home);
+  codexSession(home); codexSession(home); codexSession(home, { version: '9.9.9' }); // two versions, same kind of session
   codexSession(home, { parent: randomUUID() });
   const codex = run('--claude-root', none, '--codex-home', home);
   assert.equal(codex.report.verdict, 'GREEN', JSON.stringify(codex.report));
   assert.equal(codex.report.ok, 3);
   assert.equal(codex.report.skipped_non_root, 1, 'child threads are not attestable by design and must not turn the probe red');
   assert.deepEqual(codex.report.errors, {});
-  assert.ok(codex.report.by_shape['codex cli/codex-tui'], 'sessions are grouped by shape');
+  // The shape includes the session's own cli_version, so a failure confined to one version is visible as drift.
+  assert.equal(codex.report.by_shape['codex cli/codex-tui fixture']?.ok, 2, 'sessions are grouped by shape and version');
+  assert.equal(codex.report.by_shape['codex cli/codex-tui 9.9.9']?.ok, 1, 'a different cli_version is a separate shape');
 
   // 6. Sessions whose cwd is elsewhere are never touched
   const other = join(work, 'claude-other');

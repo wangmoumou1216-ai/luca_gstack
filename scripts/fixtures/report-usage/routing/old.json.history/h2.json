@@ -1,0 +1,4 @@
+{"version":1,"harness":"codex","root_session_id":"01a0889d-3800-7abc-8def-0123456789ac","activation_id":"act-old","status":"paused","critical_failure":true,"archived_at":"2026-09-12T00:00:00.000Z",
+ "invocations":{
+  "k1":{"invocation_id":"inv-2","root_session_id":"01a0889d-3800-7abc-8def-0123456789ac","requested_role":"peak","critical":true,"status":"accepted","external_identity":{"agent_type":"quality-gate"}}
+ }}

@@ -32,8 +32,8 @@ const before = snapshot(fx);
 const r = run(...base);
 assert.equal(r.code, 0, `report exit code: ${r.err}`);
 
-// --- routing: 2 snapshots (one live, one in *.json.history), 5 unique invocations after de-dupe
-assert.match(r.out, /快照 2 份（不可读 0）/, 'live + history snapshots both read');
+// --- routing: 3 snapshots (one live, two in *.json.history), 5 unique invocations after de-dupe
+assert.match(r.out, /快照 3 份（不可读 0）/, 'live + both history snapshots read');
 assert.match(r.out, /activation 2 个，去重后 invocation 5 条/, 'de-dupe by invocation_id');
 assert.match(r.out, /critical_failure 的 activation：1 个/);
 assert.match(r.out, /月份未知：1 条；缺 agent_type：1 条/, 'unknown month and missing agent_type are counted, not hidden');
@@ -41,6 +41,9 @@ assert.match(r.out, /月份未知：1 条；缺 agent_type：1 条/, 'unknown mo
 assert.ok(row(r.out, '2026-10', 'light', 'normal', 'accepted', 'preflight-agent'), 'live snapshot beats history for the same invocation');
 assert.ok(!row(r.out, 'light', 'pending', 'preflight-agent'), 'stale pending copy must not be counted');
 assert.ok(row(r.out, '2026-09', 'peak', 'critical', 'accepted', 'quality-gate'), 'UUIDv7 month taken from root_session_id');
+// inv-2 is pending in the older history snapshot (h1, archived 09-11) and accepted in the newer one (h2, archived 09-12).
+// h1 sorts first, so a "first snapshot seen wins" rule would pick the stale pending copy: the later archived_at must win.
+assert.ok(!row(r.out, '2026-09', 'peak', 'critical', 'pending', 'quality-gate'), 'between two history snapshots the later archived_at wins');
 assert.ok(row(r.out, 'unknown', 'anchor', 'accepted', 'explorer'), 'non-UUIDv7 id goes to the unknown month bucket');
 assert.ok(row(r.out, '2026-10', 'peak', 'critical', 'refused', '(缺失)'), 'missing agent_type is shown as (缺失)');
 
