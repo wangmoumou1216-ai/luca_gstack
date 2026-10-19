@@ -324,7 +324,10 @@ brainstorm Standard+ 被否定方向 ≥1，AI Native 时含 ≥1 条 AI 层拒�
 
 | 维度 | 检查内容 | 判定标准 |
 |------|---------|---------|
-| **AI Native** | 是否显式处理了 AI 专有状态 | 搜索 "streaming/partial/error/empty/loading/skeleton" 关键词 |
+| **适用状态与恢复** | 对照原任务及所选机制的全部适用状态 | 核触发、转换、用户反馈、输入保留与恢复的实际合同证据；仅出现关键词不构成 PASS。非 AI 的 AI 专项写有源 N/A，实际系统状态仍须完整。 |
+
+文档阶段核状态与转换是否可执行、是否覆盖原要求；这只证明规格完整。
+宣称实际行为通过时必须有真实操作证据，未观察的行为标 UNKNOWN，静态截图不代转换验证。
 
 #### Brief 合规检查（html-prototype, open-design, figma-demo —— 参考 Ruflo ADR Compliance）
 

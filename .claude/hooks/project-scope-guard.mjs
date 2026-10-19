@@ -158,6 +158,8 @@ function observationBoundary(state) {
   return '';
 }
 
+const VISIBILITY_WAIT_MS = 2500;
+
 function attestForPreTool(state) {
   const control = state?.event_control;
   const needsObservation = state?.schema_version === substrate?.PROJECT_STATE_SCHEMA
@@ -167,7 +169,7 @@ function attestForPreTool(state) {
     return { state, error: new Error('native event attester unavailable') };
   }
   try {
-    const result = substrate.attestPendingProjectEvent({
+    const attest = () => substrate.attestPendingProjectEvent({
       gstackRoot,
       projectsRoot: PROJECTS_ROOT,
       sessionId: sid,
@@ -177,6 +179,20 @@ function attestForPreTool(state) {
       transcriptPath: data?.transcript_path || '',
       codexHome: process.env.CODEX_HOME || '',
     });
+    // The harness runs this hook before it has necessarily flushed the row that proves the event
+    // (a task notification lands in the transcript a moment after the tool call starts). Poll
+    // briefly for exactly that case; a proven-but-ineligible hand-back and every other failure
+    // stay an immediate deny, and a row that never appears still denies after the deadline.
+    const deadline = Date.now() + VISIBILITY_WAIT_MS;
+    let result;
+    for (;;) {
+      try { result = attest(); break; }
+      catch (error) {
+        if (error?.code !== 'SOURCE_NOT_VISIBLE' || error?.details?.synthetic_proven === true
+            || Date.now() >= deadline) throw error;
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
+      }
+    }
     return { state: result.state, error: null };
   } catch (error) {
     // Attestation failures are fail-closed for project authority. The hook may

@@ -4,7 +4,7 @@ This file is first loaded in **Phase 5.1** (to self-run the Finalization Checkli
 
 ## Scoping Preface — READ FIRST
 
-Match the document's weight to the problem's ambiguity. There are three scope tiers, established in Phase 0.
+Match the document's weight to the problem's ambiguity. There are four scope tiers, established in Phase 0.
 
 | Tier | When | Signals |
 |---|---|---|
@@ -118,6 +118,7 @@ Do not invent content — if a section has no substance, mark it `_(not applicab
 **Generated**: {YYYY-MM-DD HH:MM} by `brainstorm` skill
 **Source Research**: `{path to research.md}` (or `cold-start` if none)
 **Scope Tier**: {Lightweight | Standard | Deep-feature | Deep-product}
+**Discovery Mode**: {full | focused; actual selection source, absent means full}
 **Status**: DRAFT
 **Supersedes**: {prior PRD filename, if this is a revision; else `—`}
 
@@ -265,6 +266,10 @@ _(Conditional: include ONLY when Phase 2.5 `agent_involvement.agent_boundary_nee
 
 ## Approaches Considered
 
+{In focused, write only actual options: one retained direction with its confirmed source when
+there is no substantive choice, otherwise two different mechanisms; a third needs distinct value.
+Full uses the Section Matrix counts. Omit unused Approach placeholders and keep actual rejections.}
+
 ### Approach A: {name} — {minimal | ideal | lateral}
 - **Description**: {2-3 sentences}
 - **Pros**: {...}
@@ -288,7 +293,9 @@ _(Conditional: include ONLY when Phase 2.5 `agent_involvement.agent_boundary_nee
 ### Rejected Directions (→ design signal: these are explicitly NOT pursued)
 - **Direction X**: {description} → Rejected because: {specific reason, not "not suitable"}
 - **Direction Y**: {description} → Rejected because: {specific reason}
-_(At least 1 rejected direction required for Standard+. If AI Native, at least 1 rejection must be on AI-level grounds — e.g., "AI path doesn't compress decisions by ≥ 2")_
+_(Full: at least 1 rejected direction for Standard+; when AI Native, at least 1 on AI-level
+grounds. Focused: preserve actual rejections and reasons; with none, state that the direction
+was already confirmed. Never invent a rejection to fill this template.)_
 
 ### Weakest Assumption
 The single assumption that, if wrong, invalidates the recommended approach:
@@ -377,7 +384,7 @@ Self-audit the draft against these 18 questions. If ANY answer is "no" or "uncle
    `REMOVED` disposition?
 5. Are requirement IDs stable — no renumbering after edits?
 6. Is every premise one the user explicitly agreed to (not the skill's invention)?
-7. Are there at least 2 approaches (3 for Deep-product), with at least one non-obvious angle?
+7. In full, are the Section Matrix approach counts and non-obvious angle satisfied? In focused, is the retained direction sourced or the real choice compared through distinct mechanisms, without fabricated options/rejections?
 8. Is the recommendation stated AFTER the options, not woven into them?
 9. Does Outstanding Questions split blocking vs deferred correctly?
 10. If `Resolve Before Planning` is non-empty, is the handoff gate respected in Phase 7?

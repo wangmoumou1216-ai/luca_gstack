@@ -583,10 +583,21 @@ mkdir -p docs/handoff
 ```
 
 必须包含：
-- **决策列表**（≤8条）：多维度研究关键发现、用户心智模型、竞品启发点
+- **质量头**：`gate_result` + 3-7 条带证据的 `criteria`（PASS/FAIL/UNKNOWN）
+- **决策列表**（≤8条）：实际模式的研究结论、适用的用户心智模型与竞品信号；零问题分支只交接适用性评估
 - **下游约束**（≤5条）：哪些发现仍有争议（DISPUTED）、哪些为人工裁决项
-- **风险**（≤3条）：样本局限、研究时效性、未覆盖维度
+- **风险**（摘要≤3条，全部关键风险保留或完整引用）：样本局限、研究时效性、未覆盖问题
 - **产出路径**：research 报告完整路径
+
+既有决策/约束保留原始来源与版本、用户确认选择、结论影响的决定及证据边界。
+超过摘要预算的关键风险引用精确报告版本与位置，不删风险或另建台账。
+
+**Step 1.5 — 写完即验：**
+```bash
+node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-ux-research-handoff.md"
+```
+失败时先补齐 handoff，不得进入 Step 2 或报告 DONE。required UNKNOWN/缺独立审查
+不能因校验器接受格式而变成 PASS；当前适用 Human Gate 仍须完成。
 
 **Step 2 — 完成分支：**
 受管 workflow（completion_owner=Orchestrator）在本 skill 全部必需步骤、自检、真实审查/当前 Human Gate 与 handoff 校验完成后，按 `references/handoff-protocol.md`「受管节点提交」只回交当前产物身份、原输出字段及提交请求；此回交替代本步 YAML 更新，不在 skill 内写 DONE。

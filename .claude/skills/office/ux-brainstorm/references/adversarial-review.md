@@ -109,7 +109,7 @@ Severity guide:
 Check:
 - [ ] design-brief skill拿到这个方案，能直接做设计决策吗？
 - [ ] 已确认产品目标/核心机制是否足够明确？Brief 可在既定范围细化语义位置、状态和 AC；生成器拥有视觉表达。
-- [ ] 被否定的方向是否完整记录？（≥2条，含AI Native层面≥1条）
+- [ ] 被否定的方向是否完整记录？full ≥2条，AI 相关时含≥1条AI层面；focused 保留全部真实否决，无则说明已确认方向，不凑数。
 - [ ] AI Native判定是否清晰？（design-brief Phase 1可以直接引用）
 - [ ] Evaluability等级是否确定？
 - [ ] 设计方案文档ID是否稳定？（D#, A#不会重新编号）
@@ -117,15 +117,15 @@ Check:
 - [ ] **Phase 3约束一致性检查**：逐条核对Phase 3每个Q的回答，
   方案是否和回答一致？如果不一致，方案里有没有声明和解释？（例：
   Q7回答「切换频率很高」但方案切换成本高 → 矛盾，必须标记）
-- [ ] **演进路径是否存在**：推荐方案是否有v1→v2→v3演进声明？v1的决策是否堵死了v2/v3？
+- [ ] AI 相关的演进路径是否诚实且不堵死后续？非 AI 的 Agent 演进是否有源 N/A，而实际状态/恢复仍完整？
 
 Severity guide:
 - design-brief需要猜产品目标或核心机制 → CRITICAL；正常语义规格细化不算缺陷
-- 被否定方向缺失 → HIGH
+- 真实否决或 full 适用数量缺失 → HIGH；focused 无实际否决不因此失败
 - ID不稳定 → CRITICAL
 - 待解决问题未分blocking/deferred → HIGH
 - 方案和Phase 3约束矛盾且未声明 → HIGH
-- 推荐方案无演进路径 → MEDIUM
+- AI 相关的推荐方案无适用演进路径 → MEDIUM；非 AI 不要求 Agent 演进
 
 ---
 
