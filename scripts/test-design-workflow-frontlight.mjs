@@ -167,6 +167,10 @@ check('F09-packet', 'Brief keeps original MUST and executable benefit conditions
   has(s.input, /每条本轮 MUST 来源、D、适用 STATE、保持项都有语义位置/);
   has(s.packet, /收益执行条件.*恢复.*适用限制.*丢失条件即不能冻结/s);
 });
+// Literal tripwire only: whether generated UIs honour it is unverified (no regeneration budget).
+check('F11-brief-state-invalidation', 'states changed by later edits or late data name their invalidation', s => {
+  has(section(s.brief, '## Phase 3', '## Phase 4'), /用户或系统的后续写入、晚到数据或撤销.*失效触发及失效后的呈现.*AC/);
+});
 check('F09-brief-retained', 'all Brief consumers permit sourced inherited decisions without invented rejections', s => {
   for (const [key, start, end] of [
     ['brief', '## Phase 5', '## Phase 6'],
@@ -227,6 +231,7 @@ if (args.includes('--mutation') && results.every(row => row.ok)) {
     ['truncate-critical-risks', 'handoff', '摘要最多 3 条；全部关键风险', '最多 3 条；其他关键风险删除', 'F10-risk-summary'],
     ['impatience-waives-unknown', 'pressure', '关键未知不能改成安全假设', '关键未知可以改成安全假设', 'F07-escape'],
     ['brief-restores-rejection-quota', 'briefSchema', '无实质取舍时填有源 N/A', '始终至少编写一项排除备选', 'F09-brief-retained'],
+    ['drop-state-invalidation', 'brief', '写明失效触发及失效后的呈现', '保持原样即可', 'F11-brief-state-invalidation'],
   ];
   for (const [name, key, before, after, expected] of mutations) {
     assert.equal(source[key].split(before).length, 2, `mutation anchor must occur exactly once: ${name}`);
