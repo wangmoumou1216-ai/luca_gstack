@@ -34,7 +34,7 @@ import {
   parseExpandedSelectionCommand,
 } from './lib/project-selection.mjs';
 
-import { attestControlledOwner, controllerInvocation, issueNativeClaim, nativeClaimRoot, readonlyShellInput, reservationSource, sameNativeOwner, withControlLock } from '../../scripts/controlled-native-owner.mjs';
+import { attestControlledOwner, controllerInvocation, issueNativeClaim, nativeClaimRoot, readonlyShellInput, reservationSource, sameNativeOwner, verifyReservationCompleted, withControlLock } from '../../scripts/controlled-native-owner.mjs';
 
 function emitDeny(reason) {
   const message = `[controlled-change] deny: ${reason}`;
@@ -70,11 +70,16 @@ function safeScratchTarget(path, scratchRoot) {
 function parsePatchTargets(command) {
   const source = String(command || '');
   if (!source.startsWith('*** Begin Patch\n') || !source.trimEnd().endsWith('*** End Patch')) return null;
-  const targets = [];
-  const header = /^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$/gm;
+  const targets = [], operated = new Set();
+  const header = /^\*\*\* (Add File|Update File|Delete File|Move to): (.+)$/gm;
   for (const match of source.matchAll(header)) {
-    const path = match[1].trim();
+    const path = match[2].trim();
     if (!path) throw new Error('patch contains an empty target');
+    // Codex rejects such a patch only after PreToolUse; refuse it here so no reservation is orphaned.
+    if (match[1] !== 'Move to') {
+      if (operated.has(resolve(path))) throw new Error(`patch has multiple operations on one target: ${path}`);
+      operated.add(resolve(path));
+    }
     if (!targets.includes(path)) targets.push(path);
   }
   if (!targets.length) throw new Error('patch has no recognized target headers');
@@ -240,6 +245,19 @@ function guardRequired(data, current, globalState) {
   emitDeny(`mutation tool is not supported in controlled mode: ${tool || '(missing)'}`);
 }
 
+// A reservation whose native terminal evidence is already durable is no longer in flight;
+// releasing it here keeps a lost Post from fencing every session of the checkout forever.
+function releaseTerminalReservations(repo) {
+  for (const row of readToolReservations(repo)) {
+    let evidence;
+    try { evidence = verifyReservationCompleted(row); } catch { continue; }
+    const digest = sha256Bytes(canonicalJson(row));
+    writeToolReservations(repo, readToolReservations(repo).filter(tool => sha256Bytes(canonicalJson(tool)) !== digest),
+      { state: 'RECOVERED', mode: 'auto-terminal', at: Date.now(), reservation: row, reservation_sha256: digest,
+        reason: 'native terminal evidence observed', ...evidence });
+  }
+}
+
 function structuredTargets(data) {
   const input = data.tool_input || {};
   if (data.tool_name === 'apply_patch') {
@@ -318,6 +336,7 @@ async function main() {
           command: `${data.tool_input.command} --native-owner-claim '${claim.path}'` } } })}\n`);
       return;
     }
+    releaseTerminalReservations(repo);
     if (!targets && globalState.blocked?.some(row => row.exclusive)) throw new Error('shared exclusive effects require damaged owner reconciliation');
     if (!targets && readToolReservations(repo).some(row => row.repo_realpath === repo)) throw new Error('opaque Bash is fenced while structured tools await completion or recovery');
     const reserve = taskId => {

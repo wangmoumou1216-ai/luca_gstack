@@ -1097,32 +1097,60 @@ function claudeSyntheticRow(records, cursorOffset, candidate) {
     hits += 1;
     found = record;
   }
+  return hits === 1 ? found : (hits === 0 ? claudeQueuedNotificationRow(records, cursorOffset, candidate) : null);
+}
+
+// Claude Code 2.1.x records a mid-turn task notification as an `attachment` row (queued_command),
+// not as a user row, so there is no promptId to match. The notification text is the only identity
+// the row carries; it embeds a per-task id, and an ambiguous (non-unique) text proves nothing.
+function claudeQueuedNotificationRow(records, cursorOffset, candidate) {
+  let expected;
+  try { expected = promptBytes(candidate); } catch { return null; }
+  let found = null;
+  let hits = 0;
+  for (const record of records) {
+    if (record.start < cursorOffset) continue;
+    const row = record.value;
+    if (row?.type !== 'attachment' || row.attachment?.type !== 'queued_command'
+        || row.attachment.origin?.kind !== 'task-notification' || typeof row.attachment.prompt !== 'string') continue;
+    if (!sameUtf8(row.attachment.prompt, expected)) continue;
+    hits += 1;
+    found = record;
+  }
   return hits === 1 ? found : null;
+}
+
+function claudeRowOrigin(row) {
+  return row?.type === 'attachment' ? row.attachment?.origin : row?.origin;
 }
 
 function claudeSyntheticProven(records, cursorOffset, candidate) {
   const record = claudeSyntheticRow(records, cursorOffset, candidate);
-  return Boolean(record) && CLAUDE_NON_HUMAN_ORIGIN_KINDS.includes(record.value.origin?.kind);
+  return Boolean(record) && CLAUDE_NON_HUMAN_ORIGIN_KINDS.includes(claudeRowOrigin(record.value)?.kind);
 }
 
 function messageText(row) {
+  if (row?.type === 'attachment' && typeof row.attachment?.prompt === 'string') return row.attachment.prompt;
   const content = row?.message?.content;
   if (typeof content === 'string') return content;
   if (Array.isArray(content)) return content.map(part => (typeof part?.text === 'string' ? part.text : '')).join('\n');
   return '';
 }
 
-// A task id counts as "ours" only when this session's own assistant launched it AFTER the user turn
-// being continued: an assistant tool_use of a task-starting tool, whose tool_result names the id as
-// a whole token. Free text from Read/WebFetch/Bash output can never satisfy this, because the
+// A task id counts as "ours" only when this session's own assistant launched it earlier in this very
+// transcript: an assistant tool_use of a task-starting tool, whose tool_result names the id as a
+// whole token. Free text from Read/WebFetch/Bash output can never satisfy this, because the
 // tool_result must answer a task-starting tool_use that the assistant itself issued.
+// The launch may predate the user turn being continued: users routinely keep typing while a
+// subagent or background task runs (8 of 9 real late reports in this repo's transcripts), and the
+// authority inherited is that of the latest user turn, never one an old task could create.
 const CLAUDE_TASK_TOOLS = ['Agent', 'Task', 'Bash'];
 
-function claudeTaskLaunchedAfter(records, rootIndex, beforeIndex, taskId) {
+function claudeTaskLaunchedBefore(records, beforeIndex, taskId) {
   if (!/^[\w-]{8,64}$/.test(taskId)) return false;
   const token = new RegExp(`(?<![\\w-])${taskId}(?![\\w-])`);
   const launched = new Set();
-  for (let index = rootIndex + 1; index < beforeIndex; index += 1) {
+  for (let index = 0; index < beforeIndex; index += 1) {
     const row = records[index].value;
     if (row?.type === 'assistant' && Array.isArray(row.message?.content)) {
       for (const part of row.message.content) {
@@ -1143,14 +1171,14 @@ function claudeTaskLaunchedAfter(records, rootIndex, beforeIndex, taskId) {
 // Only two harness-generated shapes may continue the previous user turn: the hand-back of a
 // subagent this session started, and the completion notice of a task this session started.
 // Cross-session messages from other processes carry neither marker and never qualify.
-function claudeInheritableOrigin(records, record, rootIndex) {
-  const origin = record.value.origin;
+function claudeInheritableOrigin(records, record) {
+  const origin = claudeRowOrigin(record.value);
   if (origin?.kind === 'peer' && origin.handback === true && typeof origin.senderTaskId === 'string') {
-    return claudeTaskLaunchedAfter(records, rootIndex, record.index, origin.senderTaskId);
+    return claudeTaskLaunchedBefore(records, record.index, origin.senderTaskId);
   }
   if (origin?.kind === 'task-notification') {
     const taskId = /<task-id>([\w-]{1,64})<\/task-id>/.exec(messageText(record.value))?.[1] || '';
-    return taskId !== '' && claudeTaskLaunchedAfter(records, rootIndex, record.index, taskId);
+    return taskId !== '' && claudeTaskLaunchedBefore(records, record.index, taskId);
   }
   return false;
 }
@@ -1191,7 +1219,7 @@ function claudeSyntheticContinuation({
   const rootNativeId = String(parentEvent.synthetic_of || parentEvent.native_id || '');
   const root = claudeRootHumanRow(records, rootNativeId, record.index, candidate,
     String(parentEvent.cwd || candidate.cwd), cursorOffset);
-  if (!root || !claudeInheritableOrigin(records, record, root.index)) return null;
+  if (!root || !claudeInheritableOrigin(records, record)) return null;
   const nativeId = claudeSyntheticProvenance(record.value, candidate);
   const depth = (parentEvent.synthetic_of ? Number(parentEvent.synthetic_depth || 1) : 0) + 1;
   if (depth > SYNTHETIC_CHAIN_LIMIT) {
@@ -1305,7 +1333,7 @@ function validateCurrentSyntheticClaudeEvent(event, candidate, records, cursor) 
   const root = claudeRootHumanRow(records, String(event.synthetic_of), record.index, candidate,
     String(event.cwd || candidate.cwd));
   if (!root) fail('CURSOR_MISMATCH', 'the user turn this continuation hangs from is no longer the latest');
-  if (!claudeInheritableOrigin(records, record, root.index)) {
+  if (!claudeInheritableOrigin(records, record)) {
     fail('CURSOR_MISMATCH', 'Claude cursor is not bound to the current synthetic continuation');
   }
   const nativeId = claudeSyntheticProvenance(record.value, candidate);

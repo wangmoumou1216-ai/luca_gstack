@@ -159,6 +159,22 @@ try {
     const audit = JSON.parse(readFileSync(join(gitCommonDirRealpath(repo), 'luca-controlled-change/tool-reservations.json')));
     assert.equal(audit.history.at(-1).reservation_sha256, digest);
   });
+  check('patch Codex rejects after PreToolUse is refused before any reservation', () => {
+    const d = session(), before = readToolReservations(repo).length;
+    denied(guard(d, 'apply_patch', { command: `*** Begin Patch\n*** Delete File: ${join(repo, 'c.txt')}\n*** Add File: ${join(repo, 'c.txt')}\n+x\n*** End Patch` }, { keep_inflight: true }));
+    assert.equal(readToolReservations(repo).length, before);
+  });
+  check('ended root turn releases its lost-Post reservation; open turn stays fenced', () => {
+    const d = session(), id = randomUUID();
+    ok(guard(d, 'Write', { file_path: join(repo, 'c.txt') }, { tool_use_id: id, keep_inflight: true }));
+    denied(guard(d, 'Write', { file_path: join(repo, 'c.txt') }));
+    appendFileSync(d.transcript_path, JSON.stringify({ type: 'event_msg', payload: {
+      type: 'turn_aborted', turn_id: d.turn_id, root_turn_id: d.turn_id, reason: 'interrupted' } }) + '\n');
+    ok(guard(c, 'Write', { file_path: join(repo, 'c.txt') }));
+    assert.ok(!readToolReservations(repo).some(row => row.tool_use_id === id));
+    const audit = JSON.parse(readFileSync(join(gitCommonDirRealpath(repo), 'luca-controlled-change/tool-reservations.json')));
+    assert.equal(audit.history.find(row => row.reservation?.tool_use_id === id).evidence, 'turn-terminal');
+  });
   check('damaged B is scoped while healthy A and unclaimed paths remain writable', () => {
     const active = mb.witness.replace('required-witness.json', 'active-context.json');
     const original = readFileSync(active); writeFileSync(active, '{broken');
