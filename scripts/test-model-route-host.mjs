@@ -244,10 +244,10 @@ async function behaviorSuite(api) {
 
     const replacementAtFailure = api.startActivation({...preDispatchBase,
       root_anchor: {model: 'anchor-model', source: 'root-session'}, release_digest: preDispatch.release_digest});
-    eq(api.latchCriticalFailure(failureArgs).reason, 'ACTIVATION_STATE_CHANGED',
-      'old preparation failure cannot latch restarted activation at same generation');
+    eq(api.latchCriticalFailure(failureArgs).reason, 'CRITICAL_FAILURE_LATCHED',
+      'restart retains the failed activation and its failure');
     eq(api.readActivation(preDispatchBase).activation_id, replacementAtFailure.activation_id, 'replacement activation is retained');
-    eq(api.readActivation(preDispatchBase).critical_failure, false, 'replacement activation remains usable');
+    eq(api.readActivation(preDispatchBase).critical_failure, true, 'restart cannot erase the failure');
 
     const absentBase = {...preDispatchBase, root_session_id: 'absent-preparation-failure', state_root: join(stateRoot, 'absent-root')};
     const absentFile = api.stateFileForTest(absentBase);
@@ -318,7 +318,7 @@ async function behaviorSuite(api) {
       eq(prepare(api, stateRoot, rootCritical).reason, 'CRITICAL_FAILURE_LATCHED', `${routeHarness} same activation remains blocked`);
       api.startActivation({...rootCriticalBase, root_anchor: {model: 'changed-anchor', source: 'new-root'},
         release_digest: rootCritical.release_digest});
-      eq(prepare(api, stateRoot, rootCritical).disposition, 'READY', `${routeHarness} new activation can restore dispatch`);
+      eq(prepare(api, stateRoot, rootCritical).reason, 'CRITICAL_FAILURE_LATCHED', `${routeHarness} restart cannot bypass unresolved critical work`);
     }
 
     const preservedFailure = fixture(api, stateRoot, 'root-change-preserves-first-failure');
@@ -419,6 +419,25 @@ async function behaviorSuite(api) {
     eq([prepare(api, stateRoot, ordinaryParallel).disposition, prepare(api, stateRoot, ordinaryParallel).disposition],
       ['READY', 'READY'], 'native noncritical work retains ordinary parallelism');
 
+    const continuation = fixture(api, stateRoot, 'native-continuation-fence', {
+      role: 'peak', requested_role: 'peak', requested_model: 'peak-model', critical: true,
+    });
+    const continuationCall = prepare(api, stateRoot, continuation);
+    eq(api.bindInvocationExternalIdentity({harness: 'codex', root_session_id: continuation.root_session_id,
+      invocation_id: continuationCall.envelope.invocation_id, field: 'agent_id', value: 'continuation-child',
+      state_root: stateRoot}).disposition, 'BOUND', 'continuation target identity binds to the pending call');
+    eq(api.acceptInvocationEvidence({harness: 'codex', root_session_id: continuation.root_session_id,
+      evidence: evidence(continuationCall.envelope), state_root: stateRoot}).disposition, 'ACCEPT',
+      'continuation fence test closes the original invocation first');
+    eq(api.beginNativeContinuation({harness: 'codex', root_session_id: continuation.root_session_id,
+      agent_id: 'continuation-child', operation_id: 'continuation-op', native_call_id: 'continuation-native-call',
+      evidence_ref: 'test://continuation', state_root: stateRoot}).disposition, 'READY',
+      'continuation intent is durably recorded before its native effect');
+    eq(api.prepareInvocation({harness: 'codex', root_session_id: continuation.root_session_id,
+      release_digest: continuation.release_digest, route: continuation.route, task_id: 'blocked-after-continuation',
+      input_sha: hex('blocked-after-continuation'), state_root: stateRoot}).reason,
+      'NATIVE_CONTINUATION_PENDING', 'pending continuation still fences every later dispatch');
+
     const forged = fixture(api, stateRoot, 'forged', {role: 'peak', requested_role: 'peak',
       requested_model: 'peak-model', critical: true});
     const forgedCall = prepare(api, stateRoot, forged);
@@ -463,7 +482,7 @@ async function behaviorSuite(api) {
     eq(api.acceptInvocationEvidence({
       harness: 'codex', root_session_id: paused.root_session_id,
       evidence: evidence(pausedCall.envelope), state_root: stateRoot,
-    }).reason, 'INVOCATION_ALREADY_CONSUMED', 'pause invalidates in-flight tickets');
+    }).reason, 'ACTIVATION_PAUSED', 'pause suspends evidence consumption without erasing the invocation');
     eq(prepare(api, stateRoot, paused).reason, 'ACTIVATION_PAUSED', 'pause blocks new calls');
 
     const noRef = fixture(api, stateRoot, 'no-ref', {role: 'peak', requested_role: 'peak',
@@ -482,16 +501,15 @@ async function behaviorSuite(api) {
       release_digest: restart.release_digest, state_root: stateRoot,
     });
     eq(replacement.root_generation, 0, 'new activation may restart at generation zero');
-    eq(replacement.activation_id === restart.activation.activation_id, false, 'restart creates a fresh activation id');
+    eq(replacement.activation_id === restart.activation.activation_id, true, 'same-SID restart preserves the activation');
     eq(api.acceptInvocationEvidence({
       harness: 'codex', root_session_id: restart.root_session_id,
       evidence: evidence(oldCall.envelope), state_root: stateRoot,
-    }).reason, 'UNKNOWN_INVOCATION', 'old activation ticket cannot authorize a restarted activation');
-    const archive = join(`${api.stateFileForTest({
-      harness: 'codex', root_session_id: restart.root_session_id, state_root: stateRoot,
-    })}.history`, `${restart.activation.activation_id}.json`);
-    eq(existsSync(archive), true, 'superseded activation is retained for audit');
-    eq(mode(archive), 0o600, 'activation archive is private');
+    }).reason, 'CURRENT_INVOCATION_VERIFIED', 'same invocation can complete after a same-SID resume');
+    const successor = api.startActivation({harness:'codex',root_session_id:restart.root_session_id,
+      root_anchor:{model:'anchor-model',source:'root-session'},release_digest:hex('new-release'),state_root:stateRoot});
+    eq(successor.activation_history.at(-1).activation_id,restart.activation.activation_id,'clean release upgrade preserves atomic history');
+    eq(mode(api.stateFileForTest({harness:'codex',root_session_id:restart.root_session_id,state_root:stateRoot})),0o600,'history shares the private state file');
 
     const busy = fixture(api, stateRoot, 'busy');
     const busyFile = api.stateFileForTest({
@@ -520,6 +538,22 @@ async function behaviorSuite(api) {
       .preparations || {}).length, 0, 'unavailable reservation creates no intent');
     rmSync(`${busyFile}.lock`);
 
+    for (const routeHarness of ['claude-native','claude-workflow']) {
+      const args={harness:'claude',root_session_id:'shared-'+routeHarness,state_root:stateRoot,
+        root_anchor:{model:'claude-fixture',source:'native-inheritance'},release_digest:releaseA};
+      const start=api.startActivation(args);
+      const input={...args,route:route({harness:routeHarness,requested_model:'claude-fixture'}),
+        task_id:'claude-shared-call',input_sha:hex('claude-input')};
+      const call=api.prepareInvocation(input);
+      eq(call.disposition,'READY',`${routeHarness} normal dispatch remains supported`);
+      eq(api.pauseActivation(args).disposition,'PAUSED',`${routeHarness} can pause`);
+      eq(api.startActivation(args).activation_id,start.activation_id,`${routeHarness} same-SID resume preserves work`);
+      eq(api.acceptInvocationEvidence({...args,evidence:evidence(call.envelope)}).disposition,'ACCEPT',
+        `${routeHarness} adopts its own same-invocation completion`);
+      eq(api.recordInvocationInterruption({...args,evidence:{...call.envelope,status:'interrupted'}}).reason,
+        'INTERRUPTION_NOT_CRITICAL_NATIVE',`${routeHarness} cannot enter Codex-only review recovery`);
+    }
+
     return checks;
   } finally {
     rmSync(stateRoot, {recursive: true, force: true});
@@ -528,23 +562,25 @@ async function behaviorSuite(api) {
 
 async function runMutations() {
   const source = readFileSync(hostPath, 'utf8');
+  const baseline = await behaviorSuite(await import(pathToFileURL(hostPath).href));
+  process.stdout.write(`PASS: ${baseline} unmutated host checks before mutation\n`);
   const mutations = [
-    ['native reservation admission guard removed', "if (route_harness === 'codex-native' && hasPendingCriticalInvocation(state))", 'if (false)'],
-    ['native invocation admission guard removed', "if (route.harness === 'codex-native' && hasPendingCriticalInvocation(state))", 'if (false)'],
+    ['native shared invocation admission guard removed', "if (route_harness === 'codex-native' && hasPendingCriticalInvocation(state))", 'if (false)'],
     ['preparation route harness binding bypassed', '(preparation.route_harness !== undefined && preparation.route_harness !== route.harness)', 'false'],
     ['root change clears unresolved critical obligation', 'if (unresolvedCritical) {', 'if (false) {'],
     ['root change incorrectly latches noncritical work', "|| Object.values(state.invocations).some(call => record(call) && call.status === 'pending' && call.critical === true);",
       "|| Object.values(state.invocations).some(call => record(call) && call.status === 'pending');"],
     ['root change ignores critical invocations', "|| Object.values(state.invocations).some(call => record(call) && call.status === 'pending' && call.critical === true);", '|| false;'],
-    ['unresolved intent permits dispatch', "&& ticket.status === 'pending' && ticket !== preparation", "&& false"],
+    ['unresolved preparation permits dispatch', "if (Object.values(state.preparations || {}).some(p => p.status === 'pending' && !(text(preparation_id) && p.preparation_id === preparation_id)))", 'if (false)'],
+    ['unresolved continuation permits dispatch', 'if (hasPendingCriticalContinuation(state))', 'if (false)'],
     ['intent task binding bypassed', '|| preparation.task_id !== task_id', '|| false'],
     ['consumed intent remains replayable', "preparation.status = 'consumed';", "preparation.status = 'pending';"],
     ['preparation failure accepts stale activation', 'state.activation_id !== expected_activation_id || state.root_generation !== expected_root_generation',
       'false || state.root_generation !== expected_root_generation'],
     ['preparation failure accepts stale generation', 'state.activation_id !== expected_activation_id || state.root_generation !== expected_root_generation',
       'state.activation_id !== expected_activation_id || false'],
-    ['preparation latch removed', 'state.critical_failure = true;\n    state.critical_failure_evidence',
-      'state.critical_failure = false;\n    state.critical_failure_evidence'],
+    ['preparation latch removed', 'rememberFailure(state, reason, evidence_ref, invocation_id);',
+      '/* mutation */'],
     ['preparation failure leaves pending tickets', "invalidatePending(state, 'CRITICAL_FAILURE_LATCHED');", '/* mutation */'],
     ['preparation failure creates missing directory', "if (!validState(readJson(file))) return outcome('NEEDS_CONTEXT', 'INVALID_ACTIVATION');",
       '/* mutation */'],
@@ -552,14 +588,17 @@ async function runMutations() {
     ['duplicate identity accepted', 'if (duplicate) {', 'if (false) {'],
     ['identity failure leaves pending ticket', "call.status = 'refused';\n      call.failure_reason = 'EXTERNAL_IDENTITY_DUPLICATE';",
       "call.failure_reason = 'EXTERNAL_IDENTITY_DUPLICATE';"],
-    ['release mismatch accepted', "if (release_digest !== state.release_digest)", 'if (false)'],
-    ['critical latch removed', 'if (!accepted && call.critical) state.critical_failure = true;',
-      'if (false) state.critical_failure = true;'],
+    ['release mismatch accepted', [
+      ["if (release_digest && state.release_digest !== release_digest)", 'if (false)'],
+      ["if (release_digest !== state.release_digest)", 'if (false)'],
+    ]],
+    ['critical latch removed', "if (!accepted && call.critical) rememberFailure(state, 'INVOCATION_EVIDENCE_MISMATCH',",
+      "if (false) rememberFailure(state, 'INVOCATION_EVIDENCE_MISMATCH',"],
     ['wrong adopted model accepted', '&& evidence.adopted_model === call.requested_model', '&& true'],
     ['forged route id accepted', '&& evidence.route_id === call.route_id', '&& true'],
     ['stale generation accepted', '&& evidence.root_generation === state.root_generation', '&& true'],
     ['replay accepted', "if (call.status !== 'pending')", 'if (false)'],
-    ['pause leaves calls live', "invalidatePending(state, 'ACTIVATION_PAUSED');", '/* mutation */'],
+    ['pause fails to suspend dispatch', "state.status = 'paused';", "state.status = 'active';"],
     ['root switch leaves calls live', "invalidatePending(state, 'ROOT_GENERATION_CHANGED');", '/* mutation */'],
     ['missing evidence ref accepted', '&& text(evidence.evidence_ref);', '&& true;'],
     ['cross-harness route accepted', "|| !text(route.requested_role) || !text(route.harness) || !route.harness.startsWith(`${harness}-`)",
@@ -569,19 +608,27 @@ async function runMutations() {
   let killed = 0;
   try {
     for (const [name, from, to] of mutations) {
-      assert.ok(source.includes(from), `mutation target missing: ${name}`);
+      let mutatedSource = source;
+      for (const [target, replacement] of Array.isArray(from) ? from : [[from, to]]) {
+        assert.ok(mutatedSource.includes(target), `mutation target missing: ${name}`);
+        mutatedSource = mutatedSource.replace(target, replacement);
+      }
       const mutatedPath = join(mutationRoot, `${String(killed).padStart(2, '0')}.mjs`);
-      writeFileSync(mutatedPath, source.replace(from, to), {mode: 0o600});
+      writeFileSync(mutatedPath, mutatedSource, {mode: 0o600});
       const api = await import(`${pathToFileURL(mutatedPath).href}?case=${randomUUID()}`);
       let failed = false;
       try { await behaviorSuite(api); }
-      catch { failed = true; }
+      catch (error) {
+        assert.equal(error.code, 'ERR_ASSERTION', `mutation failed outside an assertion: ${name}: ${error.stack}`);
+        failed = true;
+      }
       assert.equal(failed, true, `mutation survived: ${name}`);
       killed += 1;
     }
   } finally {
     rmSync(mutationRoot, {recursive: true, force: true});
   }
+  await behaviorSuite(await import(pathToFileURL(hostPath).href));
   process.stdout.write(`PASS: ${killed}/${mutations.length} host mutations killed\n`);
 }
 

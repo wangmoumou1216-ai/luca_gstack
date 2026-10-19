@@ -444,11 +444,14 @@ async()=>{const fs=await import('node:fs');fs.writeFileSync(${JSON.stringify(que
     let reserved = false;
     try {
       await waitFor(() => Object.values(readActivation({harness: 'codex', root_session_id: started.rootSessionId,
-        state_root: stateRoot})?.preparations || {}).some(ticket => ticket.status === 'pending'));
+        state_root: stateRoot})?.preparations || {}).some(ticket => ticket.status === 'pending')
+        && !existsSync(`${stateFile}.lock`));
       reserved = true;
     } catch { }
     ok('R11 critical preparation is durable before binding read', reserved);
-    writeFileSync(`${stateFile}.lock`, 'occupied\n', {mode: 0o600});
+    // Durable state is visible before its writer releases the lock. Acquire
+    // only after that release, rather than truncating a still-owned lock.
+    writeFileSync(`${stateFile}.lock`, 'occupied\n', {mode: 0o600, flag: 'wx'});
     writeFileSync(fifo, readFileSync(bindingsPath, 'utf8'));
     const status = await closed;
     rmSync(started.workflow, {force: true});

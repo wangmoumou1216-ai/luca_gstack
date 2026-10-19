@@ -46,7 +46,7 @@ import { fileURLToPath } from 'url';
 import { modelRoutingPolicyDigest, resolve as resolveModelRoute, resolveDispatchScene } from '../scripts/model-route.mjs';
 import { adoptionSnapshot } from '../scripts/evolution-adoption-snapshot.mjs';
 import {
-  acceptInvocationEvidence, beginCriticalPreparation, latchCriticalFailure, prepareInvocation, readActivation, releaseDigestForPolicy,
+  acceptInvocationEvidence, beginCriticalPreparation, latchCriticalFailure, prepareInvocation, readActivation, dispatchAdmission, releaseDigestForPolicy,
 } from '../scripts/model-route-host.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -650,15 +650,11 @@ let result = null, failed = null;
 try {
   if (ROOT_SESSION_ID) {
     const entry = readActivation({harness: 'codex', root_session_id: ROOT_SESSION_ID, state_root: STATE_ROOT});
-    if (entry?.critical_failure) throw new Error('MODEL_ROUTE_CRITICAL_FAILURE_LATCHED');
-    if (Object.values(entry?.preparations || {}).some(ticket => ticket?.status === 'pending')) {
-      throw new Error('NEEDS_CONTEXT: MODEL_ROUTE_UNRESOLVED_CRITICAL_PREPARATION; prior critical preparation is not closed');
-    }
-    // Only tickets already pending at entry are unresolved across runs. Tickets
-    // this runner prepares later still support normal parallel critical dispatch.
-    if (Object.values(entry?.invocations || {}).some(call => call?.critical === true
-      && call.status === 'pending')) {
-      throw new Error('NEEDS_CONTEXT: MODEL_ROUTE_UNRESOLVED_CRITICAL_INVOCATION; prior critical invocation evidence is not closed');
+    // At entry, all previous critical work must be closed. Internal runner
+    // parallelism still uses its existing codex-cli per-call admission.
+    if (entry) {
+      const admission = dispatchAdmission(entry,{route_harness:'codex-native'});
+      if (admission.disposition !== 'READY') throw new Error(`NEEDS_CONTEXT: MODEL_ROUTE_${admission.reason}`);
     }
   }
   // 不得把 meta 作为注入参数名 —— 脚本体内自己 `const meta = {...}`，同名会重复声明报错

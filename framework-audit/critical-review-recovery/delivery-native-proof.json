@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "native_completed": {
+    "transcript": "/Users/luca/.codex/sessions/2026/10/19/rollout-2026-10-19T14-25-42-01a152d6-5b70-71b0-acfd-5dc44b443d71.jsonl",
+    "turn": "01a152d6-5bd7-7a23-a179-d05fcd91ed53",
+    "terminal": {
+      "timestamp": "2026-10-19T06:27:36.677Z",
+      "ordinal": 77,
+      "type": "event_msg",
+      "payload": {
+        "type": "task_complete",
+        "root_turn_id": "01a152ab-32af-77c0-8856-bea44883df5d",
+        "turn_id": "01a152d6-5bd7-7a23-a179-d05fcd91ed53",
+        "last_agent_message": "PASS (1/1)\uff1a\u4e24\u4e2a\u6307\u5b9a\u6587\u4ef6\u524d 12 \u884c\u5df2\u8bfb\u53d6\uff0c\u5b8c\u6574\u5b57\u8282 SHA256 \u5747\u5339\u914d\u6388\u6743 manifest\u3002\n\nCanonical root\uff1a`/Users/luca/.codex/worktrees/3e98/luca_gstack`\n\n- `.codex/MODEL_ROUTING.md`\uff1a`dce05b2fac3f5bb750b78e0bbb62e3f0b46d8e2c1a80d6ecf137669a130e7ac9`\n- `scripts/codex-review-recovery.mjs`\uff1a`abf51c89226917d1f216fa050a641c815a737a52fd772d02ba95a722b009e223`\n\n\u5b8c\u6210\u8bb0\u5f55 hash \u4e0e\u4f20\u5165\u503c\u4e00\u81f4\uff1b\u6821\u9a8c\u547d\u4ee4\u9000\u51fa\u7801 0\u3002\u672c\u7968\u4ec5\u8bc1\u660e\u672c\u6b21\u51b7\u8c03\u7528\u53ef\u8bfb\u53d6\u90e8\u7f72\u6587\u4ef6\u4e14\u4e24\u4e2a\u6587\u4ef6\u8eab\u4efd\u5339\u914d\uff0c\u4e0d\u5224\u5b9a\u6062\u590d\u903b\u8f91\u6b63\u786e\u6027\u6216\u6574\u4f53\u53d1\u5e03\u5b8c\u6210\u3002\n\nEVAL_ENVELOPE_JSON\n{\"schema_version\":1,\"producer\":\"quality-gate\",\"eval_run_id\":\"critical-recovery-live-delivery-v9-20261019-a\",\"subject\":{\"skill\":\"critical-recovery-live-delivery\",\"topic\":\"deployed-native-routing\",\"scene\":\"unknown\",\"input_summary\":\"Minimal cold-invocation smoke: resolved canonical deployed root, read the first 12 lines of two specified files, and independently matched their complete-byte SHA256 against the authorized manifest. No semantic recovery review or overall publication verdict.\",\"output_paths\":[\"/Users/luca/.codex/worktrees/3e98/luca_gstack\"],\"duration\":\"lightweight\"},\"verdict\":{\"status\":\"PASS\",\"passed\":1,\"total\":1,\"findings\":[]}}",
+        "started_at": 1792391142,
+        "completed_at": 1792391256,
+        "duration_ms": 114308,
+        "time_to_first_token_ms": 8539
+      }
+    }
+  },
+  "native_accepted": {
+    "invocation": {
+      "invocation_id": "77abfd73-d915-488a-b748-441f1393f9f1",
+      "input_sha": "cfaec838ab29e4ccdb143c7506c0a8dd71f91ec80b5837d5878bc00fc73ce4d1",
+      "status": "accepted",
+      "external_identity": {
+        "tool_use_id": "call_5e3f25a214a1444d85bdce0a32ecec8c",
+        "agent_type": "quality-gate",
+        "agent_id": "01a152d6-5b70-71b0-acfd-5dc44b443d71"
+      },
+      "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/19/rollout-2026-10-19T14-25-42-01a152d6-5b70-71b0-acfd-5dc44b443d71.jsonl:01a152d6-5bd7-7a23-a179-d05fcd91ed53",
+      "critical": true,
+      "requested_role": "peak"
+    }
+  },
+  "read_report": "PASS (1/1)\uff1a\u4e24\u4e2a\u6307\u5b9a\u6587\u4ef6\u524d 12 \u884c\u5df2\u8bfb\u53d6\uff0c\u5b8c\u6574\u5b57\u8282 SHA256 \u5747\u5339\u914d\u6388\u6743 manifest\u3002\n\nCanonical root\uff1a`/Users/luca/.codex/worktrees/3e98/luca_gstack`\n\n- `.codex/MODEL_ROUTING.md`\uff1a`dce05b2fac3f5bb750b78e0bbb62e3f0b46d8e2c1a80d6ecf137669a130e7ac9`\n- `scripts/codex-review-recovery.mjs`\uff1a`abf51c89226917d1f216fa050a641c815a737a52fd772d02ba95a722b009e223`\n\n\u5b8c\u6210\u8bb0\u5f55 hash \u4e0e\u4f20\u5165\u503c\u4e00\u81f4\uff1b\u6821\u9a8c\u547d\u4ee4\u9000\u51fa\u7801 0\u3002\u672c\u7968\u4ec5\u8bc1\u660e\u672c\u6b21\u51b7\u8c03\u7528\u53ef\u8bfb\u53d6\u90e8\u7f72\u6587\u4ef6\u4e14\u4e24\u4e2a\u6587\u4ef6\u8eab\u4efd\u5339\u914d\uff0c\u4e0d\u5224\u5b9a\u6062\u590d\u903b\u8f91\u6b63\u786e\u6027\u6216\u6574\u4f53\u53d1\u5e03\u5b8c\u6210\u3002\n\nEVAL_ENVELOPE_JSON\n{\"schema_version\":1,\"producer\":\"quality-gate\",\"eval_run_id\":\"critical-recovery-live-delivery-v9-20261019-a\",\"subject\":{\"skill\":\"critical-recovery-live-delivery\",\"topic\":\"deployed-native-routing\",\"scene\":\"unknown\",\"input_summary\":\"Minimal cold-invocation smoke: resolved canonical deployed root, read the first 12 lines of two specified files, and independently matched their complete-byte SHA256 against the authorized manifest. No semantic recovery review or overall publication verdict.\",\"output_paths\":[\"/Users/luca/.codex/worktrees/3e98/luca_gstack\"],\"duration\":\"lightweight\"},\"verdict\":{\"status\":\"PASS\",\"passed\":1,\"total\":1,\"findings\":[]}}",
+  "actual_trust_verified": "8/8 exact default registered rows trusted; only changed preToolUse row written; foreign8 unchanged",
+  "trust_log_sha256": "969206d2b954210e6cf3ff3fea861b67d9bda09901669420921780452cf8594d"
+}

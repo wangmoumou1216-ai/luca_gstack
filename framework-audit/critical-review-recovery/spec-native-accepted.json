@@ -1,0 +1,16 @@
+{
+  "source_receipt_sha256": "77ed31578dadd4dacb27d7cd9965ae8aeea2ce5be9d64591106250392d34fd2c",
+  "invocation": {
+    "invocation_id": "c07e6d1e-6269-4753-9b1f-57e6224c4938",
+    "input_sha": "ca3c23c7aeefa6e2057c87792974f229beb86809bf25e0359f84241fae06f562",
+    "status": "accepted",
+    "external_identity": {
+      "tool_use_id": "call_ca88b26f59cd44ba8cb3f08a97841916",
+      "agent_type": "quality-gate",
+      "agent_id": "01a152c6-e146-7033-95e8-18e5d5d32269"
+    },
+    "evidence_ref": "codex-transcript:/Users/luca/.codex/sessions/2026/10/19/rollout-2026-10-19T14-08-47-01a152c6-e146-7033-95e8-18e5d5d32269.jsonl:01a152c6-e1ae-7bb1-9ce3-21afeeb8c04a",
+    "critical": true,
+    "requested_role": "peak"
+  }
+}

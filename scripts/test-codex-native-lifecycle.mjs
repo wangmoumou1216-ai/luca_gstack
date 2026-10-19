@@ -2,6 +2,7 @@
 // Opt-in real CLI regression; all model responses come from a loopback-only stub.
 // Keeps the isolated fixture/result.json for diagnosis. Never changes installed hooks.
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {createServer} from 'node:http';
 import {appendFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, cpSync, realpathSync, chmodSync, readdirSync, symlinkSync} from 'node:fs';
@@ -9,6 +10,12 @@ import {join, dirname, resolve, relative, delimiter} from 'node:path';
 import {spawn, spawnSync} from 'node:child_process';
 import { cleanupNativeEvidence, evidenceOptions, moduleSourceFiles, nativeEvidence } from './native-test-evidence.mjs';
 
+const recoveryDirect = process.argv.includes('--recovery-direct');
+const recoveryContinuation = process.argv.includes('--recovery-continuation');
+const recoveryMode = recoveryDirect || recoveryContinuation || process.argv.includes('--critical-recovery');
+const continuationMode = process.argv.includes('--continuation');
+assert.ok(!continuationMode || !recoveryMode, 'select one lifecycle scenario');
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const concurrentMode = process.argv.includes('--controlled-concurrent');
 const controlledMode = concurrentMode || process.argv.includes('--controlled-owner');
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -25,16 +32,17 @@ function checked(command, args, options = {}) {
   assert.equal(result.status, 0, `${command}: ${result.error?.message || result.stderr}`);
   return result.stdout.trim();
 }
-let binary, python, pythonUserBase;
+let binary, python, pythonUserBase, git;
 try {
   binary = realpathSync(process.env.CODEX_BIN || checked('which', ['codex']));
   python = checked('which', ['python3']);
   pythonUserBase = checked(python, ['-m', 'site', '--user-base']);
   checked(python, ['-c', 'import yaml'], {env: {...baseEnv, PYTHONUSERBASE: pythonUserBase}});
-  checked('git', ['--version']); checked('tar', ['--version']);
+  git = realpathSync(checked('which', ['git']));
+  checked(git, ['--version']); checked('tar', ['--version']);
 } catch (error) {
   console.log(`SKIP native Codex lifecycle: requires Codex CLI, git, tar and Python 3 with PyYAML (${error.message})`);
-  process.exit(0);
+  process.exit(process.argv.includes('--require-native') || recoveryMode ? 1 : 0);
 }
 const shellQuote = value => "'" + value.replaceAll("'", "'\"'\"'") + "'";
 // /tmp is an explicit fixture root accepted by child-project attestation, even
@@ -48,6 +56,25 @@ mkdirSync(work, {recursive:true});
 const temporary = join(root, 'tmp'), bin = join(root, 'bin');
 mkdirSync(temporary, {mode:0o700}); mkdirSync(bin);
 symlinkSync(binary, join(bin, 'codex'));
+// Prevent fixture-resolved Git transports even if plugin defaults regress.
+// This is a Git-network fence, not a general OS network sandbox.
+const gitNetworkLog=join(root,'git-network-attempts.jsonl');
+const gitShim=join(bin,'git');
+writeFileSync(gitShim,`#!${process.execPath}
+import {appendFileSync} from 'node:fs';import {spawnSync} from 'node:child_process';
+const args=process.argv.slice(2);let i=0;
+while(i<args.length&&args[i].startsWith('-')) {
+  if(['-C','-c','--git-dir','--work-tree','--namespace','--config-env'].includes(args[i]))i+=2;else i++;
+}
+const verb=args[i],rest=args.slice(i+1);
+const network=['fetch','pull','push','clone','ls-remote','send-pack','receive-pack','upload-pack'].includes(verb)
+  ||(verb==='remote'&&rest.includes('update'))||(verb==='submodule'&&rest.includes('update'));
+if(network) {
+  appendFileSync(${JSON.stringify(gitNetworkLog)},JSON.stringify({args,blocked:true})+'\\n');
+  process.stderr.write('ISOLATED_GIT_NETWORK_DENIED\\n');process.exit(126);
+}
+const result=spawnSync(${JSON.stringify(git)},args,{stdio:'inherit',env:process.env});process.exit(result.status??127);
+`);chmodSync(gitShim,0o700);
 Object.assign(baseEnv, {HOME:isolatedHome, TMPDIR:realpathSync('/tmp'), TMP:temporary, TEMP:temporary,
   PATH:bin + delimiter + (baseEnv.PATH || '/usr/bin:/bin')});
 const hookLog = join(root, 'hook-payloads.jsonl');
@@ -58,11 +85,15 @@ const archivePath = join(root, 'source.tar');
 const archive = spawnSync('git', ['archive','--output',archivePath,'HEAD'], {cwd:repo,env:baseEnv});
 if(archive.error || archive.status !== 0) throw Error(`archive failed: ${archive.error?.message || archive.stderr}`);
 if(spawnSync('tar',['-xf',archivePath,'-C',work],{env:baseEnv}).status !== 0) throw Error('extract failed');
-const overlays = ['.codex/model-route-hook.mjs', 'scripts/codex-trust-hooks.mjs',
+const overlays = ['.codex/hooks.json','.codex/model-route-hook.mjs','.codex/workflow-runner.mjs',
+  'scripts/model-route-host.mjs','scripts/model-route.mjs','scripts/codex-review-recovery.mjs','scripts/codex-hook-health.mjs',
+  '.claude/skill-os/model-routing.yaml','scripts/codex-trust-hooks.mjs',
   '.codex/codex-hook-adapter.mjs', 'scripts/controlled-change-controller.mjs', 'scripts/controlled-native-owner.mjs',
   'scripts/controlled-change.mjs', '.claude/hooks/controlled-change-guard.mjs', '.claude/hooks/project-scope-guard.mjs',
   '.claude/hooks/session-restore.mjs', '.claude/hooks/lib/harness.mjs'];
 for(const path of overlays) cpSync(join(repo,path),join(work,path));
+const candidateBytes = overlays.map(path=>({path,sha256:hash(readFileSync(join(repo,path)))}));
+for(const row of candidateBytes)assert.equal(hash(readFileSync(join(work,row.path))),row.sha256,'native overlay must match candidate bytes');
 checked('git',['init','-q'],{cwd:work});
 writeFileSync(join(work,'.codex/config.toml'), '# isolated fixture; no production writable roots\n');
 chmodSync(isolatedHome,0o700);chmodSync(home,0o700);
@@ -91,10 +122,20 @@ if(process.env.LUCA_NATIVE_EVIDENCE_URL && entry.event==='SessionEnd') {
 process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');process.exitCode=result.status??2;
 `);
 
+const recoveryDescriptorPath=join(root,'recovery-descriptor.json'), recoveryAuthorizationPath=join(root,'recovery-authorization.json');
+if(recoveryMode) {
+  const descriptor={schema_version:1,read_only:true,agent_type:'quality-gate',fork_turns:'none',
+    files:[{path:join(work,'README.md'),sha256:hash(readFileSync(join(work,'README.md')))}],
+    criteria:[{id:'NATIVE-1',text:'Read and report on the frozen README'}],authorization_ref:'isolated-native-user-prompt'};
+  writeFileSync(recoveryDescriptorPath,JSON.stringify(descriptor));
+  writeFileSync(recoveryAuthorizationPath,JSON.stringify({approved:true,descriptor_sha:hash(readFileSync(recoveryDescriptorPath)),
+    user_source_ref:descriptor.authorization_ref,effect:'independent-readonly-review'}));
+}
 if (controlledMode) writeFileSync(join(work, 'controlled-target.txt'), 'before\n');
 if (concurrentMode) {
   writeFileSync(join(work, 'controlled-second.txt'), 'before B\n');
-  writeFileSync(join(work, 'controlled-verification.mjs'), `import test from 'node:test';import assert from 'node:assert/strict';import{readFileSync}from'node:fs';test('both edits',()=>{assert.equal(readFileSync('controlled-target.txt','utf8'),'after\\n');assert.equal(readFileSync('controlled-second.txt','utf8'),'after B\\n')});`);
+  writeFileSync(join(work, 'controlled-verification.mjs'), `import test from 'node:test';import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';import{readFileSync}from'node:fs';test('both edits',()=>{assert.equal(readFileSync('controlled-target.txt','utf8'),'after\\n');assert.equal(readFileSync('controlled-second.txt','utf8'),'after B\\n')});`);
 }
 checked('git',['add','-A'],{cwd:work});
 checked('git',['-c','user.name=Isolated Test','-c','user.email=test@invalid','commit','-qm','fixture'],{cwd:work});
@@ -157,7 +198,8 @@ function sse(events) {
 function completed(id) {
   return {type:'response.completed',response:{id,usage:{input_tokens:0,input_tokens_details:null,output_tokens:0,output_tokens_details:null,total_tokens:0}}};
 }
-let requestCount = 0; let rootStep=0; let spawnedAgent=''; let iteration=1; let spawnCallId='';
+let requestCount = 0; let rootStep=0; let spawnedAgent=''; let iteration=1; let spawnCallId=''; let recoveryChildRequests=0;
+const parentReported=new Set();
 const server = createServer((request, response) => {
   let body = '';
   request.setEncoding('utf8');
@@ -185,10 +227,60 @@ const server = createServer((request, response) => {
     appendFileSync(requestLog, JSON.stringify({n:requestCount,url:request.url,keys:Object.keys(parsed),input:parsed.input,tools:parsed.tools})+'\n');
     const userMessages=(parsed.input||[]).filter(x=>x.type==='message'&&x.role==='user');
     const lastUser=JSON.stringify(userMessages.map(x=>x.content));
+    // The native task envelope identifies the child independently of its
+    // opaque task message. Do not pretend to decode encrypted_content.
+    const reportingChild=(parsed.input||[]).find(row=>row.type==='agent_message'
+      &&/^\/root\/hook_smoke_child_\d+$/.test(row.recipient||''))?.recipient;
     let item;
     const message=text=>({type:'message',role:'assistant',id:'msg_'+requestCount,content:[{type:'output_text',text}]});
     const call=(name,args,namespace)=>({type:'function_call',id:'fc_'+requestCount,call_id:'call_'+requestCount,name,arguments:JSON.stringify(args),...(namespace?{namespace}:{})});
-    if (controlledMode) {
+    if(recoveryMode) {
+      const isRoot=lastUser.includes('Isolated framework acceptance:')||lastUser.includes('Repeat the isolated acceptance');
+      if(!isRoot) {
+        recoveryChildRequests++;
+        if(recoveryChildRequests===(recoveryContinuation?2:1)) {
+          response.writeHead(200,{'Content-Type':'text/event-stream'});
+          response.write('event: response.created\ndata: {"type":"response.created","response":{"id":"interrupted-child"}}\n\n');return;
+        }
+        const report={descriptor_sha:hash(readFileSync(recoveryDescriptorPath)),criteria:[{id:'NATIVE-1',status:'PASS',evidence:'Loopback lifecycle response only; real provider reading is separately verified.'}]};
+        const envelope={schema_version:1,producer:'quality-gate',eval_run_id:'fixture-native-'+requestCount,
+          subject:{skill:'native-lifecycle',topic:'report framing',scene:'unknown',input_summary:'Loopback lifecycle only',
+            output_paths:[recoveryDescriptorPath],duration:'lightweight'},verdict:{status:'PASS',passed:1,total:1,findings:[]}};
+        item=message('REVIEW_RECOVERY_REPORT_JSON\n'+JSON.stringify(report)+'\n\nEVAL_ENVELOPE_JSON\n'+JSON.stringify(envelope));
+      } else {
+        const shell=cmd=>recoveryDirect?call('exec_command',{cmd,max_output_tokens:2000}):
+          ({type:'custom_tool_call',id:'ct_'+requestCount,call_id:'call_'+requestCount,
+          name:'exec',namespace:'functions',input:`text(await tools.exec_command({cmd:${JSON.stringify(cmd)},max_output_tokens:2000}));`});
+        const rootState=activeSession?activation(activeSession):null;
+        rootStep++;
+        const stage=recoveryContinuation&&rootStep>6?rootStep-3:rootStep;
+        if(recoveryContinuation&&rootStep<=6) {
+          if(rootStep===1) {spawnCallId='call_'+requestCount;item=call('spawn_agent',{agent_type:'quality-gate',task_name:'recovery_original',message:'CHILD: complete the first review.',fork_turns:'none'},'collaboration');}
+          else if(rootStep===2) {
+            const output=(parsed.input||[]).find(x=>x.type==='function_call_output'&&x.call_id===spawnCallId);
+            spawnedAgent=JSON.parse(output.output).task_name;item=call('wait_agent',{timeout_ms:10000},'collaboration');
+          } else if(rootStep===3)item=call('followup_task',{target:spawnedAgent,message:'CHILD: continue this critical review until interrupted.'},'collaboration');
+          else if(rootStep===4)item=call('interrupt_agent',{target:spawnedAgent},'collaboration');
+          else if(rootStep===5)item=call('spawn_agent',{agent_type:'default',task_name:'must_not_start_before_resume',message:'Must be denied after the critical followup abort.',fork_turns:'none'},'collaboration');
+          else item=message('INTERRUPTED_FOLLOWUP_RETAINED');
+        } else if(stage===1){spawnCallId='call_'+requestCount;item=call('spawn_agent',{agent_type:'quality-gate',task_name:'recovery_original',message:'CHILD: hold this review until interrupted.',fork_turns:'none'},'collaboration');}
+        else if(stage===2) {
+          const output=(parsed.input||[]).find(x=>x.type==='function_call_output'&&x.call_id===spawnCallId);
+          spawnedAgent=JSON.parse(output.output).task_name;item=call('interrupt_agent',{target:spawnedAgent},'collaboration');
+        } else if(stage===3)item=message('INTERRUPTED_REVIEW_RETAINED');
+        else if(stage===4)item=call('spawn_agent',{agent_type:'default',task_name:'must_not_start',message:'This must be rejected while the review is open.',fork_turns:'none'},'collaboration');
+        else if(stage===5)item=shell(`node scripts/codex-review-recovery.mjs inspect --session ${activeSession}`);
+        else if(stage===6) {
+          const stateFile=readdirSync(join(root,'state/codex')).filter(p=>p.endsWith('.json')).map(p=>join(root,'state/codex',p)).find(p=>JSON.parse(readFileSync(p)).root_session_id===activeSession);
+          item=shell(`node scripts/codex-review-recovery.mjs reserve --descriptor '${recoveryDescriptorPath}' --expected-state-sha ${hash(readFileSync(stateFile))} --authorization '${recoveryAuthorizationPath}'`);
+        } else if(stage===7)item=call('followup_task',{target:spawnedAgent,message:'Must be fenced before old child restarts.'},'collaboration');
+        else if(stage===8)item=call('send_message',{target:Object.keys(rootState.retired_agents||{})[0]||'missing-retired-id',message:'Must be fenced.'},'collaboration');
+        else if(stage===9){const ticket=Object.values(rootState.recovery_reservations||{})[0];item=call('spawn_agent',{agent_type:'quality-gate',task_name:ticket?.task_name||'missing_reservation',message:'Complete the frozen descriptor at '+recoveryDescriptorPath+'; return REVIEW_RECOVERY_REPORT_JSON.',fork_turns:'none'},'collaboration');}
+        else if(stage===10||stage===12)item=call('wait_agent',{timeout_ms:10000},'collaboration');
+        else if(stage===11)item=call('spawn_agent',{agent_type:'default',task_name:'after_recovery',message:'Normal dispatch after the review completed.',fork_turns:'none'},'collaboration');
+        else item=message('RECOVERY_SCENARIOS_DONE');
+      }
+    } else if (controlledMode) {
       const flatten = (tools, namespace = '') => (tools || []).flatMap(tool => tool.type === 'namespace'
         ? flatten(tool.tools, tool.name) : [{ name: tool.name, namespace, type: tool.type }]);
       const offered = flatten([...(parsed.tools || []), ...(parsed.input || []).filter(row => row.type === 'additional_tools').flatMap(row => row.tools || [])]);
@@ -197,7 +289,10 @@ const server = createServer((request, response) => {
       item = program && wrapper ? { type: 'custom_tool_call', id: 'ct_' + requestCount,
         call_id: 'call_' + requestCount, name: wrapper.name, namespace: wrapper.namespace, input: program }
         : message(program ? 'WRAPPER_MISSING' : 'CONTROLLED_OWNER_DONE');
-    } else     if(!lastUser.includes('Isolated framework acceptance:')&&!lastUser.includes('Repeat the isolated acceptance')) item=message('CHILD_DONE');
+    } else if(continuationMode&&reportingChild&&!parentReported.has(reportingChild)) {
+      parentReported.add(reportingChild);
+      item=call('send_message',{target:'..',message:'Native child progress report.'},'collaboration');
+    } else if(!lastUser.includes('Isolated framework acceptance:')&&!lastUser.includes('Repeat the isolated acceptance')) item=message('CHILD_DONE');
     else {
       if (rootStep === 0) {
         try { activeEvidence?.before({ ready: Array.isArray(parsed.input) && parsed.input.length > 0 && Boolean(activeSession),
@@ -205,17 +300,25 @@ const server = createServer((request, response) => {
         catch (error) { response.writeHead(500); response.end(error.stack); return; }
       }
       rootStep++;
-      if(rootStep===1) item=call('exec_command',{cmd:'head -1 README.md',max_output_tokens:100});
+      if(rootStep===1) item=call('exec_command',{cmd:'head -1 README.md scripts/codex-review-recovery.mjs',max_output_tokens:150});
       else if(rootStep===2) item=call('exec_command',{cmd:"printf 'hook-test\\n' > incident-probe.txt",max_output_tokens:100});
       else if(rootStep===3) item=call('exec_command',{cmd:'cat incident-probe.txt',max_output_tokens:100});
       else if(rootStep===4) item={type:'custom_tool_call',id:'ct_'+requestCount,call_id:'call_'+requestCount,name:'apply_patch',input:'*** Begin Patch\n*** Update File: incident-probe.txt\n@@\n-hook-test\n+hook-patch-tested\n*** End Patch'};
-      else if(rootStep===5) { spawnCallId='call_'+requestCount; item=call('spawn_agent',{agent_type:'default',task_name:'hook_smoke_child_'+iteration,message:'CHILD_SMOKE: Reply CHILD_DONE only.',fork_turns:'none'},'collaboration'); }
+      else if(rootStep===5) { spawnCallId='call_'+requestCount; item=call('spawn_agent',{agent_type:continuationMode?'quality-gate':'default',task_name:'hook_smoke_child_'+iteration,message:(continuationMode?'CHILD_REPORT_PARENT: Report to your parent once, then reply CHILD_DONE.':'CHILD_SMOKE: Reply CHILD_DONE only.'),fork_turns:'none'},'collaboration'); }
       else if(rootStep===6) {
         for(const input of parsed.input||[]) if(input.type==='function_call_output'&&input.call_id===spawnCallId) {
           try { const obj=JSON.parse(input.output); spawnedAgent=obj.agent_id||obj.task_name||spawnedAgent; } catch {}
         }
         item=spawnedAgent?call('wait_agent',{timeout_ms:10000},'collaboration'):message('SPAWN_FAILED');
-      } else item=message('ALL_SCENARIOS_DONE');
+      } else if(continuationMode&&rootStep===7) item=call('send_message',
+        {target:spawnedAgent,message:'Queue this for later; do not start a new turn.'},'collaboration');
+      else if(continuationMode&&rootStep===8) item=call('followup_task',
+        {target:'./'+spawnedAgent.split('/').at(-1),message:'CHILD_SMOKE: Continue once and reply CHILD_DONE only.'},'collaboration');
+      else if(continuationMode&&rootStep===9) item=call('wait_agent',{timeout_ms:10000},'collaboration');
+      else if(continuationMode&&rootStep===10) item=call('spawn_agent',
+        {agent_type:'default',task_name:'after_continuation_'+iteration,message:'CHILD_SMOKE: Reply CHILD_DONE only.',fork_turns:'none'},'collaboration');
+      else if(continuationMode&&rootStep===11) item=call('wait_agent',{timeout_ms:10000},'collaboration');
+      else item=message('ALL_SCENARIOS_DONE');
     }
     const events=[{type:'response.created',response:{id:'resp_'+requestCount}},{type:'response.output_item.done',item},completed('resp_'+requestCount)];
     response.writeHead(200, {'content-type':'text/event-stream','cache-control':'no-cache'});
@@ -226,9 +329,18 @@ const server = createServer((request, response) => {
 await new Promise((resolve,reject) => {server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
 const port = server.address().port;
 const configPath = join(home, 'config.toml');
-writeFileSync(configPath, `model = "gpt-6.1-sol"\nmodel_provider = "localstub"\napproval_policy = "never"\nsandbox_mode = "danger-full-access"\nmodel_reasoning_effort = "low"\ncheck_for_update_on_startup = false\nsuppress_unstable_features_warning = true\n[features]\nhooks = true\napps = false\ndaemon_auto_start = false\nmulti_agent = true\n[model_providers.localstub]\nname = "Local offline stub"\nbase_url = "http://127.0.0.1:${port}/v1"\nenv_key = "LOCAL_STUB_KEY"\nwire_api = "responses"\nsupports_websockets = false\nrequest_max_retries = 0\nstream_max_retries = 0\n[projects.${JSON.stringify(work)}]\ntrust_level = "trusted"\n`);
+writeFileSync(configPath, `model = "gpt-6.1-sol"\nmodel_provider = "localstub"\napproval_policy = "never"\nsandbox_mode = "danger-full-access"\nmodel_reasoning_effort = "low"\ncheck_for_update_on_startup = false\nsuppress_unstable_features_warning = true\n[features]\nhooks = true\napps = false\nplugins = false\nremote_plugin = false\nplugin_sharing = false\nrecommended_plugins = false\ndaemon_auto_start = false\nmulti_agent = true\n[model_providers.localstub]\nname = "Local offline stub"\nbase_url = "http://127.0.0.1:${port}/v1"\nenv_key = "LOCAL_STUB_KEY"\nwire_api = "responses"\nsupports_websockets = false\nrequest_max_retries = 0\nstream_max_retries = 0\n[projects.${JSON.stringify(work)}]\ntrust_level = "trusted"\n`);
 
 const isolatedEnv = {...baseEnv,NODE_ENV:'test',PYTHONUSERBASE:pythonUserBase,LUCA_EVENT_ATTESTATION_TEST:'1',LUCA_CONTROLLED_TEST_HOME:isolatedHome,LUCA_MODEL_ROUTE_STATE_ROOT:join(root,'state'),LUCA_MODEL_ROUTE_BINDINGS_PATH:bindings,LUCA_MODEL_ROUTE_TRANSCRIPT_ROOT:join(home,'sessions'),LUCA_CHILD_PROJECT_STORE_ROOT:join(root,'child-store'),LUCA_CHILD_PROJECT_TEST_CODEX_HOME:home,LUCA_PROJECTS_ROOT:join(root,'projects'),MEMORY_ROOT:work,HOME:isolatedHome,CODEX_HOME:home,LOCAL_STUB_KEY:'offline',NO_PROXY:'127.0.0.1,localhost',no_proxy:'127.0.0.1,localhost'};
+const featureState=checked(binary,['features','list'],{env:isolatedEnv,cwd:work});
+for(const name of ['plugins','remote_plugin','plugin_sharing','recommended_plugins']) {
+  assert.match(featureState,new RegExp('^'+name+'\\s+\\S+\\s+false$','m'),'fixture disables '+name);
+}
+const gitProbe=spawnSync('git',['-C',work,'-c','safe.bareRepository=explicit','ls-remote','https://example.invalid/never-contact'],
+  {env:isolatedEnv,encoding:'utf8'});
+assert.equal(gitProbe.status,126,'Git transport denied before execution');
+assert.match(gitProbe.stderr,/ISOLATED_GIT_NETWORK_DENIED/);
+writeFileSync(join(root,'isolation-setup.json'),JSON.stringify({featureState,gitProbe:{status:gitProbe.status,stderr:gitProbe.stderr}},null,2));
 if (audit) isolatedEnv.LUCA_NATIVE_EVIDENCE_URL = `http://127.0.0.1:${port}/native-evidence-after`;
 function appServerRequest(method, params) {
   return new Promise((resolve,reject) => {
@@ -347,10 +459,16 @@ if (concurrentMode) {
   }
   first = concurrentTurns[0]; sid = concurrentIds[0];
 } else {
-first=await runTurn(['exec','--json','--skip-git-repo-check','--sandbox','danger-full-access','-C',work,'Isolated framework acceptance: read README.md, create and edit incident-probe.txt, read it back, explicitly spawn one default child agent and wait, then answer ALL_SCENARIOS_DONE.']);
+const prompt=recoveryMode
+  ? 'Isolated framework acceptance: I authorize the isolated interrupted review and one replacement independent read-only review. Frozen descriptor '+recoveryDescriptorPath
+    +' SHA256 '+hash(readFileSync(recoveryDescriptorPath))+'. Its entire files/criteria scope is '+readFileSync(recoveryDescriptorPath,'utf8')
+    +'. Interrupt the original review, retain its obligation across restart, reserve the replacement and verify the old-child fences; then complete the replacement and verify ordinary dispatch.'
+  : 'Isolated framework acceptance: read README.md, create and edit incident-probe.txt, read it back, explicitly spawn one default child agent and wait'
+    +(continuationMode?', authorize that child to report to its parent, queue an idle message, follow up that child once, wait for completion and dispatch one further child':'')+', then answer ALL_SCENARIOS_DONE.';
+first=await runTurn(['exec','--json','--skip-git-repo-check','--sandbox','danger-full-access','-C',work,prompt]);
 sid=first.events.find(x=>x.type==='thread.started')?.thread_id;
 firstActivation=activation(sid);
-rootStep=0;spawnedAgent='';iteration=2;
+rootStep=recoveryMode?(recoveryContinuation?6:3):0;if(!recoveryMode)spawnedAgent='';iteration=2;
 if (!controlledMode) {
 second=sid?await runTurn(['exec','resume','--json',sid,'Repeat the isolated acceptance actions in this resumed session, including one child agent.']):null;
 secondActivation=activation(sid);
@@ -372,11 +490,120 @@ secondActivation=activation(sid);
   }
   throw new Error(`Native lifecycle failed; evidence: ${root}`,{cause:error});
 } finally {server.closeAllConnections();if(server.listening)await new Promise(resolve=>server.close(resolve));}
+const gitAttempts=readFileSync(gitNetworkLog,'utf8').trim().split('\n').map(JSON.parse);
+const isolationChecks={pluginsDisabled:true,gitProbeBlocked:gitAttempts.length===1
+  &&gitAttempts[0].args.at(-1)==='https://example.invalid/never-contact',
+  noPluginClone:!readdirSync(home,{recursive:true}).some(p=>p.includes('plugins-clone-'))};
+writeFileSync(join(root,'isolation-result.json'),JSON.stringify({checks:isolationChecks,gitAttempts,featureState},null,2));
+assert.ok(Object.values(isolationChecks).every(Boolean),'fixture must not synchronize external plugins');
 const hooks=readFileSync(hookLog,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse);
 const allEvents=[...first.events,...(second?.events||[])];
 const denied=hooks.filter(x=>x.status!==0||/"permissionDecision":"deny"|"continue":false/.test(x.output));
 const requests=readFileSync(requestLog,'utf8').split('\n').filter(Boolean).map(JSON.parse);
-const toolErrors=requests.flatMap(x=>x.input||[]).filter(x=>(x.type==='function_call_output'||x.type==='custom_tool_call_output')&&/unsupported call:|failed to parse function arguments:|hook.*blocked|Process exited with code [1-9]|Exit code: [1-9]/i.test(x.output));
+const toolErrors=requests.flatMap(x=>x.input||[]).filter(x=>(x.type==='function_call_output'||x.type==='custom_tool_call_output')&&/unsupported call:|agent_name.*reserved|failed to parse function arguments:|hook.*blocked|Process exited with code [1-9]|Exit code: [1-9]/i.test(x.output));
+const traceFiles=[];
+function collectTraces(folder) {
+  for(const entry of readdirSync(folder,{withFileTypes:true})) {
+    const path=join(folder,entry.name);
+    if(entry.isDirectory())collectTraces(path);
+    else if(entry.name.endsWith('.jsonl'))traceFiles.push(path);
+  }
+}
+collectTraces(join(home,'sessions'));
+const nativeTraces=traceFiles.map(path=>({path,rows:readFileSync(path,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse)}));
+if(continuationMode) {
+  const intents=Object.values(secondActivation?.resume_intents||{}),calls=Object.values(secondActivation?.invocations||{});
+  const continuationCalls=nativeTraces.flatMap(t=>t.rows.filter(r=>r.type==='response_item'
+    &&r.payload?.type==='function_call'&&r.payload.namespace==='collaboration'
+    &&['send_message','followup_task'].includes(r.payload.name)).map(r=>({trace:t,call:r.payload})));
+  const continuationResults=continuationCalls.map(({trace,call})=>({call_id:call.call_id,name:call.name,
+    arguments:JSON.parse(call.arguments),results:trace.rows.filter(r=>r.type==='response_item'
+      &&r.payload?.type==='function_call_output'&&r.payload.call_id===call.call_id).map(r=>r.payload.output)}));
+  // Replay the actual recorded Stop payload only after its intent has settled.
+  // This is callback fault injection, not a claim that the CLI emitted it twice.
+  const continuationStopReplays=intents.filter(i=>i.kind==='followup_task').map(intent=> {
+    const stop=hooks.findLast(h=>h.payload.hook_event_name==='SubagentStop'&&h.payload.agent_id===intent.agent_id);
+    if(!stop)return {agent_id:intent.agent_id,pass:false,reason:'missing native stop'};
+    const transcriptBefore=hash(readFileSync(stop.payload.agent_transcript_path));
+    const stateBefore=hash(JSON.stringify(activation(sid)));
+    const replay=spawnSync(process.execPath,[join(work,'.codex/model-route-hook.mjs')],
+      {input:JSON.stringify(stop.payload),cwd:work,env:isolatedEnv,encoding:'utf8',timeout:35000});
+    return {agent_id:intent.agent_id,invocation_id:intent.invocation_id,
+      terminal_turn:intent.terminal_proof?.native_turn_id,exit:replay.status,stdout:replay.stdout,stderr:replay.stderr,
+      pass:replay.status===0&&replay.stdout.trim()==='{}'
+        &&stateBefore===hash(JSON.stringify(activation(sid)))
+        &&transcriptBefore===hash(readFileSync(stop.payload.agent_transcript_path))};
+  });
+  const checks={bothExits:first.status===0&&second?.status===0,
+    duplicateStopReplays:continuationStopReplays.length===2&&continuationStopReplays.every(r=>r.pass),
+    nativeMessageResults:continuationResults.length===6
+      &&continuationResults.every(r=>r.results.length===1&&r.results[0]===''),noErrors:!denied.length&&!toolErrors.length
+      &&!allEvents.some(e=>['turn.failed','error'].includes(e.type)),
+    exactlyTwoContinuations:intents.filter(i=>i.kind==='followup_task').length===2
+      &&intents.filter(i=>i.kind==='followup_task').every(i=>i.status==='completed'&&i.terminal_proof?.native_turn_id!==i.child_turn_before),
+    exactlyTwoIdleQueues:intents.length===4&&intents.filter(i=>i.kind==='send_message').length===2
+      &&intents.filter(i=>i.kind==='send_message').every(i=>i.status==='completed'&&i.terminal_proof?.native_turn_id===i.child_turn_before),
+    exactlyTwoParentReports:new Set(hooks.filter(h=>h.payload.tool_name==='collaborationsend_message'
+      &&h.payload.tool_input?.target==='..'&&h.status===0&&!h.output.includes('deny'))
+      .map(h=>h.payload.tool_use_id)).size===2,
+    subsequentDispatchAccepted:calls.length===4&&calls.every(c=>c.status==='accepted'),
+    retainedFirstCalls:Object.keys(firstActivation?.invocations||{}).length===2
+      &&Object.keys(firstActivation?.invocations||{}).every(id=>secondActivation?.invocations?.[id]?.status==='accepted'),
+    sameActivation:firstActivation?.activation_id===secondActivation?.activation_id,
+    exactlySixStops:hooks.filter(h=>h.payload.hook_event_name==='SubagentStop').length===6,
+    noLatch:secondActivation?.critical_failure===false};
+  const result={pass:Object.values(checks).every(Boolean),checks,root,first,second,firstActivation,secondActivation,candidateBytes,denied,toolErrors,continuationResults,continuationStopReplays};
+  writeFileSync(join(root,'continuation-result.json'),JSON.stringify(result,null,2));
+  console.log(JSON.stringify({pass:result.pass,checks,evidence:join(root,'continuation-result.json')}));
+  process.exit(result.pass?0:1);
+}
+if(recoveryMode) {
+  const callRows=Object.values(secondActivation?.invocations||{}),obligations=Object.values(secondActivation?.review_obligations||{});
+  const original=callRows.find(x=>x.retired_by_recovery_id&&!x.recovery_id),replacement=callRows.find(x=>x.recovery_id);
+  const sourceIntent=Object.values(secondActivation?.resume_intents||{}).find(i=>i.review_obligation_id);
+  const interruptedTurn=recoveryContinuation?sourceIntent?.terminal_proof?.native_turn_id:original?.interruption?.native_turn_id;
+  const originalTrace=nativeTraces.find(t=>t.rows[0]?.payload?.id===original?.external_identity?.agent_id);
+  const aborts=originalTrace?.rows.filter(r=>r.type==='turn_aborted'||r.payload?.type==='turn_aborted')||[];
+  const originalTurns=new Set(originalTrace?.rows.filter(r=>r.type==='turn_context').map(r=>r.payload.turn_id));
+  const expectedDenial=/UNRESOLVED_REVIEW_OBLIGATION|RETIRED_REVIEW_AGENT/;
+  let interruptedStopReplay=null;
+  if(recoveryContinuation&&originalTrace) {
+    // Fault-inject the original callback against the now interrupted/retired
+    // native child; it must not erase history or accept the aborted later turn.
+    const stop=hooks.find(h=>h.payload.hook_event_name==='SubagentStop'&&h.payload.agent_id===original.external_identity.agent_id);
+    const before=hash(JSON.stringify(activation(sid))),transcript=hash(readFileSync(originalTrace.path));
+    const replay=stop&&spawnSync(process.execPath,[join(work,'.codex/model-route-hook.mjs')],
+      {input:JSON.stringify(stop.payload),cwd:work,env:isolatedEnv,encoding:'utf8',timeout:35000});
+    interruptedStopReplay={exit:replay?.status,stdout:replay?.stdout,stderr:replay?.stderr,
+      pass:replay?.status===0&&replay.stdout.trim()==='{}'&&before===hash(JSON.stringify(activation(sid)))
+        &&transcript===hash(readFileSync(originalTrace.path))};
+  }
+  const checks={bothExits:first.status===0&&second?.status===0,sameActivation:firstActivation?.activation_id===secondActivation?.activation_id,
+    originalRetained:!!original&&Object.values(firstActivation?.invocations||{}).length===1,
+    singleReplacement:callRows.filter(x=>x.recovery_id).length===1&&replacement?.status==='accepted',
+    obligationComplete:obligations.length===1&&obligations[0].status==='COMPLETED',
+    ordinaryAllowed:callRows.some(x=>!x.critical&&x.status==='accepted'),
+    noLatch:secondActivation?.critical_failure===false,
+    preEffectFences:['collaborationfollowup_task','collaborationsend_message'].every(name=>hooks.some(x=>x.payload.tool_name===name&&x.output.includes('RETIRED_REVIEW_AGENT'))),
+    openReviewDenied:hooks.some(x=>x.payload.tool_input?.task_name==='must_not_start'&&x.output.includes('UNRESOLVED_REVIEW_OBLIGATION')),
+    exactChildRequests:recoveryChildRequests===(recoveryContinuation?4:3),
+    attributedActualAbort:aborts.length===1&&(aborts[0].payload?.turn_id||aborts[0].turn_id)===interruptedTurn,
+    oldChildNeverResumed:originalTurns.size===(recoveryContinuation?2:1)&&originalTurns.has(interruptedTurn)
+      &&originalTrace?.rows.filter(r=>r.payload?.type==='task_complete').length===(recoveryContinuation?1:0),
+    interruptedCallback:!recoveryContinuation||interruptedStopReplay?.pass===true,
+    historicalAcceptance:!recoveryContinuation||(original?.status==='accepted'&&sourceIntent?.status==='interrupted'
+      &&obligations[0]?.continuation_operation_id===sourceIntent.operation_id
+      &&Object.values(firstActivation?.review_obligations||{})[0]?.status==='OPEN'),
+    beforeResumeBlocked:!recoveryContinuation||hooks.some(x=>x.payload.tool_input?.task_name==='must_not_start_before_resume'
+      &&x.output.includes('UNRESOLVED_REVIEW_OBLIGATION')),
+    noUnexpectedFailures:denied.length===(recoveryContinuation?4:3)&&denied.every(h=>h.status===0&&expectedDenial.test(h.output))
+      &&toolErrors.every(e=>expectedDenial.test(e.output))&&!allEvents.some(e=>['turn.failed','error'].includes(e.type))};
+  const result={pass:Object.values(checks).every(Boolean),checks,root,first,second,firstActivation,secondActivation,candidateBytes,
+    scope:'Real CLI lifecycle against loopback provider; no claim of real model file reading.',denied,toolErrors,interruptedStopReplay};
+  writeFileSync(join(root,recoveryContinuation?'continuation-recovery-result.json':'critical-recovery-result.json'),JSON.stringify(result,null,2));
+  console.log(JSON.stringify({pass:result.pass,checks,evidence:join(root,recoveryContinuation?'continuation-recovery-result.json':'critical-recovery-result.json')}));
+  process.exit(result.pass?0:1);
+}
 if (concurrentMode) {
   const witnesses = ['native-wrapper-owner', 'native-wrapper-b', 'native-wrapper-integration'].map(task =>
     JSON.parse(readFileSync(join(work, '.git/luca-controlled-change', task, 'required-witness.json'))));
@@ -422,11 +649,23 @@ check(first.events.some(event=>event.type==='turn.completed') && second?.events.
 check(stops.length===2 && stops.every(event=>event.payload.last_assistant_message==='CHILD_DONE' && event.output.trim()==='{}'),'two successful child stops');
 check(new Set(hooks.map(event=>event.entry)).size===11,'all 11 registrations actually triggered');
 check(!denied.length && !toolErrors.length && !allEvents.some(event=>event.type==='turn.failed' || event.type==='error'),'no hook denial or tool/runtime failure');
+check([first,second].every(turn=>turn.events.some(event=>event.type==='item.completed'
+  &&event.item?.type==='command_execution'&&event.item.exit_code===0
+  &&event.item.aggregated_output?.includes('==> scripts/codex-review-recovery.mjs <=='))),
+  'ordinary native file reads mentioning the recovery entry execute successfully');
 check(result.finalFile==='hook-patch-tested\n','patch produced exact expected file');
+const firstIds = Object.keys(firstActivation?.invocations || {});
+const secondIds = Object.keys(secondActivation?.invocations || {});
+check(firstIds.length === 1 && secondIds.length === 2 && secondIds.includes(firstIds[0])
+  && secondIds.filter(id => !firstIds.includes(id)).length === 1
+  && firstActivation.activation_id === secondActivation.activation_id,
+  'resume retains the first invocation and accepts exactly one new invocation');
 for(const [index,state] of [firstActivation,secondActivation].entries()) {
   check(state && state.status==='paused' && state.critical_failure===false,`turn ${index+1} activation ended cleanly`);
   const invocations=Object.values(state?.invocations||{}), preparations=Object.values(state?.preparations||{});
-  check(invocations.length===1 && invocations.every(call=>call.status==='accepted' && call.evidence_ref?.startsWith('codex-transcript:')),`turn ${index+1} adopted same-invocation success evidence`);
+  // A resumed root retains accepted history; only the first turn has one call.
+  // Every retained call must still be independently accepted with its own evidence.
+  check(invocations.length === index + 1 && invocations.every(call=>call.status==='accepted' && call.evidence_ref?.startsWith('codex-transcript:')),`turn ${index+1} adopted same-invocation success evidence`);
   check(!preparations.some(call=>['pending','invalidated'].includes(call.status)),`turn ${index+1} has no unresolved critical preparation`);
 }
 result.failures=failures;result.pass=failures.length===0;
@@ -434,7 +673,7 @@ writeFileSync(join(root,'result.json'),JSON.stringify(result,null,2));
 console.log(`${result.pass?'PASS':'FAIL'} native Codex lifecycle: ${hooks.length} hook events, ${new Set(hooks.map(event=>event.entry)).size}/11 registrations; evidence: ${join(root,'result.json')}`);
 if (audit) {
   const rawRequests = readFileSync(requestLog, 'utf8'), rawHooks = readFileSync(hookLog, 'utf8');
-  turnEvidence.forEach(turn => {
+  turnEvidence.forEach((turn, index) => {
     const invocations = Object.values(turn.state?.invocations || {}), preparations = Object.values(turn.state?.preparations || {});
     const expected = [
       { cli_exit: 0, turn_completed: true, session_preserved: true, exact_file: 'hook-patch-tested\n', native_failures: false },
@@ -446,7 +685,7 @@ if (audit) {
         session_preserved: turn.session === sid, exact_file: turn.file, native_failures: denied.length > 0 || toolErrors.length > 0 || turn.events.some(event => event.type === 'turn.failed' || event.type === 'error') },
       { registration_ids: [...new Set(turn.hooks.map(row => row.entry))].sort((a, b) => a - b) },
       { status: turn.state?.status, critical_failure: turn.state?.critical_failure,
-        accepted_same_invocation: invocations.length === 1 && invocations.every(call => call.status === 'accepted' && call.evidence_ref?.startsWith('codex-transcript:')),
+        accepted_same_invocation: invocations.length === index + 1 && invocations.every(call => call.status === 'accepted' && call.evidence_ref?.startsWith('codex-transcript:')),
         unresolved_preparations: preparations.some(call => ['pending', 'invalidated'].includes(call.status)) },
     ];
     turn.run.capture({ ...turn.data, results: expected.map((value, index) => ({ expected: value, actual: actual[index] })),

@@ -1,0 +1,6 @@
+{
+  "source": "direct human reply in current thread",
+  "question_call_id": "call_7ead832d73464f53a41214abf59a144e",
+  "answer": "复用本次结果，跳过重复全量检查",
+  "scope": "This one task commit may reuse exact source full validation and skip duplicate full scan. Sensitive information scan remains mandatory. No change to repository hooks or global config."
+}

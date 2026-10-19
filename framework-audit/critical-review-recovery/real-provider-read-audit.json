@@ -1,0 +1,535 @@
+{
+  "status": "PASS",
+  "method": "parent compares every original untruncated native output numbered line to exact source bytes; controls/witness raw full output",
+  "transcript": "/Users/luca/.codex/sessions/2026/10/19/rollout-2026-10-19T13-55-06-01a152ba-5756-7032-8293-75c331877e77.jsonl",
+  "files": [
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/model-route-host.mjs",
+      "sha256": "2dc9e9130ca1ae0fa19ea5e2f590660f84761cc0af58fd3d2abc31ef44264ba3",
+      "line_count": 920,
+      "covered_lines": 920,
+      "chunks": [
+        {
+          "call_id": "call_eca00ce4daf943de9614dfec7843b633",
+          "chunk_id": "80c80e",
+          "ranges": [
+            1,
+            230
+          ]
+        },
+        {
+          "call_id": "call_a34a32578fcc44798b5ef8d2892b8fe3",
+          "chunk_id": "71ce57",
+          "ranges": [
+            231,
+            460
+          ]
+        },
+        {
+          "call_id": "call_53aa4016fe684617ba8c9ada95177af5",
+          "chunk_id": "b8504e",
+          "ranges": [
+            461,
+            690
+          ]
+        },
+        {
+          "call_id": "call_c08b01e62961458fad4af13cdb76f7c2",
+          "chunk_id": "133b1d",
+          "ranges": [
+            691,
+            920
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/.codex/model-route-hook.mjs",
+      "sha256": "ac9c41153c9614f1d52faa22420bddc129bfde1ebfe79eafd1d26fd000c48fd8",
+      "line_count": 1017,
+      "covered_lines": 1017,
+      "chunks": [
+        {
+          "call_id": "call_df8fda2aa18241d28c219052d5b37a4d",
+          "chunk_id": "234f76",
+          "ranges": [
+            1,
+            250
+          ]
+        },
+        {
+          "call_id": "call_e4f926c8e6664a89ab7f8a5f96cd7e41",
+          "chunk_id": "bdc9a5",
+          "ranges": [
+            251,
+            500
+          ]
+        },
+        {
+          "call_id": "call_6682d8bd29e44d699f2913c9118e401b",
+          "chunk_id": "853b21",
+          "ranges": [
+            501,
+            750
+          ]
+        },
+        {
+          "call_id": "call_af79cb7b50194275bc96310541f1bcc9",
+          "chunk_id": "10c792",
+          "ranges": [
+            751,
+            1017
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/.codex/workflow-runner.mjs",
+      "sha256": "39a4ee5017a88d89be013f81e3caf391e79f6161e69566b52ac5842e9b432817",
+      "line_count": 684,
+      "covered_lines": 684,
+      "chunks": [
+        {
+          "call_id": "call_2f043e0beef94c4fb551f88dcbbb35e2",
+          "chunk_id": "e1034b",
+          "ranges": [
+            1,
+            230
+          ]
+        },
+        {
+          "call_id": "call_092524eb7590400cb3baa8bc4e47c467",
+          "chunk_id": "f55019",
+          "ranges": [
+            231,
+            460
+          ]
+        },
+        {
+          "call_id": "call_21beefa8d3864057bd6129ce5da3c64c",
+          "chunk_id": "edcda6",
+          "ranges": [
+            461,
+            684
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/.codex/hooks.json",
+      "sha256": "8beee10eaa2f8297cb8ded5aefa9a95e1b29e8ddfb84b4b01e855b68c16c5805",
+      "line_count": 125,
+      "covered_lines": 125,
+      "chunks": [
+        {
+          "call_id": "call_d7880b4b39334fe1bdc81cff5fa3c1ed",
+          "chunk_id": "f1ef3d",
+          "ranges": [
+            1,
+            125
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/codex-review-recovery.mjs",
+      "sha256": "abf51c89226917d1f216fa050a641c815a737a52fd772d02ba95a722b009e223",
+      "line_count": 190,
+      "covered_lines": 190,
+      "chunks": [
+        {
+          "call_id": "call_2b4bebaf6ef748ab93df79f2f0f42a32",
+          "chunk_id": "0c0d59",
+          "ranges": [
+            1,
+            190
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/test-model-route-host.mjs",
+      "sha256": "ffaeb19a3ed7638d4d26818e380808694c38645f2bf80638d4eb782266249f8e",
+      "line_count": 642,
+      "covered_lines": 642,
+      "chunks": [
+        {
+          "call_id": "call_5340fc1b26f744f298f08acca53419fd",
+          "chunk_id": "af3117",
+          "ranges": [
+            1,
+            220
+          ]
+        },
+        {
+          "call_id": "call_e6d5fde9ecf04167ab2166f41253cce1",
+          "chunk_id": "6aa83c",
+          "ranges": [
+            221,
+            440
+          ]
+        },
+        {
+          "call_id": "call_14d94643308b42b590f8cf0c5c54f20f",
+          "chunk_id": "dbbd7d",
+          "ranges": [
+            441,
+            642
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/test-codex-model-route-hook.mjs",
+      "sha256": "8193549aa48eb5716eda0ddce03135e4d305a198b62ce71d3339ab0b2a0e6542",
+      "line_count": 1368,
+      "covered_lines": 1368,
+      "chunks": [
+        {
+          "call_id": "call_abd456fc3ea5486889de50d5ac39e8c7",
+          "chunk_id": "68d637",
+          "ranges": [
+            1,
+            230
+          ]
+        },
+        {
+          "call_id": "call_1d6bfa966d474cc79675ead9a4847940",
+          "chunk_id": "b3e4f5",
+          "ranges": [
+            231,
+            460
+          ]
+        },
+        {
+          "call_id": "call_ba49f83aabbe4c40aac9329795c635ef",
+          "chunk_id": "bf913f",
+          "ranges": [
+            461,
+            690
+          ]
+        },
+        {
+          "call_id": "call_992d2bcbbddc4ace814a18a0eef439ad",
+          "chunk_id": "e2972f",
+          "ranges": [
+            691,
+            920
+          ]
+        },
+        {
+          "call_id": "call_4f2c9c38c41b491b8e1f33c32b64fd7c",
+          "chunk_id": "745a6d",
+          "ranges": [
+            921,
+            1150
+          ]
+        },
+        {
+          "call_id": "call_1726ec84a43344e5aa1e15e8c4600538",
+          "chunk_id": "289bdb",
+          "ranges": [
+            1151,
+            1368
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/test-workflow-runner-runtime.mjs",
+      "sha256": "589330802e12ad7d42e10c9b737b2132ad511e452138149942a8b72b9eab889c",
+      "line_count": 659,
+      "covered_lines": 659,
+      "chunks": [
+        {
+          "call_id": "call_78876b2113e14e36ad35ed0c7f4eb189",
+          "chunk_id": "41541e",
+          "ranges": [
+            1,
+            220
+          ]
+        },
+        {
+          "call_id": "call_23762f05fdc24833b891c24c005ea141",
+          "chunk_id": "c20b52",
+          "ranges": [
+            221,
+            440
+          ]
+        },
+        {
+          "call_id": "call_a29674f99fc348628f6c7289641cd908",
+          "chunk_id": "86b14b",
+          "ranges": [
+            441,
+            659
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/test-codex-native-lifecycle.mjs",
+      "sha256": "c8a2e93c4a3597c72478e745ba841ba549b110c6e7468d7bc0e8da3e631fdb00",
+      "line_count": 702,
+      "covered_lines": 702,
+      "chunks": [
+        {
+          "call_id": "call_aafd8e8563ca4aa3b96d9bfdee543082",
+          "chunk_id": "3a2ba9",
+          "ranges": [
+            1,
+            235
+          ]
+        },
+        {
+          "call_id": "call_252fa7c64fac45c69497762a74c2be01",
+          "chunk_id": "246025",
+          "ranges": [
+            236,
+            470
+          ]
+        },
+        {
+          "call_id": "call_8e9cf9da59f946f3bdbcc4a1963460fd",
+          "chunk_id": "659d47",
+          "ranges": [
+            471,
+            702
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/test-codex-review-recovery.mjs",
+      "sha256": "e71b42a4d5f90450e8cf75db1db15a515e0f33e5bf8f59b58e6d7bddffdfa053",
+      "line_count": 439,
+      "covered_lines": 439,
+      "chunks": [
+        {
+          "call_id": "call_444356298ea74168b165c424408f8aba",
+          "chunk_id": "048c27",
+          "ranges": [
+            1,
+            220
+          ]
+        },
+        {
+          "call_id": "call_f3311d358c204e28a80491412b17a1cb",
+          "chunk_id": "4662be",
+          "ranges": [
+            221,
+            439
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/.codex/MODEL_ROUTING.md",
+      "sha256": "dce05b2fac3f5bb750b78e0bbb62e3f0b46d8e2c1a80d6ecf137669a130e7ac9",
+      "line_count": 178,
+      "covered_lines": 178,
+      "chunks": [
+        {
+          "call_id": "call_d0e364487ccd4732b0175979e24144ef",
+          "chunk_id": "ee8c0e",
+          "ranges": [
+            1,
+            178
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/test-codex-child-project.mjs",
+      "sha256": "0d6f793f24754d332b9dc35fa0ef511e13b19148aa4fa7ec09deb85f5c9fbc85",
+      "line_count": 618,
+      "covered_lines": 618,
+      "chunks": [
+        {
+          "call_id": "call_a643c3cb61a645d99dbb0eadd23023bf",
+          "chunk_id": "86f7ab",
+          "ranges": [
+            1,
+            210
+          ]
+        },
+        {
+          "call_id": "call_bd5392741de04b40af18eae81d8b48e8",
+          "chunk_id": "075891",
+          "ranges": [
+            211,
+            420
+          ]
+        },
+        {
+          "call_id": "call_306ac2e662d14f12875f10388302c387",
+          "chunk_id": "ccde6a",
+          "ranges": [
+            421,
+            618
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/CHANGELOG.md",
+      "sha256": "9cd18d030e06670de79b4c70e3bf5d0b8f86c858e2ae30d1df73b793974f0aec",
+      "line_count": 460,
+      "covered_lines": 460,
+      "chunks": [
+        {
+          "call_id": "call_49e82e35b75243cdbec973d03ed76fa4",
+          "chunk_id": "381057",
+          "ranges": [
+            1,
+            100
+          ]
+        },
+        {
+          "call_id": "call_ae2346a506624bce888c9a6d1a22cab6",
+          "chunk_id": "061f3a",
+          "ranges": [
+            101,
+            200
+          ]
+        },
+        {
+          "call_id": "call_0b021b959c5e468c9bcb625313f64f6f",
+          "chunk_id": "83ad2b",
+          "ranges": [
+            201,
+            300
+          ]
+        },
+        {
+          "call_id": "call_bf6c70d556394c5b884935115aecaee2",
+          "chunk_id": "d8a564",
+          "ranges": [
+            301,
+            400
+          ]
+        },
+        {
+          "call_id": "call_d8cdd6f0d0e948879db13428567327f1",
+          "chunk_id": "abe8be",
+          "ranges": [
+            401,
+            460
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/codex-hook-health.mjs",
+      "sha256": "b356850ddcb832bcc4c0dcc8dec958134662f36b111aa73d61f900bf67dde0c5",
+      "line_count": 304,
+      "covered_lines": 304,
+      "chunks": [
+        {
+          "call_id": "call_cc58dff2d5234788ba58d744ba1363e7",
+          "chunk_id": "145216",
+          "ranges": [
+            1,
+            160
+          ]
+        },
+        {
+          "call_id": "call_ca593922c38b4b4ba21f280c56ab63d3",
+          "chunk_id": "cf2dcd",
+          "ranges": [
+            161,
+            304
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/test-hook-source-digests.mjs",
+      "sha256": "160fe7356310e988e5537aaf655078d154b1a91742146e5156eeb9bd9ba74dac",
+      "line_count": 164,
+      "covered_lines": 164,
+      "chunks": [
+        {
+          "call_id": "call_02a056fc8a37487188b438ae8f3d64f9",
+          "chunk_id": "e61226",
+          "ranges": [
+            1,
+            164
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9/scripts/test-codex-hook-health.mjs",
+      "sha256": "c2a3877e9e9ebcb994ac33510297d27c6609f9b54f6b43d7caafc1bdbfe36b03",
+      "line_count": 372,
+      "covered_lines": 372,
+      "chunks": [
+        {
+          "call_id": "call_d8ebda0dbc794391b64c435c4b79f4d6",
+          "chunk_id": "595533",
+          "ranges": [
+            1,
+            190
+          ]
+        },
+        {
+          "call_id": "call_f020390754f24dc8960c4d93ea27b5e6",
+          "chunk_id": "a320e5",
+          "ranges": [
+            191,
+            372
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/real-provider-proof-v9/read-witness.txt",
+      "sha256": "cf7a65e53c15b7bbe1f055af7b6b9e16cb8a118efa7b8b9debfb707a620e4838",
+      "line_count": 1,
+      "covered_lines": 1,
+      "chunks": [
+        {
+          "call_id": "call_f020390754f24dc8960c4d93ea27b5e6",
+          "chunk_id": "a320e5",
+          "ranges": [
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/real-provider-proof-v9/descriptor.json",
+      "sha256": "2ae25be35efa0050ee62cf4ce7a19d7dd7010ccac1cd752dcd4da9d5640e919d",
+      "line_count": 83,
+      "covered_lines": 83,
+      "chunks": [
+        {
+          "call_id": "call_daeba877e49942c8a282125c503ed901",
+          "chunk_id": "006417",
+          "ranges": [
+            1,
+            83
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/real-provider-proof-v9/authorization.json",
+      "sha256": "a71ede475fa4461a1e3f34f3832232842fb6d3750e696376022917f71f153954",
+      "line_count": 6,
+      "covered_lines": 6,
+      "chunks": [
+        {
+          "call_id": "call_daeba877e49942c8a282125c503ed901",
+          "chunk_id": "006417",
+          "ranges": [
+            1,
+            6
+          ]
+        }
+      ]
+    }
+  ]
+}

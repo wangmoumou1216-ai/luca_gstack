@@ -47,7 +47,7 @@
         ]
       },
       {
-        "matcher": "^(Bash|Agent|spawn_agent|collaboration__spawn_agent|collaborationspawn_agent)$",
+        "matcher": "^(Bash|Agent|spawn_agent|collaboration__spawn_agent|collaborationspawn_agent|followup_task|send_message|collaboration__followup_task|collaborationfollowup_task|collaboration__send_message|collaborationsend_message)$",
         "hooks": [
           {
             "type": "command",

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "files": [
+    {
+      "path": "scripts/model-route-host.mjs",
+      "sha256": "2dc9e9130ca1ae0fa19ea5e2f590660f84761cc0af58fd3d2abc31ef44264ba3"
+    },
+    {
+      "path": ".codex/model-route-hook.mjs",
+      "sha256": "ac9c41153c9614f1d52faa22420bddc129bfde1ebfe79eafd1d26fd000c48fd8"
+    },
+    {
+      "path": ".codex/workflow-runner.mjs",
+      "sha256": "39a4ee5017a88d89be013f81e3caf391e79f6161e69566b52ac5842e9b432817"
+    },
+    {
+      "path": ".codex/hooks.json",
+      "sha256": "8beee10eaa2f8297cb8ded5aefa9a95e1b29e8ddfb84b4b01e855b68c16c5805"
+    },
+    {
+      "path": "scripts/codex-review-recovery.mjs",
+      "sha256": "abf51c89226917d1f216fa050a641c815a737a52fd772d02ba95a722b009e223"
+    },
+    {
+      "path": "scripts/test-model-route-host.mjs",
+      "sha256": "ffaeb19a3ed7638d4d26818e380808694c38645f2bf80638d4eb782266249f8e"
+    },
+    {
+      "path": "scripts/test-codex-model-route-hook.mjs",
+      "sha256": "8193549aa48eb5716eda0ddce03135e4d305a198b62ce71d3339ab0b2a0e6542"
+    },
+    {
+      "path": "scripts/test-workflow-runner-runtime.mjs",
+      "sha256": "589330802e12ad7d42e10c9b737b2132ad511e452138149942a8b72b9eab889c"
+    },
+    {
+      "path": "scripts/test-codex-native-lifecycle.mjs",
+      "sha256": "c8a2e93c4a3597c72478e745ba841ba549b110c6e7468d7bc0e8da3e631fdb00"
+    },
+    {
+      "path": "scripts/test-codex-review-recovery.mjs",
+      "sha256": "e71b42a4d5f90450e8cf75db1db15a515e0f33e5bf8f59b58e6d7bddffdfa053"
+    },
+    {
+      "path": ".codex/MODEL_ROUTING.md",
+      "sha256": "dce05b2fac3f5bb750b78e0bbb62e3f0b46d8e2c1a80d6ecf137669a130e7ac9"
+    },
+    {
+      "path": "scripts/test-codex-child-project.mjs",
+      "sha256": "0d6f793f24754d332b9dc35fa0ef511e13b19148aa4fa7ec09deb85f5c9fbc85"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "9cd18d030e06670de79b4c70e3bf5d0b8f86c858e2ae30d1df73b793974f0aec"
+    },
+    {
+      "path": "scripts/codex-hook-health.mjs",
+      "sha256": "b356850ddcb832bcc4c0dcc8dec958134662f36b111aa73d61f900bf67dde0c5"
+    },
+    {
+      "path": "scripts/test-hook-source-digests.mjs",
+      "sha256": "160fe7356310e988e5537aaf655078d154b1a91742146e5156eeb9bd9ba74dac"
+    },
+    {
+      "path": "scripts/test-codex-hook-health.mjs",
+      "sha256": "c2a3877e9e9ebcb994ac33510297d27c6609f9b54f6b43d7caafc1bdbfe36b03"
+    }
+  ],
+  "frozen_manifest_sha256": "1603dd7b690a8e54206a0d2dd67bd1ff4af62d8a5917cb280745d1751c1cf644",
+  "frozen_diff_sha256": "498fde2818edf22140d225fa6c483ac13de4eb4d2a77fd01d8d7a5aa8f44be2a",
+  "plan_sha256": "c42d59fed55a179139d99853c2cabfaf0eded8a5536be500a1bdddfb1292cf1e"
+}

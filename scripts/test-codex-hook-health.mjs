@@ -68,6 +68,34 @@ function tree(path) {
     [entry.name, entry.isDirectory() ? tree(join(path, entry.name)) : readFileSync(join(path, entry.name)).toString('base64')]));
 }
 
+test('recovery fence registration is exact: missing alias fails and restored bytes pass', t => {
+  const f=fixture(t,()=>{},{native:true,install:false});
+  const before=readFileSync(f.hooksPath);
+  assert.equal(f.inspect().ok,true);
+  const config=JSON.parse(before);
+  const group=config.hooks.PreToolUse.find(g=>g.hooks.some(h=>h.command.includes('/.codex/model-route-hook.mjs')));
+  assert.ok(group.matcher.includes('|collaborationsend_message'));
+  group.matcher=group.matcher.replace('|collaborationsend_message','');
+  writeFileSync(f.hooksPath,JSON.stringify(config));
+  assert.equal(f.inspect().ok,false);
+  assert.match(f.inspect().registration.problems.join(),/REGISTRATION_CONTRACT_MISMATCH/);
+  writeFileSync(f.hooksPath,before);
+  assert.equal(f.inspect().ok,true);
+});
+
+test('pre-recovery native and stable registration pins remain recognized for diagnostics', t => {
+  const f=fixture(t,()=>{},{native:true,install:false});
+  const config=JSON.parse(readFileSync(f.hooksPath));
+  const group=config.hooks.PreToolUse.find(g=>g.hooks.some(h=>h.command.includes('/.codex/model-route-hook.mjs')));
+  group.matcher='^(Bash|Agent|spawn_agent|collaboration__spawn_agent|collaborationspawn_agent)$';
+  for(const [expected,source] of [['native-trust-v1',config],['stable-v3',stableRegistration(structuredClone(config))]]) {
+    writeFileSync(f.hooksPath,JSON.stringify(source));
+    const report=inspectHookHealth(f.root,{sourceOnly:true});
+    assert.equal(report.ok,true,JSON.stringify(report));
+    assert.equal(report.registration.protocol,expected);
+  }
+});
+
 test('healthy sources and protected installation pass without writing or claiming live-session verification', t => {
   const f = fixture(t), before = tree(f.base), report = f.inspect();
   assert.equal(report.ok, true, JSON.stringify(report));

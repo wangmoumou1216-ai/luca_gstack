@@ -19,9 +19,18 @@ const GATE_START = `cd "$(git rev-parse --show-toplevel)" || exit 2; ${SOURCE_SC
 // source digest varies; event/group order, matchers, full launch/recovery text,
 // timeouts and context limits must remain reviewed. Description is presentation.
 // Intentional protocol changes require reviewing and updating this pin together.
-const LEGACY_REGISTRATION_CONTRACT = '0d3e966d491751a1e45ce6a29fc62fd850981ba972393b81fdf51be989cbd50a';
-const STABLE_REGISTRATION_CONTRACT = '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189';
-const NATIVE_REGISTRATION_CONTRACT = '071dcae5ae935ce15318dea12d1deaee3cddec60c74bda6d82ec1c422eb885e4';
+const LEGACY_REGISTRATION_CONTRACTS = new Set([
+  '0d3e966d491751a1e45ce6a29fc62fd850981ba972393b81fdf51be989cbd50a',
+  'dc2315e69f83f76a01f0afcaf7b0f9329acb9b4301089e26f3fbcc79a3818314',
+]);
+const STABLE_REGISTRATION_CONTRACTS = new Set([
+  '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189',
+  'b2292c4ac201eb4fe2b5222fd9f45204070173b6a622f9e76e03ee02ca84496c',
+]);
+const NATIVE_REGISTRATION_CONTRACTS = new Set([
+  '071dcae5ae935ce15318dea12d1deaee3cddec60c74bda6d82ec1c422eb885e4',
+  'c6ef2efa3fcb18e91163f4c2dd25277d8c568ae82c490949d47aeff549601c45',
+]);
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === 'object') return Object.fromEntries(
@@ -118,11 +127,11 @@ export function inspectHookHealth(root, { sourceOnly = false,
     if (commands.length !== 11) throw new Error(`expected 11 registrations, found ${commands.length}`);
     const fullContract = sha(JSON.stringify(canonical(config.hooks)));
     const digests = [];
-    if (fullContract === NATIVE_REGISTRATION_CONTRACT) {
+    if (NATIVE_REGISTRATION_CONTRACTS.has(fullContract)) {
       report.registration.protocol = 'native-trust-v1';
       report.registration.contract_sha256 = fullContract;
       report.registration.trust_owner = 'Codex native trusted command';
-    } else if (fullContract === STABLE_REGISTRATION_CONTRACT) {
+    } else if (STABLE_REGISTRATION_CONTRACTS.has(fullContract)) {
       report.registration.protocol = 'stable-v3';
       report.registration.contract_sha256 = fullContract;
     } else {
@@ -137,7 +146,7 @@ export function inspectHookHealth(root, { sourceOnly = false,
         hook.command = hook.command.replace(/case "\$h" in [a-f0-9]{64}/, 'case "$h" in SOURCE_DIGEST');
       }
       report.registration.contract_sha256 = sha(JSON.stringify(canonical(normalized)));
-      if (report.registration.contract_sha256 !== LEGACY_REGISTRATION_CONTRACT) {
+      if (!LEGACY_REGISTRATION_CONTRACTS.has(report.registration.contract_sha256)) {
         throw new Error('REGISTRATION_CONTRACT_MISMATCH: event, matcher or complete command differs from the reviewed protocol');
       }
       report.registration.protocol = 'legacy-literal';
