@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "50aec311541e7dff2f090ffd4f6f86bf9edef4e7dacc9c6404d1a6517635e237",
+  "source_sha256": "108d84e009f327c088a11eca07076ad27813f671259d8559431855b88b1a11a0",
   "skill": "ux-brainstorm",
   "group": "skills",
   "global": {
@@ -16,22 +16,33 @@
         "optional": [
           "ux_research_report",
           "screenshots",
-          "architecture_brief"
+          "architecture_brief",
+          "discovery_mode"
         ]
       },
       "workflow": {
         "required": [],
         "optional": [
           "ux_research_report",
-          "prd_artifact"
+          "prd_artifact",
+          "discovery_mode"
         ]
       }
+    },
+    "discovery_mode": {
+      "default": "full",
+      "allowed": [
+        "focused",
+        "full"
+      ],
+      "focused_requires_explicit_choice": true
     },
     "quality_gates": [
       "seven_ux_questions",
       "oracle_review",
       "stable_design_ids",
       "interaction_architecture"
-    ]
+    ],
+    "notes": "focused与scope正交，仅显式试验；seven_ux_questions表示相关检查，已答不重复问。保留人的选择与独立Oracle；主任务3–5步走读+关键恢复进入已有推荐/流程，非AI不强加AI机制。Brief继承目标/核心机制并补语义规格。"
   }
 }

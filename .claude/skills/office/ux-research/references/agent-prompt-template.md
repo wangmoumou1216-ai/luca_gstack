@@ -1,6 +1,7 @@
 # UX Research — Agent Prompt Template & Configuration
 
 > Loaded by ux-research skill at Phase 1. Do NOT load at Phase 0.
+> 仅 legacy deep/moderate 使用固定维度模板；focused 使用 `../../deepresearch/references/focused-research.md` Phase 1。
 > When `research_depth = moderate`: findings ≥3, webfetch ≥1, 2 rounds (skip Round 3), first 2
 > keywords mandatory (rest optional).
 
@@ -22,7 +23,7 @@ YOUR DEPTH REQUIREMENT: [这个维度的深度标尺——见Phase 0维度表]
 INSTRUCTIONS:
 1. 你是一名[推理角色]，专注于[维度名称]
 2. 不要给设计建议——只做研究，只产出发现
-3. 每条发现必须有来源URL
+3. 每条发现必须有真实来源URL；已提供竞品材料可用精确文件/页面/帧位置，不编造URL
 4. 发现矛盾信息时，两方都记录
 5. 优先权威来源（见TOOL USAGE）
 6. 如果发现与目标场景（如B2B销售高压环境）的特殊性相关，明确标注
@@ -120,13 +121,13 @@ OUTPUT FORMAT（强制，严格遵守此结构）:
 <finding id="1">
   <claim>[具体发现，一句话，不超过40字]</claim>
   <detail>[2-3句支撑细节]</detail>
-  <source>[完整URL]</source>
+  <source>[真实完整URL；已提供竞品材料为精确文件/页面/帧位置]</source>
   <source_type>[academic | industry | expert | user_feedback | case_study | product_blog]</source_type>
   <confidence>HIGH | MEDIUM | LOW</confidence>
   <evidence_strength>STRONG | MODERATE | WEAK</evidence_strength>
   <evidence_basis>[为什么是这个强度：来源权威性 + 数据质量 + 时效性]</evidence_basis>
   <b2b_relevance>[这个发现对目标场景（如B2B销售高压环境）的特殊意义，如无关写N/A]</b2b_relevance>
-  <design_signal>[这个发现告诉设计师需要考虑什么，不是设计建议，是研究信号]</design_signal>
+  <design_signal>[原始任务/待定取舍 → 证据及迁移边界 → 支持/不支持什么；保留反证与未知，不直接推出功能、组件或用户选择]</design_signal>
 </finding>
 
 <finding id="2">
@@ -207,17 +208,21 @@ YOUR SEARCH STRATEGY:
 
 ---
 
-**Agent D3：竞品范式选择与验证结果**
+**Agent D3：竞品设计机制与适用证据**
+
+仅 D3 派发时把 `references/competitor-analysis.md` 的精确路径交给实际研究者，要求研究前
+完整读取并应用；保留现有 findings/search_log 字段和所选 legacy 深度。其他维度不因此加载。
 
 ```typescript
 task(category="unspecified-high", load_skills=[], run_in_background=true,
-  description="Research: Competitor paradigm choices and market validation in [design context]",
+  description="Research: Competitor design mechanisms and transfer evidence in [design context]",
   prompt=AGENT_D3_PROMPT)
 ```
 
 ```
-YOUR ROLE: 竞品分析师 — 你的推理方式是从竞品的设计选择和市场反馈出发，判断哪些范式被验证有效、哪些被市场否定。你不只看竞品做了什么，你看用户怎么评价竞品做的事。
-YOUR ANGLE: 竞品在这个场景下选择了什么交互范式？市场验证结果是什么？
+YOUR ROLE: 竞品分析师 — 比较同任务的实际页面、交互机制、关键状态及迁移条件，区分观察、文档与效果证据。
+YOUR ANGLE: 竞品如何完成这个任务？证据能支持哪些设计取舍，哪些仍未知？
+METHOD OWNER: .claude/skills/office/ux-research/references/competitor-analysis.md（研究前完整读取）
 
 YOUR SEARCH STRATEGY:
 → 对每个竞品，研究它的交互范式选择（不是功能列表）
@@ -234,7 +239,7 @@ YOUR SEARCH STRATEGY:
 注意：
 → 你研究的是竞品选择了什么范式，背后是什么假设
 → 不是功能对比清单
-→ 每个竞品至少找1条反向证据（用户批评或设计失败）
+→ 针对每个竞品寻找反向证据（用户批评或设计失败）；未找到记搜索范围与 gap，不编造；缺必需证据不声称相应效果已验证
 ```
 
 ---

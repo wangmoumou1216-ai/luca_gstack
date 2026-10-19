@@ -173,6 +173,12 @@ When `research.md` is provided, questions gain a **grounding clause** that refer
 
 ## Part 3 — Scope-Tier Question Routing
 
+`discovery_mode=full` uses the table/confirmation/cold-start rules below. Explicit focused
+checks the same relevant questions, recording source/version for concrete existing answers;
+only unanswered consequential questions reach the user, including in cold-start. Do not ask
+again to confirm an unambiguous user decision; research alone cannot answer a preference.
+Critical unknowns stay blocking. Skipping a repeated question is not deleting its forcing check.
+
 | Scope | Questions to ask (min → max) | Skip rationale |
 |---|---|---|
 | **Lightweight** | Q1, Q4 (2 questions) | Pre-Product / Pre-Scope work — keep ceremony low |
@@ -184,7 +190,7 @@ When `research.md` is provided, questions gain a **grounding clause** that refer
 (named users, cited observations, explicit wedge), surface the question with the answer pre-filled
 and ask only: "Is this still accurate?" — skip if confirmed.
 
-**Cold-start mode:** When no `research.md` is provided, ALWAYS ask the full scope-tier question
+**Full cold-start mode:** When no `research.md` is provided, ALWAYS ask the full scope-tier question
 set. Do not infer answers.
 
 ---

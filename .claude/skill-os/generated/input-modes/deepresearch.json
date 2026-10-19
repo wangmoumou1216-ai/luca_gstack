@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "50aec311541e7dff2f090ffd4f6f86bf9edef4e7dacc9c6404d1a6517635e237",
+  "source_sha256": "108d84e009f327c088a11eca07076ad27813f671259d8559431855b88b1a11a0",
   "skill": "deepresearch",
   "group": "skills",
   "global": {
@@ -14,21 +14,35 @@
           "research_topic"
         ],
         "optional": [
-          "scope_constraints"
+          "scope_constraints",
+          "research_depth",
+          "research_budget"
         ]
       },
       "workflow": {
         "required": [],
         "optional": [
           "idea_artifact",
-          "prd_artifact"
+          "prd_artifact",
+          "research_depth",
+          "research_budget"
         ]
       }
+    },
+    "research_depth": {
+      "default": "deep",
+      "allowed": [
+        "focused",
+        "moderate",
+        "deep"
+      ],
+      "focused_requires_explicit_choice": true
     },
     "quality_gates": [
       "source_traceability",
       "search_log",
       "consensus_matrix"
-    ]
+    ],
+    "notes": "focused 为显式试验，1名研究者/1–3决策问题/初始8项检索读取（批量逐项计），沿共享 focused-research 合同做证据评级与独立审查；consensus_matrix 是现有承载，不是代理票数。deep/moderate 保留。"
   }
 }

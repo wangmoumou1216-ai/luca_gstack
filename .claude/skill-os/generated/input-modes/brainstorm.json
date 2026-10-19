@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "50aec311541e7dff2f090ffd4f6f86bf9edef4e7dacc9c6404d1a6517635e237",
+  "source_sha256": "108d84e009f327c088a11eca07076ad27813f671259d8559431855b88b1a11a0",
   "skill": "brainstorm",
   "group": "skills",
   "global": {
@@ -15,16 +15,26 @@
         ],
         "optional": [
           "deepresearch_report",
-          "idea_artifact"
+          "idea_artifact",
+          "discovery_mode"
         ]
       },
       "workflow": {
         "required": [],
         "optional": [
           "deepresearch_report",
-          "idea_artifact"
+          "idea_artifact",
+          "discovery_mode"
         ]
       }
+    },
+    "discovery_mode": {
+      "default": "full",
+      "allowed": [
+        "focused",
+        "full"
+      ],
+      "focused_requires_explicit_choice": true
     },
     "quality_gates": [
       "socratic_questions",
@@ -34,6 +44,7 @@
       "prd_destination_matrix",
       "no_unmapped_high_confidence_claims",
       "handoff_gate"
-    ]
+    ],
+    "notes": "discovery_mode 与PRD scope正交；focused由主Agent扫描并复用已答问题，new/mixed不自动升full；保留相关forcing checks、真实选择与独立Oracle。研究到决定的收益/代价/翻转条件复用现有rationale，不把建议升MUST。"
   }
 }

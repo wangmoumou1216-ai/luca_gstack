@@ -186,11 +186,13 @@ skills:
     modes:
       standalone:
         required: ["research_topic"]
-        optional: ["scope_constraints"]
+        optional: ["scope_constraints", "research_depth", "research_budget"]
       workflow:
         required: []
-        optional: ["idea_artifact", "prd_artifact"]
+        optional: ["idea_artifact", "prd_artifact", "research_depth", "research_budget"]
+    research_depth: {default: deep, allowed: [focused, moderate, deep], focused_requires_explicit_choice: true}
     quality_gates: ["source_traceability", "search_log", "consensus_matrix"]
+    notes: "focused 为显式试验，1名研究者/1–3决策问题/初始8项检索读取（批量逐项计），沿共享 focused-research 合同做证据评级与独立审查；consensus_matrix 是现有承载，不是代理票数。deep/moderate 保留。"
 
   quick-research:
     modes:
@@ -203,11 +205,13 @@ skills:
     modes:
       standalone:
         required: ["idea_or_problem_statement"]
-        optional: ["deepresearch_report", "idea_artifact"]
+        optional: ["deepresearch_report", "idea_artifact", "discovery_mode"]
       workflow:
         required: []
-        optional: ["deepresearch_report", "idea_artifact"]
+        optional: ["deepresearch_report", "idea_artifact", "discovery_mode"]
+    discovery_mode: {default: full, allowed: [focused, full], focused_requires_explicit_choice: true}
     quality_gates: ["socratic_questions", "oracle_review", "stable_ids", "research_claim_coverage", "prd_destination_matrix", "no_unmapped_high_confidence_claims", "handoff_gate"]
+    notes: "discovery_mode 与PRD scope正交；focused由主Agent扫描并复用已答问题，new/mixed不自动升full；保留相关forcing checks、真实选择与独立Oracle。研究到决定的收益/代价/翻转条件复用现有rationale，不把建议升MUST。"
 
   superpowers-brainstorming:
     source: "superpowers plugin"
@@ -226,21 +230,25 @@ skills:
     modes:
       standalone:
         required: ["design_question"]
-        optional: ["prd_artifact", "screenshots"]
+        optional: ["prd_artifact", "screenshots", "research_depth", "research_budget"]
       workflow:
         required: []
-        optional: ["prd_artifact", "brainstorm_output"]
+        optional: ["prd_artifact", "brainstorm_output", "research_depth", "research_budget"]
+    research_depth: {default: deep, allowed: [focused, moderate, deep], focused_requires_explicit_choice: true}
     quality_gates: ["human_research_plan_gate", "source_traceability", "consensus_matrix", "research_only"]
+    notes: "focused 为显式试验，1名研究者/1–3决策问题/初始8项检索读取（批量逐项计）；共识矩阵改承载证据质量/独立性/适用边界，保留独立审查与适用Human Gate。无AI不加AI/趋势研究，deep/moderate维度不变。"
 
   ux-brainstorm:
     modes:
       standalone:
         required: ["design_problem_or_idea"]
-        optional: ["ux_research_report", "screenshots", "architecture_brief"]
+        optional: ["ux_research_report", "screenshots", "architecture_brief", "discovery_mode"]
       workflow:
         required: []
-        optional: ["ux_research_report", "prd_artifact"]
+        optional: ["ux_research_report", "prd_artifact", "discovery_mode"]
+    discovery_mode: {default: full, allowed: [focused, full], focused_requires_explicit_choice: true}
     quality_gates: ["seven_ux_questions", "oracle_review", "stable_design_ids", "interaction_architecture"]
+    notes: "focused与scope正交，仅显式试验；seven_ux_questions表示相关检查，已答不重复问。保留人的选择与独立Oracle；主任务3–5步走读+关键恢复进入已有推荐/流程，非AI不强加AI机制。Brief继承目标/核心机制并补语义规格。"
 
   design-brief:
     modes:
@@ -265,6 +273,7 @@ skills:
         required: ["design_input"]
         note: "May omit PRD, but must not claim end-to-end traceable delivery."
     quality_gates: ["design_coordinate_system", "ai_native_layers", "eight_field_decision_cards", "state_coverage", "page_interaction_mapping", "output_target_platform_scope_sources", "traceability_gate", "design_generation_packet", "tool_consumption_contract", "single_entry_contract", "source_inheritance", "prototype_preservation_when_applicable", "template_adaptation_before_freeze", "scoped_traceability"]
+    notes: "读取当前必需PRD/已选方案/handoff完整版本；建议不自动成为MUST。0–3显著决定的证据边界、收益/代价/翻转条件复用D.rationale与AC，所有关键风险保留；收益执行条件进入实际Packet既有字段，丢条件停止冻结。"
 
   html-prototype:
     modes:

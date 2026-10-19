@@ -1,11 +1,22 @@
 # UX Research — Socratic Examination Prompt
 
 > Loaded by ux-research skill at Phase 3. Do NOT load at Phase 0 or Phase 1.
+> focused 依 `../../deepresearch/references/focused-research.md` Phase 3 选择审查对象和证据评级；
+> 保留本输出字段，不强制六维/段数。非 AI 的 ai_native_challenge 写有源 N/A，
+> b2b_challenge 按真实目标场景填写；不从示例推断产品。证据是否足以改变/支持决定须说明边界。
+> focused 的 ALL FINDINGS 指批准的问题集发现，不要求六维；按 focused owner 的对象范围审查，
+> status 原样回传五种既有矩阵状态（含 STRONG、UNVERIFIED），不为套输出格式改级。
+> 下方六类追问与叙事段数只约束 legacy；focused 只保留实际适用的追问和完整输出字段。
 > When `research_depth = moderate`: apply only to DISPUTED + CONTRADICTED findings (skip
 > CONSENSUS). Evidence quality rating for DISPUTED findings only. Synthesis narrative 1-2
 > paragraphs.
 
 ---
+
+有竞品发现时，将本检查及方法 owner 的精确路径交给实际 examiner；
+同一 examiner 完整读取 `references/competitor-analysis.md`，检查实际像素/行为
+来源、同任务可比性、迁移边界、关键状态及观察到效果的越级推断；结果留在现有 concerns/
+boundary_condition/open_questions。没有竞品发现不加载，不增设第二轮审查；原模式审查范围保持。
 
 ### Socratic Prompt Structure
 
@@ -63,7 +74,7 @@ OUTPUT FORMAT:
 
 <socratic_examination>
 
-<examined_finding id="[N]" claim="[主张]" status="[CONSENSUS/DISPUTED/CONTRADICTED]">
+<examined_finding id="[N]" claim="[主张]" status="[CONSENSUS/STRONG/DISPUTED/CONTRADICTED/UNVERIFIED]">
   <clarification>
     <question>[追问问题]</question>
     <assessment>[这个发现在这里是否清晰，或存在什么模糊性]</assessment>

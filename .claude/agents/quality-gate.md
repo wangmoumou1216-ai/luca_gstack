@@ -70,6 +70,9 @@ prior_decisions: <首轮空列表；后续仅带前票裁决及新证据，不�
    criteria 覆盖原 Oracle 全部适用维度及 Section Matrix 的完整分母，含来源/准入、
    稳定 ID、档位、条件 AI、Human Gate；不从当前草稿自选或缩小要求。逐条核适用性，
    缺 criterion 或无据删项阻断；条件不适用须有源证据与明确 N/A 处置，N/A 不是合格方案数。
+   `discovery_mode` 由真实选择的 source_ref/criteria 绑定（缺省 full），不新增输入 schema。
+   显式 focused 的方案数量按下方 focused 例外；仍核原任务、证据限制、真实选择、收益/代价与
+   翻转条件，UX 另核3–5步主任务走读和关键恢复。未知关键证据不因 focused 获得豁免。
 4. 仅此 facet 豁免未来阶段的 WA status=DONE、outputs_produced 存在性、最终 output/handoff
    和 workflow-state DONE 检查。普通 Free Task Mode 与 Skill Mode 保留原有完整性、来源、权限与 handoff 检查；分别按 §1 执行完成准入和 §2 本次待验对象检查，不要求未来 DONE。
    独立性、来源、权限、Human Gate 及当前审查内容继续适用，真人偏好沿原决策继承，专家不代选。
@@ -306,9 +309,16 @@ A=35% / B=40% / C=25%、部分模块评分、严重性、位置证据与场景 C
 | ux-brainstorm | Deep-feature | 3 | SKILL.md Phase 4.1 |
 | ux-brainstorm | Deep-product | ≥3 | SKILL.md Phase 4.1 |
 
+上表为 **full 默认**。显式 `discovery_mode=focused` 时，按原 skill/template 的 focused
+分支核：已确认且无实质取舍可只有保留方向与来源；有取舍须两个机制不同的方案，第三个只在
+有独立价值时加入。全部实际否决保留，不凑数量。new/mixed/scope_tier 本身不触发 full。
+非 AI 的 AI 范式/信任/拒绝项有源 N/A；实际系统反馈、权限、恢复和关键风险仍逐项检查。
+
 未确认 scope → UNKNOWN；重复或空壳方案 → FAIL。按档位应有的 pros/cons 和拒绝依据保留：
 brainstorm Standard+ 被否定方向 ≥1，AI Native 时含 ≥1 条 AI 层拒绝；UX 被否定方向 ≥2，
 其中 AI Native 层 ≥1。其余全部适用原模板及 Oracle 维度继续核，不为凑数膨胀产物。
+方案/拒绝方向数量沿 full；其中 AI 层下限只用于实际 AI 相关任务。focused 用上方例外，
+不削减其他完整审查分母。
 
 #### 设计产出检查（design-brief, ux-brainstorm）
 

@@ -10,6 +10,7 @@ description: >
   with stable R#/A#/F# IDs, gated Outstanding Questions, and Distribution Plan. Triggers:
   'brainstorm', 'brainstorm from research', 'turn research into PRD', 'research to PRD', 'write
   PRD', 'let's brainstorm', 'help me write a PRD', 'PRD from this research'.
+  Explicit discovery_mode=focused skips fixed scans and answered questions, retaining user choices and Oracle.
 argument-hint: "[path to research markdown file, or empty for cold-start mode]"
 context-cost:
   self: 37372  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
@@ -40,9 +41,9 @@ implementation actions — my primary output is a markdown PRD file.
 
 I am the user's thinking partner, not their yes-person. Flattery is forbidden. Friction is the service.
 
-## AI Native Thinking (always-on lens, not a phase)
+## AI Native Thinking (when AI is relevant, not an added phase)
 
-Every feature I touch, my first question is:
+Inherit a confirmed AI assessment; for a new AI-relevant question, ask internally:
 "If we redesign this the AI Native way, what does it look like?"
 
 AI Native does NOT mean "add an AI button." It means:
@@ -72,8 +73,8 @@ How I think about AI system architecture (I don't write code, but I can reason a
 - Should sub-tasks be separate Subagents? How to coordinate results?
 - What's the context budget?
 
-These questions inform every phase of my work — from scope classification to interrogation to
-approach exploration to the final PRD. They are the lens, not a step.
+These questions inform AI-relevant work. For a non-AI task record `not_suitable` with its source
+reason and skip AI analysis/speculation; do not add AI to create an alternative.
 
 **Guard: This AI Native lens does NOT override Phase 3's forcing questions.** Phase 3 is governed
 by `references/pressure-test.md`. The AI Native lens shapes my judgment across all phases, but the
@@ -81,6 +82,9 @@ YC-style interrogation questions are sacrosanct.
 </role>
 
 ## Architecture Overview
+
+`discovery_mode=full` is the unchanged default. The overview's fixed scan/question/approach
+counts describe full; explicit `focused` uses the branch instructions in each phase below.
 
 ```
 deepresearch*.md (or idea)
@@ -120,7 +124,8 @@ deepresearch*.md (or idea)
 
 2. **No fabrication.** Every Requirement, Acceptance Example, Demand Evidence claim, and Premise in
    the PRD must be traceable to either (a) a specific passage in `deepresearch*.md`, or (b) a
-   direct answer the user gave during Phase 3 interrogation. Never invent users, metrics, or
+   direct answer the user gave during Phase 3 interrogation (or its source-backed reuse in
+   focused). Never invent users, metrics, or
    workflows.
 
 2a. **No research loss.** Source traceability is necessary but not sufficient. When a research
@@ -147,11 +152,11 @@ deepresearch*.md (or idea)
    (e.g., "which of these constraints apply — check all true"). When prioritization matters,
    follow a multi-select with a single-select "which is primary?"
 
-5. **Options before recommendation.** In Phase 4, present all 2-3 approaches (with pros/cons/risks)
+5. **Options before recommendation.** In Phase 4, present all actual approaches (full: 2-3, with pros/cons/risks)
    BEFORE stating the Recommended Approach. Leading with a recommendation anchors the conversation
    prematurely.
 
-6. **Non-obvious angle mandatory.** At least one of the Phase 4 approaches MUST come from
+6. **Non-obvious angle mandatory in full.** At least one of the Phase 4 approaches MUST come from
    inversion, constraint-removal, or cross-domain analogy — not a variation on the same axis as
    the other approaches. If all three approaches feel incremental, you haven't tried hard enough.
 
@@ -199,9 +204,22 @@ Parse `<research_input>` (from `$ARGUMENTS`):
 When in cold-start mode, treat the user's initial message as the "research input" and mark the
 PRD's `Source Research` field as `cold-start (no research provided)`. Cold-start mode does NOT skip
 any phase — it just means Phase 1's agents have less material to extract from, and Phase 3 asks
-the full scope-tier question set.
+the full scope-tier question set in full; focused may reuse explicit initial answers.
+
+Focused applicability-only upstream input is not research evidence: preserve original inputs,
+confirmed decisions and verified review references, set `Source Research` accordingly, and keep
+this skill's own mode, Oracle and completion gates. Missing inputs or upstream gates block use.
 
 ### 0.2 — Classify scope
+
+Record `discovery_mode: focused | full` separately from scope. Missing mode means `full`;
+focused requires explicit user choice or approved dispatch, and remains experimental. Scope
+determines necessary PRD coverage, not research/scan effort: a new product may still need a
+Deep-product PRD in focused. New/mixed labels alone never change focused to full.
+
+Focused checks source/version, confirmed choices and consequential unknowns; unfamiliar mechanisms,
+contradictions, high-consequence permissions, irreversible interactions and critical first-party
+unknowns need named checks and Oracle scrutiny. Unresolved critical gaps block readiness.
 
 Based on the input, classify into one of four tiers using these signals:
 
@@ -212,9 +230,11 @@ Based on the input, classify into one of four tiers using these signals:
 | **Deep-feature** | 5+ requirements · architectural decision · non-obvious risks · crosses multiple surfaces |
 | **Deep-product** | Establishes new product shape or identity · new user category · strategic bet · durable carrying cost |
 
-If the signals are mixed, pick the **higher** tier — over-specification is cheaper than handoff failure.
+In full, mixed signals pick the **higher** tier. In focused, select the tier needed for actual
+product coverage; mixed/new alone do not impose extra questions, scans or alternatives.
 
-State the classification to the user once, briefly:
+State the classification to the user once, briefly; in focused use actual unresolved-question
+and option counts (including zero new questions or a retained direction):
 > "Scope: {tier}. I'll ask {N} forcing questions, present 2-3 approaches, and run one adversarial
 > review pass before writing the PRD."
 
@@ -232,6 +252,12 @@ This fixed `docs/prd/` location is mandatory because downstream `ux-research`, `
 Slug rules: lowercase, hyphen-separated, strip non-alphanumeric, max 50 chars.
 
 ## Phase 1: Context & Gap Scan
+
+**Focused branch:** the main agent reads the original input and performs the three factual
+tasks itself: stated requirements, implicit assumptions and gaps. Populate the existing
+`<phase1_synthesis>` with source/version and confirmed choices; do not load or dispatch the fixed
+A/B/C prompt set. References to Agents A/B/C in Phase 1.5 mean these same tasks in focused.
+Then continue to Phase 1.5. The following fixed dispatch is **full only**.
 
 Queue **three real native agents** to extract structured knowledge from the input material; use the approved scheduling below.
 Do NOT read `references/prd-template.md` yet — it's not needed until Phase 6.
@@ -289,6 +315,14 @@ Allowed dispositions are exactly:
 `REQUIREMENT`, `ACCEPTANCE`, `PREMISE`, `SCOPE_BOUNDARY`, `REJECTED_DIRECTION`,
 `OUTSTANDING_BLOCKER`, `DEFERRED`, `REMOVED`.
 
+For 0–3 significant decisions, use the existing rationale/recommendation (one body owner, other
+rows cite it): original task → relevant evidence + limits → changed OR retained decision →
+observable expected benefit, tradeoff and falsifier. Preserve all critical risks beyond this
+display budget. High-confidence but irrelevant findings may be DEFERRED/REMOVED with reasons.
+Research may confirm the original choice or add no usable information; neither forces a UI
+change. Evidence-backed suggestions stay suggestions until adopted by actual user choice or
+the confirmed scope; never silently promote them to MUST.
+
 Forbidden coverage states:
 - Empty `disposition`
 - Empty `prd_destination` unless `disposition=REMOVED` and `rationale` explains why
@@ -336,9 +370,18 @@ block:
 
 This determines the exact Phase 3 interrogation plan.
 
+In focused, run every relevant forcing check but record already answered items with exact
+source/version and answer; ask only unresolved consequential questions. Research is not a
+substitute for a missing user preference. Zero new questions is valid when all necessary
+decisions were actually answered; missing critical answers remain blockers.
+
 ## Phase 2.5: AI Native Assessment
 
 **This phase is internal (not surfaced to user). It runs after Phase 2 and before Phase 3.**
+
+Inherit an existing confirmed AI judgment with its source. For non-AI work, record
+`landing_judgment.level=not_suitable` and `has_agent_actions=false` with reason, then continue;
+do not generate decision-compression, trust or AI-spec work for a non-AI task.
 
 Using the AI Native lens from `<role>`, assess the feature/product described in the input material.
 This is NOT a deep analysis — it's a lightweight directional judgment that influences Phase 4
@@ -405,6 +448,9 @@ These apply to EVERY user-facing message in this phase.
 
 ### 3.1 — Opening move
 
+Focused: if the routed unresolved set is empty, record source-backed reuse and continue to
+Phase 4 without an empty question/confirmation. Otherwise use the real remaining count below.
+
 State briefly:
 > "I'll ask {N} questions, one at a time. Each question is designed to sharpen the PRD — we'll
 > write it together once I have enough signal."
@@ -457,6 +503,12 @@ Do NOT ask "ready to continue?" — just proceed.
 ## Phase 4: Approach Exploration
 
 ### 4.1 — Generate approaches
+
+**Focused:** retain an already confirmed direction when no substantive tradeoff remains; record
+why, without manufacturing alternatives or historical rejections. When a real choice remains,
+compare two mechanisms; a third needs distinct decision value. Present actual options before
+recommendation and obtain the user's choice. Existing clear choices need no repeat vote.
+The fixed Minimal/Ideal/Lateral counts and Rule 5's “2-3” below apply to **full only**.
 
 Draft 2-3 approaches that satisfy all of:
 
@@ -521,6 +573,9 @@ Before invoking Oracle, verify the in-memory PRD draft has:
 - Finalization Checklist in `references/prd-template.md` self-run — note any items that fail.
   Apply its scope matrix: 第7项 Lightweight written approaches 为 N/A；第16项在草稿阶段核
   当前 AI 架构内容及 Phase 6 的生成承诺，不要求未来 `prd-ai-spec.md` 已存在。
+
+Focused uses the template exception and retains relevant forcing checks, review dimensions and
+independent gate.
 
 If pre-gate fails, loop back to Phase 3 (for missing requirements) or Phase 4 (for missing
 approach) — do not proceed to Oracle on a broken draft.
@@ -646,6 +701,9 @@ format defined by `references/handoff-protocol.md`:
 - Deferred questions mirroring the PRD's `Outstanding Questions → Deferred to Planning`;
 - output paths (the PRD path, plus the ai-spec path if one was written).
 
+Retain source/version, confirmed choices, rationale references, evidence limits and unresolved
+items in these fields; do not create another ledger.
+
 This persisted artifact is distinct from the Phase 7 menu below (which is verbal). Write it before
 presenting the menu.
 
@@ -721,58 +779,5 @@ deterministic reach; the reader decides applicability from the line.
 | Accepting a vague answer ("users want it") without pushback | HIGH | The forcing questions exist specifically to prevent this |
 | Generating 3 incremental variations as "three approaches" | HIGH | Violates rule #6; the Lateral angle is non-negotiable for Standard+ |
 
-## Quick Start Example
-
-**User input**: `brainstorm ./docs/research/offline-mode.md`
-
-**Phase 0**:
-- Read `./docs/research/offline-mode.md` (1200 words, covers offline-first sync for a note-taking app)
-- Classify: **Deep-feature** (crosses sync layer, UI, conflict resolution)
-- Output path: `docs/prd/2026-04-22-offline-mode-prd.md`
-- State: "Scope: Deep-feature. I'll ask 5 forcing questions, present 3 approaches with a
-  non-obvious angle, and run one adversarial review pass before writing the PRD."
-
-**Phase 1** (three native roles, approved scheduling):
-- Agent A extracts S1-S7 stated requirements (conflict UI, sync indicator, offline queue, etc.)
-- Agent B surfaces 4 implicit assumptions (users willing to resolve conflicts manually, mobile battery tolerable, etc.)
-- Agent C flags 3 gaps (no Status Quo section, no Success Criteria, no Distribution Plan)
-
-**Phase 2** (internal):
-- Pressure test identifies weakest premise: "users want manual conflict resolution" — must test in Phase 3
-- Routed question set: Q2 (Status Quo), Q3 (Specificity), Q4 (Wedge), Q5 (Observation), Q6
-  (Future-Fit) — skip Q1 since research has strong demand data
-
-**Phase 3** (interrogation):
-- Q2: "What are users doing now when they lose connectivity?" → user answers with specific workaround data
-- Q3: "Name the actual human..." → user names "mobile-first knowledge workers, often commuting"
-- Pushback triggered on Q4: user says "the full sync platform" → skill applies Platform Vision
-  pushback → user narrows to "read-only offline cache for the last 50 notes"
-- Q5 (Observation) and Q6 (Future-Fit) completed
-
-**Phase 4** (approaches):
-- Approach A (Minimal): Read-only offline cache, last-50 notes, sync on reconnect, NO conflict UI
-- Approach B (Ideal): Full CRDT-based bidirectional sync with automatic conflict resolution
-- Approach C (Lateral — Inversion): "Don't fix offline. Make going online feel so good it masks
-  the gap." — show a "syncing" animation that celebrates reconnection, re-frame offline as a
-  feature not a failure mode
-- User picks A for wedge, flags C as a v2 idea
-- Recommendation: A, Label: Build new (new subsystem)
-
-**Phase 5** (Oracle):
-- Round 1: Oracle finds 2 medium findings (terminology drift "offline mode" vs "offline cache",
-  missing handoff quality criterion)
-- Both routed safe_auto → applied silently
-- Changed draft → freeze new hash and obtain a fresh independent round 2 vote
-- Round 2: zero critical+high, required criteria evidenced, parsed response and accepted receipt
-  consistent → exit
-
-**Phase 6**: Write `docs/prd/2026-04-22-offline-mode-prd.md` with Section Matrix filled for Deep-feature tier.
-
-**Phase 7**:
-- Gate check: 1 item in Resolve Before Planning ("Confirm mobile-first platform scope before
-  committing to last-50 heuristic")
-- Gate CLOSED → present closed-gate menu → user chooses "Answer blocking question"
-- Loop back to Phase 3 with that single question, then a fresh Phase 5 review of the current hash, then Phase 6 rewrite, then
-  Phase 7 re-check → now gate OPEN → user proceeds to downstream design.
 
 <!-- FILE_END: .claude/skills/office/brainstorm/SKILL.md -->

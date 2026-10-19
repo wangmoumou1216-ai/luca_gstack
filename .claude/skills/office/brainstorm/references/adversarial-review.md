@@ -11,6 +11,10 @@ Fire Oracle review when the PRD draft is complete (end of Phase 4) and BEFORE wr
 (Phase 6). The review operates on the in-memory draft, not the written file.
 
 **Gate criterion to enter Phase 5:**
+
+Bind explicit `discovery_mode` in the source/criteria (absent means full). In focused, use the
+prd-template focused count exception; actual confirmed choices and all relevant forcing checks
+must be evidenced. Do not demand synthetic alternatives or repeated user confirmations.
 - All requirements have stable IDs
 - All Outstanding Questions are categorized (blocking vs deferred)
 - Approaches and Recommended Approach are present (for Standard+ scope)
@@ -115,6 +119,10 @@ Hunt for source claims or brainstorm decisions that disappeared, were weakened, 
 - Are rejected directions preserved under `Recommended Approach → Rejected Directions` or Scope Boundaries, so downstream design does not reintroduce them?
 - Are weak assumptions represented as Premises only when user-confirmed, and otherwise as Outstanding Questions?
 - Are any coverage rows marked `REMOVED` without a concrete rationale?
+- For significant choices, does the existing rationale connect the original task, evidence and
+  limits to a changed or retained decision, observable expected benefit/tradeoff and falsifier?
+- Is a general finding being promoted to a MUST or specific component without actual adoption?
+  Supporting the original design or adding no usable information is valid, not a quality win.
 
 ### Dimension 7: AI Native Soundness (conditional — skip if Phase 2.5 landing_judgment is `not_suitable` or absent)
 Hunt for AI-related product design failures.

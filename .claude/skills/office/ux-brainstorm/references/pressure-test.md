@@ -164,6 +164,11 @@ Rules:
 
 ## Part 3: Question Routing by Scope Tier
 
+下表为 full 的提问安排。focused 仍核所有相关 forcing checks，但从原始输入/已有确认
+逐题记录来源版本与答案，只追问会改变结果的未决项；冷启动也可复用明确答案。
+研究不能代替用户取舍。非 AI 不触发 Q5/Q6/Q7 的 AI 条件；Q1 核实际系统反馈的可判断性。
+Q3 的实际任务/权限/恢复边界仍要核，已答不重复问；关键未知仍阻断。
+
 | Tier | Required Questions | Conditional |
 |------|-------------------|-------------|
 | Lightweight | Q1, Q4 | Q5* Q6* Q7* |
@@ -275,6 +280,8 @@ Run the following against Phase 1 output + ux-research report (if available):
 ```
 
 ### Step 4: AI时代范式透镜检查（新增）
+
+仅 AI 相关任务执行；已确认判断引用继承，非 AI 写有源 N/A，不为本检查引入 AI。
 
 对每个ux-research的CONSENSUS发现，检查：
 

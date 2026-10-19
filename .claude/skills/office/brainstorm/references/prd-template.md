@@ -15,6 +15,13 @@ Match the document's weight to the problem's ambiguity. There are three scope ti
 
 ## Section Matrix — What to Include by Tier
 
+Scope governs product coverage; `discovery_mode` governs effort. The counts below are **full**
+(default). Explicit focused retains all required substance/IDs but allows the already confirmed
+direction with its source when no meaningful choice remains, or two different mechanisms when
+a choice remains (third only with distinct value). Apply this exception to Approaches Considered,
+Rejected Directions and checklist #7; preserve actual rejected choices, never invent rejections
+to reach a count. Record the mode beside Scope Tier. All other applicable checklist gates remain.
+
 `✓` = required · `triggered` = include only when activated by a signal · `—` = skip
 
 | Section | Lightweight | Standard | Deep-feature | Deep-product |
@@ -149,6 +156,12 @@ destination in this PRD. This section prevents downstream `/ux-research`, `/ux-b
 **Coverage rule:** `Disposition` cannot be blank. `PRD Destination` cannot be blank unless
 `Disposition=REMOVED` and `Rationale` explains why it was removed. Do not use "implicit",
 "covered generally", "handled downstream", or "TBD" as a destination.
+
+For 0–3 consequential decisions, Rationale points to one owned explanation of original task →
+evidence + applicability limits → changed/retained choice → observable expected benefit,
+tradeoff and falsifier (normally Recommended Approach). Keep all critical risks. Irrelevant
+high-confidence findings can be DEFERRED/REMOVED with a reason. Suggestions do not become MUST
+without actual adoption; research can support the original choice or add no usable information.
 
 ## Status Quo
 
@@ -342,6 +355,9 @@ Examples of good assignments:
 ## What I Noticed About How You Think
 
 2-4 quoted callbacks to things the user said during the interrogation. Use their actual words in quotes. This is not flattery — it's pattern reflection that helps the user see their own reasoning shape.
+
+Focused uses only actual relevant user words from the current or source-backed prior answers;
+no quote minimum. If none are useful, mark N/A instead of inventing dialogue or asking filler.
 
 - "{direct quote}" — this suggests you {pattern observed}.
 - "{direct quote}" — worth noticing: {pattern observed}.

@@ -20,6 +20,7 @@ design_output:
     rationale: "用户要的就是 OD 产出且桌面端 OD 走订阅会话可靠；headless 实测不稳（生成慢 >2.5-3min + daemon SIGTERM 重启；鉴权非故障原因）。daemon 既 UP，正确降级是同栈桌面端，而非换 magicpath/html-prototype。"
 
 research_default:
+  effort_selection: "research_depth=focused 与 discovery_mode=focused 仅显式试验；分别沿deepresearch/ux-research与brainstorm/ux-brainstorm的当前合同，默认deep/full不变。scope不等于投入；new/mixed不自动升full，关键未知仍阻断。"
   principle: "复杂且新颖任务，研究阶段(deepresearch/ux-research)是默认步骤，非可选。"
   light_paths_apply_when:        # 不含研究节点的轻量 recommended_paths 仅适用于：
     - "低不确定性"
@@ -88,10 +89,14 @@ presets:
       - "after task-plan SHA freeze, Plan Agent compiles exact U-IDs"
       - "the user confirms that same task-plan SHA, baseline, U-ID set, paths, effects, and assertions"
 
+# 场景只描述任务背景；按实际缺口选节点/局部回退的唯一 owner 为
+# .claude/agents/references/plan-design-guidance.md。静态路径不是必跑清单。
+# 成熟输入路径不绕过 research_default、真实人类决定及节点质量门；不激活 Workflow。
 scenes:
   A:
     name: "new_feature"
     recommended_paths:
+      - ["design-brief", "design-output"]  # 目标/核心机制已定，关键证据足够
       - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "design-output"]
       - ["idea", "brainstorm", "design-brief", "design-output"]
       - ["idea", "superpowers-brainstorming", "design-brief", "design-output"]  # 轻量路径
@@ -107,6 +112,7 @@ scenes:
   B:
     name: "existing_feature_optimization"
     recommended_paths:
+      - ["design-brief", "design-output"]  # 已知问题与修改/保持范围，不代替需要的审计
       - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "design-output"]
       - ["ux-audit", "design-brief", "design-output"]
       - ["superpowers-brainstorming", "design-brief", "design-output"]  # 轻量路径
@@ -133,6 +139,7 @@ scenes:
   D:
     name: "agent_native_redesign"
     recommended_paths:
+      - ["design-brief", "design-output"]  # 分工/权限/确认/接管/恢复均已确认，关键未知已解决
       - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "design-output"]
       - ["ux-brainstorm", "design-brief", "design-output"]
       - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "design-output"]  # 有一手用户/使用数据：先综合洞察再 Agent 化设计（追加项 C）
@@ -182,6 +189,7 @@ handoff_gates:
       - "selected_approach missing"
       - "interaction_architecture missing"
     allow_standalone_override: true
+    decision_transfer: "继承原始来源版本与用户确认目标/核心机制；Brief可补语义位置/状态/AC，建议不自动升MUST；预期收益的执行条件进入既有Packet字段，生成器保留视觉表达。focused不豁免上述门。"
     note: "design-brief=收敛引擎：检测到 ux-brainstorm 产出时继承其 §5 AI-Native 判定 / §10 假设 / §9 被否定方向（Phase1 切交互层复核, Phase2 切 checkpoint），不重做发散；已有需求/原型入口不强制本上游门，不重做已确认机制；以当前设计源完整覆盖收敛。二者不并列产同类文档。"
 
   design_brief_to_magicpath:

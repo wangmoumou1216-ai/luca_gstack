@@ -1,6 +1,8 @@
 # Deep Research — Socratic Examination Prompt
 
 > Loaded by deepresearch skill at Phase 3. Do NOT load at Phase 0 or Phase 1.
+> Focused: scope and confidence follow `focused-research.md` Phase 3, not the fixed categories/paragraphs below.
+> Keep this output shape; question relevance, source independence, transfer and unsupported implications.
 > When `research_depth = moderate`: apply only to DISPUTED + CONTRADICTED findings (skip
 > CONSENSUS). Evidence quality rating for DISPUTED findings only. Synthesis narrative 1-2
 > paragraphs.
@@ -74,7 +76,7 @@ OUTPUT FORMAT:
     [Perspectives not represented in the research]
   </missing_perspectives>
   <implications>
-    [Key implications and second-order effects]
+    [Decision informed, evidence limits, second-order costs; distinguish changing a decision, supporting it, and no usable information. Do not infer a required component from a general finding.]
   </implications>
   <revised_confidence>[HIGH / MEDIUM / LOW — may differ from original]</revised_confidence>
   <revision_reason>[Why confidence changed, or "No change" if unchanged]</revision_reason>

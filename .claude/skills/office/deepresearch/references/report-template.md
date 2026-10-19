@@ -3,6 +3,18 @@
 > Loaded by deepresearch skill at Phase 4. Do NOT load before Phase 4.
 > When `research_depth = moderate`: report detail level = summary findings per angle (not full detail).
 
+For focused, apply `focused-research.md`: declare the actual mode, original task/source version,
+confirmed choices, one researcher + independent examiner and actual search/read item usage in
+the existing Methodology. Reuse the headings below: summarize only decision-relevant findings,
+use evidence-source columns in the matrix and organize detailed findings by the 1–3 questions.
+No fixed paragraph/angle/finding minimum; absent evidence stays a gap, not an invented section.
+In each existing finding's detail, connect task → evidence + limits → decision informed. Expand
+0–3 significant implications, retaining all critical risks; distinguish changed / supported /
+no usable information. A report cannot assert that an untested design is better.
+For zero questions, the shared owner's applicability-only completion branch controls these fields:
+zero researchers, no findings, confidence N/A and an actual independent applicability examination.
+The multi-agent/parallel/round labels below are legacy placeholders, not focused execution claims.
+
 ---
 
 ### Step 4.3: Report Template

@@ -12,6 +12,14 @@ constructive but unsparing.
 
 You review against 5 dimensions. You do NOT rewrite the proposal — you flag problems and classify their severity.
 
+Bind discovery_mode (absent means full), original task/source version and confirmed choices.
+Focused applies SKILL.md Phase 4.1's actual-choice counts, not the full fixed counts below.
+All five review dimensions remain; non-AI AI-specific criteria are sourced N/A, while actual
+system feedback, permissions and failure recovery remain required. Missing independent review
+or critical evidence never becomes N/A. Check the main task's 3–5-step walkthrough + critical
+recovery: does the mechanism actually imply the claimed benefit, and move cost elsewhere?
+Walkthrough reasoning is not user-test or visual-quality evidence.
+
 ---
 
 ## Five Review Dimensions
@@ -100,7 +108,7 @@ Severity guide:
 
 Check:
 - [ ] design-brief skill拿到这个方案，能直接做设计决策吗？
-- [ ] 还需要发明什么设计判断？（如果需要 → 不就绪）
+- [ ] 已确认产品目标/核心机制是否足够明确？Brief 可在既定范围细化语义位置、状态和 AC；生成器拥有视觉表达。
 - [ ] 被否定的方向是否完整记录？（≥2条，含AI Native层面≥1条）
 - [ ] AI Native判定是否清晰？（design-brief Phase 1可以直接引用）
 - [ ] Evaluability等级是否确定？
@@ -112,7 +120,7 @@ Check:
 - [ ] **演进路径是否存在**：推荐方案是否有v1→v2→v3演进声明？v1的决策是否堵死了v2/v3？
 
 Severity guide:
-- design-brief需要发明产品/设计决策 → CRITICAL
+- design-brief需要猜产品目标或核心机制 → CRITICAL；正常语义规格细化不算缺陷
 - 被否定方向缺失 → HIGH
 - ID不稳定 → CRITICAL
 - 待解决问题未分blocking/deferred → HIGH
@@ -142,6 +150,7 @@ ADVERSARIAL DESIGN REVIEW
 
 ROUND: {N} of default max 2 (extra rounds require a stated escalation reason)
 SCOPE TIER: {tier}
+DISCOVERY MODE: {full | focused; explicit selection source, absent means full}
 SOURCE: {ux-research report path or cold-start}
 
 <design_proposal>

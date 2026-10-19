@@ -251,18 +251,19 @@ for (const [name, pattern] of [
 }
 const engineeringModes = read('.claude/agents/references/plan-engineering-modes.md');
 const designGuidance = read('.claude/agents/references/plan-design-guidance.md');
-const expectedDesignGuidanceSha256 = 'b7fc7d1ae70acef5720338b6f4ae4f3ba3d06e7de92a78fc5abd343242943224';
+const expectedDesignGuidanceSha256 = '31966880bdbbb234f226c1fd7976d925ec7dcbe4caa4f157d6b10ed2f9ae79e4';
 const designGuidanceSha256 = createHash('sha256').update(designGuidance).digest('hex');
 const assertionExamples = read('.claude/agents/references/plan-assertion-examples.md');
 const mandatoryDesignOutputGate = 'When a design chain proceeds from `design-brief` to implementation, the intervening design-output\n'
   + 'Phase is mandatory: it must not be omitted, merged with implementation, or bypassed by proceeding\n'
   + 'directly to implementation.';
 const expectedOrderedDesignChain = [
-  'For a full design chain, preserve this order and omit a node only when its applicability was',
-  'explicitly assessed:',
+  'Build only the applicable dependencies: evidence before the decision using it, the selected',
+  'product/interaction decisions before Brief, then the chosen output and actual validation.',
+  'The full-chain reference below is not a checklist or a reason to add missing nodes:',
   '',
   '```text',
-  'research → brainstorm/PRD → ux-brainstorm → design-brief → design output → implementation',
+  'applicable research → product/interaction choices → design-brief → design output + validation → requested implementation',
   '```',
   '',
   'The design-output Phase is independent from implementation and exists to validate interaction; it',
@@ -276,7 +277,7 @@ const expectedOrderedDesignChain = [
   '`ux-research` may run alongside an already-started brainstorm only when a PRD file exists, it',
   'contains target users and core features, and no blocking `[待确认]` remains. Otherwise it waits.',
 ].join('\n');
-const orderedDesignChainMatch = designGuidance.match(/(?:^|\n)## Ordered design chain\n\n([\s\S]*?)\n\n## Design output choice and authority/);
+const orderedDesignChainMatch = designGuidance.match(/(?:^|\n)## Ordered dependencies within the selected chain\n\n([\s\S]*?)\n\n## Design output choice and authority/);
 const orderedDesignChain = orderedDesignChainMatch?.[1];
 const orderedDesignChainPrefix = orderedDesignChainMatch
   ? designGuidance.slice(0, orderedDesignChainMatch.index) : designGuidance;
@@ -366,7 +367,7 @@ if (!engineeringModes.includes('<!-- FILE_END: agents/references/plan-engineerin
 if (!designGuidance.includes('<!-- FILE_END: agents/references/plan-design-guidance.md -->')
     || designGuidanceSha256 !== expectedDesignGuidanceSha256
     || !/failure does not|故障.*does not|故障.*不/.test(designGuidance)
-    || !/research → brainstorm\/PRD → ux-brainstorm → design-brief → design output → implementation/.test(designGuidance)
+    || !/applicable research → product\/interaction choices → design-brief → design output \+ validation → requested implementation/.test(designGuidance)
     || !/must occupy a separate Work Agent\/Phase/.test(designGuidance)
     || orderedDesignChain !== expectedOrderedDesignChain
     || orderedDesignChainContainer.inHtmlComment || orderedDesignChainContainer.inRawHtmlBlock

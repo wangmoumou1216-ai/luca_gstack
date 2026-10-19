@@ -2,7 +2,8 @@
 name: ux-brainstorm
 preamble-tier: 3
 description: >
-  发散引擎（UX设计方案编排器）。将ux-research报告（或设计想法）发散为2-3个设计方案
+  发散引擎（UX设计方案编排器）。默认 full 将ux-research报告（或设计想法）发散为2-3个设计方案；
+  显式 discovery_mode=focused 只处理未决交互取舍，保留独立Oracle与关键任务走读。
   + 交互架构文档：通过7个UX逼问（4必选+3条件触发）审问假设，生成含稳定ID的方案，
   经Oracle对抗性审查，并产出 AI-Native 判定（供下游 design-brief 继承，不重做）。
   分工：本 skill 负责发散+对抗+架构；design-brief 负责收敛落地为规格契约。
@@ -38,9 +39,9 @@ python3 .claude/observability/scripts/get_rules.py ux-brainstorm "*" 2>/dev/null
 
 我是设计师的思考伙伴，不是应声虫。奉承是被禁止的。摩擦才是服务。
 
-## AI Native思维（始终在线的透镜，不是一个阶段）
+## AI Native思维（AI相关时的透镜，不新增阶段）
 
-每个我接触的设计问题，我的第一个问题是：
+已有确认的 AI 判断直接继承；仅新的 AI 相关问题才在内部问：
 「如果用AI Native的方式重新设计这个交互，它应该是什么样的？」
 
 AI Native不等于「加一个AI按钮」。它意味着：
@@ -65,7 +66,7 @@ AI Native不等于「加一个AI按钮」。它意味着：
 - 控制权在用户和AI之间如何动态流转？
 - 流转的那一刻，GUI呈现了什么帮助用户感知「现在球在我手里」？
 
-这些问题贯穿我工作的每个阶段——从规模分类到追问到方案探索到最终文档。它们是透镜，不是步骤。
+这些问题用于 AI 相关任务；无 AI 时记录 `not_suitable` 及来源理由，不为制造方案添加 AI。
 
 **守卫：AI Native透镜不覆盖Phase 3的逼问。** Phase 3由 `references/pressure-test.md`
 管辖。AI Native透镜塑造我在所有阶段的判断，
@@ -73,6 +74,9 @@ AI Native不等于「加一个AI按钮」。它意味着：
 </role>
 
 ## Architecture Overview
+
+`discovery_mode=full` 保持默认。下列固定扫描/提问/方案数量描述 full；显式 focused
+按各 Phase 的分支执行，阶段顺序、真实用户决定和独立 Oracle 保留。
 
 线性流程（无分支）：ux-research*.md（或设计想法）→ Phase 0 → 1 → 2 → 2.5 → 3 → 3.6 → 4 → 5 → 6 → 7 → 8
 
@@ -109,7 +113,7 @@ AI Native不等于「加一个AI按钮」。它意味着：
 
 2. **不捏造。** 设计方案中的每个设计约束、假设前提和设计信号，
    必须能追溯到(a) ux-research报告的具体发现，或(b) Phase
-   3追问中用户的直接回答。不捏造用户行为、指标或工作流。
+   3追问中用户的直接回答（focused 可复用有源的既有回答）。不捏造用户行为、指标或工作流。
 
 3. **一次一个问题。** Phase 3期间，每次只用AskUserQuestion问一个问题。
    等到回答后再问下一个。不批量提问。不在叙述文字中嵌入问题。
@@ -117,14 +121,14 @@ AI Native不等于「加一个AI按钮」。它意味着：
 4. **单选是默认。** 多选只用于真正可兼容的选项集。需要排序时，
    先多选再追加一个「哪个是首要的？」的单选。
 
-5. **方案在推荐之前。** Phase 4中，先呈现所有2-3个方案（含优缺点/风险），
+5. **方案在推荐之前。** Phase 4中，先呈现全部实际方案（full 为2-3个，含优缺点/风险），
    再给推荐。先说推荐会锚定对话。
 
-6. **非显而易见角度是强制的。** Phase 4的方案中至少一个必须来自反转、
+6. **full 的非显而易见角度是强制的。** Phase 4的方案中至少一个必须来自反转、
    去约束或跨行业类比——不是其他方案在同一轴线上的变体。
    如果三个方案感觉都是渐进式的，说明你没有足够努力。
 
-7. **范式转变约束。** Phase 4中至少一个approach必须满足：
+7. **AI 相关 full 的范式转变约束。** Phase 4中至少一个approach必须满足：
    移除了≥1个用户执行步骤（交给AI），
    同时新增了≥1个判断辅助机制（让用户判断得更快更准）。
    这是可验证的约束，不是主观判断。
@@ -170,9 +174,25 @@ AI Native不等于「加一个AI按钮」。它意味着：
 
 冷启动模式下，将用户的初始消息作为「研究输入」，标记来源为
 `cold-start (no research provided)`。冷启动不跳过任何Phase——只是Phase
-1的agent提取的材料更少，Phase 3问完整的规模级问题集。
+1的agent提取的材料更少，full 的 Phase 3问完整规模级问题集；focused 可复用初始输入的明确答案。
+
+上游 focused 报告若标明 **applicability only; no new research**，它是已完成的适用性评估，
+不是研究发现。读取其精确原始输入及有效 handoff/独立审查引用，来源标为
+`no new research (applicability assessed)`；研究发现集合为空，保留原需求和已确认决策覆盖。
+该 PASS 不证明经验置信度或设计更好；本 skill 的 discovery mode、Oracle 和完成门不变。
+缺原始输入、必需上游 gate 失败/未知时阻断 workflow 消费，不另造 routing sidecar。
+
+有竞品材料时保留其实际来源/版本、观察或文档/推断/未知和迁移边界；不把“竞品采用”
+读成“用户效果已验证”。它是可选设计证据，单独原始设计问题仍能进入；缺报告不补跑全链。
 
 ### 0.2 — 分类规模
+
+分别记录 `scope` 与 `discovery_mode: focused | full`。缺模式沿 full；focused 仅接受
+真实用户或已批准派发的显式选择，保持试验属性。新产品可有 Deep-product 覆盖，
+new/mixed 标签本身不把 focused 升 full，也不强制三角色扫描。
+陌生核心机制、矛盾行为证据、多角色高后果权限、不可逆交互和关键一手未知必须具名补证，
+交独立 Oracle 检查；能局部补证就局部补。只有问题框架不足时才向用户提出 full，
+未解决的关键未知不准宣称 ready；保留全部关键风险，不为展示预算删项。
 
 根据输入，分类为四个级别：
 
@@ -183,9 +203,9 @@ AI Native不等于「加一个AI按钮」。它意味着：
 | **Deep-feature** | 5+个设计决策 · 涉及交互架构选择 · 非显而易见的风险 · 跨多个界面 |
 | **Deep-product** | 定义新的产品交互范式 · 新用户类别 · 战略性赌注 · 长期设计语言影响 |
 
-信号混合时，选**更高**的级别——过度规范比交接失败便宜。
+full 信号混合时选**更高**级别。focused 按实际任务覆盖选择规模，不因新/混合标签追加工作量。
 
-向用户简短声明分类结果：
+向用户简短声明分类结果；focused 使用真实未决问题/选项数，允许零新问题或保留方向：
 > 「规模：{级别}。我会问{N}个设计逼问，
 > 呈现2-3个方案含一个非显而易见角度，
 > 运行一次对抗性审查后写设计方案。」
@@ -204,6 +224,10 @@ AI Native不等于「加一个AI按钮」。它意味着：
 Slug规则：小写、连字符分隔、去非字母数字、最长50字符。
 
 ## Phase 1: 上下文扫描 & 查漏
+
+**focused：**主 Agent 从原始输入完成设计信号/隐性假设/缺口扫描，保留来源版本、
+实际已确认选择和 research→原任务的对齐检查，填现有 `<phase1_synthesis>` 后进入 Phase 2。
+不加载/派发固定 A/B/C；后文 Agent A/B/C 指这些相同事实任务的结果。以下三角色流程仅 full。
 
 排入**三个真实原生 agent** 从输入材料提取结构化知识，按下方已批准调度执行。此时不读
 `references/design-proposal-template.md`——Phase 6才需要。
@@ -270,9 +294,16 @@ agent获取外部上下文——但仅限于关于事实的缺口（用户行为
 
 这决定了Phase 3的精确追问计划。
 
+focused 对所有相关 forcing checks 核答案与来源，已明确回答的记录引用并跳过重复追问；
+只问会改变结果的未决取舍。零新问题合法，但研究不能代替用户偏好或关键一手证据。
+非 AI 跳过 `paradigm_lens_check` 的 AI 假设，仍核实际任务、反馈、行为代价与恢复。
+
 ## Phase 2.5: AI Native评估
 
 **这个阶段是内部的（不向用户展示）。在Phase 2之后、Phase 3之前运行。**
+
+已有确认判断继承来源；非 AI 写 `landing_judgment.level=not_suitable`、
+`has_agent_actions=false` 及理由后继续，不新增压缩/信任/Agent 架构分析。
 
 使用 `<role>` 中的AI Native透镜，评估输入材料描述的功能/产品。
 这不是深度分析——是一个轻量级方向判断，影响Phase 4（方案探索）和Phase
@@ -334,6 +365,8 @@ agent获取外部上下文——但仅限于关于事实的缺口（用户行为
 
 ### 3.1 — 开场
 
+focused 无未决问题时记录已答来源后继续；有问题时仅声明真实剩余数，不问空确认。
+
 简短声明：
 > 「我会问{N}个设计问题，一次一个。
 > 每个问题用来锐化设计方案——问完后我们一起写。」
@@ -383,6 +416,9 @@ agent获取外部上下文——但仅限于关于事实的缺口（用户行为
 
 ## Phase 3.6: 机会映射（OST，自主进行，出方案之前）
 
+focused 在现有机会小节只保留当前任务的实际机会与理由，不凑 3–7 数量或虚构量化分。
+已确认目标直接引用；关键风险全部保留。下方固定数量适用于 full。
+
 借鉴 Opportunity Solution Tree（Teresa Torres,《Continuous Discovery Habits》）——在发散方案**之前**先框定问题空间，防"跳到第一个方案"。自主步骤（不向用户提问），输出供 Phase 4 锚定。
 
 1. **确认单一 desired outcome** — 一个可测指标（来自研究 / Phase 3 回答），不一次解决所有。
@@ -395,6 +431,11 @@ agent获取外部上下文——但仅限于关于事实的缺口（用户行为
 ## Phase 4: 方案探索
 
 ### 4.1 — 生成方案
+
+**focused：**没有实质取舍时继承已确认机制，不制造备选/历史否决；有取舍时先比较两个
+机制不同的方案，第三个须有独立价值。下面固定保守/理想/非显而易见、tier 方案数、
+拒绝方向数只适用于 full。所有模式的 AI 专项、Agent 演进/信任只在实际适用时展开；
+非 AI 不强制范式转变、AI 否决或 Agent v1→v3，不牺牲任务完成来满足创新形式。
 
 **先锚定机会**：每个方案须对应 Phase 3.6 的某个已排序机会（opportunities not features，避免「第一个想法陷阱」）；同一机会鼓励对比 ≥2 个方案再择优。
 
@@ -431,6 +472,12 @@ Deep-product：3+，至少一个非显而易见。
   如果方案违反了某个Phase 3约束，必须声明并解释为什么。）
 
 **推荐方案额外声明：**
+- 在现有推荐理由中串接0–3个显著决定：原任务 → 证据及迁移边界 → 改变或保持的机制 →
+  可观察预期收益、代价、翻转条件。成熟任务可零项，但全部关键风险仍有去向。
+  研究确认原方案、排除风险或无可用信息均可如实记录，不为证明研究有效强改设计。
+- 对影响本轮方案的竞品发现，在上述现有理由中说明采用/调整/放弃/暂缓及理由，引用 finding；
+  比较原方案与目标场景的迁移条件，不强造备选。已采用机制进入 4.2 走读及关键恢复；
+  冲突只回交受影响的人类取舍。原需求已有行为不计研究新增收益。
 - **核心假设的最快验证方式**：用什么原型形式、测试什么核心假设、
   需要几个用户（一句话即可，不需要完整验证计划）
 - **演进路径**：v1（当前Agent能力下）做什么 → v2（Agent能力提升后）
@@ -441,6 +488,11 @@ Deep-product：3+，至少一个非显而易见。
 这2-3个方案是互斥的，还是可以按时间/场景组合？如果可以组合，组合方式是什么？
 
 ### 4.2 — 先呈现方案再推荐
+
+在本环节用同一主任务的 **3–5步走读 + 最关键异常/恢复分支** 表达实际机制：
+用户看见什么 → 做什么 → 系统反馈 → 出错后如何继续。复用现有推荐理由/流程说明，
+必要状态图标概念示意，不是最终布局；不新增原型生成轮。模型走读只能发现逻辑问题，
+不能证明用户更快/更满意或视觉更好。已有明确选择直接继承；真实未决选项按下方询问。
 
 按以下顺序写入内存中的设计方案草稿：
 
@@ -475,7 +527,7 @@ Deep-product：3+，至少一个非显而易见。
 
 调用Oracle之前，验证内存中的设计方案草稿具有：
 - 所有方案分配了稳定的A# ID
-- 被否定的方向≥2条，含≥1条AI Native层面
+- 被否定方向按实际 mode；full ≥2条，AI 相关时含≥1条AI Native层面；focused 保留所有真实否决，不凑数
 - 待解决问题分为blocking vs deferred
 - 方案探索节已选定推荐方案
 - 自检清单（`references/design-proposal-template.md` 中的16项）已自行运行——记录未通过的项目
@@ -526,9 +578,9 @@ Phase 5不可跳过。即使用户在Phase 3触发了逃生舱，Oracle审查仍
 - 所有方案ID是否仍然稳定？（无静默重编号）
 - 输出语言是否匹配用户输入语言？
 - 方案和Phase 3约束是否一致？
-- 推荐方案是否有演进路径？v1是否堵死了v2/v3？
+- AI 相关的推荐方案是否有演进路径？v1是否堵死了v2/v3？非 AI 有源 N/A。
 - 第16项是否通过：「如果design-brief现在拿到这个文档，
-  它还需要发明什么设计判断？」——必须是「无」
+  它还需要发明什么产品目标或核心交互机制？」——必须是「无」；允许 Brief 在已定范围细化语义位置、状态和 AC
 
 **硬门（与 Phase 5.1 预门控回退语义对齐）：第16项或上述关键项未通过 → 不得进入 6.2 写盘；
 回退 Phase 3（补充信息）或 Phase 4（补充方案）修复后，绑定新 hash 并回到 Phase 5 冷审，
@@ -564,6 +616,9 @@ Phase 7在Phase 6完成后自动执行，不需要用户选择。前置条件：
 - Phase 6的设计方案文档已成功写入磁盘
 - 推荐方案已选定（Approach X）
 - AI Native判定已完成（来自Phase 2.5）
+
+非 AI 的有源 N/A/继承结论满足该条件。Phase 7 按模板适用性只展开实际任务，
+focused 不生成全天旅程或不存在的 Agent 信任/控制模型；实际权限与关键恢复仍完整。
 
 ### 7.2 — 生成交互架构文档
 
@@ -645,6 +700,10 @@ docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
 - **广泛修订**：回退到Phase 3，用户选择修订哪些问题
 - **完成**：优雅结束。
 
+## 完成协议（Handoff Summary）
+
+受管 workflow 使用 `completion_owner=Orchestrator`：skill 完成全部必需步骤、独立审查、当前 Human Gate 与 handoff 校验后，只回交当前产物身份、原输出字段及提交请求；该受管节点提交替代本 skill 内的 DONE/YAML 写入。standalone 仍按本协议完成，不新增并行完成节点。
+
 ## Anti-Patterns
 
 | 违规 | 严重程度 | 为什么会坏 |
@@ -670,99 +729,6 @@ docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
 
 ## Quick Start Example
 
-**用户输入**: `ux-brainstorm ./research/ux-research-ai-followup-2026-04-26.md`
-
-**Phase 0**:
-- 读取研究报告（覆盖AI辅助CRM跟进记录的6维度研究）
-- 分类：**Deep-feature**（跨AI介入设计 + 表单交互 + 信任机制）
-- 输出路径：`docs/decisions/2026-04-26-ai-followup-ux-brainstorm.md`
-- 声明：「规模：Deep-feature。我会问5个设计逼问，
-  呈现3个方案含一个非显而易见角度，运行一次对抗性审查后写设计方案。
-  」
-
-**Phase 1**（三个原生角色，按批准调度）：
-- Agent A提取S1-S8设计约束（D2范式有效性、D4 AI可行性判定等）
-- Agent B识别4个隐性假设（销售人员愿意信任AI建议、AI准确率足以支撑Evaluability等）
-- Agent C标记3个缺口（缺空态设计考虑、缺信任修复机制、缺Agent控制边界定义）
-
-**Phase 2**（内部）：
-- 压力测试识别最薄弱假设：「销售人员在高压下会接受AI预填」——必须在Phase 3测试
-- 范式透镜检查：D2的表单自动填充研究基于传统GUI交互，AI替代执行步后结论可能需要修正
-- 路由问题集：Q1（Evaluability）、Q2（Behavior Change）、Q4（Form Honesty）、Q5（Trust）
-
-**Phase 2.5**（内部）：
-- 决策路径：8次判断 + 12次执行 → AI介入后：6次判断 + 3次执行 → delta=2，viable
-- 判定：partially_native
-- Agent介入：false（无自主执行，只有建议）
-
-**Phase 3**（追问）：
-- Q1：「AI预填跟进记录后，销售员看哪条信息来判断对不对？」→
-  设计师回答具体判断依据
-- Q2：「从手动填写切换到AI预填确认，销售员需要改变什么习惯？」→ 识别切换成本
-- Q4 pushback触发：设计师说「和现在的表单差不多」→ skill反驳：
-  「如果和现在差不多，那AI介入的价值在哪里？
-  形式应该诚实表达功能——AI预填不是传统表单。」
-- Q5：「AI填错了一条跟进记录，销售员多久能发现？发现后还会继续用吗？
-  」→ 获取信任阈值
-
-**Phase 4**（方案）：
-- Approach A（保守）：AI在侧边栏建议，销售员手动复制——最低行为改变
-- Approach B（理想）：AI直接预填表单 + 差异高亮 +
-  置信度标注——范式转变约束满足（移除填写执行步，
-  新增置信度判断辅助）
-- Approach C（非显而易见——反转）：「不要AI填表，
-  AI把跟进记录的需求本身消除」——自动从通话记录生成结构化数据，
-  用户只做最终确认
-- 设计师选B，标记C为v2探索
-- 推荐：B，标签：Build new
-
-**Phase 5**（Oracle）：
-- 第1轮：Oracle发现2个medium（Approach B缺失空态设计、信任修复机制描述不充分）
-- 两项路由safe_auto → 静默应用
-- 草稿改变 → 冻结新 hash，取得独立第2轮票
-- 第2轮：零critical+high，required criteria 有证据，解析响应与 accepted 收据一致 → 退出
-
-**Phase 6**：写入 `docs/decisions/2026-04-26-ai-followup-ux-brainstorm.md`
-
-**Phase 7**：
-- 加载交互架构模板
-- 基于Approach B展开：用户场景地图（10个场景）、流程模板（A-E五种）、
-  控制权三层模型、信任阶段T0-T4、降级策略L0-L3
-- 写入 `docs/decisions/2026-04-26-ai-followup-interaction-architecture.md`
-
-**Phase 8**：
-- 门控检查：0项blocking → 门控开放
-- 呈现菜单 → 设计师选择「完成」
-
----
-
-## 完成协议（Handoff Summary）
-
-**标记 DONE 之前必须执行，无 handoff 的 DONE 视为不完整。**
-
-**Step 1 — 写入 handoff summary：**
-```
-路径：docs/handoff/YYYY-MM-DD-<topic>-ux-brainstorm-handoff.md
-格式：见 .claude/skills/office/references/handoff-protocol.md（≤2000 tokens）
-```
-
-必须包含：
-- **决策列表**（≤8条）：选定方案、排除方案及原因、Oracle 修正项
-- **下游约束**（≤5条）：设计方案边界、交互架构约束、不得覆盖的已选方案
-- **风险**（≤3条）：未验证假设、v2 探索项
-- **产出路径**：decisions/ 文件完整路径（方案 + 交互架构）
-
-**Step 2 — 完成分支：**
-受管 workflow（completion_owner=Orchestrator）在本 skill 全部必需步骤、自检、真实审查/当前 Human Gate 与 handoff 校验完成后，按 `references/handoff-protocol.md`「受管节点提交」只回交当前产物身份、原输出字段及提交请求；此回交替代本步 YAML 更新，不在 skill 内写 DONE。
-下方 YAML 保留为验收后 O 使用原 writer 一次提交的字段说明，不是另一写入器；standalone 保留自身完成及 handoff 合同，无节点不写状态，也不新增 O/QG 依赖。
-
-```yaml
-ux-brainstorm:
-  status: DONE
-  output: "docs/decisions/<filename>"
-  completed_at: "<YYYY-MM-DD>"
-  gate_result: PASS
-  handoff_path: "docs/handoff/<filename>"
-```
+See the phase contracts above for a complete worked example; examples are non-normative and kept compact to protect context budget.
 
 <!-- FILE_END: .claude/skills/office/ux-brainstorm/SKILL.md -->

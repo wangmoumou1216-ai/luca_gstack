@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "50aec311541e7dff2f090ffd4f6f86bf9edef4e7dacc9c6404d1a6517635e237",
+  "source_sha256": "108d84e009f327c088a11eca07076ad27813f671259d8559431855b88b1a11a0",
   "skill": "ux-research",
   "group": "skills",
   "global": {
@@ -15,22 +15,36 @@
         ],
         "optional": [
           "prd_artifact",
-          "screenshots"
+          "screenshots",
+          "research_depth",
+          "research_budget"
         ]
       },
       "workflow": {
         "required": [],
         "optional": [
           "prd_artifact",
-          "brainstorm_output"
+          "brainstorm_output",
+          "research_depth",
+          "research_budget"
         ]
       }
+    },
+    "research_depth": {
+      "default": "deep",
+      "allowed": [
+        "focused",
+        "moderate",
+        "deep"
+      ],
+      "focused_requires_explicit_choice": true
     },
     "quality_gates": [
       "human_research_plan_gate",
       "source_traceability",
       "consensus_matrix",
       "research_only"
-    ]
+    ],
+    "notes": "focused 为显式试验，1名研究者/1–3决策问题/初始8项检索读取（批量逐项计）；共识矩阵改承载证据质量/独立性/适用边界，保留独立审查与适用Human Gate。无AI不加AI/趋势研究，deep/moderate维度不变。"
   }
 }

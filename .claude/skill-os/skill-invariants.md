@@ -168,6 +168,12 @@ raw semantic FAIL 保留证据，不要求加工前 raw semantic PASS；默认�
 
 **不可进化：** 必须等待用户回答才能继续的约束、PRD 输出路径、Outstanding Questions 分类规则。
 
+**精确 opt-in 例外（frontlight R1，2026-10-16 用户批准）：** `brainstorm` / `ux-brainstorm`
+的 `discovery_mode=focused` 可由主 Agent 完成固定三角色扫描，复用已有明确答案、仅询问
+未决相关问题；保留全部相关 forcing checks、真实用户取舍、独立 Oracle 和阻塞规则。
+scope 与投入分开，新/混合标签不自动升 full；full 默认及其适用计数保持。focused
+不强制造备选/否决项，实际取舍按各 skill 的 focused 分支。此例外不推广默认或权限。
+
 ---
 
 ### deepresearch
@@ -179,6 +185,12 @@ raw semantic FAIL 保留证据，不要求加工前 raw semantic PASS；默认�
 | Phase 3 Socratic | 苏格拉底问题的措辞 |
 
 **不可进化：** agent 数量下限（≥5）、每 agent ≥3 轮搜索约束、输出路径。
+
+**精确 opt-in 例外（frontlight R1，2026-10-16 用户批准）：** 上述数量保护只约束 legacy
+deep/moderate（moderate 继续沿既有表的阈值）。deepresearch 与 ux-research 显式
+`research_depth=focused` 改用 1 名研究者、1–3 个决策问题、初始 8 项检索/读取和证据评级，
+完整合同由 deepresearch/references/focused-research.md 拥有。独立审查、来源诚实、适用
+Human Gate、关键未知阻塞、原输出路径均保留；无显式选择不使用此试验，不改深档默认。
 
 ---
 

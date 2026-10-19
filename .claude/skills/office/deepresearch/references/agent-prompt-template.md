@@ -1,6 +1,7 @@
 # Deep Research — Agent Prompt Template & Configuration
 
 > Loaded by deepresearch skill at Phase 1. Do NOT load at Phase 0.
+> Legacy deep/moderate only. Focused uses `focused-research.md` Phase 1 instead of this fixed-angle template.
 > When `research_depth = moderate`: findings ≥3, webfetch ≥1, 2 rounds (skip Round 3), first 2
 > keywords mandatory (rest optional). (阈值真值源 = SKILL.md Research Depth Modes 表；改数值须同步此处。)
 
@@ -114,7 +115,7 @@ OUTPUT FORMAT (MANDATORY — return EXACTLY this structure):
 
 <finding id="1">
   <claim>[Specific factual claim — one sentence]</claim>
-  <detail>[2-3 sentences of supporting detail]</detail>
+  <detail>[Supporting detail; original task/decision informed, applicability limits, counterevidence and remaining unknowns. Evidence does not itself choose a feature or component.]</detail>
   <source>[Full URL]</source>
   <source_type>[official_docs | academic | news | blog | code | forum | government | other]</source_type>
   <confidence>HIGH | MEDIUM | LOW</confidence>

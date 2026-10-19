@@ -30,6 +30,16 @@ or the ability to ask the user are not sufficient silent-skip reasons.
 
 ## Heavy skill isolation
 
+Depth and discovery effort are separate from product scope. Explicit `research_depth=focused`
+in deepresearch/ux-research uses their one-researcher decision-question contract; legacy
+deep/moderate stay available and deep remains the default. Explicit `discovery_mode=focused`
+in brainstorm/ux-brainstorm removes fixed scans and answered-question repetition while keeping
+all relevant checks, real user choices and independent Oracle. Missing selection means full;
+new/mixed labels alone never upgrade focused. Do not promote these experiments by default.
+Choose only the unresolved fact/product/interaction work; mature agreed inputs may enter Brief
+directly under its input contract. Critical unfamiliar mechanisms or first-party unknowns still
+need named evidence and cannot be declared ready; local escalation does not grant full-mode work.
+
 `deepresearch`, `brainstorm`, `ux-research`, and `ux-brainstorm` each consume substantial context
 and must occupy a separate Work Agent/Phase. Never combine two of them in one Work Agent. Non-
 interactive research (`deepresearch`, `ux-research`) may use a subagent; interactive work
@@ -56,13 +66,66 @@ Use skills according to evidence, not a fixed script:
 `muse-req-triage` keeps its own AskUserQuestion decision gate. Plan may schedule its position but
 must not skip or answer that human gate.
 
-## Ordered design chain
+## Select design work by the unresolved gap
 
-For a full design chain, preserve this order and omit a node only when its applicability was
-explicitly assessed:
+This is the shared selection and local-return owner for product-design Phase planning and R3
+workflow recommendations/resumption. A/B/C/D describes the task; it does not require an entire
+static path. Direct single-skill requests stay standalone and do not load a graph or upstream
+skills for completeness. Apply the research default and real human gates above unchanged.
+
+Before invoking a node, use the existing entry/plan sentence to name the unresolved gap, the
+capability, the decision it could affect and the stopping condition. Inherit readable evidence
+and actual prior answers; add no routing questionnaire, report or approval. Do not invoke research
+merely to discover it was unnecessary; its zero-question branch still has its own examiner.
+
+| Actual gap | Smallest relevant work | When it is unnecessary |
+|---|---|---|
+| Raw expression cannot yet be faithfully understood | idea | requirements already understandable |
+| Product goal, scope or core solution unresolved | brainstorm | those product decisions already confirmed |
+| Consequential external fact or feasibility unknown | research matching object and question breadth, under the research gates above | evidence already sufficient; no consequential fact question |
+| Competitor design/interaction precedent needed | ux-research, with its conditional competitor method | no applicable decision/risk gap; existing evidence sufficient |
+| Current interface problem unclear | ux-audit | valid existing problem/baseline can be reused under its contract |
+| Core interaction mechanism has a real unresolved tradeoff | ux-brainstorm | mechanism chosen; remaining work is specification |
+| Agreed goals/mechanism need executable design | design-brief | request ends at research/analysis, or an explicitly chosen standalone tool owns its own legal input path |
+
+Competitor analysis may end at ux-research. With a settled mechanism it may feed Brief directly;
+with an unresolved mechanism it feeds UX exploration first. A research title does not require
+ux-brainstorm. Findings must retain evidence limits and actual adoption, not become MUST merely
+because they were researched. Keep, reject or report no increment honestly; do not invent change.
+First-party unknowns still require actual user evidence, not competitor observations.
+
+Mature A/B inputs may start at Brief. C preserves its actual ux-audit baseline, same-scope
+recheck, P0 and score requirements; do not relabel C as B to escape them. D may start at Brief only
+when role, authority, confirmation/takeover and recovery decisions are settled; critical unknowns
+return to their owner and real user, not a fabricated mature-input label. These paths do not
+promote focused by default or bypass the complex-and-novel research confirmation rule.
+
+If a skill is selected, preserve its input, independent review and human gates. Stop at the
+user's requested deliverable: research alone does not start downstream design; design delivery
+includes actual output validation; engineering follows only when requested and its inputs pass.
+
+### Local return after a failed check
+
+| Failure belongs to | Return target |
+|---|---|
+| Missing consequential external fact | corresponding research question only |
+| Product goal/scope conflict | product decision owner and real user |
+| Core interaction tradeoff or implemented mechanism fails the task | UX decision owner, with targeted evidence if needed |
+| Chosen mechanism lacks state/acceptance wording | design-brief |
+| Packet is correct but generated UI omits its condition | generator/output repair and affected revalidation |
+| Visual refinement within confirmed change/preserve scope | existing visual/refinement owner; no automatic product redesign |
+
+Preserve unaffected confirmed decisions and stable IDs. Invalidate and recheck only affected
+consumers/evidence; do not restart unrelated upstream work or waive any affected gate.
+
+## Ordered dependencies within the selected chain
+
+Build only the applicable dependencies: evidence before the decision using it, the selected
+product/interaction decisions before Brief, then the chosen output and actual validation.
+The full-chain reference below is not a checklist or a reason to add missing nodes:
 
 ```text
-research → brainstorm/PRD → ux-brainstorm → design-brief → design output → implementation
+applicable research → product/interaction choices → design-brief → design output + validation → requested implementation
 ```
 
 The design-output Phase is independent from implementation and exists to validate interaction; it

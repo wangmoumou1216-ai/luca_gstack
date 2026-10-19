@@ -283,84 +283,84 @@ mutate('plan hides the exact mandatory gate in an obsolete note outside the norm
 mutate('plan hides the entire exact ordered chain in an obsolete HTML comment', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '<!-- obsolete full section\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '<!-- obsolete full section\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n-->'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan hides the entire exact ordered chain in a Markdown code fence', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '~~~markdown\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '~~~markdown\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n~~~'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan hides the ordered chain in a three-space-indented CommonMark fence', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '   ~~~markdown\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '   ~~~markdown\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n   ~~~'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan uses an unlike fence marker to fake closure before the ordered chain', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '```markdown\n~~~\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '```markdown\n~~~\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n```'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan hides the ordered chain in a CommonMark script raw HTML block', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '<script type="text/plain">\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '<script type="text/plain">\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n</script>'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan uses a spaced fake script closer before the ordered chain', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '<script>\n</script >\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '<script>\n</script >\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n</script>'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan composes a cross-tag type-1 closer with a blank-terminated HTML block', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '<script>\n</pre>\n<div>\n</script>\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '<script>\n</pre>\n<div>\n</script>\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n</div>'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan uses a CRLF-normalized end-of-line script opener', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '<script\r\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '<script\r\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n</script>'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan injects a non-Markdown C0 control character before the ordered chain', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
-  writeFileSync(p, readFileSync(p, 'utf8').replace('## Ordered design chain', '\u000b## Ordered design chain'));
+  writeFileSync(p, readFileSync(p, 'utf8').replace('## Ordered dependencies within the selected chain', '\u000b## Ordered dependencies within the selected chain'));
 }, /mandatory design-output\/no-skip/);
 for (const [name, separator] of [['LINE SEPARATOR', '\u2028'], ['PARAGRAPH SEPARATOR', '\u2029']]) {
   mutate(`plan uses Unicode ${name} as a false Markdown line boundary`, dir => {
     const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
-    writeFileSync(p, readFileSync(p, 'utf8').replace('## Ordered design chain', `${separator}## Ordered design chain`));
+    writeFileSync(p, readFileSync(p, 'utf8').replace('## Ordered dependencies within the selected chain', `${separator}## Ordered dependencies within the selected chain`));
   }, /mandatory design-output\/no-skip/);
 }
 mutate('plan hides the ordered-chain heading after a type-7 tag with quoted greater-than', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '<x-note data-hidden=">">\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '<x-note data-hidden=">">\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n</x-note>'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan hides the ordered-chain heading in a blank-terminated raw HTML block', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
   writeFileSync(p, readFileSync(p, 'utf8')
-    .replace('## Ordered design chain', '<div hidden>\n## Ordered design chain')
+    .replace('## Ordered dependencies within the selected chain', '<div hidden>\n## Ordered dependencies within the selected chain')
     .replace('## Design output choice and authority', '## Design output choice and authority\n</div>'));
 }, /mandatory design-output\/no-skip/);
 for (const [name, whitespace] of [['NBSP', '\u00a0'], ['EM SPACE', '\u2003']]) {
   mutate(`plan uses ${name} as a false CommonMark blank line`, dir => {
     const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
     writeFileSync(p, readFileSync(p, 'utf8')
-      .replace('## Ordered design chain', `<div>\n${whitespace}\n## Ordered design chain`)
+      .replace('## Ordered dependencies within the selected chain', `<div>\n${whitespace}\n## Ordered dependencies within the selected chain`)
       .replace('## Design output choice and authority', '## Design output choice and authority\n</div>'));
   }, /mandatory design-output\/no-skip/);
 }
 mutate('plan turns the ordered-chain heading into indented code', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');
-  writeFileSync(p, readFileSync(p, 'utf8').replace('## Ordered design chain', '    ## Ordered design chain'));
+  writeFileSync(p, readFileSync(p, 'utf8').replace('## Ordered dependencies within the selected chain', '    ## Ordered dependencies within the selected chain'));
 }, /mandatory design-output\/no-skip/);
 mutate('plan keeps no-skip sentence but permits direct implementation', dir => {
   const p = join(dir, '.claude/agents/references/plan-design-guidance.md');

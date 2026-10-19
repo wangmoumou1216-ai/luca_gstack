@@ -3,7 +3,8 @@ name: deepresearch
 preamble-tier: 2
 argument-hint: "[研究主题或问题]"
 description: >
-  Deep research orchestrator. Dispatches 5-8 native research agents under approved scheduling across web, docs, code, and
+  Deep research orchestrator. Supports explicit focused decision research with one researcher;
+  legacy deep/moderate dispatch 5-8 native research agents across web, docs, code, and
   academic sources. Cross-validates findings via consensus matrix. Applies Socratic questioning to
   challenge assumptions and expose gaps. Generates structured markdown report. Triggers: 'deep
   research', 'research [topic]', 'deepresearch'.
@@ -32,6 +33,10 @@ a source.
 </role>
 
 ## Architecture Overview
+
+The overview/counts below describe legacy `deep` / `moderate`. Explicit `focused` follows the
+same Phase 0–4 order through [focused research](references/focused-research.md), read in full
+before focused planning; return to this skill's completion protocol afterward.
 
 ```
 User Topic
@@ -64,10 +69,11 @@ Phase 4: Report Generation → Write .md file
 
 ## Research Depth Modes
 
-This skill supports two research depth modes. The mode is selected by the user at Phase 0 and
-controls execution parameters throughout all subsequent phases. **All CRITICAL RULES remain in
-effect for both modes** — the mode only adjusts quantitative thresholds, never disables a rule
-entirely.
+`research_depth: focused | moderate | deep`. `deep` remains the legacy default; preserve an
+explicit user/approved dispatch selection. `focused` is opt-in experimental: one researcher,
+1–3 decision questions and an initial 8-item search/read budget, under the linked protocol.
+The table below owns unchanged legacy thresholds; focused replaces fixed counts, angles and
+agent-vote confidence only. Honesty, independence, human choices and completion gates remain.
 
 | Parameter | Deep (default) | Moderate |
 |-----------|---------------|----------|
@@ -98,7 +104,9 @@ entirely.
 - Rule 9: 2 rounds (instead of 3 — skip Round 3 verification)
 - Rule 11: source type diversity check becomes optional (flag if noticed, but not mandatory)
 
-All other rules apply identically in both modes.
+All other rules apply identically in both legacy modes. The focused protocol owns its evidence
+rating and quantitative procedure; CRITICAL Rules 2, 6–11 and related Anti-Patterns below are
+legacy-only where they require fixed rounds/counts or agent voting. Other safety rules apply.
 
 ---
 
@@ -118,7 +126,9 @@ All other rules apply identically in both modes.
    schemas to adapt to the exposed native interface, not proof of a callable tool.
 4. **LANGUAGE MATCHING**: Detect the user's language from their input. Write the final report in
    that same language. The skill instructions are English, but the OUTPUT adapts.
-5. **COMPLETE REPORTS ONLY**: Never deliver partial reports. All 4 phases must complete before writing the file.
+5. **COMPLETE REPORTS ONLY**: Never deliver partial reports. All 4 phases must complete before writing the file;
+   the explicit focused zero-question applicability completion is governed solely by
+   `references/focused-research.md` and retains independent examination and handoff validation.
 6. **SOURCE DIVERSITY**: Agents must use DIFFERENT search strategies and source types. Identical
    queries across agents are wasteful.
 7. **MINIMUM FINDINGS PER ANGLE**: Each angle must produce ≥5 findings. If search cannot reach 5,
@@ -159,7 +169,7 @@ Extract from the user's input:
 
 ### Step 0.2: Select Research Depth
 
-After parsing the topic, ask the user to select research depth:
+After parsing the topic, inherit an explicit depth choice; otherwise ask the user to select it:
 
 AskUserQuestion:
 > Research topic parsed: **[core topic]**
@@ -171,9 +181,15 @@ AskUserQuestion:
 > examination, 3-5 paragraph synthesis
 > B）**Moderate Research** — 2-round search protocol, ≥3 findings per angle, Socratic review
 > of disputed findings only, 1-2 paragraph synthesis
+> C）**Focused Research (experimental)** — one researcher, 1–3 decision questions, initially
+> 8 search/read items, evidence-based confidence and an independent examiner
 
-Record selection as `research_depth: deep | moderate`. This variable controls thresholds in all
+Record selection as `research_depth: focused | moderate | deep`. This variable controls thresholds in all
 subsequent phases per the Research Depth Modes table above.
+
+For focused, fully read and execute `references/focused-research.md` Phases 0–4 instead of the
+legacy Step 0.3–Phase 4 procedure below; then complete this skill's handoff. The focused report
+uses the same output path and existing report fields, not a parallel artifact type.
 
 **Headless fallback (when the user cannot be asked):** If AskUserQuestion is unavailable
 (e.g. running inside a subagent), check the dispatch prompt for an injected `research_depth`
@@ -435,6 +451,9 @@ After writing the file:
 ---
 
 ## Anti-Patterns
+
+Fixed-count/round/voting violations in this table apply to deep/moderate with their mode
+thresholds. For focused, validate its explicit protocol instead; all honesty/review rules remain.
 
 | Violation | Severity |
 |-----------|----------|

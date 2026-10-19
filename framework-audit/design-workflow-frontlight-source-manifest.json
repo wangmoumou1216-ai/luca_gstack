@@ -1,0 +1,389 @@
+{
+  "schema_version": 1,
+  "candidate": "r4.1-current-rebuild",
+  "base_sha": "a3528fffb98a12be7eb76e6f0744e15d5853c0b9",
+  "head_sha": "WORKTREE",
+  "files": [
+    {
+      "path": ".claude/agents/quality-gate.md",
+      "sha256": "7c9b0230d02c0079f3e72f3b496bc395428891676fabcbd3ba0b6167bde69746",
+      "bytes": 30473
+    },
+    {
+      "path": ".claude/agents/references/plan-design-guidance.md",
+      "sha256": "31966880bdbbb234f226c1fd7976d925ec7dcbe4caa4f157d6b10ed2f9ae79e4",
+      "bytes": 13626
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/auto.json",
+      "sha256": "53374cea47043c00ea5df8e47a61142f74afb0ebf46a0a60bfba89102f087223",
+      "bytes": 677
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/brainstorm.json",
+      "sha256": "edec6c6c73ab35b9aabea90ad02683a6f4732e602ace6841c6fb216e898911ea",
+      "bytes": 1351
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/claude-design.json",
+      "sha256": "b40a6a0ec81086e4872cad5bfb0b98470ad1c1cc89073ec6b1b4db94225d0bef",
+      "bytes": 2132
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-hygiene.json",
+      "sha256": "43fed14db7ec57129dd8b421b6dc4b6d199e7a807716eca2e8c4387990fc787e",
+      "bytes": 1902
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-recon.json",
+      "sha256": "d01d52723a99e4bccf51c2e6b801e58308a22d0f707e07b30462ae0431582fa5",
+      "bytes": 2238
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/code-review.json",
+      "sha256": "16670b43de9018e0c53a741b67e8011bfc39da3c3aa52a1066e46a076802b796",
+      "bytes": 1130
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/codebase-design.json",
+      "sha256": "78cda61b19fb99b16557c40d1df0873ad6397f0db5b13c6e8cb5caa9544153a8",
+      "bytes": 1052
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/compare.json",
+      "sha256": "67b22eb9249e77394439e03c455a8addc7aec2ea070eec1b4b7c7008ccd995f1",
+      "bytes": 827
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/deepresearch.json",
+      "sha256": "5dade53b424ce3293647fbf4e99b3be28bf71f13e065f2e5351da21d020a637b",
+      "bytes": 1245
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/design-brief.json",
+      "sha256": "49bd173a06f60549e71556ccbe0c276279701432af6a1e16cf113df252f57eef",
+      "bytes": 2778
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/design-output.json",
+      "sha256": "0840c61bdffd353eb8a761333e4e811cc9a9cc4336051cac13534ebae1bfbb09",
+      "bytes": 1129
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/diagnosing-bugs.json",
+      "sha256": "0d3ffb4b91f569bbded675fb4019f6075bc0969a04ae4837a4fab726d862d694",
+      "bytes": 1276
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/domain-modeling.json",
+      "sha256": "6c8870fdd52c4595888ffadba53d4d7d2337628a5064af73765d0e70b7d0844d",
+      "bytes": 1317
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/evals.json",
+      "sha256": "94594b2c213c3c228b8a70286de026ec250c5928b19fac4a23d61ae6fe1b7a03",
+      "bytes": 587
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/figma-demo.json",
+      "sha256": "e26deec314d9b6dda15e7bd5d923b265623f3439d6105f45bd8bf4866264c3b1",
+      "bytes": 753
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/grilling.json",
+      "sha256": "41c6dda3c859dce840a2ec9de3ccdd923446e1fabc6f6a4509f7f17f2c7c1608",
+      "bytes": 1370
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/handoff.json",
+      "sha256": "fccc46af504b76e2240b79221ff52ca03c78f64f0d3dfb3decb01d4475d922a4",
+      "bytes": 777
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/html-prototype.json",
+      "sha256": "d1dcfebd32efb39560290ebcfe0e22ee13e828604d45c49992856f3ed2531edb",
+      "bytes": 2083
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/idea.json",
+      "sha256": "9cb405f54822c4b8ef547a8e578384bff61a98149f66c7b569b0de4eee215100",
+      "bytes": 655
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/implement.json",
+      "sha256": "f7837bcd9bd4c8f9c833a5db5e4b056e6503e03f48e8eb1907c5c63d659391b1",
+      "bytes": 1309
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/insight-synthesis.json",
+      "sha256": "e9e2465179e5a1c261af9c06ba59eda77c463cd6ed14803c07dc831cd560d9eb",
+      "bytes": 1051
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/issue-triage.json",
+      "sha256": "237a1836b6b7fbafc8c57cfe9cfed5d081438c023e21dada1e1323e251f3d280",
+      "bytes": 1762
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/loop-me.json",
+      "sha256": "3b17b92e87ad3a9b63a8480f24b5ca03c3e8706c60bf01bd31742875170d26a5",
+      "bytes": 1355
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/magicpath.json",
+      "sha256": "84f78485e6e7a7ca13090fc31d5f9cbe5239a30f8f9c5e646e8b2296530fa6a8",
+      "bytes": 881
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/motion-polish.json",
+      "sha256": "93982077f5007e144faa18d92e1e361f73ba36483bcc8010bc05f43a9292b6ba",
+      "bytes": 2023
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/muse-req-triage.json",
+      "sha256": "27f4fdfd3e461616ab75d78e0d1710c7dcb183b508d1bc7d026e25494d5f76fd",
+      "bytes": 781
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/open-design.json",
+      "sha256": "0a1c3bc7063fdd8ccb99e6971dee1baed32c696c2dfbcdac9a8a9d59107f7e76",
+      "bytes": 3213
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/prototype-notes.json",
+      "sha256": "b4f63d4525a57f7c88ada0bc32687890635285edb3096692ed554c466fe1d9d7",
+      "bytes": 2258
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/quick-research.json",
+      "sha256": "0a322c16a1032ab12493eacde3f78419009c2b86d9e13eb4c294aacc385a3c11",
+      "bytes": 533
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/redteam.json",
+      "sha256": "d7b83d40ab820f8727b1e48504a55d03733b2cc5b0bdfd2bccb622fd42756c58",
+      "bytes": 598
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/research-kit.json",
+      "sha256": "1e612b2a5f97d08514e6e4ac67e7007dda5357165edb14c2529aeec0a54e7a90",
+      "bytes": 2346
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/resolving-merge-conflicts.json",
+      "sha256": "ebef2b032566ac7a1ce81f513486e1971dab0d5c51df166910e2b3802b07c8d1",
+      "bytes": 1346
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/retro.json",
+      "sha256": "43764666aa3ee0a2097bc22c3bc5ca9f20b2006faa493026827656599b7f7708",
+      "bytes": 616
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/setup-wizard.json",
+      "sha256": "d6bbcce2b0fd3667670fc447ff7c6c3417c339328676ee1c95b6896fa5b58977",
+      "bytes": 1477
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/superpowers-brainstorming.json",
+      "sha256": "4872b6a6f270249e20d5de5625fb680a3d088a3935fe76c6cd561b59a2a3447c",
+      "bytes": 896
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/task-plan.json",
+      "sha256": "52c382bcb21226cf455d0ad39b99f3edd048ce0e1a32a90ba87437fc6d9d8e42",
+      "bytes": 1751
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/tech-spec.json",
+      "sha256": "f9e709331abf5fa0568a3ebb74b58d0ace2094cdd1798cbba50b7f75417daebb",
+      "bytes": 1744
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/to-spec.json",
+      "sha256": "6236e73a7a450d05fb906b45cdf7da3206391c2b4b0428304f506c61ae9462fd",
+      "bytes": 1220
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/to-tickets.json",
+      "sha256": "29bbe7c6cd5a83b72b6e69bd6f9c3109da6ecfe1e7526b9e97a20c649e7da617",
+      "bytes": 1205
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-audit.json",
+      "sha256": "a469b5cbd9c0adde59a26b5cada489fd4dd8209b92a85b052de027d91be05528",
+      "bytes": 606
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-brainstorm.json",
+      "sha256": "4919038d3c5c7cb349add2483b88342c23894112d86d2efa4e5793cf34160524",
+      "bytes": 1305
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-research.json",
+      "sha256": "24713e72c8eb802842bbec5605c73ae103215599791304135e827795096cb90e",
+      "bytes": 1317
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/ux-writing.json",
+      "sha256": "37c4df4d0eb57195291c36be7b3e90fc0d48e17de063461a477b6092ef7b4e85",
+      "bytes": 1014
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/wait-what.json",
+      "sha256": "8dc01165e13c49683e97da52e75f642724d5ecf2b3c90f0a9b7e391665824c2d",
+      "bytes": 818
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/wayfinder.json",
+      "sha256": "b45b74b1f8848f57ad305417377f80e06df72e1f53836c48b08d284c547fe22c",
+      "bytes": 1272
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/writing-for-agents.json",
+      "sha256": "9ca061d26506bcb88c3b3c6fc4bf190640d8774ecae4a93b87b073ddf42f7442",
+      "bytes": 1036
+    },
+    {
+      "path": ".claude/skill-os/generated/input-modes/writing-workshop.json",
+      "sha256": "65a3c4f88a34fac33ae392e0c031e2f12569c335f9ff3adce46b23aa45053e58",
+      "bytes": 1823
+    },
+    {
+      "path": ".claude/skill-os/generated/skill-catalog.md",
+      "sha256": "98a97ee8a19643edc974222afa36d5fe74219ee34318f83bca5588e2937ababe",
+      "bytes": 13780
+    },
+    {
+      "path": ".claude/skill-os/input-modes.yaml",
+      "sha256": "108d84e009f327c088a11eca07076ad27813f671259d8559431855b88b1a11a0",
+      "bytes": 40251
+    },
+    {
+      "path": ".claude/skill-os/optional-workflow-graph.yaml",
+      "sha256": "5c4ebc30ca6c4d1440559219173c2083dd458ee0f69f16cd176c000258f83743",
+      "bytes": 20746
+    },
+    {
+      "path": ".claude/skill-os/routing-chain-check.md",
+      "sha256": "4e2827e952ac5ac654ef48176e4ddf8a5a5fda8419c6a56ed78d8bb56dd6c096",
+      "bytes": 14768
+    },
+    {
+      "path": ".claude/skill-os/skill-invariants.md",
+      "sha256": "8054bcc12b464cef602e0ed5e1b95c3b7f0f64c75a953fe5170f39bda6f5b8a9",
+      "bytes": 13422
+    },
+    {
+      "path": ".claude/skills/office/brainstorm/SKILL.md",
+      "sha256": "5ecd1fbaebf8f009a0a5c1ade9e45a826a9d342aa487344ac37f5bc59668f7c1",
+      "bytes": 46195
+    },
+    {
+      "path": ".claude/skills/office/brainstorm/references/adversarial-review.md",
+      "sha256": "7c30486eecb2bd8fc802f84c10bf62451961aa64acf867a4379bdd8de99d4aff",
+      "bytes": 13982
+    },
+    {
+      "path": ".claude/skills/office/brainstorm/references/prd-template.md",
+      "sha256": "2eddf2788e9607eacb05d693ff2ba9c8fa48fc895aebbc2a49e235bf0dd81b45",
+      "bytes": 19332
+    },
+    {
+      "path": ".claude/skills/office/brainstorm/references/pressure-test.md",
+      "sha256": "c108ccb16d6fc33f51d0d6a83d9e9dc8ba7ac29cf9e2b8cdcaa4309b313a048d",
+      "bytes": 13041
+    },
+    {
+      "path": ".claude/skills/office/deepresearch/SKILL.md",
+      "sha256": "d90727d2f1027d23c13a337147665c21804577ba1a6d1e878a071aa1a01166c0",
+      "bytes": 25966
+    },
+    {
+      "path": ".claude/skills/office/deepresearch/references/agent-prompt-template.md",
+      "sha256": "6e19049bcdfcfe3ef399cec71eaea49090c0a7bea40061af8351b9fd01cb7ee7",
+      "bytes": 9216
+    },
+    {
+      "path": ".claude/skills/office/deepresearch/references/report-template.md",
+      "sha256": "025de5e57d68dde5476fc03c6a7f3b6382799558607e23633a44c7bd95c11dc6",
+      "bytes": 6451
+    },
+    {
+      "path": ".claude/skills/office/deepresearch/references/socratic-prompt.md",
+      "sha256": "48f8c025f3b8b6533384d60f01fb4efe6238d7da0402c408a1ab1140048aaa18",
+      "bytes": 3900
+    },
+    {
+      "path": ".claude/skills/office/design-brief/SKILL.md",
+      "sha256": "fb15e89a3fe6f5555cd7ac015d4e16e2b70322bcae9dace43548a683b5a04acd",
+      "bytes": 18530
+    },
+    {
+      "path": ".claude/skills/office/design-brief/references/input-contract.md",
+      "sha256": "16a2201de9d5cc70c15065391a1bf5b5b6370ad73afa9ac43400689091b50cd3",
+      "bytes": 10384
+    },
+    {
+      "path": ".claude/skills/office/design-brief/references/output-templates.md",
+      "sha256": "2707886794e524f2dc23450c4522548f8998dfd5dc9022996af972a86ce96ce7",
+      "bytes": 17151
+    },
+    {
+      "path": ".claude/skills/office/ux-brainstorm/SKILL.md",
+      "sha256": "08afdce4e477b71da04fd70bbbf24cfab16c665b666567d33527019bdef3f5e3",
+      "bytes": 40795
+    },
+    {
+      "path": ".claude/skills/office/ux-brainstorm/references/adversarial-review.md",
+      "sha256": "ee96a24ee3ba3664e5ff71964f5bc19cf5d08bd2fbb093bdfa88c619e8305c56",
+      "bytes": 9664
+    },
+    {
+      "path": ".claude/skills/office/ux-brainstorm/references/design-proposal-template.md",
+      "sha256": "52959e77b812a37af5b7e83290ac63ec96cdce47242996638438d5388f3d7d40",
+      "bytes": 9415
+    },
+    {
+      "path": ".claude/skills/office/ux-brainstorm/references/interaction-architecture-template.md",
+      "sha256": "37738fb739411510bcd4d17dc474a0f0864e10ded73bfd884194e20e8050ef26",
+      "bytes": 17181
+    },
+    {
+      "path": ".claude/skills/office/ux-brainstorm/references/pressure-test.md",
+      "sha256": "da88ce00a33867e7474e875cf3aaf3fa09f70055954d7c7439b5e0f5532257b5",
+      "bytes": 11492
+    },
+    {
+      "path": ".claude/skills/office/ux-research/SKILL.md",
+      "sha256": "9db80b2fd4a5e50e95afbdef34c3857bedca3131af51525a6e93d17a87461899",
+      "bytes": 26881
+    },
+    {
+      "path": ".claude/skills/office/ux-research/references/agent-prompt-template.md",
+      "sha256": "ebc1147caa9abe9473eef7374f1b1d761571d9ff3b54f5283d6ae4628d8e8530",
+      "bytes": 15756
+    },
+    {
+      "path": ".claude/skills/office/ux-research/references/report-template.md",
+      "sha256": "e8f4cba8bf86cff609400be170d00152f39ddc629b7c3d3bb3b091590cffb860",
+      "bytes": 7247
+    },
+    {
+      "path": ".claude/skills/office/ux-research/references/socratic-prompt.md",
+      "sha256": "448a43c8708e403df56caf3ec378d688f7e471c60091c75f1e761ab276047371",
+      "bytes": 6813
+    },
+    {
+      "path": "scripts/check-agent-context.mjs",
+      "sha256": "fef0ce5d3c0560fb362598dbcb4895e91e0b78a6213bd10cca9aa5c0a0fba8b7",
+      "bytes": 44171
+    },
+    {
+      "path": "scripts/test-agent-context.mjs",
+      "sha256": "5d44167c4165abd30c6949625927ae73df3d25e326f2d4b91ac0ab14c64dfb67",
+      "bytes": 50621
+    }
+  ],
+  "status": "UNREVIEWED"
+}
