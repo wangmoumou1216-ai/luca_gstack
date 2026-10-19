@@ -1,0 +1,4 @@
+{"type":"attachment","timestamp":"2026-10-03T01:00:00Z","text":"[route-guard] one"}
+{"type":"user","timestamp":"2026-10-03T01:01:00Z","text":"no marker here"}
+{"type":"attachment","timestamp":"2026-09-30T01:00:00Z","text":"[route-guard] two"}
+{"type":"attachment","text":"[route-guard] three no timestamp"}

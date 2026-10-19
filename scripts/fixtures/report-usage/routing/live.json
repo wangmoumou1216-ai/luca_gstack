@@ -1,0 +1,7 @@
+{"version":1,"harness":"codex","root_session_id":"01a1095c-3400-7abc-8def-0123456789ab","activation_id":"act-live","status":"active","critical_failure":false,
+ "invocations":{
+  "k1":{"invocation_id":"inv-1","root_session_id":"01a1095c-3400-7abc-8def-0123456789ab","requested_role":"anchor","critical":false,"status":"accepted","external_identity":{"agent_type":"worker"}},
+  "k2":{"invocation_id":"inv-dup","root_session_id":"01a1095c-3400-7abc-8def-0123456789ab","requested_role":"light","critical":false,"status":"accepted","external_identity":{"agent_type":"preflight-agent"}},
+  "k3":{"invocation_id":"inv-noagent","root_session_id":"01a1095c-3400-7abc-8def-0123456789ab","requested_role":"peak","critical":true,"status":"refused"},
+  "k4":{"invocation_id":"inv-badmonth","root_session_id":"not-a-uuid","requested_role":"anchor","critical":false,"status":"accepted","external_identity":{"agent_type":"explorer"}}
+ }}
