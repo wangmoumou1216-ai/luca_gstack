@@ -518,7 +518,8 @@ Draft 2-3 approaches that satisfy all of:
 
 How many land in the PRD's written **Approaches Considered** section follows the Section Matrix in
 `references/prd-template.md`（真值源，勿在此重复分档计数）: Standard / Deep-feature ≥2 (aim for the
-full Minimal/Ideal/Lateral triad), Deep-product ≥3 with at least one Lateral. For Lightweight the
+full Minimal/Ideal/Lateral triad), Deep-product ≥3 with at least one Lateral; these counts are full-mode,
+and focused writes only actual options per the template exception. For Lightweight the
 written section is skipped — explore ≥2 internally, but the Phase 5.1 pre-gate does not require the
 section for Lightweight.
 

@@ -189,9 +189,9 @@ AI Native不等于「加一个AI按钮」。它意味着：
 
 分别记录 `scope` 与 `discovery_mode: focused | full`。缺模式沿 full；focused 仅接受
 真实用户或已批准派发的显式选择，保持试验属性。新产品可有 Deep-product 覆盖，
-new/mixed 标签本身不把 focused 升 full，也不强制三角色扫描。
+new/mixed 标签本身不把 focused 升 full，focused 下也不强制三角色扫描（full 照常扫描）。
 陌生核心机制、矛盾行为证据、多角色高后果权限、不可逆交互和关键一手未知必须具名补证，
-交独立 Oracle 检查；能局部补证就局部补。只有问题框架不足时才向用户提出 full，
+交独立 Oracle 检查；能局部补证就局部补。focused 中只有问题框架不足时才向用户提出改用 full，
 未解决的关键未知不准宣称 ready；保留全部关键风险，不为展示预算删项。
 
 根据输入，分类为四个级别：
