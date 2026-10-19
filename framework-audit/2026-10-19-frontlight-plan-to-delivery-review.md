@@ -15,14 +15,15 @@
 
 ## 0. 结论
 
-**源码层基本到位；Claude 端执行层本次补测了 3 个 skill 的关键分支（由主会话或 subagent 按 SKILL.md 全文
-执行，未经 slash/Skill 工具的发现与调用），行为与合同一致并暴露多处合同缺口（已修 4 处）；效果层仍未证明，
-你最在意的"用了这些 skill 比只用 brief 更好"没有任何一组实验测到。**
+**源码层基本到位；执行层本次补测了全部 5 个 skill 的关键分支（Claude 端由主会话或 subagent 按 SKILL.md 全文
+执行，未经 slash/Skill 工具调用）+ 1 次 legacy 默认回归 + 1 次 Codex 端 `$skill` 原生调用，行为与合同一致（V6 有一处自报的读取偏离，见 §2.2），
+并暴露多处合同缺口（已修 8 处）；效果层仍未证明，你最在意的"用了这些 skill 比只用 brief 更好"没有任何一组实验测到。**
 
 - **源码**：focused 路径、竞品分析方法、按缺口选节点、局部回退都已写入；核心检查独立复跑全绿；双端同源。
-- **执行（本次新增）**：Claude 端按 SKILL.md 全文执行了 deepresearch focused 全流程（研究者+独立审查；
-  handoff 结构校验 exit 0）、ux-brainstorm focused 到真人取舍门、design-brief 到真人门。brainstorm、ux-research
-  未原生跑；legacy deep/full 未回归运行；Codex 端仍沿用其 426/502 失败记录（UNKNOWN）。
+- **执行（本次新增）**：Claude 端 deepresearch focused 全流程（研究者+独立审查；handoff 结构校验 exit 0）；
+  ux-brainstorm、brainstorm、ux-research、design-brief 的 focused 分支均按合同停在真人门；ux-brainstorm 不指定模式时
+  正确走 full（真实派发 A/B/C 扫描，未漏入 focused 放宽）；Codex 端 `$ux-brainstorm` 发现与执行成功，行为与 Claude 一致。
+  除 deepresearch 外均未走到 Oracle/handoff（停在真人门是预期）。
 - **效果**：唯一实验的 B、C 都是"原始需求直达 design-brief"，只比较了 Brief 规则新旧版本；四个前段
   skill 均未进入效果对照。两份原型都没全过关键任务。
 - **体验**：focused 档位是 opt-in、默认 deep/full；但"成熟需求直达 Brief"已是 A/B/D 场景的默认推荐
@@ -41,8 +42,8 @@
 | R-5 | 双向钢人+专家会审（原始） | 计划层成立；实现层部分 | 计划三轮会审；R2 源码第二轮 PASS，合并裁决 FAIL 15/16（双端 UNKNOWN） |
 | R-6 | 研究为何没转化成更好设计（R1 核心） | 诊断未完成 | 无 A/C0；唯一案例为成熟需求 |
 | R-7 | 用了这些 skill 比只用 brief 更好（成功标准） | 零覆盖 | B、C 均 direct-Brief（`two-attempt-evaluation.md` Scope 段） |
-| R-8 | 每个 skill 可独立使用 | 源码成立；V2/V4 以 standalone 原生运行通过入口 | input-modes standalone 最小输入未加前置 |
-| R-9 | ux-research 竞品分析，轻量独立、转化到下游 | 源码成立 / 执行未验证 | `ux-research/references/competitor-analysis.md`；消费点 `ux-brainstorm/SKILL.md:185,477`、`design-brief/references/input-contract.md:50` |
+| R-8 | 每个 skill 可独立使用 | 源码成立；V1–V6 全部以 standalone 运行通过入口 | input-modes standalone 最小输入未加前置 |
+| R-9 | ux-research 竞品分析，轻量独立、转化到下游 | 源码成立；V5 验证到研究规划门（读竞品方法、共享 8 项预算、只交付研究），研究执行与下游转化未跑 | `ux-research/references/competitor-analysis.md`；消费点 `ux-brainstorm/SKILL.md:185,477`、`design-brief/references/input-contract.md:50` |
 | R-10 | 每多一个 skill 都要带来值得的改变——明确并验证 | 明确了；未验证 | guidance"进入前说清缺口、无增量如实报告" |
 | R-11 | 别太死：按缺口串联、局部回退 | 源码成立 | guidance 两节；graph 场景 A/B/D 首行新增 `[design-brief, design-output]`，**C 仍以 ux-audit 开头**；R3 指针 `routing-chain-check.md:78-80` |
 | R-12 | 改完验证完 → 提交推送拉回 | 提交推送成立；"验证完"不成立 | `081b1b0`、`5422065` 在 origin/main |
@@ -69,17 +70,21 @@ U-001 部分；U-002 源码完成（本次另修 4 处）；U-003 未完成（1 
 要求完整读取 `quality-gate.md`。测试性质：字面短语 tripwire（脚本第 2 行自述），mutation 替换的正是
 regex 匹配的句子，只能抓"句子被删"，不能证明语义正确。
 
-### 2.2 完整 skill 执行 —— Claude 端本次补测
+### 2.2 完整 skill 执行 —— 本次补测
 
 | 运行 | 入口 | 结果 | 证据 |
 |---|---|---|---|
 | V1 deepresearch focused（2 个决策问题） | 主会话编排：1 名原生研究者 → 主会话证据评估 → 1 名独立 Socratic 审查者 → 报告 + handoff | **全流程完成**。8/8 预算含失败计数；6 条发现含反证；审查 PASS_WITH_REVISIONS 已吸收；handoff `gate_result` 为编排方自评 5/5，真实 validator `--handoff` 与 `--require-gate PASS` 结构校验均 exit 0 | 本机 scratchpad `v1/`（研究方式由调度方选定，不是用户批准的产品研究；产出未写 `docs/`，因 NO_PIN 不得触碰项目别名） |
 | V2 ux-brainstorm focused（非 AI，继承决定 + 1 个真实取舍） | 原生 subagent 按 SKILL.md 全文执行 | **停在 Phase 4.2 真人取舍门**（正确）。未派固定扫描 agent、未凑第 3 方案、AI 范式判 not_suitable、无 Agent/信任表；继承决定未重问；产出 4 步走读 + 失败/过期恢复分支；Oracle 在 4.2 之后，未到达 | scratchpad `v2/` |
 | V4 design-brief（原始需求，非 AI，含未采纳研究建议） | 原生 subagent 按 SKILL.md 全文执行 | **停在真人门 HG-1**（正确）。MUST-1..3 全链追到 Packet 无丢失；未采纳建议登记为 DEFERRED、非 MUST；已确认决定填有源 N/A 未编造否决；**新 F-1 句使"已带入摘要"失效语义未定被识别并阻断冻结** | scratchpad `v4/` |
+| V3 brainstorm focused（新功能，方向全部已确认） | 原生 subagent | **停在 Phase 3 第 1 问**（一方事实缺口）。未派 A/B/C；未为已确认方向编造备选/否决/投票；new 标签未推回 full；AI 判 not_suitable；已答的窄切入点未重问 | scratchpad `v3/` |
+| V5 ux-research focused（竞品分析：批量操作撤销） | 原生 subagent | **停在 Phase 0 研究规划门**，0/8 预算未动。规划前完整读取竞品方法；1 名研究者、2 个决策问题、整次共享 8 项（明确不按竞品分配）；无固定 5+1 维度、无 AI 维度；写明只交付研究、不自动进入下游 | scratchpad `v5/` |
+| V6 ux-brainstorm **默认模式**（AI 相关新功能，未指定模式） | 原生 subagent | **正确选 full**（`SKILL.md:78,190`），真实串行派发 A/B/C 三个扫描 agent（3/3 返回），按 Deep-feature 路由 6 个 UX 逼问，计划恰好 3 个方案与 AI Native 方向；**无 focused 放宽漏入**。停在 Phase 3 Q1 真人门；自报偏离：K3 触发后 plan-agent.md 未读到 EOF | scratchpad `v6/` |
+| Codex `$ux-brainstorm` focused（与 V2 同输入） | `codex exec -s read-only`（codex-cli 0.163.0） | **发现与执行成功**（websocket 426 后自动降级完成；skill 正文由模型用 shell 全文读取，exec 日志看不到宿主注入）。未派扫描 agent、无 AI 范式、未重问 CSV/异步、两方向 4 步走读 + 恢复规则，停在 Phase 4.2 同一真人问题。差异：规模判 Lightweight（Claude 判 Standard） | 本机 scratchpad `codex-probe.log` |
 
-未运行：brainstorm、ux-research；legacy deep/full 回归；Codex 端（沿用 426/502）。交接第 2 步中 stale review
-hash、缺恢复路径的阻断未演练（仅有静态 validator 夹具）；第 4 步按宿主分列 discovery/execution/refusal 未做，
-Claude 端 discovery（slash/Skill 工具调用）未测。V2/V4 中 subagent 无法向真人提问，停在门口是预期行为，不代表 skill 完成。
+仍未覆盖：legacy deep/moderate 研究档位的回归（V6 只回归了 ux-brainstorm 的 full）；Codex 端其余 4 个 skill；
+交接第 2 步中 stale review hash、缺恢复路径的阻断未演练（仅有静态 validator 夹具）；Claude 端 slash/Skill 工具发现未测。
+subagent 无法向真人提问，停在门口是预期行为，不代表 skill 完成。
 
 此前 Codex 真实 focused 研究的"方法门 FAIL"需更正归因：判 FAIL 的理由之一是"未用 Context7"，但该要求位于
 legacy Step 0.3（`deepresearch/SKILL.md:221`），而 `SKILL.md:189` 明确 focused "instead of the legacy
@@ -127,7 +132,11 @@ C 走直达是计划内分支（计划 §1、§5）。研究链的效果本应�
 | F-9 | 低 | ux-brainstorm 方案须"引用具体 Q 编号"，Phase 3 零问题时无可引 | **已修**：零问题时引用原始输入/已确认决定 |
 | F-10 | 低 | design-brief SCHEMA 的 AI Slop 表自称"对照框架第 8 节"，实为 4 项视觉 slop + 6 项第 8 节（合并），且漏第 8 节"全屏 modal AI"（基线即存在） | **已修**：如实标注来源，第 8 节未单列项仍适用 |
 | F-11 | 低 | 多处规则重复投影（input-modes notes、graph、guidance、SKILL.md），未来易漂移 | 随 F-4 收敛 |
-| F-12 | 低 | V2/V4 记录的其余合同歧义：ux-brainstorm 声明模板未给 4.2 取舍问题留位、"单一可测指标"与"不虚构量化"张力、focused 有真实取舍时 Oracle 在用户选择之后；design-brief 12 节结构中"可追踪完整矩阵/Tool Consumption Contract"无模板、本地 HTML 冻结是否需真人批准不明、page-context 适用范围 | 登记待改；均需设计判断，非 frontlight 引入 |
+| F-13 | 中 | brainstorm `SKILL.md` 把 Approaches Considered 的 ≥2/≥3 写成无条件，focused 例外在 50 行后（V3） | **已修**：注明这些计数只适用 full，focused 按模板例外只写实际选项 |
+| F-14 | 中 | ux-research 研究规划模板的深度只列 deep/moderate、提问固定"按以下 6 个维度"，选了 focused 的用户会看到与选择矛盾的规划（V5） | **已修**：深度加 focused，focused 改呈现决策问题、来源策略与预算 |
+| F-15 | 低 | 竞品方法写"导航、等待、审查均计真实成本"，易被读成占 8 项预算（V5） | **已修**：记入真实成本报告，但不占 8 项 |
+| F-16 | 中 | ux-brainstorm 与 pressure-test 中 3 处 focused 放宽没限定作用域（"也不强制三角色扫描""只在问题框架不足时提出 full""冷启动也可复用/已答不重复问"），默认 full 运行可能误用（V6） | **已修**：逐处限定为 focused，并注明 full 照常扫描/问完整题集 |
+| F-12 | 低 | V2–V6 记录的其余合同歧义（V3/V5 另记：NO_PIN 下 standalone handoff 写入规则冲突、"consequential"无定义、介入点 3 的预先回答边界；V6 另记："已批准调度"未说明由谁批准）：ux-brainstorm 声明模板未给 4.2 取舍问题留位、"单一可测指标"与"不虚构量化"张力、focused 有真实取舍时 Oracle 在用户选择之后；design-brief 12 节结构中"可追踪完整矩阵/Tool Consumption Contract"无模板、本地 HTML 冻结是否需真人批准不明、page-context 适用范围 | 登记待改；均需设计判断，非 frontlight 引入 |
 
 已核实不是问题：双端漂移（同源）；竞品分析"只是多一份报告"（源码层写入既有 D3 与下游 owner）；独立使用被破坏；
 额度/预算遵守。
@@ -174,9 +183,13 @@ owner，不破坏旧模式、独立入口和人工门；不切默认是遵守你
 3. F-8/F-9：`ux-brainstorm/SKILL.md` 两处一句话澄清。
 4. F-10：`design-brief/SCHEMA.md` Slop 表来源如实标注。
 5. 用法说明入库：`framework-audit/design-workflow-frontlight/usage-guide.md`（§5 认知负担）。
+6. F-13～F-16：`brainstorm/SKILL.md`、`ux-research/SKILL.md`、`ux-research/references/competitor-analysis.md`、
+   `ux-brainstorm/SKILL.md`、`ux-brainstorm/references/pressure-test.md` 的一句话澄清（作用域限定，不改行为设计）。
+   现有回归不覆盖这几行，"已过回归"只说明没改坏别处，不说明这几处本身被测到。
 
-**后续项：** F-4/F-11 文本精简（独立计划）；F-12 合同歧义；核心问题补测（需会走进研究节点的高不确定案例 + 生成额度）；
-brainstorm、ux-research、legacy 档位的原生运行；Codex 端原生验证。
+**后续项：** F-4/F-11 文本精简（独立计划）；F-12 合同歧义；核心问题补测（需会走进研究节点的高不确定案例 + 生成额度，
+即 U-003 的 A/C0/holdout——你已把生成上限定为 2 且已用完，未经新授权不追加）；legacy deep/moderate 研究档位回归；
+Codex 端其余 4 个 skill；各 skill 走完真人门之后的 Oracle/handoff 段。
 
 **需要你决定：** F-2——是否让某些条件下默认走 focused / 直达 Brief。现有证据只有 1 例且不区分直达与研究链，弱于
 原采用门。
@@ -185,8 +198,9 @@ brainstorm、ux-research、legacy 档位的原生运行；Codex 端原生验证�
 
 ## 8. 能说和不能说
 
-**能说：** 源码写好了、静态检查过了、双端同源；Claude 端按 SKILL.md 全文执行时 deepresearch focused 全流程跑通、
-ux-brainstorm 与 design-brief 的关键分支按合同停在真人门；竞品分析与按缺口串联在源码里成立；成熟需求直达 Brief 已是
-A/B/D 默认推荐；Brief 补充了状态失效的规格要求，在一个构造案例中被引用并阻断冻结，生成层效果未验证。
+**能说：** 源码写好了、静态检查过了、双端同源；deepresearch focused 在 Claude 端全流程跑通；其余 4 个 skill 的 focused
+分支在 Claude 端按合同停在真人门；ux-brainstorm 默认仍走 full、没有被 focused 稀释；Codex 端 `$ux-brainstorm` 能发现并按
+同样合同执行；竞品分析与按缺口串联在源码里成立；成熟需求直达 Brief 已是 A/B/D 默认推荐；Brief 补充了状态失效的规格要求，
+在一个构造案例中被引用并阻断冻结，生成层效果未验证。
 
-**不能说：** 体验变轻了、设计变好了、研究有用了、省了 50%、比只用 brief 好、偏好 B 证明直达更好、四个 skill 在两端都完整跑通。
+**不能说：** 体验变轻了、设计变好了、研究有用了、省了 50%、比只用 brief 好、偏好 B 证明直达更好、五个 skill 在两端都完整跑通。
