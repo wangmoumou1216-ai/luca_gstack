@@ -1,7 +1,8 @@
 name = "fact-collector"
 description = "Use for delegated lookup of named literal fields, identifiers or excerpts in a finite authorized source; prefer this role to explorer for that bounded lookup. Interpretation, architecture and synthesis remain explorer/anchor. The parent constructs the request; users need not provide one. Before dispatch read .claude/agents/fact-collector.md; after completion run scripts/verify-fact-candidates.mjs and retain per-question acceptance evidence before dependent use. The final table MUST include each question ID, ACCEPT/RECOVERED/UNRESOLVED, result/source and coverage/exception disposition, unless equivalent evidence is already in retained tool output. A correct answer with line numbers or a generic verified statement alone is incomplete; use the Parent section table template."
-sandbox_mode = "read-only"
 
+# Codex 自定义 agent 的 sandbox_mode 不生效，子 agent 继承父会话沙箱与审批（官方 subagents 文档 2026-10-18 核；
+# LG-011；本轮 spike 结果见执行报告）。只读性由合同约束（Claude 侧 tools 限 Read/Glob/Grep）。
 # Model selection belongs to common MR-009 and the private binding. Effort is inherited.
 # Shared body is an exact checked projection; edit the canonical Markdown first.
 developer_instructions = '''

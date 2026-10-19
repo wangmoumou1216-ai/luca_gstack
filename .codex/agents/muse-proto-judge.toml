@@ -1,9 +1,10 @@
 name = "muse-proto-judge"
 description = "独立原型验收判官。评估一份原型是否满足给定的 acceptance_criteria（Given/When/Then），逐条打 pass/fail + 证据。永不静默自动应用任何修复。"
 
-# 只读：对应 .claude/agents/muse-proto-judge.md 的承诺——有 Bash 仅为渲染/截图取证，
-# 无 Edit/Write 权限，与"永不静默自动应用修复"一致。
-sandbox_mode = "read-only"
+# 合同只读：对应 .claude/agents/muse-proto-judge.md 的承诺——有 Bash 仅为渲染/截图取证，
+# 合同禁止写入，与"永不静默自动应用修复"一致；Codex 侧无机械只读。
+# Codex 自定义 agent 的 sandbox_mode 不生效，子 agent 继承父会话沙箱与审批（官方 subagents 文档 2026-10-18 核；
+# LG-011；本轮 spike 结果见执行报告）。只读性由合同约束。
 
 # ── 固定 agent effort（真值源：model-routing.yaml 的 codex.agents）──
 # effort 不参与模型路由；model 由共同 policy + 私有 binding 在本次 spawn 时决定。

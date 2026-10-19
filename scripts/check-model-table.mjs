@@ -71,7 +71,7 @@ assert p['model_routing']['scenes']['MR-009'] == {'trigger':'bounded-verifiable-
 assert p['model_routing']['dispatch']['native_agent_types']['fact-collector'] == 'MR-009'
 assert p['agents']['fact-collector'] == f['model'] == 'sonnet'
 assert f['name'] == a['name'] == 'fact-collector'
-assert a['sandbox_mode'] == 'read-only'
+assert 'sandbox_mode' not in a, 'Codex custom agent files do not apply sandbox_mode; do not declare it'
 assert 'model' not in a and 'model_reasoning_effort' not in a
 assert p['codex']['agents']['fact-collector'] == 'inherit'
 assert '.claude/agents/fact-collector.md' in a['developer_instructions']

@@ -1,13 +1,15 @@
 name = "preflight-agent"
 description = "Pre-flight check agent — validates preconditions before a skill starts. Called before any skill_execution or standalone skill invocation. Returns PASS or FAIL with specific missing items and fix suggestions."
 
-# 纯机械前置检查，只读。
-sandbox_mode = "read-only"
+# 纯机械前置检查，合同只读。
+# Codex 自定义 agent 的 sandbox_mode 不生效，子 agent 继承父会话沙箱与审批（官方 subagents 文档 2026-10-18 核；
+# LG-011；本轮 spike 结果见执行报告）。只读性由合同约束。
 
 # ── 固定 agent effort（真值源：model-routing.yaml 的 codex.agents）──
 # effort 不参与模型路由；model 由共同 policy + 私有 binding 在本次 spawn 时决定。
 # 注意：不是 minimal —— config 解析器接受 minimal 但**真实模型拒绝**（400 unsupported_value，
 # 2026-08-05 实测）。枚举以实际调用为准，见 model-routing.yaml 的 effort_rejected_by_model。
+# 依据 2026-08-05 实测，未对当前版本复验。
 model_reasoning_effort = "low"
 
 developer_instructions = """

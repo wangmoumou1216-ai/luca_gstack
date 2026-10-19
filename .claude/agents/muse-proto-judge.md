@@ -5,11 +5,11 @@ description: |
   满足给定的 acceptance_criteria（Given/When/Then），逐条打 pass/fail + 证据。
   永不静默自动应用任何修复。冷启动隔离上下文调度（同 quality-gate 的调度
   方式）——调度方只传"原型路径 + acceptance_criteria 列表"，绝不传生成过程/
-  推理链。muse fork 专属新增，母版 luca_gstack 无此 agent。
+  推理链。起源于 muse fork；本仓已并入并由路由正式引用。
 model: opus  # 保留独立判官的原生默认值；用户明确指定时按原生配置处理
 tools:
   - Read
-  - Bash   # 仅用于渲染/截图取证（如无头浏览器截图核对视觉状态），禁止用于写文件；无 Edit/Write 权限，与"永不静默自动应用修复"的只读承诺一致
+  - Bash   # 仅用于渲染/截图取证（如无头浏览器截图核对视觉状态），禁止用于写文件；无 Edit/Write 工具，但 Bash 能写文件，只读由合同约束，与"永不静默自动应用修复"的承诺一致
 ---
 
 # muse-proto-judge Subagent v1.0

@@ -13,7 +13,7 @@
 //   7. plan-agent 能力锚（块0前提门/增量重规划/块5出门自检——防修剪纪律误删）
 // 文件缺失/抽取失败即 FAIL——重构改了形状必须同步更新本检查，不许静默跳过。
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -131,6 +131,16 @@ t('orchestrator 独占 verdict recorder 调用', /record_eval\.py\s+--verdict-fi
 t('orchestrator 不允许改写 judge verdict', orch.includes('不得改写 verdict'));
 t('Codex quality-gate 如实声明权限继承', codexQg.includes('权限继承父会话'));
 t('Codex quality-gate 不宣称已机械隔离 sandbox', !/^sandbox_mode\s*=/m.test(codexQg));
+// Codex 的自定义 agent 文件不应用 sandbox_mode（官方 subagents 文档；LG-011），子 agent 继承父会话权限。
+// 假只读声明曾被删掉后又复发，故遍历全部 TOML 而不是点名文件；新增 agent 自动受约束。
+const codexAgentFiles = readdirSync(join(root, '.codex/agents')).filter(f => f.endsWith('.toml')).sort();
+t('Codex agent TOML 目录非空', codexAgentFiles.length > 0, '.codex/agents 下没有 TOML');
+for (const f of codexAgentFiles) {
+  const body = read(`.codex/agents/${f}`);
+  // Tolerate indentation and a quoted key; a plain `^sandbox_mode =` match would miss `"sandbox_mode" = ...`.
+  t(`Codex ${f} 不声明未保证的 sandbox_mode`, !/^\s*["']?sandbox_mode["']?\s*=/m.test(body));
+  t(`Codex ${f} 如实说明继承父会话权限`, body.includes('继承父会话'));
+}
 
 // 9. 模型选择只有一份公共 policy；Codex 固定 effort 表是兼容元数据，不是第二条模型路由。
 // Stop at the next real top-level key; Claude/Codex must never satisfy common checks.
