@@ -586,6 +586,9 @@ function run(command, args, options = {}) {
     child.stdin.end();
     let stdout = '';
     let stderr = '';
+    // Decode as streams: a pipe read can split a multi-byte UTF-8 character across chunks.
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
     child.stdout.on('data', (chunk) => { stdout += chunk; });
     child.stderr.on('data', (chunk) => { stderr += chunk; });
     let timedOut = false;
@@ -4856,6 +4859,7 @@ async function invokeG5Codex(fixture, isolation, contract, guard = () => {}) {
     pending.set(id, { method, resolve: resolveRpc, reject: rejectRpc });
     send({ id, method, params });
   });
+  child.stderr.setEncoding('utf8');
   child.stderr.on('data', (chunk) => { if (stderr.length < 16_000) stderr += chunk; });
   child.on('error', fail);
   child.on('exit', (code, signal) => {
