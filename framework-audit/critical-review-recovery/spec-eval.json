@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "critical-recovery-spec-v9-20261019-a",
+  "subject": {
+    "skill": "code-hygiene-mode-d-spec",
+    "topic": "critical-review-interruption-recovery-v9",
+    "scene": "unknown",
+    "input_summary": "Cold Spec-only U004 review of the original approved plan plus explicit scope supplement. Verified frozen sources, retained native evidence and real-provider read coverage; independently ran recovery 28/28, native continuation recovery 16/16, and red/restored-green guard mutation. C12 final paired receipts remain a caller aggregate gate; U005/U006 are downstream, not completed.",
+    "output_paths": [
+      "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 17,
+    "total": 17,
+    "findings": []
+  }
+}

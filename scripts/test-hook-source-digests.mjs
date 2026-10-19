@@ -41,8 +41,8 @@ assert.equal(entries.length, 11);
 const normalize = value => value && typeof value === 'object' ? Array.isArray(value) ? value.map(normalize)
   : Object.fromEntries(Object.keys(value).sort().map(key => [key, normalize(value[key])])) : value;
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
-assert.equal(sha(JSON.stringify(normalize(nativeConfig.hooks))), '071dcae5ae935ce15318dea12d1deaee3cddec60c74bda6d82ec1c422eb885e4');
-assert.equal(sha(JSON.stringify(normalize(config.hooks))), '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189');
+assert.equal(sha(JSON.stringify(normalize(nativeConfig.hooks))), 'c6ef2efa3fcb18e91163f4c2dd25277d8c568ae82c490949d47aeff549601c45');
+assert.equal(sha(JSON.stringify(normalize(config.hooks))), 'b2292c4ac201eb4fe2b5222fd9f45204070173b6a622f9e76e03ee02ca84496c');
 const base = realpathSync(mkdtempSync(join(tmpdir(), 'hook-source-digests-')));
 const fixture = join(base, "repo with space's quote"), home = join(base, 'home');
 mkdirSync(home, { mode: 0o700 });

@@ -195,12 +195,19 @@ export function verifyReservationCompleted(reservation) {
   if (realpathSync(source.path) !== source.path || !st.isFile() || String(st.dev) !== source.dev
       || String(st.ino) !== source.ino || bytes.length < source.size
       || sha256Bytes(bytes.subarray(0, source.size)) !== source.prefix_sha256) fail('reservation source prefix/identity changed');
-  const records = bytes.subarray(source.size).toString('utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+  const tail = bytes.subarray(source.size, bytes.lastIndexOf(10) + 1);
+  const records = tail.toString('utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
   const matches = records.filter(row => row.type === 'event_msg' && row.payload?.type === 'item_completed'
     && row.payload.thread_id === reservation.session_id && row.payload.turn_id === reservation.turn_id
     && row.payload.item?.id === reservation.tool_use_id && ['CommandExecution', 'FileChange'].includes(row.payload.item.type)
     && ['completed', 'failed', 'declined'].includes(row.payload.item.status)
     && Number.isFinite(row.payload.completed_at_ms) && row.payload.completed_at_ms >= reservation.created_at);
-  if (matches.length !== 1) fail('exact native terminal tool evidence is missing or ambiguous');
-  return { evidence_sha256: hash(matches[0]), outcome: matches[0].payload.item.status };
+  if (matches.length === 1) return { evidence_sha256: hash(matches[0]), outcome: matches[0].payload.item.status };
+  if (matches.length) fail('exact native terminal tool evidence is ambiguous');
+  // Codex may reject a tool after PreToolUse (e.g. apply_patch verification) without any item
+  // record or PostToolUse. The end of its root turn then proves no tool of that turn is in flight.
+  const ended = records.filter(row => row.type === 'event_msg' && ['task_complete', 'turn_aborted'].includes(row.payload?.type)
+    && row.payload.turn_id === reservation.turn_id);
+  if (ended.length !== 1) fail('exact native terminal tool evidence is missing or ambiguous');
+  return { evidence_sha256: hash(ended[0]), outcome: 'UNKNOWN', evidence: 'turn-terminal' };
 }

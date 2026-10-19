@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "producer": "quality-gate",
+  "eval_run_id": "critical-recovery-standards-v9-20261019-a",
+  "subject": {
+    "skill": "code-hygiene-mode-d-standards",
+    "topic": "critical-review-interruption-recovery-v9",
+    "scene": "unknown",
+    "input_summary": "Independent Standards-only review of frozen FILE_SET16 against repository contracts and active rules. Ran recovery and hook suites, independently selected report-status guard mutation with restored green, and actual native continuation recovery; read parent runtime evidence. Loopback lifecycle evidence does not establish real-model semantic review or universal OS network isolation.",
+    "output_paths": [
+      "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v9"
+    ],
+    "duration": "heavy"
+  },
+  "verdict": {
+    "status": "PASS",
+    "passed": 6,
+    "total": 6,
+    "findings": []
+  }
+}

@@ -1928,17 +1928,20 @@ check('synthetic continuation: pinned refusals for each way the structural proof
   }
 });
 
-check('synthetic continuation: a task launched before the user turn cannot re-arm authority', () => {
+check('synthetic continuation: a task launched before a later user message still reports back into that latest turn', () => {
+  // Real usage: the user keeps typing while a subagent runs, and its hand-back lands afterwards.
   const fx = makeEnv();
   makeProject(fx, 'alpha');
   bind(fx, 'S', 'alpha');
   appendRows(fx, 'S', startedTaskRows(fx, 'S', 'agent-task-1'));
-  beginTurn(fx, 'S');
+  const latestHuman = beginTurn(fx, 'S');
+  assert.equal(latestHuman.state, 'TURN_ACTIVE');
+  const humanNativeId = readProjectState(fx.gstack, 'S', fx.projects).value.event_control.current.native_id;
   closeCurrentEvent(fx, 'S', 'stop');
   const promptId = randomUUID();
   queueSynthetic(fx, 'S', promptId);
   appendRows(fx, 'S', [peerRow(fx, 'S', { taskId: 'agent-task-1', promptId })]);
-  expectRefusal('old task', fx, 'SOURCE_NOT_VISIBLE', true);
+  assert.equal(attestWithTestRoot(fx, 'S').event.synthetic_of, humanNativeId);
 });
 
 check('synthetic continuation: a completed background task notification continues the turn', () => {
@@ -1953,6 +1956,40 @@ check('synthetic continuation: a completed background task notification continue
   });
   appendRows(fx, 'S', [taskNotificationRow(fx, 'S', { taskId: 'bgtask-0001', promptId })]);
   assert.equal(attestWithTestRoot(fx, 'S').event.synthetic_of, humanNativeId);
+});
+
+function queuedNotificationRow(fx, sid, { taskId, text, sidechain = false }) {
+  // Claude Code 2.1.x: a mid-turn notification is an attachment row, never a user row.
+  return {
+    type: 'attachment', uuid: randomUUID(), sessionId: sid, cwd: fx.gstack, userType: 'external', isSidechain: sidechain,
+    attachment: { type: 'queued_command', commandMode: 'task-notification', origin: { kind: 'task-notification', producer: 'session-task' },
+      prompt: text ?? `<task-notification>\n<task-id>${taskId}</task-id>\n<status>failed</status>\n</task-notification>` },
+  };
+}
+
+check('synthetic continuation: a notification recorded as a queued_command attachment continues the turn', () => {
+  const fx = makeEnv();
+  const humanNativeId = closedHumanTurn(fx, 'S');
+  const prompt = '<task-notification>\n<task-id>bgtask-0001</task-id>\n<status>failed</status>\n</task-notification>';
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'bgtask-0001', 'Bash'));
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S', cwd: fx.gstack,
+    harness: 'claude', prompt, promptId: randomUUID(), intent: { kind: 'turn' },
+  });
+  appendRows(fx, 'S', [queuedNotificationRow(fx, 'S', { taskId: 'bgtask-0001' })]);
+  assert.equal(attestWithTestRoot(fx, 'S').event.synthetic_of, humanNativeId);
+});
+
+check('synthetic continuation: an attachment notification for a task this session never launched stays refused', () => {
+  const fx = makeEnv();
+  closedHumanTurn(fx, 'S');
+  const prompt = '<task-notification>\n<task-id>foreign-0001</task-id>\n<status>failed</status>\n</task-notification>';
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S', cwd: fx.gstack,
+    harness: 'claude', prompt, promptId: randomUUID(), intent: { kind: 'turn' },
+  });
+  appendRows(fx, 'S', [queuedNotificationRow(fx, 'S', { taskId: 'foreign-0001' })]);
+  expectRefusal('foreign task attachment', fx, 'SOURCE_NOT_VISIBLE', true);
 });
 
 check('synthetic continuation: a newer user prompt revokes an active continuation at the next tool call', () => {

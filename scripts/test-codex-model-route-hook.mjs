@@ -6,7 +6,7 @@ import {cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, 
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {readActivation, recoverActivation, stateFileForTest} from './model-route-host.mjs';
+import {readActivation, recoverActivation, stateFileForTest, activationContentSha, reserveReviewRecovery} from './model-route-host.mjs';
 import {allocateFixtureRoot, releaseFixtureRoot} from './exact-fixture-slots.mjs';
 import {queueProjectEventCandidate} from '../.claude/hooks/lib/project-substrate.mjs';
 
@@ -19,7 +19,7 @@ mkdirSync(join(ROOT, '.codex'), {mode: 0o700});
 mkdirSync(join(ROOT, 'scripts'), {mode: 0o700});
 mkdirSync(join(ROOT, '.claude'), {mode: 0o700});
 cpSync(join(repo, '.codex', 'model-route-hook.mjs'), join(ROOT, '.codex', 'model-route-hook.mjs'));
-for (const name of ['model-route.mjs', 'model-route-host.mjs']) {
+for (const name of ['model-route.mjs', 'model-route-host.mjs', 'codex-review-recovery.mjs']) {
   cpSync(join(repo, 'scripts', name), join(ROOT, 'scripts', name));
 }
 cpSync(join(repo, '.claude', 'hooks', 'lib'), join(ROOT, '.claude', 'hooks', 'lib'), {recursive: true});
@@ -82,6 +82,17 @@ function equal(actual, expected, message) {
 }
 function state(sessionId) {
   return readActivation({harness: 'codex', root_session_id: sessionId, state_root: stateRoot});
+}
+function pendingInvocation(state,id,extra={}) {
+  const hash=createHash('sha256').update('pending-fixture').digest('hex');
+  return {invocation_id:id,activation_id:state.activation_id,root_generation:state.root_generation,
+    release_digest:state.release_digest,root_session_id:state.root_session_id,status:'pending',critical:true,
+    route_id:'route-'+id,task_id:'task-'+id,input_sha:hash,policy_sha:hash,routing_config_sha:hash,
+    capability_evidence_sha:hash,route_harness:'codex-native',requested_role:'peak',requested_model:'gpt-6-astra',...extra};
+}
+function pendingPreparation(state,id,extra={}) {
+  return {preparation_id:id,activation_id:state.activation_id,root_generation:state.root_generation,
+    task_id:'task-'+id,evidence_ref:'test://preparation-'+id,status:'pending',...extra};
 }
 function start(sessionId, model = 'gpt-5.6-sol', source = 'startup') {
   return run({hook_event_name: 'SessionStart', session_id: sessionId, model, source, cwd: ROOT});
@@ -230,9 +241,195 @@ function nestedNativeChecks() {
   }
 }
 
+function continuationMessagingChecks() {
+  const messageAllowed=target=>({hookSpecificOutput:{hookEventName:'PreToolUse',
+    permissionDecision:'allow',updatedInput:{target,message:'FYI; do not start a new turn.'}}});
+  const writeRows = (path, rows) => writeFileSync(path, rows.map(JSON.stringify).join('\n') + '\n');
+  const rowsAt = path => readFileSync(path, 'utf8').trim().split('\n').map(JSON.parse);
+  function child(owner, id, alias, {critical = false, complete = true} = {}) {
+    const path = join(transcriptRoot, `rollout-2026-10-01T01-00-00-${owner}.jsonl`);
+    if (!existsSync(path)) rootTranscript(owner);
+    const args = {task_name: alias.split('/').at(-1), message: 'work',
+      agent_type: critical ? 'quality-gate' : 'worker', fork_turns: 'none'};
+    const tool = 'spawn-' + id, rows = rowsAt(path), turn = rows.findLast(r => r.type === 'turn_context').payload.turn_id;
+    equal(run({hook_event_name:'PreToolUse',session_id:owner,turn_id:turn,tool_use_id:tool,
+      tool_name:'collaborationspawn_agent',tool_input:args,cwd:ROOT,transcript_path:path})
+      .hookSpecificOutput.permissionDecision, 'allow', 'messaging fixture dispatches through real hook');
+    rows.push({type:'response_item',payload:{type:'function_call',namespace:'collaboration',name:'spawn_agent',
+      call_id:tool,arguments:JSON.stringify(args)}},
+    {type:'event_msg',payload:{type:'item_completed',thread_id:owner,turn_id:turn,
+      item:{type:'SubAgentActivity',kind:'started',id:tool,agent_thread_id:id}}},
+    {type:'response_item',payload:{type:'function_call_output',call_id:tool,output:JSON.stringify({task_name:alias})}});
+    writeRows(path, rows);
+    subStart(owner,id,args.agent_type);
+    const native = transcript({sessionId:owner,agentId:id,agentType:args.agent_type,
+      model:critical?'gpt-6-astra':'gpt-5.6-sol',complete});
+    const childRows = rowsAt(native);
+    Object.assign(childRows[0].payload,{cwd:ROOT,session_id:owner,thread_source:'subagent'});
+    Object.assign(childRows[0].payload.source.subagent.thread_spawn,
+      {parent_thread_id:owner,agent_path:alias,depth:alias.split('/').length-2});
+    childRows.find(r=>r.type==='turn_context').payload.cwd=ROOT;
+    const canonical=join(transcriptRoot,`rollout-2026-10-01T01-00-00-${id}.jsonl`);
+    writeRows(canonical,childRows);
+    if(complete)equal(subStop(owner,id,args.agent_type,canonical),{},'fixture completion is accepted');
+    return canonical;
+  }
+  function send(caller,target,suffix) {
+    const path=join(transcriptRoot,`rollout-2026-10-01T01-00-00-${caller}.jsonl`),rows=rowsAt(path);
+    const tool='message-'+suffix,args={target,message:'FYI; do not start a new turn.'};
+    rows.push({type:'response_item',payload:{type:'function_call',namespace:'collaboration',name:'send_message',
+      call_id:tool,arguments:JSON.stringify(args)}});writeRows(path,rows);
+    const result=run({hook_event_name:'PreToolUse',session_id:caller,
+      turn_id:rows.findLast(r=>r.type==='turn_context').payload.turn_id,tool_use_id:tool,
+      tool_name:'collaborationsend_message',tool_input:args,cwd:ROOT,transcript_path:path});
+    rows.push({type:'response_item',payload:{type:'function_call_output',call_id:tool,output:''}});writeRows(path,rows);
+    return {result,path};
+  }
+  if(!process.argv.includes('--messaging-parent')) {
+    const owner='root-idle-message';start(owner);rootTranscript(owner);
+    child(owner,'idle-message-child','/root/idle',{critical:true});
+    for(const target of ['idle-message-child','/root/idle','idle']) {
+      const {result,path}=send(owner,target,target.replaceAll('/','-'));
+      equal(result,messageAllowed('/root/idle'),'idle child message is allowed');
+      equal(recoveryRunner(owner,path).hookSpecificOutput.permissionDecision,'allow',
+        'successful queue to already idle child does not require a nonexistent new turn');
+      equal(Object.values(state(owner).resume_intents).every(i=>i.status!=='pending'),true,
+        'idle queue leaves no pending continuation');
+    }
+    for(const [index,output] of ['{}','[]','"unexpected"','{"status":"failed"}',
+      '{"ok":true}','1','null','false',' '].entries()) {
+      const unknownOwner='root-unknown-message-'+index;start(unknownOwner);rootTranscript(unknownOwner);
+      child(unknownOwner,'unknown-child-'+index,'/root/unknown',{critical:true});
+      const queued=send(unknownOwner,'unknown-child-'+index,'unknown-'+index),rows=rowsAt(queued.path);
+      rows.at(-1).payload.output=output;writeRows(queued.path,rows);
+      equal(recoveryRunner(unknownOwner,queued.path).hookSpecificOutput.permissionDecision,'deny',
+        'unknown native message result cannot certify success: '+output);
+      equal(Object.values(state(unknownOwner).resume_intents)[0].status,'pending',
+        'unknown native message result retains the pending intent: '+output);
+    }
+    const failed=send(owner,'idle-message-child','failed-result'),badRows=rowsAt(failed.path);
+    badRows.at(-1).payload.output=JSON.stringify({error:'message failed'});writeRows(failed.path,badRows);
+    equal(recoveryRunner(owner,failed.path).hookSpecificOutput.permissionDecision,'deny',
+      'failed tool result cannot close an idle intent');
+    const wrongOwner='root-message-model-mismatch';start(wrongOwner);rootTranscript(wrongOwner);
+    const wrongChild=child(wrongOwner,'wrong-message-model','/root/wrong-model',{critical:true});
+    const message=send(wrongOwner,'wrong-message-model','model-mismatch'),wrongRows=rowsAt(wrongChild);
+    wrongRows.find(r=>r.type==='turn_context').payload.model='unapproved-model';writeRows(wrongChild,wrongRows);
+    equal(recoveryRunner(wrongOwner,message.path).hookSpecificOutput.permissionDecision,'deny',
+      'continuation model mismatch blocks dispatch');
+    equal(state(wrongOwner).failure_records.some(f=>f.reason==='CONTINUATION_MODEL_MISMATCH'
+      &&f.invocation_id===Object.values(state(wrongOwner).invocations)[0].invocation_id),true,
+      'continuation evidence contradiction is appended with invocation identity');
+    const liveOwner='root-live-message';start(liveOwner);rootTranscript(liveOwner);
+    const live=child(liveOwner,'live-message-child','/root/live',{critical:true,complete:false});
+    const queued=send(liveOwner,'live-message-child','live');equal(queued.result,messageAllowed('/root/live'),'running child may receive a queued message');
+    equal(recoveryRunner(liveOwner,queued.path).hookSpecificOutput.permissionDecision,'deny',
+      'tool success alone cannot settle a running critical child');
+    equal(Object.values(state(liveOwner).resume_intents)[0].status,'pending','running message intent remains pending');
+    const liveRows=rowsAt(live);liveRows.push({type:'event_msg',payload:{type:'task_complete',turn_id:'turn-live-message-child'}});writeRows(live,liveRows);
+    equal(subStop(liveOwner,'live-message-child','quality-gate',live),{},'running child finishes normally');
+    equal(recoveryRunner(liveOwner,queued.path).hookSpecificOutput.permissionDecision,'allow',
+      'actual terminal evidence settles the running queue');
+  }
+  {
+    const owner='root-duplicate-continuation';start(owner);const path=rootTranscript(owner);
+    const native=child(owner,'repeat-child','/root/repeat',{critical:true});
+    const rows=rowsAt(path),args={target:'/root/repeat',message:'Continue once'},id='repeat-followup';
+    rows.push({type:'response_item',payload:{type:'function_call',namespace:'collaboration',
+      name:'followup_task',call_id:id,arguments:JSON.stringify(args)}});writeRows(path,rows);
+    equal(run({hook_event_name:'PreToolUse',session_id:owner,turn_id:'turn-root',tool_use_id:id,
+      tool_name:'collaborationfollowup_task',tool_input:args,cwd:ROOT,transcript_path:path})
+      .hookSpecificOutput.permissionDecision,'allow','followup to accepted critical child is admitted');
+    rows.push({type:'response_item',payload:{type:'function_call_output',call_id:id,output:''}});writeRows(path,rows);
+    const more=rowsAt(native);more.push({type:'event_msg',payload:{type:'task_started',turn_id:'repeat-turn'}},
+      {type:'turn_context',payload:{turn_id:'repeat-turn',model:'gpt-6-astra',cwd:ROOT}},
+      {type:'response_item',payload:{type:'message',role:'assistant',content:[{type:'output_text',text:'done'}]}});
+    writeRows(native,more);
+    equal(subStop(owner,'repeat-child','quality-gate',native),{},'pending continuation accepts its actual stop boundary');
+    more.push({type:'event_msg',payload:{type:'task_complete',turn_id:'repeat-turn'}});writeRows(native,more);
+    equal(recoveryRunner(owner,path).hookSpecificOutput.permissionDecision,'allow','actual followup terminal settles intent');
+    const before=state(owner);
+    equal(subStop(owner,'repeat-child','quality-gate',native),{},'completed continuation callback replay is idempotent');
+    equal(state(owner),before,'duplicate continuation callback leaves ledger unchanged');
+    more.push({type:'event_msg',payload:{type:'task_started',turn_id:'untracked-turn'}},
+      {type:'turn_context',payload:{turn_id:'untracked-turn',model:'gpt-6-astra',cwd:ROOT}},
+      {type:'response_item',payload:{type:'message',role:'assistant',content:[{type:'output_text',text:'done'}]}});
+    writeRows(native,more);
+    equal(subStop(owner,'repeat-child','quality-gate',native).stopReason,'UNTRACKED_CHILD_ACTIVITY',
+      'a new untracked turn cannot reuse the completed continuation proof');
+    equal(state(owner).critical_failure,true,'untracked activity remains a durable hard failure');
+    equal(state(owner).failure_records.some(f=>f.reason==='UNTRACKED_CHILD_ACTIVITY'
+      &&f.invocation_id===Object.values(state(owner).invocations)[0].invocation_id),true,
+      'untracked callback audit retains the known invocation identity');
+  }
+  const owner='root-family-messages';start(owner);rootTranscript(owner);
+  const actor='family-actor', sibling='family-sibling';
+  child(owner,actor,'/root/actor',{complete:false});start(actor);
+  child(owner,sibling,'/root/sibling');
+  equal(send(actor,'..','parent-relative').result.hookSpecificOutput?.updatedInput,
+    {target:'/root',message:'FYI; do not start a new turn.'},'resolved target is passed to native backend without altering the message');
+  equal(send(actor,'/root','parent').result,messageAllowed('/root'),'child can report to its proven root parent');
+  equal(send(actor,owner,'parent-id').result,messageAllowed('/root'),'native root UUID is also a proven message target');
+  equal(send(actor,sibling,'sibling').result,messageAllowed('/root/sibling'),'sibling message is permitted through its owning ledger');
+  const ownerPath=join(transcriptRoot,`rollout-2026-10-01T01-00-00-${owner}.jsonl`);
+  equal(recoveryRunner(owner,ownerPath).hookSpecificOutput.permissionDecision,'allow',
+    'owner reconciles sibling message from actual caller transcript');
+  equal(Object.values(state(owner).resume_intents).every(i=>i.status!=='pending'),true,
+    'cross-caller idle message settles in target owner ledger');
+  child(actor,'family-grandchild','/root/actor/grand');
+  equal(send(owner,'family-grandchild','descendant').result,messageAllowed('/root/actor/grand'),'ancestor can message a non-direct descendant');
+  const actorPath=join(transcriptRoot,`rollout-2026-10-01T01-00-00-${actor}.jsonl`);
+  equal(recoveryRunner(actor,actorPath,{turn_id:'turn-'+actor}).hookSpecificOutput.permissionDecision,'allow',
+    'descendant owner reads the actual ancestor caller result');
+  equal(send(actor,'/root/foreign','unknown').result.hookSpecificOutput.permissionDecision,'deny',
+    'unproven target is not a bypass');
+  const old='family-retired-review',oldPath=child(owner,old,'/root/retired',{critical:true,complete:false});
+  const oldRows=rowsAt(oldPath);oldRows.push({type:'event_msg',payload:{type:'turn_aborted',turn_id:'turn-'+old}});writeRows(oldPath,oldRows);
+  equal(recoveryRunner(owner,ownerPath).hookSpecificOutput.permissionDecision,'deny','interrupted review retains its obligation');
+  const current=state(owner),call=Object.values(current.invocations).find(c=>c.external_identity?.agent_id===old);
+  const sha=x=>createHash('sha256').update(x).digest('hex');
+  const descriptor={schema_version:1,read_only:true,agent_type:'quality-gate',fork_turns:'none',
+    files:[{path:oldPath,sha256:sha(readFileSync(oldPath))}],criteria:[{id:'M1',text:'Frozen fixture review'}],authorization_ref:'fixture-user'};
+  const input={harness:'codex',root_session_id:owner,state_root:stateRoot};
+  equal(reserveReviewRecovery({...input,expected_state_sha:activationContentSha(input),descriptor,
+    descriptor_sha:sha(JSON.stringify(descriptor)),obligation_id:call.invocation_id,operation_id:'fixture-retirement',
+    release_digest:current.release_digest,policy_sha:call.policy_sha,authorization_ref:'fixture-user',
+    verifyNativeEvidence:()=>{}}).disposition,'RESERVED','unit host fixture retires the interrupted child');
+  equal(send(actor,old,'retired-sibling').result.hookSpecificOutput?.permissionDecisionReason?.includes('RETIRED_REVIEW_AGENT'),true,
+    'cross-caller messaging cannot bypass the target owner retirement');
+  oldRows.push({type:'event_msg',payload:{type:'task_started',turn_id:'unexpected-resume'}},
+    {type:'turn_context',payload:{turn_id:'unexpected-resume',model:'gpt-6-astra',cwd:ROOT}});writeRows(oldPath,oldRows);
+  equal(send(old,'/root','retired-sender').result.hookSpecificOutput?.permissionDecisionReason?.includes('RETIRED_REVIEW_AGENT'),true,
+    'retired sender cannot use a parent message to bypass its own retirement');
+  equal(state(owner).failure_records.some(f=>f.reason==='RETIRED_REVIEW_AGENT_RESUMED'
+    &&f.invocation_id===call.invocation_id),true,'unexpected retired activity appends a hard failure in its owner ledger');
+  const family='root-relative-messages';start(family);rootTranscript(family);
+  child(family,'relative-a','/root/a',{complete:false});start('relative-a');
+  child(family,'relative-b','/root/b',{complete:false});start('relative-b');
+  child('relative-a','relative-grand-a','/root/a/grand');
+  child('relative-b','relative-grand-b','/root/b/grand');
+  for(const [caller,target,suffix,canonical] of [[family,'a/grand','descendant-relative','/root/a/grand'],
+    ['relative-a','grand','own-child','/root/a/grand'],['relative-a','../b/grand','sibling-relative','/root/b/grand'],
+    ['relative-a','/root/b/grand','sibling-canonical','/root/b/grand'],['relative-a','relative-grand-b','sibling-id','/root/b/grand']]) {
+    equal(send(caller,target,suffix).result,messageAllowed(canonical),'native caller-relative task path resolves unambiguously: '+target);
+  }
+  equal(send('relative-a','../../foreign','outside-family').result.hookSpecificOutput?.permissionDecision,'deny',
+    'caller-relative paths cannot escape the proven root family');
+}
+
 try {
-  nestedNativeChecks();
-  if (!process.argv.includes('--nested')) {
+  for(const command of ['cat scripts/codex-review-recovery.mjs',
+    'rg codex-review-recovery.mjs scripts','node --test scripts/test-codex-review-recovery.mjs',
+    'node scripts/test-codex-review-recovery.mjs --mutation',
+    'node scripts/codex-review-recovery.mjs inspect --session fixture | head -1']) {
+    equal(run({hook_event_name:'PreToolUse',session_id:'ordinary-recovery-reference',cwd:ROOT,
+      tool_name:'Bash',tool_input:{command}}),{},'native Bash recovery matcher leaves ordinary command untouched: '+command);
+  }
+  equal(state('ordinary-recovery-reference'),null,'ordinary recovery references create no routing state');
+  const messagingOnly=process.argv.includes('--messaging')||process.argv.includes('--messaging-parent');
+  if(!process.argv.includes('--nested'))continuationMessagingChecks();
+  if(!messagingOnly)nestedNativeChecks();
+  if (!process.argv.includes('--nested')&&!messagingOnly) {
   const changedAnchor = 'root-active-model-change';
   start(changedAnchor, 'gpt-6-astra');
   const changedDispatch = recoveryPre(changedAnchor, rootTranscript(changedAnchor), {
@@ -331,7 +528,7 @@ try {
     } else {
       equal(next.hookSpecificOutput.permissionDecision, 'deny', `${variant} evidence does not authorize another spawn`);
       equal(state(sid), before, `${variant} evidence does not alter model authority`);
-      if (variant === 'critical') equal(next.hookSpecificOutput.permissionDecisionReason.includes('CRITICAL_INVOCATION_EVIDENCE_PENDING'), true,
+      if (variant === 'critical') equal(next.hookSpecificOutput.permissionDecisionReason.includes('UNRESOLVED_CRITICAL_INVOCATION'), true,
         'native started does not close critical evidence obligations');
     }
   }
@@ -442,15 +639,21 @@ try {
     const blocked = state(session);
     blocked.status = 'paused';
     if (suffix === 'critical-failure') blocked.critical_failure = true;
-    if (suffix === 'pending-invocation') blocked.invocations.pending = {status: 'pending', critical: true};
-    if (suffix === 'pending-preparation') blocked.preparations.pending = {status: 'pending'};
-    if (suffix === 'invalidated-critical') blocked.invocations.unclosed = {
-      status: 'invalidated', critical: true, invalidation_reason: 'ACTIVATION_PAUSED'};
-    if (suffix === 'invalidated-preparation') blocked.preparations.unclosed = {
-      status: 'invalidated', invalidation_reason: 'ACTIVATION_PAUSED'};
+    if (suffix === 'pending-invocation') blocked.invocations.pending = pendingInvocation(blocked,'pending');
+    if (suffix === 'pending-preparation') blocked.preparations.pending = pendingPreparation(blocked,'pending');
+    if (suffix === 'invalidated-critical') blocked.invocations.unclosed = pendingInvocation(blocked,'unclosed',{
+      status: 'invalidated', invalidation_reason: 'ACTIVATION_PAUSED'});
+    if (suffix === 'invalidated-preparation') blocked.preparations.unclosed = pendingPreparation(blocked,'unclosed',{
+      status: 'invalidated', invalidation_reason: 'ACTIVATION_PAUSED'});
     if (suffix === 'release-mismatch') blocked.release_digest = '0'.repeat(64);
     writeFileSync(stateFileForTest({harness: 'codex', root_session_id: session, state_root: stateRoot}),
       JSON.stringify(blocked));
+    if(suffix==='release-mismatch') {
+      equal(recoveryPre(session,rootTranscript(session)).hookSpecificOutput.permissionDecision,'allow','clean paused release can upgrade');
+      equal(state(session).activation_history.at(-1).activation_id,blocked.activation_id,'clean upgrade retains the prior activation');
+      equal(state(session).activation_history.at(-1).release_digest,blocked.release_digest,'clean upgrade retains the old release identity');
+      continue;
+    }
     equal(recoveryPre(session, rootTranscript(session)).hookSpecificOutput.permissionDecision, 'deny',
       `paused ${suffix} cannot be recovered automatically`);
     equal(recoveryRunner(session, rootTranscript(session)).hookSpecificOutput.permissionDecision, 'deny',
@@ -462,11 +665,16 @@ try {
     start(session);
     const blocked = state(session);
     if (kind === 'critical-failure') blocked.critical_failure = true;
-    if (kind === 'pending-invocation') blocked.invocations.pending = {status: 'pending', critical: true};
-    if (kind === 'pending-preparation') blocked.preparations.pending = {status: 'pending'};
+    if (kind === 'pending-invocation') blocked.invocations.pending = pendingInvocation(blocked,'pending');
+    if (kind === 'pending-preparation') blocked.preparations.pending = pendingPreparation(blocked,'pending');
     if (kind === 'release-mismatch') blocked.release_digest = '0'.repeat(64);
     writeFileSync(stateFileForTest({harness: 'codex', root_session_id: session, state_root: stateRoot}),
       JSON.stringify(blocked));
+    if(kind==='release-mismatch') {
+      equal(recoveryRunner(session,rootTranscript(session)).hookSpecificOutput.permissionDecision,'allow','clean active release can upgrade before runner');
+      equal(state(session).activation_history.at(-1).activation_id,blocked.activation_id,'runner clean upgrade retains prior activation');
+      continue;
+    }
     equal(recoveryRunner(session, rootTranscript(session)).hookSpecificOutput.permissionDecision, 'deny',
       `runner keeps active ${kind} blocked`);
     equal(state(session), blocked, `runner preserves active ${kind} state`);
@@ -475,7 +683,7 @@ try {
   start(racedSession);
   const raced = state(racedSession);
   raced.critical_failure = true;
-  raced.invocations.obligation = {status: 'pending', critical: true};
+  raced.invocations.obligation = pendingInvocation(raced,'obligation');
   writeFileSync(stateFileForTest({harness: 'codex', root_session_id: racedSession, state_root: stateRoot}),
     JSON.stringify(raced));
   const recoveredRace = recoverActivation({harness: 'codex', root_session_id: racedSession,
@@ -682,13 +890,15 @@ try {
   start(renewalSession);
   const oldActivationId = state(renewalSession).activation_id;
   start(renewalSession, 'gpt-5.6-sol', 'resume');
-  equal(state(renewalSession).activation_id !== oldActivationId, true,
-    'a resumed root session creates a new activation');
+  equal(state(renewalSession).activation_id, oldActivationId,
+    'a resumed root session preserves the activation and its obligations');
+  equal(state(renewalSession).root_generation, 0,
+    'a same-model resume does not create a new root generation');
   const rootDigest = createHash('sha256').update(ROOT).digest('hex');
   const activationDigest = createHash('sha256').update(oldActivationId).digest('hex');
   equal(existsSync(join(childStore, rootDigest, 'revocations',
-    `${renewalSession}-${activationDigest}.revoked.json`)), true,
-  'a new activation permanently tombstones the old generation');
+    `${renewalSession}-${activationDigest}.revoked.json`)), false,
+    'same-activation resume preserves valid child project associations');
   const anchorSession = 'root-anchor';
   start(anchorSession);
   equal(state(anchorSession).root_anchor.model, 'gpt-5.6-sol', 'SessionStart pins root anchor');
@@ -715,6 +925,22 @@ try {
   }));
   equal(anchorStop, {}, 'SubagentStop accepts matching evidence before task_complete is appended');
   equal(Object.values(state(anchorSession).invocations)[0].status, 'accepted', 'accepted native evidence is persisted');
+  const acceptedRevision=state(anchorSession).revision;
+  equal(subStop(anchorSession,'agent-anchor','default',join(transcriptRoot,'agent-anchor.jsonl')),{},
+    'the exact repeated completion callback is idempotent');
+  equal(state(anchorSession).revision,acceptedRevision,'repeated completion does not rewrite accepted evidence');
+
+  const historySession='root-model-history';
+  start(historySession);
+  pre(historySession,{task_name:'history-review',message:'judge',agent_type:'quality-gate'},'history-spawn');
+  subStart(historySession,'history-child','quality-gate');
+  const historyPath=transcript({sessionId:historySession,agentId:'history-child',agentType:'quality-gate',model:'gpt-6-astra'});
+  const historyRows=readFileSync(historyPath,'utf8').trim().split('\n').map(JSON.parse);
+  historyRows.splice(2,0,{type:'turn_context',payload:{turn_id:'turn-history-child',model:'gpt-5.6-sol'}});
+  writeFileSync(historyPath,historyRows.map(row=>JSON.stringify(row)).join('\n')+'\n');
+  equal(subStop(historySession,'history-child','quality-gate',historyPath).continue,false,
+    'a correct final model cannot hide a mismatching earlier model');
+  equal(state(historySession).critical_failure,true,'mixed child model history retains a hard failure');
 
   for (const shape of ['top-level', 'event-msg']) {
     for (const scope of ['historical', 'current', 'unattributed']) {
@@ -823,6 +1049,19 @@ try {
   equal(state(peakSession).critical_failure, true, 'wrong critical adopted model latches activation');
   equal(pre(peakSession, {task_name: 'later', message: 'later'}, 'tool-later')
     .hookSpecificOutput.permissionDecision, 'deny', 'latched activation blocks later native spawns');
+
+  const lateFailureSession='root-late-hard-failure';
+  start(lateFailureSession);
+  pre(lateFailureSession,{task_name:'late-review',message:'judge',agent_type:'quality-gate'},'late-review-spawn');
+  subStart(lateFailureSession,'late-review-child','quality-gate');
+  start(lateFailureSession,'gpt-6-astra','compact');
+  equal(state(lateFailureSession).failure_records.length,1,'root change records the coordination failure');
+  const lateStop=subStop(lateFailureSession,'late-review-child','quality-gate',transcript({
+    sessionId:lateFailureSession,agentId:'late-review-child',agentType:'quality-gate',model:'gpt-5.6-sol'}));
+  equal(lateStop.continue,false,'late mismatching completion remains unaccepted');
+  equal(state(lateFailureSession).failure_records.length,2,
+    'the coordination latch cannot hide a later real model failure');
+  equal(state(lateFailureSession).failure_records.at(-1).kind,'hard','late model failure is independently audited');
 
   const messageMismatchSession = 'root-message-mismatch';
   start(messageMismatchSession);
@@ -951,9 +1190,8 @@ try {
   const unresolvedSession = 'root-unresolved-workflow';
   start(unresolvedSession);
   const unresolvedState = state(unresolvedSession);
-  unresolvedState.invocations['workflow-pending'] = {
-    status: 'pending', critical: true, route_harness: 'codex-cli',
-  };
+  unresolvedState.invocations['workflow-pending'] = pendingInvocation(unresolvedState,'workflow-pending',
+    {route_harness:'codex-cli'});
   writeFileSync(stateFileForTest({harness: 'codex', root_session_id: unresolvedSession, state_root: stateRoot}),
     JSON.stringify(unresolvedState));
   equal(pre(unresolvedSession, {task_name: 'after-io-failure', message: 'work'}, 'tool-unresolved-native')
@@ -1015,9 +1253,9 @@ try {
     'tool-after-compact-runner', 'Bash').hookSpecificOutput.permissionDecision, 'deny',
     'compact cannot unlock the runner entry');
   start(preparationBusy, 'gpt-6-astra', 'resume');
-  equal(state(preparationBusy).critical_failure, false, 'normal new activation can recover compact-blocked work');
+  equal(state(preparationBusy).critical_failure, true, 'resume preserves the compact-blocked critical failure');
   equal(pre(preparationBusy, {task_name: 'new_activation', message: 'work'}, 'tool-new-activation')
-    .hookSpecificOutput.permissionDecision, 'allow', 'new activation starts an ordinary invocation');
+    .hookSpecificOutput.permissionDecision, 'deny', 'new activation cannot wash away a critical failure');
 
   // B reads an empty snapshot, then A fully dispatches and binds before B resumes.
   // The host lock, rather than that stale snapshot, must decide admission.
@@ -1077,15 +1315,20 @@ try {
   equal(pre(seriesSession, {task_name: 'still-latched', message: 'work'}, 'tool-six-repaired-still-latched')
     .hookSpecificOutput.permissionDecision, 'deny', 'binding repair does not silently clear the critical failure');
   start(seriesSession, 'gpt-6-sol', 'resume');
-  equal(state(seriesSession).critical_failure, false, 'normal new activation resets the failure latch');
-  const repairedSeries = pre(seriesSession,
+  equal(state(seriesSession).critical_failure, true, 'normal resume preserves the failure latch');
+  equal(pre(seriesSession,
+    {task_name: 'six-review', message: 'judge', agent_type: 'quality-gate', reasoning_effort: 'high'}, 'tool-six-after-latch')
+    .hookSpecificOutput.permissionDecision, 'deny', 'a latched series session remains blocked until audited recovery');
+  const repairedSession = 'root-six-series-repaired-fresh';
+  start(repairedSession, 'gpt-6-sol');
+  const repairedSeries = pre(repairedSession,
     {task_name: 'six-review', message: 'judge', agent_type: 'quality-gate', reasoning_effort: 'high'}, 'tool-six-approved');
-  equal(repairedSeries.hookSpecificOutput.updatedInput.model, 'gpt-6-astra', 'approved 6-series peak is selected after explicit repair');
-  subStart(seriesSession, 'agent-six-review', 'quality-gate');
-  equal(subStop(seriesSession, 'agent-six-review', 'quality-gate', transcript({
-    sessionId: seriesSession, agentId: 'agent-six-review', agentType: 'quality-gate', model: 'gpt-6-astra',
-  })), {}, '6-series peak adopted evidence closes the repaired invocation');
-  equal(pre(seriesSession, {task_name: 'six-light', message: 'check', agent_type: 'preflight-agent'}, 'tool-six-light')
+  equal(repairedSeries.hookSpecificOutput.updatedInput.model, 'gpt-6-astra', 'fresh session selects the explicitly approved 6-series peak');
+  subStart(repairedSession, 'agent-six-review', 'quality-gate');
+  equal(subStop(repairedSession, 'agent-six-review', 'quality-gate', transcript({
+    sessionId: repairedSession, agentId: 'agent-six-review', agentType: 'quality-gate', model: 'gpt-6-astra',
+  })), {}, '6-series peak adopted evidence closes the fresh invocation');
+  equal(pre(repairedSession, {task_name: 'six-light', message: 'check', agent_type: 'preflight-agent'}, 'tool-six-light')
     .hookSpecificOutput.updatedInput.model, 'gpt-6-luna', '6-series mechanical task selects approved light');
   start('root-six-anchor', 'gpt-6-sol');
   equal('model' in pre('root-six-anchor', {task_name: 'six-anchor', message: 'work'}, 'tool-six-anchor')

@@ -398,8 +398,20 @@ export function createHostLaunchBroker({ gstackRoot, projectsRoot, revalidatePro
       if (!['ACTIVE_NO_PIN', 'COMMITTED'].includes(r.status)) throw codeError('CHILD_LAUNCH_NOT_ACTIVE');
       return { status: 'CHILD_TOOL', executionAuthority: 'NOT_PROVIDED' };
     }
-    const observed=attestPendingProjectEvent({gstackRoot,projectsRoot,sessionId:r.sid,boundaryId:payload.turn_id || payload.prompt_id,
-      cwd:gstackRoot,observation:'pre-tool',transcriptPath:payload.transcript_path || '',codexHome:r.request.profileIdentity.sourceRoot.realpath});
+    let observed;
+    try {
+      observed=attestPendingProjectEvent({gstackRoot,projectsRoot,sessionId:r.sid,boundaryId:payload.turn_id || payload.prompt_id,
+        cwd:gstackRoot,observation:'pre-tool',transcriptPath:payload.transcript_path || '',codexHome:r.request.profileIdentity.sourceRoot.realpath});
+    } catch (error) {
+      // An already-active global launch holds no project authority to protect. A turn with no human
+      // event behind it (a Codex /goal continuation, a quota-reset resume) may still run framework
+      // tools; project switch/new and project paths each re-require an active attested event in the
+      // scope guard, so this grants nothing beyond what a NO_PIN session already reaches.
+      if (!r.request.projectIdentity && r.status === 'ACTIVE_NO_PIN' && error?.code === 'NO_PENDING_EVENT') {
+        return {status:'ACTIVE_NO_PIN',sessionId:r.sid,executionAuthority:'NOT_PROVIDED'};
+      }
+      throw error;
+    }
     if (!r.request.projectIdentity) {
       if (observed.event?.status !== 'active') throw codeError('GLOBAL_STATE_INVALID');
       if (r.status === 'ATTACHED') {

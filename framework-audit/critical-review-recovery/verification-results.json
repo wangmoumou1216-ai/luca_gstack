@@ -1,0 +1,191 @@
+[
+  {
+    "name": "native-followup-recovery",
+    "argv": [
+      "node",
+      "scripts/test-codex-native-lifecycle.mjs",
+      "--recovery-continuation",
+      "--require-native"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 41.8,
+    "log": "verification-v9/native-followup-recovery-replay.log",
+    "initial_setup_attempt": {
+      "exit_code": 1,
+      "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/native-followup-recovery.log",
+      "reason": "Git add fixture setup timeout before CLI under concurrent copy/test load"
+    },
+    "evidence": "/private/tmp/luca-native-lifecycle.YsKvgN/continuation-recovery-result.json"
+  },
+  {
+    "name": "hook-health",
+    "argv": [
+      "node",
+      "--test",
+      "scripts/test-codex-hook-health.mjs",
+      "scripts/test-source-guard-preserve.mjs",
+      "scripts/test-codex-trust-hooks.mjs",
+      "scripts/test-host-launch-journal-migration.mjs"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 35.73,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/hook-health.log"
+  },
+  {
+    "name": "source-digests",
+    "argv": [
+      "node",
+      "scripts/test-hook-source-digests.mjs"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 24.71,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/source-digests.log"
+  },
+  {
+    "name": "host",
+    "argv": [
+      "node",
+      "scripts/test-model-route-host.mjs",
+      "--mutation"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 78.1,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/host.log"
+  },
+  {
+    "name": "recovery",
+    "argv": [
+      "node",
+      "scripts/test-codex-review-recovery.mjs",
+      "--mutation"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 181.25,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/recovery.log"
+  },
+  {
+    "name": "hook",
+    "argv": [
+      "node",
+      "scripts/test-codex-model-route-hook.mjs"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 90.31,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/hook.log"
+  },
+  {
+    "name": "runner",
+    "argv": [
+      "node",
+      "scripts/test-workflow-runner-runtime.mjs"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 29.92,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/runner.log"
+  },
+  {
+    "name": "child-project",
+    "argv": [
+      "node",
+      "scripts/test-codex-child-project.mjs"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 28.16,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/child-project.log"
+  },
+  {
+    "name": "native-default",
+    "argv": [
+      "node",
+      "scripts/test-codex-native-lifecycle.mjs",
+      "--require-native"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 67.66,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/native-default.log"
+  },
+  {
+    "name": "native-direct",
+    "argv": [
+      "node",
+      "scripts/test-codex-native-lifecycle.mjs",
+      "--recovery-direct",
+      "--require-native"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 56.31,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/native-direct.log"
+  },
+  {
+    "name": "native-recovery",
+    "argv": [
+      "node",
+      "scripts/test-codex-native-lifecycle.mjs",
+      "--critical-recovery",
+      "--require-native"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 44.85,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/native-recovery.log"
+  },
+  {
+    "name": "native-continuation",
+    "argv": [
+      "node",
+      "scripts/test-codex-native-lifecycle.mjs",
+      "--continuation",
+      "--require-native"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 49.38,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/native-continuation.log"
+  },
+  {
+    "name": "model-route",
+    "argv": [
+      "node",
+      "scripts/test-model-route.mjs"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 0.45,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/model-route.log"
+  },
+  {
+    "name": "workflow-runner",
+    "argv": [
+      "node",
+      "scripts/test-workflow-runner.mjs"
+    ],
+    "cwd": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/candidate-v9",
+    "exit_code": 0,
+    "source_matches": true,
+    "elapsed_seconds": 1.26,
+    "log": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/verification-v9/workflow-runner.log"
+  }
+]

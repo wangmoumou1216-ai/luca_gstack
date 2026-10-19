@@ -601,8 +601,9 @@ try {
     startActivation({ harness: 'codex', root_session_id: rootSid,
       root_anchor: { model: 'fixture-model', source: 'resume' },
       release_digest: 'a'.repeat(64), state_root: stateRoot });
-    assert.notEqual(readActivation({ harness: 'codex', root_session_id: rootSid,
-      state_root: stateRoot }).activation_id, paused.activation_id);
+    assert.equal(readActivation({ harness: 'codex', root_session_id: rootSid,
+      state_root: stateRoot }).activation_id, paused.activation_id,
+    'same-SID resume preserves the activation; the explicit child revocation remains authoritative');
     assert.equal(resolveCodexChildProject({ gstackRoot: gstack,
       projectsRoot: projects, childSessionId: childSid, codexHome }), null);
     writeFileSync(stateFile, line({ ...paused, status: 'active' }));

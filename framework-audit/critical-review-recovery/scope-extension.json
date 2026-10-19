@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "human-approved-scope-supplement",
+  "plan_id": "CRITICAL-REVIEW-RECOVERY-20261016",
+  "original_plan": {
+    "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/recovered-approved-plan.md",
+    "sha256": "c42d59fed55a179139d99853c2cabfaf0eded8a5536be500a1bdddfb1292cf1e",
+    "scope": "framework-no-pin/critical-review-interruption-recovery"
+  },
+  "original_approval_ref": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/plan-approval-relocated.json",
+  "approved_additional_source_paths": [
+    "scripts/test-codex-child-project.mjs",
+    "CHANGELOG.md",
+    "scripts/codex-hook-health.mjs",
+    "scripts/test-hook-source-digests.mjs",
+    "scripts/test-codex-hook-health.mjs"
+  ],
+  "final_candidate_manifest": {
+    "path": "/private/tmp/luca-critical-recovery-20261016.ZzVz2e/review-v6/review-inputs/manifest.json",
+    "sha256": "7247f5e4ba07d08c3db88efe4d7fe7141c46c43ff622e1832b6682d8281e649a"
+  },
+  "additional_effects": [
+    {
+      "effect": "primary-matcher-sync",
+      "path": "/Users/luca/Desktop/luca_gstack/.codex/hooks.json",
+      "limit": "Only model-route PreToolUse matcher changes matching frozen candidate; preserve all other entries and user staged changes."
+    },
+    {
+      "effect": "native-hook-retrust",
+      "limit": "Only exact changed registration entry identified by official currentHash; preserve all other config values and trust records."
+    }
+  ],
+  "preserve_staged_paths": [
+    ".claude/hooks/lib/event-attestation.mjs",
+    "scripts/test-project-transaction.mjs"
+  ],
+  "human_source": {
+    "native_transcript": "/Users/luca/.codex/sessions/2026/10/16/rollout-2026-10-16T16-43-32-01a143e1-787c-7540-bf3b-1e622bdd7369.jsonl",
+    "line": 3090,
+    "message_id": "msg_01a1527a-1f47-71d1-80a9-8c3e21f459fb",
+    "timestamp": "2026-10-19T04:44:57.543Z",
+    "question_tool_call_id": "call_a728003e58564d87b2b9307e34378a9b",
+    "answer": "允许这两项范围扩展"
+  },
+  "semantic_authority": "Verified live user answer to displayed scope question; this JSON/hash is a binding record, not self-issued authorization. Original plan bytes, U001-U006 order and old-root read-only boundaries remain unchanged."
+}
