@@ -1086,3 +1086,43 @@ test('registered Host Launch PreToolUse intercepts every native tool kind',()=>{
     assert.equal(matcher.test(name),true,name);
   }
 });
+
+// Codex fires no UserPromptSubmit for a /goal turn: the transcript gains an unanchored context
+// row and nothing is queued, so attestation reaches NO_PENDING_EVENT.
+function appendGoalTurn(f) {
+  const turn = randomUUID();
+  const prompt = '<codex_internal_context source="goal">\nContinue working toward the active thread goal.\n</codex_internal_context>';
+  appendFileSync(f.source, JSON.stringify({ type: 'response_item', payload: { type: 'message', role: 'user',
+    id: `msg_${randomUUID()}`, content: [{ type: 'input_text', text: prompt }],
+    internal_chat_message_metadata_passthrough: { turn_id: turn } } }) + '\n');
+  return { ...f.payload, hook_event_name: 'PreToolUse', turn_id: turn, tool_name: 'Bash', tool_input: { command: 'git status' } };
+}
+
+test('a global launch keeps framework tools in a /goal continuation without granting selection', async () => {
+  const f = fixture(), claim = await attached(f);
+  await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() });
+  const event = readProjectState(f.gstackRoot, f.sid).value.event_control.current;
+  closeAttestedProjectEvent({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+    sessionId: f.sid, eventId: event.event_id, boundaryId: event.boundary_id });
+  const result = await f.broker.claim('beforeTool', { ...claim, nativePayload: appendGoalTurn(f) });
+  assert.deepEqual(result, { status: 'ACTIVE_NO_PIN', sessionId: f.sid, executionAuthority: 'NOT_PROVIDED' });
+  mkdirSync(join(f.projectsRoot, 'beta'), { recursive: true });
+  assert.throws(() => prepareProjectSwitch({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+    sessionId: f.sid, operation: 'switch', target: 'beta' }), { code: 'NO_ACTIVE_EVENT' });
+  assert.equal((await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() })).status, 'ACTIVE_NO_PIN');
+  assert.equal(readProjectState(f.gstackRoot, f.sid).value.event_control.current.status, 'active');
+});
+
+test('a project launch still refuses a /goal continuation with no human event', async () => {
+  const f = fixture(), claim = await attached(f, true);
+  await f.broker.claim('beforeTool', { ...claim, nativePayload: f.appendHuman() });
+  const event = readProjectState(f.gstackRoot, f.sid).value.event_control.current;
+  closeAttestedProjectEvent({ gstackRoot: f.gstackRoot, projectsRoot: f.projectsRoot,
+    sessionId: f.sid, eventId: event.event_id, boundaryId: event.boundary_id });
+  await assert.rejects(f.broker.claim('beforeTool', { ...claim, nativePayload: appendGoalTurn(f) }), { code: 'NO_PENDING_EVENT' });
+});
+
+test('a global launch still requires a human event before it first becomes active', async () => {
+  const f = fixture(), claim = await attached(f);
+  await assert.rejects(f.broker.claim('beforeTool', { ...claim, nativePayload: appendGoalTurn(f) }), { code: 'NO_PENDING_EVENT' });
+});
