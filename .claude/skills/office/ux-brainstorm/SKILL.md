@@ -467,7 +467,7 @@ Deep-product：3+，至少一个非显而易见。
 - Evaluability等级（用户判断实际 AI/系统反馈的依据；时间估计未实测须标假设）
 - 实际被否定的方向（这个方案放弃了什么路线；focused 无实际否决时如实说明）
 - **Phase 3约束关联**（这个方案基于Phase
-  3的哪些回答做出的——引用具体Q编号和回答要点。
+  3的哪些回答做出的——引用具体Q编号和回答要点；Phase 3 零问题时引用原始输入/已确认决定。
   如果方案违反了某个Phase 3约束，必须声明并解释为什么。）
 
 **推荐方案额外声明：**
@@ -527,7 +527,7 @@ focused 保留方向引用已确认选择及理由，不重复投票；真实未
 - 被否定方向按实际 mode；full ≥2条，AI 相关时含≥1条AI Native层面；focused 保留所有真实否决，不凑数
 - 待解决问题分为blocking vs deferred
 - 方案探索节已选定推荐方案
-- 自检清单（`references/design-proposal-template.md` 中的16项）已自行运行——记录未通过的项目
+- 自检清单（`references/design-proposal-template.md` 中的16项）已自行运行——此时只读取该模板的 Finalization Checklist 段，全文仍在 Phase 6 加载；记录未通过的项目
 
 如果预门控失败，回退到Phase 3（补充信息）或Phase 4（补充方案）
 ——不在残缺草稿上运行Oracle。
