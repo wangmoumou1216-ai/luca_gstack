@@ -246,6 +246,10 @@ If the user pushes back on the interrogation process itself (not on a specific q
   标注信息不足的部分为"未验证假设"。」 Then proceed to Phase 4 with explicit
   caveats.
 
+关键未知不能改成安全假设；只对非关键未知允许带明确限制继续探索。
+未决的用户取舍仍等待真人回答；关键证据缺口、权限/不可逆行为不清时保留阻塞，
+不得宣称 ready。Oracle 对 required UNKNOWN 仍阻断，用户催促不替代真实答案或独立票。
+
 ---
 
 ## Part 7: Internal Pressure Test Protocol (Phase 2 use only — NOT surfaced to user)

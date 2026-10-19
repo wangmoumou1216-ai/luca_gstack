@@ -53,6 +53,27 @@ class HandoffTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('every criteria bullet must contain', result.stderr)
 
+    def test_completion_headers_apply_to_all_four_skill_owners(self):
+        for skill in ['deepresearch', 'ux-research', 'brainstorm', 'ux-brainstorm']:
+            with self.subTest(skill=skill):
+                result = self.check_handoff(HANDOFF, skill)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                missing = HANDOFF.replace('criteria:', 'no_criteria:')
+                self.assertNotEqual(self.check_handoff(missing, skill).returncode, 0)
+
+    def test_risk_reference_and_provenance_fit_existing_parser_contract(self):
+        # Parser compatibility only: a semantic reviewer must still verify the referenced set.
+        body = HANDOFF.replace(
+            'Native behaviour is not tested by this fixture.',
+            'Source: fixture-input-v1; confirmed choice: retain mechanism; evidence limits: offline.\n'
+            'Risk summary: K1/K2; K3/K4. Complete critical set K1-K4: fixture-report-v1 section Risks.\n'
+            'Native behaviour and source truth are not tested by this fixture.')
+        self.assertLess(len(body), 8000)
+        for skill in ['deepresearch', 'ux-research', 'ux-brainstorm']:
+            with self.subTest(skill=skill):
+                result = self.check_handoff(body, skill)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
 
 if __name__ == '__main__':
     unittest.main()

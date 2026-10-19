@@ -206,9 +206,8 @@ new/mixed 标签本身不把 focused 升 full，也不强制三角色扫描。
 full 信号混合时选**更高**级别。focused 按实际任务覆盖选择规模，不因新/混合标签追加工作量。
 
 向用户简短声明分类结果；focused 使用真实未决问题/选项数，允许零新问题或保留方向：
-> 「规模：{级别}。我会问{N}个设计逼问，
-> 呈现2-3个方案含一个非显而易见角度，
-> 运行一次对抗性审查后写设计方案。」
+> 「规模：{级别}，探索模式：{mode}。还需问{N}个问题，
+> {继承已确认方向／比较实际M个方案}，然后做独立对抗性审查。」
 
 不要请求确认分类——声明并继续。用户可以纠正。
 
@@ -448,7 +447,7 @@ focused 在现有机会小节只保留当前任务的实际机会与理由，不
 - 至少一个**非显而易见路径**：反转、
   去约束或跨行业类比——不是其他方案在同一轴线上的变体
 
-**范式转变约束（强制）：** 至少一个approach必须满足 CRITICAL RULE 7 定义的范式转变约束
+**范式转变约束（AI 相关 full）：** 至少一个approach必须满足 CRITICAL RULE 7 定义的范式转变约束
 （移除≥1执行步 + 新增≥1判断辅助）；此处仅作勾选，阈值与完整定义以 RULE 7 为唯一真值源。
 
 Lightweight级别：2个方案（保守 + 一个其他）可接受。
@@ -465,8 +464,8 @@ Deep-product：3+，至少一个非显而易见。
 **每个方案必须声明：**
 - 核心假设
 - 用户需要改变什么行为 + 代价
-- Evaluability等级（用户多快能判断AI输出对错）
-- 被否定的方向（这个方案放弃了什么路线）
+- Evaluability等级（用户判断实际 AI/系统反馈的依据；时间估计未实测须标假设）
+- 实际被否定的方向（这个方案放弃了什么路线；focused 无实际否决时如实说明）
 - **Phase 3约束关联**（这个方案基于Phase
   3的哪些回答做出的——引用具体Q编号和回答要点。
   如果方案违反了某个Phase 3约束，必须声明并解释为什么。）
@@ -480,12 +479,12 @@ Deep-product：3+，至少一个非显而易见。
   冲突只回交受影响的人类取舍。原需求已有行为不计研究新增收益。
 - **核心假设的最快验证方式**：用什么原型形式、测试什么核心假设、
   需要几个用户（一句话即可，不需要完整验证计划）
-- **演进路径**：v1（当前Agent能力下）做什么 → v2（Agent能力提升后）
+- **演进路径（AI 相关时）**：v1（当前Agent能力下）做什么 → v2（Agent能力提升后）
   可以演进到什么 → v3（用户信任完全建立后）最终形态是什么。
   每个版本一句话。目的是确保v1的决策不堵死v2/v3的演进空间。
 
 **方案关系声明（必填）：**
-这2-3个方案是互斥的，还是可以按时间/场景组合？如果可以组合，组合方式是什么？
+说明实际方案的互斥或组合关系；仅有已确认保留方向时记录该事实，不虚构组合。
 
 ### 4.2 — 先呈现方案再推荐
 
@@ -496,21 +495,19 @@ Deep-product：3+，至少一个非显而易见。
 
 按以下顺序写入内存中的设计方案草稿：
 
-1. 所有方案（A, B, C）含优缺点/风险/最适合条件
+1. 所有实际方案含优缺点/风险/最适合条件
 2. 然后推荐方案 + 理由
 3. 然后「什么条件会翻转推荐」——具体条件
 
-向用户呈现：
-> 「设计方案的方案探索部分有三个方向。在我锁定推荐之前，
-> 哪个最接近你的设计直觉——或者你有第四个方向？」
+focused 保留方向引用已确认选择及理由，不重复投票；真实未决取舍才使用 AskUserQuestion：
+> 「这里有{M}个实际方向。哪个符合你的优先考虑，或还需要探索什么方向？」
 
 使用AskUserQuestion（单选）：选项为实际生成的方案 {A, B, C, ...}，加
 「以上都不是——我来描述其他方向」；当前档位未生成的方案不列为选项。
 
 如果选A/B/C：记录选择，继续。
-如果选「以上都不是」：自由文本获取第四方向，
-然后生成新的2-3个方案集。最多循环一次；如果仍然卡住，
-保留现有方案并在待解决问题中标记。
+如果选「以上都不是」：自由文本获取其他方向，按当前模式的 Phase 4.1 修订实际方案。
+最多循环一次；如果仍未决，保留现有方案并在阻塞问题中标记，不能自行代选。
 
 ### 4.3 — 标注推荐
 
@@ -657,10 +654,9 @@ docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
 **填充规则：**
 - 严格遵循 `references/interaction-architecture-template.md` 的章节结构
 - 章节顺序匹配模板
-- 所有表格必须填写完整，不留 `{占位符}`
-- 场景ID（S1, S2...）、模板ID（A, B, C...）、信任阶段ID（T0-T4）、
-  降级级别ID（L0-L3）使用稳定编号，不重编号
-- 运行模板底部的Finalization Checklist（10项），全部通过才写入
+- 仅适用表格填写完整，不留 `{占位符}`；不适用节写有源 N/A，按模板明确说明原因
+- 仅实际存在的场景、模板、信任阶段与降级级别使用稳定编号，不重编号或为凑 ID 造状态
+- 运行模板底部的Finalization Checklist（10项）；适用项全通过、不适用项有源 N/A 才写入，关键未知仍阻断
 
 ### 7.4 — 确认写入
 
@@ -700,10 +696,6 @@ docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
 - **广泛修订**：回退到Phase 3，用户选择修订哪些问题
 - **完成**：优雅结束。
 
-## 完成协议（Handoff Summary）
-
-受管 workflow 使用 `completion_owner=Orchestrator`：skill 完成全部必需步骤、独立审查、当前 Human Gate 与 handoff 校验后，只回交当前产物身份、原输出字段及提交请求；该受管节点提交替代本 skill 内的 DONE/YAML 写入。standalone 仍按本协议完成，不新增并行完成节点。
-
 ## Anti-Patterns
 
 | 违规 | 严重程度 | 为什么会坏 |
@@ -720,15 +712,51 @@ docs/decisions/YYYY-MM-DD-{slug}-interaction-architecture.md
 | 自动Oracle循环超过2轮 | MEDIUM | 额外轮先说明理由，存活阻塞停止写盘 |
 | 输出语言为英文但用户用中文 | HIGH | 违反规则#10；设计方案是给用户团队用的 |
 | 接受模糊回答（「用户会搞明白的」）不反驳 | HIGH | 逼问存在就是为了防止这种情况 |
-| 3个方案都是渐进式变体 | HIGH | 违反规则#6；非显而易见角度不可协商 |
-| 所有方案都不满足范式转变约束 | HIGH | 违反规则#7；至少一个必须移除执行步+新增判断辅助 |
-| 被否定方向少于2条或缺AI Native层面否定 | HIGH | 交接不完整；design-brief缺少决策上下文 |
+| full 的3个方案都是渐进式变体 | HIGH | 违反规则#6；focused 有真实取舍时比较不同机制，无取舍保留已确认方向 |
+| AI 相关 full 的所有方案都不满足范式转变约束 | HIGH | 违反规则#7；非 AI 不添加 AI 来满足该项 |
+| full 的被否定方向未满足适用数量，或 focused 遗漏真实否决 | HIGH | AI 层数量仅用于 AI 相关 full；focused 保留真实否决及理由，不凑数 |
 | Phase 7交互架构文档留有{占位符}未填写 | CRITICAL | 文档不完整，无法画出用户旅程图 |
 | Phase 7跳过Finalization Checklist | HIGH | 质量门控不可跳过 |
 | Phase 7在Phase 6之前执行 | CRITICAL | 没有选定方案就无法展开结构层设计 |
 
-## Quick Start Example
+## 完成协议（Handoff Summary）
 
-See the phase contracts above for a complete worked example; examples are non-normative and kept compact to protect context budget.
+**标记 DONE 之前必须执行，无 handoff 的 DONE 视为不完整。**
+
+**Step 1 — 写入 handoff summary：**
+```
+路径：docs/handoff/YYYY-MM-DD-<topic>-ux-brainstorm-handoff.md
+格式：见 .claude/skills/office/references/handoff-protocol.md（≤2000 tokens）
+```
+
+必须包含：
+- **质量头**：`gate_result` + 3-7 条带证据的 `criteria`（PASS/FAIL/UNKNOWN）
+- **决策列表**（≤8条）：选定方案、排除方案及原因、Oracle 修正项
+- **下游约束**（≤5条）：设计方案边界、交互架构约束、不得覆盖的已选方案
+- **风险**（摘要≤3条，全部关键风险保留或完整引用）：未验证假设、适用的v2 探索项
+- **产出路径**：decisions/ 文件完整路径（方案 + 交互架构）
+
+在既有决策/约束字段保留原始来源版本、用户确认选择、推荐理由及走读引用、证据边界与
+未决项。研究建议不因被引用就升级 MUST；不另造决策台账或冻结第二份规格。
+
+**Step 1.5 — 写完即验：**
+```bash
+node scripts/check-quality-gates.mjs --handoff "docs/handoff/<filename>-ux-brainstorm-handoff.md"
+```
+失败时先补齐 handoff，不得进入 Step 2 或报告 DONE；格式校验不能代替独立票、
+当前 Human Gate 或关键风险检查。
+
+**Step 2 — 完成分支：**
+受管 workflow（completion_owner=Orchestrator）在本 skill 全部必需步骤、自检、真实审查/当前 Human Gate 与 handoff 校验完成后，按 `references/handoff-protocol.md`「受管节点提交」只回交当前产物身份、原输出字段及提交请求；此回交替代本步 YAML 更新，不在 skill 内写 DONE。
+下方 YAML 保留为验收后 O 使用原 writer 一次提交的字段说明，不是另一写入器；standalone 保留自身完成及 handoff 合同，无节点不写状态，也不新增 O/QG 依赖。
+
+```yaml
+ux-brainstorm:
+  status: DONE
+  output: "docs/decisions/<filename>"
+  completed_at: "<YYYY-MM-DD>"
+  gate_result: PASS
+  handoff_path: "docs/handoff/<filename>"
+```
 
 <!-- FILE_END: .claude/skills/office/ux-brainstorm/SKILL.md -->

@@ -235,8 +235,8 @@ product coverage; mixed/new alone do not impose extra questions, scans or altern
 
 State the classification to the user once, briefly; in focused use actual unresolved-question
 and option counts (including zero new questions or a retained direction):
-> "Scope: {tier}. I'll ask {N} forcing questions, present 2-3 approaches, and run one adversarial
-> review pass before writing the PRD."
+> "Scope: {tier}; discovery mode: {mode}. I'll ask {N} unresolved questions,
+> {retain the confirmed direction | compare the actual M approaches}, then run independent review."
 
 Do not ask for scope confirmation — state and proceed. The user can push back if the tier is wrong.
 
@@ -496,7 +496,7 @@ scratchpad. These quotes will populate:
 ### 3.4 — Transition to Phase 4
 
 When the routed question set is exhausted (or escape hatch is triggered), state:
-> "I have enough to sketch 2-3 approaches. Give me a moment."
+> "I'll now {document the confirmed direction | compare the remaining alternatives}."
 
 Do NOT ask "ready to continue?" — just proceed.
 
@@ -533,21 +533,21 @@ section for Lightweight.
 
 Write the approaches to the in-memory draft PRD in this exact order:
 
-1. All approaches (A, B, C) with pros/cons/risks/when-best
+1. All actual approaches with pros/cons/risks/when-best
 2. Then the Recommended Approach with reasoning
 3. Then "What would flip the recommendation" — the specific condition under which a different approach wins
 
-Surface this to the user for review:
-> "Three approaches for the PRD's Approaches Considered section. Before I lock in a recommendation,
-> which one feels closest — or does a fourth direction come to mind?"
+For a focused retained direction, cite the actual prior choice and rationale; no repeat vote.
+For a real choice, surface the actual alternatives before using AskUserQuestion:
+> "Here are {M} approaches. Which fits your priorities, or what other direction should we explore?"
 
 Use a AskUserQuestion (single-select): options are the actual generated approaches {A, B, C, ...}
 plus "None of these — let me describe another direction"; omit nonexistent options for this tier.
 
 If user picks A/B/C: record choice, proceed.
-If user picks "None": ask for their fourth direction in free-text, then generate a new set of 2-3
-that incorporate their direction. Loop once if needed; do not loop twice (if still stuck, persist
-the options as-is and flag in Outstanding Questions).
+If user picks "None": collect their direction in free-text and revise the alternatives under
+the current mode's Phase 4.1 rule. Loop once if needed; if still unresolved, keep the actual
+options and flag the missing choice in Outstanding Questions. Do not select it for the user.
 
 ### 4.3 — Label the recommendation
 
@@ -777,7 +777,7 @@ deterministic reach; the reader decides applicability from the line.
 | Automatically looping Oracle beyond 2 rounds | MEDIUM | Explain escalation reasons; surviving blockers stop writing |
 | Outputting PRD in English when user wrote in Chinese/other | HIGH | Rule #9 violation; the PRD is for the user's team, not the skill |
 | Accepting a vague answer ("users want it") without pushback | HIGH | The forcing questions exist specifically to prevent this |
-| Generating 3 incremental variations as "three approaches" | HIGH | Violates rule #6; the Lateral angle is non-negotiable for Standard+ |
+| In full, generating only incremental variations as distinct approaches | HIGH | Violates rule #6; focused instead requires distinct mechanisms only when a real choice remains |
 
 
 <!-- FILE_END: .claude/skills/office/brainstorm/SKILL.md -->
