@@ -1980,6 +1980,25 @@ check('synthetic continuation: a notification recorded as a queued_command attac
   assert.equal(attestWithTestRoot(fx, 'S').event.synthetic_of, humanNativeId);
 });
 
+check('synthetic continuation: the guard waits for a notification row the harness has not flushed yet', () => {
+  const fx = makeEnv();
+  closedHumanTurn(fx, 'S');
+  const prompt = '<task-notification>\n<task-id>bgtask-0002</task-id>\n<status>failed</status>\n</task-notification>';
+  appendRows(fx, 'S', startedTaskRows(fx, 'S', 'bgtask-0002', 'Bash'));
+  queueProjectEventCandidate({
+    gstackRoot: fx.gstack, projectsRoot: fx.projects, sessionId: 'S', boundaryId: 'S', cwd: fx.gstack,
+    harness: 'claude', prompt, promptId: randomUUID(), intent: { kind: 'turn' },
+  });
+  const late = JSON.stringify(queuedNotificationRow(fx, 'S', { taskId: 'bgtask-0002' }));
+  const writer = spawn('/bin/sh', ['-c', `sleep 0.5; printf '%s\\n' "$ROW" >> "$FILE"`],
+    { env: { ...process.env, ROW: late, FILE: transcriptFor(fx, 'S') }, stdio: 'ignore' });
+  const started = Date.now();
+  const verdict = bashOnProject(fx, 'S')?.hookSpecificOutput?.permissionDecision;
+  assert.notEqual(verdict, 'deny', 'a notification that appears within the wait window must still authorize');
+  assert.ok(Date.now() - started >= 400, 'the guard must actually have waited for the row');
+  writer.kill();
+});
+
 check('synthetic continuation: an attachment notification for a task this session never launched stays refused', () => {
   const fx = makeEnv();
   closedHumanTurn(fx, 'S');
