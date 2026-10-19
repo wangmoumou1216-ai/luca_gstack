@@ -231,6 +231,8 @@ jobs:
           echo "$c" | grep -q 'SF-002' && echo "$c" | grep -q 'SC-20260523-002' && echo "$c" | grep -q 'SC-20260523-003'
       - name: Model policy and Claude native-routing counterexamples (S33 remote)
         run: node scripts/check-model-table.mjs && node scripts/test-claude-native-routing.mjs
+      - name: Usage report and attestation probe fixtures (read-only, no real-machine data)
+        run: node scripts/test-report-usage.mjs && node scripts/test-probe-attestation-fields.mjs
       - name: MEMORY_STANDALONE opt-in not leaked into tracked settings
         run: '! git ls-files -z ".claude/settings*.json" | xargs -0 -r grep -l MEMORY_STANDALONE | grep -q .'
 
