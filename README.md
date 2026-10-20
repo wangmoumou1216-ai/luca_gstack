@@ -322,7 +322,8 @@ SessionStart，workflow-runner 的已有激活检查保持原合同。App 的受
 ### 设计链与工程链
 
 ```text
-设计链     idea → deepresearch → brainstorm → ux-research → ux-brainstorm
+完整设计链（可选，仅在有具名缺口时才补上游；默认从 design-brief 开始）
+           idea → deepresearch → brainstorm → ux-research → ux-brainstorm
                 → design-brief → open-design
 
 已有需求   需求/口述 ───────────────→ design-brief → open-design

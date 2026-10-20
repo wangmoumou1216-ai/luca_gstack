@@ -18,15 +18,16 @@ Recommend an unrequested high-value blind-spot angle at the Plan confirmation ga
 considered but not selected. Trivial work triggers no research suggestion. Angle selection belongs
 to Plan; a research skill's later human gate controls depth/cost at a different granularity.
 
-When a task is both complex and novel, research is the default. Here, complex means any main Plan
-trigger is true (three-or-more created/modified files, two-or-more independent subagents, phase
-dependency, or an irreversible operation); novel means the core mechanism/interaction lacks a
-mature precedent or the user explicitly identifies it as new to them/the field. Choose
-`quick-research` for a
+Research is gated on a named decision, not on complexity or novelty. Write down the design decision
+that external evidence could overturn or confirm, and the fact that would do so; if the fact is not
+already in the inputs and the user cannot simply answer it, research that question at the smallest
+sufficient depth. Complexity (any main Plan trigger: three-or-more created/modified files,
+two-or-more independent subagents, phase dependency, or an irreversible operation) or novelty alone
+does not require research, and not researching needs no confirmation. Choose `quick-research` for a
 narrow primary-source question worth retaining, `deepresearch` for broad multi-source or technical
 feasibility work, and `ux-research` for UX/competitor precedent. A very narrow fact may use one web
-spike. Skipping research must be explicit in the proposed Phase plan and confirmed; cost, schedule,
-or the ability to ask the user are not sufficient silent-skip reasons.
+spike. Cost or schedule are not reasons to skip a named, decision-changing question; a research
+phase whose named decision cannot be written is not scheduled.
 
 ## Heavy skill isolation
 
@@ -72,7 +73,7 @@ This is the shared selection and local-return owner for product-design Phase pla
 workflow recommendations/resumption. A/B/C/D describes the task; it does not require an entire
 static path. The default design entry is design-brief (C keeps its ux-audit baseline); add an upstream
 skill only for a named gap in the table below. Direct single-skill requests stay standalone and do not load a graph or upstream
-skills for completeness. Apply the research default and real human gates above unchanged.
+skills for completeness. Apply the named-decision research rule and real human gates above unchanged.
 
 Before invoking a node, use the existing entry/plan sentence to name the unresolved gap, the
 capability, the decision it could affect and the stopping condition. Inherit readable evidence
