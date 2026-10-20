@@ -25,7 +25,7 @@ python3 .claude/observability/scripts/get_rules.py design-output "*"
 1. 读取精确冻结 Packet，绑定 canonical path + SHA-256，核 Brief 的冻结目标及其真实选择来源。
    无已选工具时展示 OD 与 Claude Design 两项，说明 OD 按其客户端合同、CD 在 Luca app
    Design 内由用户生成；只问一次并等待真实回答。不可把推荐、输入格式或工具故障当选择。
-2. 已明确选择直接继承；也可直接继承用户已选择的本地 HTML / MagicPath。
+2. 已明确选择直接继承（只有 OD / Claude Design 两个出口）。
    短回复只更新 tool，保留原 source_ref、完整 scope、execution_mode、下游交付、未决决定和权限范围。
    JSON/模型自报不证明真人选择。没有可核原完整任务时 NEEDS_CONTEXT，不猜恢复。
 3. 原 Packet 明确工具未选：调用 `scripts/design-output-selection.mjs` 的 `resolveDesignOutput`，
@@ -35,7 +35,7 @@ python3 .claude/observability/scripts/get_rules.py design-output "*"
    已存在 sidecar 必须先读并传入核验，不覆盖或按 latest 猜选。有效选择不重问。
 4. Packet 硬绑定另一工具、旁车冲突或事实变化 → 返回 Brief 修订重冻，保持原材料与历史。
    新工具选择不授权模板采用/外部传输；这些门分别继承有效依据，缺口归实际 adapter。
-5. 选择后读取实际 `open-design` / `claude-design`（或已选备用工具）完整 SKILL 和 input-mode，
+5. 选择后读取实际 `open-design` / `claude-design` 完整 SKILL 和 input-mode，
    将同一完整任务、精确 Packet、sidecar、已核来源与权限交回该 owner，不只交工具名。
 
 ## 共同操作流程
@@ -43,6 +43,8 @@ python3 .claude/observability/scripts/get_rules.py design-output "*"
 两条路径均为：选工具 → 确认该工具设计规范 → 材料就位 → 生成/迭代 → 回收验收。
 回收验收由独立执行者在真实浏览器里按 Brief 的 Given/When/Then 逐条实操；未通过项只修这些项并复测，
 最多两轮，仍未通过的列为剩余项交用户，不把一轮复测当全过；复测中新报出的项也计入这两轮上限。
+确定性项可先跑验收脚本 `node .claude/skills/office/design-output/scripts/verify-prototype.mjs <index.html> [design-brief.md]`；
+其 PASS 不代替浏览器实操，实操项仍逐条独立判定。
 实际 adapter 用同一 resolveDesignExecutionDefaults 策略继承同工具的有效设计规范确认；
 缺确认只问“沿用当前设计系统，还是指定另一套？”，OD/CD 确认不能互相迁移。
 短答续接保留完整任务；recover 不重新选择工具、规范或模板。OD 保留既有执行模式；
@@ -56,6 +58,8 @@ Workflow 展开时把入口替换为实际 adapter 节点，completion_owner=Orc
 只有 adapter 回收、独立语义验收、适用加工与当前 Human Gate 通过后，由 Orchestrator 一次提交。
 standalone 继续实际 adapter 合同；缺宿主/能力按该 adapter 返回 NEEDS_CONTEXT/BLOCKED，
 不把选择完成、EXPORTED、STAGED 或下载当原型交付完成，不自动换工具。
+OD 与 CD 都不可用（OD daemon/桌面端不可达，且当前宿主没有 Luca app Design）时返回 NEEDS_CONTEXT，
+写明可操作的下一步：先启动 OD，或在 Luca app 的 Design 里使用 CD；没有第三个出口，不改用其他工具生成。
 Claude `/design-output` 与 Codex `$design-output` / skill selector 加载此同一权威；无问答 widget 用文字等待。
 
 <!-- FILE_END: design-output/SKILL.md -->

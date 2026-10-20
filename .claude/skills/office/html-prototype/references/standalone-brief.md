@@ -9,7 +9,7 @@ Source-kind selection grants no project, read/write or workflow authority.
   存在实际 design-brief 时继续提供其精确路径与全部决策，不以 standalone 声明绕过。
 
 没有实际上游时，省略第二个位置参数：
-`node .claude/skills/office/html-prototype/scripts/verify-prototype.mjs "<已授权绝对 index.html 路径>"`。
+`node .claude/skills/office/design-output/scripts/verify-prototype.mjs "<已授权绝对 index.html 路径>"`。
 存在实际上游时仍传其已验证精确路径；不得传不存在的占位路径或伪造 brief。
 
 Source fields must contain a nonempty value on the same line; whitespace/newline alone is missing.

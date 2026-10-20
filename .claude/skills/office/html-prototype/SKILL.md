@@ -777,7 +777,7 @@ python3 .claude/skills/office/references/write_state.py || {
 
 **主文件：** `docs/prototype/YYYY-MM-DD-<topic>/index.html`
 **规格文件（必须，CLAUDE-prototype.md Step 4 交接块）：** 同目录 `prototype-spec.md`。
-读取并填充 SCHEMA.md；必须包含：
+读取并填充 `references/prototype-spec-schema.md`；必须包含：
 
 ```markdown
 ## Traceability Coverage
@@ -811,7 +811,7 @@ D/STATE、来源与 AC、约束、下游去向；已确认页库引用或 `refer
 生成 `index.html` 和 `prototype-spec.md` 后，必须运行：
 
 ```bash
-node .claude/skills/office/html-prototype/scripts/verify-prototype.mjs \
+node .claude/skills/office/design-output/scripts/verify-prototype.mjs \
   "docs/prototype/YYYY-MM-DD-<topic>/index.html" \
   "docs/decisions/YYYY-MM-DD-<topic>-design-brief.md"
 ```

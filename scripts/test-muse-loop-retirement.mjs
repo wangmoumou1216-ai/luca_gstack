@@ -10,7 +10,7 @@ import { spawnSync } from 'node:child_process';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const scratch = mkdtempSync(join(tmpdir(), 'muse-loop-retirement-'));
 const hookRel = '.claude/hooks/route-guard.mjs';
-const qaRel = '.claude/skills/office/html-prototype/scripts/verify-prototype.mjs';
+const qaRel = '.claude/skills/office/design-output/scripts/verify-prototype.mjs';
 const registryRel = '.claude/skill-os/skill-routing-map.yaml';
 const retired = ['muse-loop-orchestrate', 'muse-proto-gen'];
 const natural = ['muse loop', 'muse自进化循环', '需求到原型闭环', '跑一下muse loop'];

@@ -308,7 +308,7 @@ OD 项目外，绑定 handoff ID、所有 hash、实际 output closure、module 
 `candidate_set` 是另一个预先确认的 profile；当前 `single` 发现候选或额外 HTML 时不得自动挑选、复制、
 改名或切换 profile。`reference_only` 的正常回收不是模板衍生，也不能含 carrier receipt 字段。
 
-**写 prototype-spec.md**（读 `html-prototype/SCHEMA.md`，框架来源填 `open-design`）：设计意图（迁移自交互文档）；
+**写 prototype-spec.md**（读 `references/prototype-spec-schema.md`，框架来源填 `open-design`）：设计意图（迁移自交互文档）；
 carrier 的 Design Decision Coverage 必须引用 recovery receipt 的 TAC/applicability trace；`reference_only`
 标为「非模板衍生，源=<产物>，无 TAC」，adhoc 不伪装 100% 可追踪。语义位置与实现清单从实际
 `output/index.html` 归纳，保留 D/STATE/AC、已确认 reference/binding 索引和本轮 handoff ID；记录实际

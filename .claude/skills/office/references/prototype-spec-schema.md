@@ -260,4 +260,4 @@ raw_gate 仅当前精确输入机械资格；raw semantic FAIL 保留，不是�
 source 行为仍 FAIL/UNKNOWN 时不能接受或完成。
 本节仅扩展 exact identity；不改变 html-prototype 平台、生成器启用、用途门或普通输出政策，也不默认接线该生成器。
 
-<!-- FILE_END: html-prototype/SCHEMA.md -->
+<!-- FILE_END: references/prototype-spec-schema.md -->

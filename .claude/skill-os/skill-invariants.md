@@ -148,7 +148,7 @@ raw semantic FAIL 保留证据，不要求加工前 raw semantic PASS；默认�
 | Phase 3 HTML 生成 | 注释说明文案、检查项措辞 |
 | Phase 4.5 QA 检查项说明 | 每个检查项的 detail 文案 |
 
-**不可进化：** UI 审美分 ≥24/30 门槛、QA 检查项列表本身、Phase 4.5 的 `verify-prototype.mjs` 调用。
+**不可进化：** UI 审美分 ≥24/30 门槛、QA 检查项列表本身、Phase 4.5 的 `verify-prototype.mjs` 调用（脚本已迁至 `design-output/scripts/`）。
 
 **精确用途例外（U008）：** 只有已明确 `purpose=logic-validation` 的逻辑验证原型，
 审美24/30分门和固定默认/空/加载/错误/成功五态可记 N/A。阶段顺序、骨架真实确认、
