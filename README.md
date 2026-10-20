@@ -356,8 +356,9 @@ SessionStart，workflow-runner 的已有激活检查保持原合同。App 的受
 
 ### 4 场景推荐路径（可选，主动启用）
 
-真值源 `.claude/skill-os/optional-workflow-graph.yaml`。每个场景都有从轻到重的多条推荐路径，
-外加"研究默认门"：**任务同时复杂且新颖时，研究阶段是默认步骤而非可选**，跳过必须显式声明理由并经你确认。
+真值源 `.claude/skill-os/optional-workflow-graph.yaml`。设计默认从 design-brief 开始（场景 C 先做 ux-audit），
+上游 skill 只在有具名缺口时才加。研究门：**只有写得出"它会推翻或确认哪个决定"时才研究**，复杂或新颖本身不触发研究，
+不研究也无需你确认。
 
 工程交付另有可选 `engineering-delivery` preset，只提供推荐边和进入条件。
 它不授予执行权；`implement` 仍将通过门禁的精确 task-plan、SHA、U-ID、基线与效果范围交给 Plan Agent 编译并等你批准。

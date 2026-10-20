@@ -21,14 +21,14 @@ design_output:
 
 research_default:
   effort_selection: "research_depth=focused 与 discovery_mode=focused 仅显式试验；分别沿deepresearch/ux-research与brainstorm/ux-brainstorm的当前合同，默认deep/full不变。scope不等于投入；new/mixed不自动升full，关键未知仍阻断。"
-  principle: "复杂且新颖任务，研究阶段(deepresearch/ux-research)是默认步骤，非可选。"
-  light_paths_apply_when:        # 不含研究节点的轻量 recommended_paths 仅适用于：
-    - "低不确定性"
-    - "核心机制有成熟先例"
-  require_research_when:         # 满足全部 → 必须走含 deepresearch 或 ux-research 的路径
-    - "命中 Plan Agent 任一触发条件（复杂）"
-    - "核心机制/交互无成熟先例（新颖）"
-  skip_requires: "在 Phase 计划中显式声明跳过理由并经用户确认；禁止静默省略研究节点"
+  principle: "研究只为具名决定服务：写得出「哪个设计决定、什么外部事实会推翻或确认它」才研究；复杂或新颖本身不触发研究。写不出就直接进 design-brief，由 Brief 在关键缺口处问人或定点查证。"
+  light_paths_apply_when:        # 不含研究节点的路径（默认）适用于：
+    - "写不出会被外部证据推翻的具名决定"
+  require_research_when:         # 满足全部 → 只针对该决定做最小研究（quick-research / focused 优先）
+    - "能写出具名决定，以及会推翻或确认它的外部事实/行为证据"
+    - "该事实不在已有输入内，也不是用户能直接回答的问题"
+  skip_requires: "不研究无需确认或跳过理由；提议研究时先写出它服务的具名决定"
+  evidence: "2026-10-20 frontlight 补测（meeting-assistant，高不确定新能力）：focused 研究用满 8 项改变 0 个决定；无研究新链与直达 Brief 关键任务同为 7/1/0/0，前段 token 约 5 倍。见 framework-audit/2026-10-19-frontlight-plan-to-delivery-review.md §3.1。"
   tool_choice:
     deepresearch: "广域多源/学术/技术可行性（外部对象）"
     ux-research: "先例/竞品/UX/行为设计（外部对象）"
@@ -96,9 +96,8 @@ scenes:
   A:
     name: "new_feature"
     recommended_paths:
-      - ["design-brief", "design-output"]  # 目标/核心机制已定，关键证据足够
-      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "design-output"]
-      - ["idea", "brainstorm", "design-brief", "design-output"]
+      - ["design-brief", "design-output"]  # 默认：Brief 在关键缺口处问人/定点查证
+      - ["idea", "brainstorm", "design-brief", "design-output"]  # 仅当「做什么」尚未确定
       - ["idea", "superpowers-brainstorming", "design-brief", "design-output"]  # 轻量路径
       - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "design-output"]  # 自带一手定性数据：先综合出洞察再 PRD（追加项 C）
       - ["brainstorm", "research-kit", "insight-synthesis", "ux-brainstorm", "design-brief", "design-output"]  # PRD 假设→采集工具→[luca 亲自采集]→洞察（research-kit 2026-07-21）
@@ -107,13 +106,12 @@ scenes:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
       - ["idea", "brainstorm", "design-brief", "magicpath"]
-      - ["idea", "deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
+      - ["design-brief", "html-prototype"]
       - ["idea", "brainstorm", "design-brief", "html-prototype"]
   B:
     name: "existing_feature_optimization"
     recommended_paths:
       - ["design-brief", "design-output"]  # 已知问题与修改/保持范围，不代替需要的审计
-      - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "design-output"]
       - ["ux-audit", "design-brief", "design-output"]
       - ["superpowers-brainstorming", "design-brief", "design-output"]  # 轻量路径
       - ["insight-synthesis", "ux-research", "ux-brainstorm", "design-brief", "design-output"]  # 有工单/回访一手数据：综合洞察 + 外部竞品（追加项 C）
@@ -127,7 +125,6 @@ scenes:
       - ["code-recon", "tech-spec", "task-plan"]
     fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
       - ["ux-audit", "design-brief", "magicpath"]
-      - ["brainstorm", "ux-audit", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
       - ["ux-audit", "design-brief", "html-prototype"]
   C:
     name: "online_review_redesign"
@@ -140,15 +137,14 @@ scenes:
     name: "agent_native_redesign"
     recommended_paths:
       - ["design-brief", "design-output"]  # 分工/权限/确认/接管/恢复均已确认，关键未知已解决
-      - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "design-output"]
-      - ["ux-brainstorm", "design-brief", "design-output"]
+      - ["ux-brainstorm", "design-brief", "design-output"]  # Agent 分工/权限/确认/接管/撤销未定时
       - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "design-output"]  # 有一手用户/使用数据：先综合洞察再 Agent 化设计（追加项 C）
       - ["brainstorm", "research-kit", "insight-synthesis", "ux-brainstorm", "ux-writing", "design-brief", "design-output"]  # Agent 化全链：摸用户心智 + hedging/agent 状态文案规范（2026-07-21）
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
       - ["ux-brainstorm", "design-brief", "magicpath"]
-      - ["deepresearch", "brainstorm", "ux-research", "ux-brainstorm", "design-brief", "html-prototype"]
+      - ["ux-brainstorm", "design-brief", "html-prototype"]
 
 # Optional entrances share one convergence stage; they do not activate a workflow by themselves.
 design_entry_paths:

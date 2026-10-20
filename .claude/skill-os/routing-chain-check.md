@@ -31,10 +31,10 @@
 
 **R1 · 研究前置（仅裸奔点 brainstorm / ux-brainstorm）**
 这两个 skill 缺研究输入时会静默 cold-start 产薄产物、不报警（其 SKILL.md Phase 0.1 声明的行为）。
-当目标是二者之一 + 会话内无研究输入 + 意图**复杂且新颖**（判据 = `optional-workflow-graph.yaml
-research_default`，与 Plan Agent 研究默认门同一把尺子）→ dispatch 前问一句：
-「这题复杂且没有成熟先例，先调研（/deepresearch 或 /ux-research）还是直接开始？」
-简单或有成熟先例 → 直接进，不问。
+当目标是二者之一 + 会话内无研究输入 + 写得出一个**会被外部证据推翻或确认的具名决定**（判据 =
+`optional-workflow-graph.yaml research_default`，与 Plan Agent 研究门同一把尺子）→ dispatch 前问一句：
+「X 决定取决于外部事实 Y，先针对它查证还是直接开始？」
+写不出这样的决定 → 直接进，不问；复杂或新颖本身不构成提问理由。
 
 **R2 · 设计产出工具选择（design-output）**
 对明确已有 HTML 增改交互说明或标注的意图，语义路由到 `prototype-notes`，先核当前文件、确认与范围；

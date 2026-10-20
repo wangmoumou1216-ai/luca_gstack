@@ -70,7 +70,8 @@ must not skip or answer that human gate.
 
 This is the shared selection and local-return owner for product-design Phase planning and R3
 workflow recommendations/resumption. A/B/C/D describes the task; it does not require an entire
-static path. Direct single-skill requests stay standalone and do not load a graph or upstream
+static path. The default design entry is design-brief (C keeps its ux-audit baseline); add an upstream
+skill only for a named gap in the table below. Direct single-skill requests stay standalone and do not load a graph or upstream
 skills for completeness. Apply the research default and real human gates above unchanged.
 
 Before invoking a node, use the existing entry/plan sentence to name the unresolved gap, the
@@ -98,7 +99,7 @@ Mature A/B inputs may start at Brief. C preserves its actual ux-audit baseline, 
 recheck, P0 and score requirements; do not relabel C as B to escape them. D may start at Brief only
 when role, authority, confirmation/takeover and recovery decisions are settled; critical unknowns
 return to their owner and real user, not a fabricated mature-input label. These paths do not
-promote focused by default or bypass the complex-and-novel research confirmation rule.
+promote focused by default or bypass the evidence-gated research rule.
 
 If a skill is selected, preserve its input, independent review and human gates. Stop at the
 user's requested deliverable: research alone does not start downstream design; design delivery

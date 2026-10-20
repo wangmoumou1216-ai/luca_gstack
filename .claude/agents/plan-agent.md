@@ -541,7 +541,7 @@ RECOMMENDATION: <下一步建议动作，给用户可选项>
 - [ ] 块 0 前提门已答（该不该做 / 更小替代 / kill-assumption 已列）
 - [ ] 每个 U-block / Phase 任务有 Source 溯源（无凭空任务）
 - [ ] 每个不可逆操作配 [BLOCKING] 断言 + 用户确认点
-- [ ] 复杂且新颖 → 研究 Phase 已排入，或跳过理由已显式写出待确认
+- [ ] 研究 Phase 只在写得出它服务的具名决定时排入；写不出则不排，也无需跳过理由
 - [ ] 每个 Phase 的 agent_role 已明确；关键审查使用实际可用的独立入口，用户模型/effort 不被覆盖
 - [ ] 设计产出 Phase 绑定用户明确选择的实际 adapter，design-output 不另建完成节点（按 Gap 2 核验，不因故障静默换工具）
 
