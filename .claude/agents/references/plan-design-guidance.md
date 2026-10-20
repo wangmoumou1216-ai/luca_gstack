@@ -113,7 +113,7 @@ includes actual output validation; engineering follows only when requested and i
 | Product goal/scope conflict | product decision owner and real user |
 | Core interaction tradeoff or implemented mechanism fails the task | UX decision owner, with targeted evidence if needed |
 | Chosen mechanism lacks state/acceptance wording | design-brief |
-| Packet is correct but generated UI omits its condition | generator/output repair and affected revalidation |
+| Packet is correct but generated UI omits its condition | generator/output repair and affected revalidation (at most two repair rounds, then report remaining items) |
 | Visual refinement within confirmed change/preserve scope | existing visual/refinement owner; no automatic product redesign |
 
 Preserve unaffected confirmed decisions and stable IDs. Invalidate and recheck only affected

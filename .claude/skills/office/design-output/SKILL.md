@@ -41,6 +41,8 @@ python3 .claude/observability/scripts/get_rules.py design-output "*"
 ## 共同操作流程
 
 两条路径均为：选工具 → 确认该工具设计规范 → 材料就位 → 生成/迭代 → 回收验收。
+回收验收由独立执行者在真实浏览器里按 Brief 的 Given/When/Then 逐条实操；未通过项只修这些项并复测，
+最多两轮，仍未通过的列为剩余项交用户，不把一轮复测当全过；复测中新报出的项也计入这两轮上限。
 实际 adapter 用同一 resolveDesignExecutionDefaults 策略继承同工具的有效设计规范确认；
 缺确认只问“沿用当前设计系统，还是指定另一套？”，OD/CD 确认不能互相迁移。
 短答续接保留完整任务；recover 不重新选择工具、规范或模板。OD 保留既有执行模式；

@@ -260,7 +260,24 @@ Oracle/handoff 段；交接第 2 步的 stale hash / 缺恢复阻断演练。
 2. 场景推荐路径：A/B/D 去掉完整网上研究链（deepresearch → brainstorm → ux-research → ux-brainstorm）及对应 HTML 兜底链；保留 A 的 brainstorm 短路径（仅当「做什么」未定）、D 的 ux-brainstorm 路径（Agent 分工/权限/接管未定时）、C 的 ux-audit 基线。
 3. `routing-chain-check.md` R1、`plan-agent.md` 出门自检、`plan-design-guidance.md`（默认入口为 design-brief）与 README 同步为同一把尺子；`scripts/check-agent-context.mjs` 中对指南文件的哈希锁随之更新。
 4. 未改动：deepresearch / ux-research / brainstorm / ux-brainstorm 仍可单独调用；insight-synthesis、research-kit、ux-audit、ux-writing、code-recon、所有出口工具、工程链保持原样（本次证据不覆盖它们）。
-5. 「实测 → 定点修」不需新增：各出口已有独立浏览器验收，指南「局部回退」已规定 Packet 正确但界面漏实现时修出口并复验。
+5. 「实测 → 定点修」写成明确步骤：`design-output` 共同流程规定回收验收由独立执行者在真实浏览器按 Brief 的
+   Given/When/Then 逐条实操，未通过项只修这些项并复测，最多两轮，仍未过的列为剩余项交用户；指南「局部回退」同步
+   为「最多两轮修复」。依据是 §9.1：一轮修复能修好目标项，但不同验收者会报出新项。
+6. Brief 不需改：其 AC 已是逐条 Given/When/Then（`output-templates.md:139`、`SKILL.md:218`），可直接作为验收任务。
+7. 有意保留：A/B/D 中「自带一手数据」的路径（insight-synthesis / research-kit 开头，后接 brainstorm 或 ux-brainstorm）
+   与工程链（brainstorm → design-brief → tech-spec）。它们服务的是用户自己的一手定性数据（访谈、工单、回访）、
+   还没有数据时先设计采集工具、以及工程交付。本次证据没有任何一手数据，只覆盖网上研究与无数据的发散，不足以外推删除。
+   使用情况报告（`check-skill-scene-coverage.py`，只读）：ux-brainstorm ACTIVE（场景 2 / 产出 1）；insight-synthesis 不落盘、
+   无法观测；research-kit 低频豁免；brainstorm、deepresearch、ux-research 代理口径未定，均不判。
+8. 按用户纠正再收两处：(a) ux-writing 的 PRD 要求不需要先跑 brainstorm——用户的原始需求本身可作 PRD 输入，
+   路径改为 ux-writing → design-brief；(b) B 场景一手数据路径里的 ux-research 查的是外部竞品、与用户数据无关，
+   按本报告的研究门不应写成固定步骤，已移出，竞品先例仍按缺口表单步调用。
+
+**核心流程（据此判断哪些 skill 不在核心里）：** 原始需求（可直接作 PRD）→ design-brief → 用户选的出口工具
+（design-output 下的 OD / Claude Design，或 html-prototype / magicpath）→ 独立浏览器验收 → 定点修。
+场景 C 前置 ux-audit，工程交付走工程链。**不在核心流程里**：deepresearch、ux-research、brainstorm、ux-brainstorm
+（按需单独调用）。本次**没有删除任何 skill**：只有 ux-brainstorm 有实际使用记录，其余无法判定是否闲置，
+删除需要人工裁决；它们已从默认和推荐路径中移出，保留单独调用入口。
 
 **仍需验证：** 证据只有 2 个案例；「定点修一次能把原型修到全过」正在用 B 原型做一次验证（结果见 §9.1）。
 

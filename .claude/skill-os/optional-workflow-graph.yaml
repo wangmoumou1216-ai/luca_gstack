@@ -101,7 +101,7 @@ scenes:
       - ["idea", "superpowers-brainstorming", "design-brief", "design-output"]  # 轻量路径
       - ["insight-synthesis", "brainstorm", "ux-brainstorm", "design-brief", "design-output"]  # 自带一手定性数据：先综合出洞察再 PRD（追加项 C）
       - ["brainstorm", "research-kit", "insight-synthesis", "ux-brainstorm", "design-brief", "design-output"]  # PRD 假设→采集工具→[luca 亲自采集]→洞察（research-kit 2026-07-21）
-      - ["idea", "brainstorm", "ux-brainstorm", "ux-writing", "design-brief", "design-output"]  # 内容规范 pre-brief：voice-copy-spec 产出后 design-brief Step 1.0b 继承（ux-writing 2026-07-21）
+      - ["ux-writing", "design-brief", "design-output"]  # 内容规范 pre-brief（用户原始需求本身可作 PRD 输入，无需先跑 brainstorm；交互取舍并入 Brief）：voice-copy-spec 产出后 design-brief Step 1.0b 继承（ux-writing 2026-07-21）
     engineering_paths:  # 工程链（与设计链并行，不替代）
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
     fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
@@ -114,7 +114,7 @@ scenes:
       - ["design-brief", "design-output"]  # 已知问题与修改/保持范围，不代替需要的审计
       - ["ux-audit", "design-brief", "design-output"]
       - ["superpowers-brainstorming", "design-brief", "design-output"]  # 轻量路径
-      - ["insight-synthesis", "ux-research", "ux-brainstorm", "design-brief", "design-output"]  # 有工单/回访一手数据：综合洞察 + 外部竞品（追加项 C）
+      - ["insight-synthesis", "ux-brainstorm", "design-brief", "design-output"]  # 有工单/回访一手数据：综合洞察；外部竞品先例按缺口单步 ux-research，不写成固定步骤
       - ["research-kit", "insight-synthesis", "ux-brainstorm", "design-brief", "design-output"]  # 先设计采集工具摸问题→[采集]→洞察（research-kit 2026-07-21）
       - ["code-recon", "ux-brainstorm", "design-brief", "design-output"]  # brownfield 起步：现有代码 → 架构 brief 作 architecture_brief 输入（code-recon 2026-09-02）
     engineering_paths:
