@@ -15,7 +15,7 @@ argument-hint: "[path to research markdown file, or empty for cold-start mode]"
 context-cost:
   self: 37372  # 实测字节数 wc -c，统一口径 2026-07-04（G5）
   runtime-estimate: 75000
-  shared-refs: [ai-native-design-framework]
+  shared-refs: [ai-native-design-framework, competitor-scan]
   recommended-model: core-execution  # 2026-07-10 Fable手术刀：整场交互降opus，苏格拉底审查环节按fable_whitelist P1单独dispatch fable
 ---
 
@@ -338,6 +338,10 @@ on Problem Frame or Demand Evidence), consider firing ONE additional `subagent_t
 agent to fetch external context before Phase 3 — but only if the gap is about facts the user
 probably doesn't have (market size, competitive landscape), not about product decisions (only the
 user can answer those).
+
+For competitor *feature or interaction precedent* (not market facts) that could change one nameable decision, offer a
+light comparison once, per `.claude/skills/office/references/competitor-scan.md`: propose candidate objects, let the user
+edit or decline, and record the answer in Source Research. Market size and landscape facts stay with the librarian above.
 
 ## Phase 2: Internal Pressure Test
 

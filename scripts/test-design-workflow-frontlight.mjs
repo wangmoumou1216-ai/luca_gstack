@@ -27,6 +27,9 @@ const paths = {
   input: '.claude/skills/office/design-brief/references/input-contract.md',
   packet: '.claude/skills/office/design-brief/references/output-templates.md',
   briefSchema: '.claude/skills/office/design-brief/SCHEMA.md',
+  scan: '.claude/skills/office/references/competitor-scan.md',
+  guidance: '.claude/agents/references/plan-design-guidance.md',
+  method: '.claude/skills/office/ux-research/references/competitor-analysis.md',
 };
 const diskSource = Object.fromEntries(Object.entries(paths).map(([key, path]) => [key, readFileSync(resolve(root, path), 'utf8')]));
 const baseline = args.includes('--baseline') ? execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() : null;
@@ -193,6 +196,70 @@ check('F10-legacy', 'legacy depths and default full stay explicit', s => {
 const fixturePath = 'framework-audit/design-workflow-frontlight/u002-replay-fixtures.json';
 const fixtureText = readFileSync(resolve(root, fixturePath), 'utf8');
 const fixture = JSON.parse(fixtureText);
+// Light competitor comparison: agent-offered, user-decided, output-neutral (user premise 2026-10-21).
+check('F12-competitor-scan', 'light competitor scan is named-decision gated, asked once, capped, honest and output-neutral', s => {
+  const t = s.scan;
+  has(t, /命名决定测试/);
+  has(t, /写不出就整句不出现，也不问/);
+  has(t, /一次、开放、纯文本/);
+  has(t, /“不用”＝终局，本任务不再问/);
+  has(t, /标“凭已有认识、未核实”/);
+  has(t, /≤3 个对象，整次 ≤6 次读取/);
+  has(t, /评论\/论坛只用来定位，不作结论依据/);
+  has(t, /文档层先例/);
+  has(t, /UNVERIFIED/);
+  has(t, /证据日期超过约 18 个月或版本不明，标 stale/);
+  has(t, /competitor-analysis\.md\]\(\.\.\/ux-research\/references\/competitor-analysis\.md\)/);
+  has(t, /Layer C（信任）与 Layer D（代理）/);
+  has(t, /decision_changed/);
+  has(t, /不由 agent 自评/);
+  has(t, /前 5 次真实提议/);
+  has(t, /不新增 Packet\/TAC 字段，不自动升 MUST/);
+  // The user's own constraints: light, agent-offered, candidate-bearing, decline is final, never a questionnaire.
+  has(t, /不出选项菜单，不问预算、深度、维度/);
+  has(t, /2–3 个由需求推出的候选对象/);
+  has(t, /至少一个机制与其余不同/);
+  has(t, /不编造产品/);
+  has(t, /没有固定候选池/);
+  has(t, /已成形的截图\/录屏\/分析 → 只摄取，不扫描/);
+  has(t, /视为同意，直接按下面的预算做，不再问/);
+  has(t, /超过 3 个 → 按可比性取前 3/);
+  has(t, /没有已锁定项目（NO_PIN）——此时不发起扫描/);
+  has(t, /执行体用现有 `quick-research`/);
+  has(t, /用户说“看一眼”即同意本次读取/);
+  has(t, /没有浏览器/);
+  has(t, /不写效果主张/);
+  has(t, /没有增量就如实写，不强造差异/);
+  has(t, /`decision: <命名决定>` 与 `decision_changed: pending`/);
+  has(t, /一律沿用/);
+  has(t, /这里不复述/);
+  has(t, /不进入任何生成输入/);
+  has(t, /它不改变 open-design \/ claude-design 的产出/);
+  has(t, /这不是 skill、模式、审批或 Packet\/TAC 字段/);
+  has(t, /同意、拒绝和文件路径记进既有来源索引/);
+  has(t, /competitor-scan: declined/);
+  has(t, /docs\/research\/competitor-scan-log\.md/);
+  has(t, /不到 1 次，\n或拒绝率超过 80%，则本文件回退为只保留 plan-design-guidance 里的一行/);
+  has(t, /本文件不新建 skill、模式或审批/);
+  lacks(t, /2–4|预算档/);
+  lacks(t, /无额外门|不另加预算档外的审批/);
+  lacks(t, /动效默认|默认动效|固定阈值|\d+\s?ms\b|缓动|时长/);
+});
+check('F13-competitor-scan-landing', 'one owner, pointers only, no second ask point and no questionnaire', s => {
+  const brief = s.brief.split('competitor-scan.md').length - 1;
+  assert.ok(brief >= 1 && /按 \[competitor-scan\]\(\.\.\/references\/competitor-scan\.md\)\n用本轮入口句提议一次/.test(s.brief), 'design-brief Phase 0 pointer');
+  const phase0 = section(s.brief, '## Phase 0：输入继承与缺口核对', '## Phase A');
+  has(phase0, /competitor-scan/);
+  const optional = section(s.product, '**Optional: additional research.**', '## Phase 2');
+  has(optional, /competitor-scan\.md/);
+  has(optional, /offer a\nlight comparison once/);
+  assert.equal(s.product.split('competitor-scan.md').length - 1, 1, 'brainstorm names the reference exactly once (no second intake question)');
+  has(s.guidance, /competitor-scan\.md, executed by quick-research after the one-time offer/);
+  has(s.guidance, /competitor analysis" alone names no object/);
+  has(s.method, /走 `\.\.\/\.\.\/references\/competitor-scan\.md`，不进本方法/);
+  lacks(s.input, /competitor-scan/);
+});
+
 check('FIXTURE-separation', 'subject prompts and grader expectations are separate finite sets', () => {
   assert.equal(fixture.evidence_class, 'BOUNDED_NATIVE_PROBES_NOT_FULL_SKILL_RUNS');
   assert.deepEqual(fixture.subject_cases.map(row => row.id), fixture.grader_expectations.map(row => row.id));
@@ -232,6 +299,27 @@ if (args.includes('--mutation') && results.every(row => row.ok)) {
     ['impatience-waives-unknown', 'pressure', '关键未知不能改成安全假设', '关键未知可以改成安全假设', 'F07-escape'],
     ['brief-restores-rejection-quota', 'briefSchema', '无实质取舍时填有源 N/A', '始终至少编写一项排除备选', 'F09-brief-retained'],
     ['drop-state-invalidation', 'brief', '写明失效触发及失效后的呈现', '保持原样即可', 'F11-brief-state-invalidation'],
+    ['scan-always-ask', 'scan', '写不出就整句不出现，也不问', '写不出也照问', 'F12-competitor-scan'],
+    ['scan-uncap-reads', 'scan', '整次 ≤6 次读取', '读取不设上限', 'F12-competitor-scan'],
+    ['scan-auto-must', 'scan', '不自动升 MUST', '自动升 MUST', 'F12-competitor-scan'],
+    ['scan-agent-self-grades', 'scan', '不由 agent 自评', '由 agent 自评即可', 'F12-competitor-scan'],
+    ['scan-motion-default', 'scan', '本文件只新增一条：', '本文件只新增一条（动效默认 200ms）：', 'F12-competitor-scan'],
+    ['scan-claims-ui-observation', 'scan', '文档层先例', '已观察真实界面', 'F12-competitor-scan'],
+    ['scan-restores-option-menu', 'scan', '不出选项菜单，不问预算、深度、维度', '给出预算、深度、维度的选项菜单', 'F12-competitor-scan'],
+    ['scan-drops-no-browser', 'scan', '没有浏览器', '有浏览器', 'F12-competitor-scan'],
+    ['scan-drops-consent-record', 'scan', '同意、拒绝和文件路径记进既有来源索引', '同意、拒绝不用记', 'F12-competitor-scan'],
+    ['scan-drops-stop-threshold', 'scan', '不到 1 次', '不限次数', 'F12-competitor-scan'],
+    ['scan-decline-not-final', 'scan', '“不用”＝终局，本任务不再问', '“不用”＝本次先放过，之后还会再问', 'F12-competitor-scan'],
+    ['scan-no-pin-still-scans', 'scan', '此时不发起扫描', '此时照常发起扫描', 'F12-competitor-scan'],
+    ['scan-allows-invention', 'scan', '不编造产品', '可补充常见产品', 'F12-competitor-scan'],
+    ['scan-executor-ux-research', 'scan', '执行体用现有 `quick-research`', '执行体用现有 `ux-research`', 'F12-competitor-scan'],
+    ['scan-enters-generation', 'scan', '不进入任何生成输入', '可进入生成输入', 'F12-competitor-scan'],
+    ['scan-restates-method', 'scan', '一律沿用', '改为在此重新定义', 'F12-competitor-scan'],
+    ['scan-drops-header-fields', 'scan', '`decision: <命名决定>` 与 `decision_changed: pending`', '一份摘要', 'F12-competitor-scan'],
+    ['scan-adds-budget-tier', 'scan', '本文件不新建 skill、模式或审批', '本文件新建 deep 预算档', 'F12-competitor-scan'],
+    ['scan-always-scans-materials', 'scan', '已成形的截图/录屏/分析 → 只摄取，不扫描', '已成形的材料一律再扫描', 'F12-competitor-scan'],
+    ['brief-pointer-removed', 'brief', '按 [competitor-scan](../references/competitor-scan.md)\n用本轮入口句提议一次', '按相关规则\n用本轮入口句提议一次', 'F13-competitor-scan-landing'],
+    ['guidance-row-removed', 'guidance', 'competitor-scan.md, executed by quick-research after the one-time offer', 'ux-research after the one-time offer', 'F13-competitor-scan-landing'],
   ];
   for (const [name, key, before, after, expected] of mutations) {
     assert.equal(source[key].split(before).length, 2, `mutation anchor must occur exactly once: ${name}`);

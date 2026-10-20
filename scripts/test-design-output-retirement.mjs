@@ -44,6 +44,21 @@ function verifyEntriesGone() {
   assert.match(routing, /做个原型/, 'prototype wording must still route somewhere');
 }
 
+// Output-neutrality contract (user premise 2026-10-21): acceptance never reshapes what OD/CD generated.
+function verifyOutputText(output) {
+  assert.ok(output.includes('design-output/scripts/verify-prototype.mjs'), 'design-output must reference the acceptance script');
+  assert.match(output, /--mode=external/, 'design-output must run the acceptance script in external mode for OD/CD output');
+  assert.match(output, /报告写到临时目录，不写进交付目录/, 'external reports must not be written into the delivery directory');
+  assert.match(output, /--out-dir=<调用方给定的稳定路径>/, 'a judge needs a stable report path (--out-dir) to find qa-results.json');
+  assert.match(output, /NEEDS_CONTEXT/, 'design-output must state the both-exits-unavailable outcome');
+  assert.match(output, /没有第三个出口/, 'design-output must state there is no third exit');
+  assert.match(output, /AI Slop 扫描/, 'design-output must carry the acceptance-side slop report that replaced the retired generator firewall');
+  assert.match(output, /由用户决定是否修复/, 'slop findings are reported, the user decides');
+  assert.match(output, /不自动触发重新生成/, 'slop findings must not trigger regeneration');
+  assert.doesNotMatch(output, /N ≥ 3[^\n]*必须返工/, 'acceptance must not force rework from the slop threshold');
+  assert.doesNotMatch(output, /MagicPath|本地 HTML/, 'design-output still inherits a retired tool');
+}
+
 function verifySharedAssets() {
   for (const rel of [
     '.claude/skills/office/references/prototype-spec-schema.md',
@@ -51,12 +66,7 @@ function verifySharedAssets() {
     '.claude/skills/office/design-output/scripts/verify-prototype.mjs',
     '.claude/skills/office/design-output/scripts/test-verify-prototype.mjs',
   ]) assert.ok(existsSync(join(root, rel)), `shared asset lost: ${rel}`);
-  const output = read('.claude/skills/office/design-output/SKILL.md');
-  assert.ok(output.includes('design-output/scripts/verify-prototype.mjs'), 'design-output must reference the acceptance script');
-  assert.match(output, /NEEDS_CONTEXT/, 'design-output must state the both-exits-unavailable outcome');
-  assert.match(output, /没有第三个出口/, 'design-output must state there is no third exit');
-  assert.match(output, /AI Slop 扫描/, 'design-output must carry the acceptance-side slop re-check that replaced the retired generator firewall');
-  assert.doesNotMatch(output, /MagicPath|本地 HTML/, 'design-output still inherits a retired tool');
+  verifyOutputText(read('.claude/skills/office/design-output/SKILL.md'));
   assert.match(read('.claude/skills/office/open-design/SKILL.md'), /references\/prototype-spec-schema\.md/, 'open-design must read the migrated schema');
 }
 
@@ -96,4 +106,11 @@ if (process.argv.includes('--mutation')) {
   assert.throws(() => verifyTombstones(unhidden, catalog), /still listed as hidden/);
   assert.throws(() => verifyTombstones(visibility, catalog.replace('`html-prototype` — `retired-unavailable`', '')), /catalog lacks tombstone/);
   console.log('PASS mutation: missing tombstone / hidden relapse / catalog tombstone removed -> exact assertion fails -> original passes');
+  const outputText = read('.claude/skills/office/design-output/SKILL.md');
+  assert.throws(() => verifyOutputText(outputText.replaceAll('--mode=external', '')), /external mode/);
+  assert.throws(() => verifyOutputText(outputText.replaceAll('不自动触发重新生成', '')), /must not trigger regeneration/);
+  assert.throws(() => verifyOutputText(outputText + '\nN ≥ 3 必须返工'), /must not force rework/);
+  assert.throws(() => verifyOutputText(outputText.replaceAll('由用户决定是否修复', '')), /the user decides/);
+  console.log('PASS mutation: external mode dropped / regeneration trigger / forced rework / user decision removed -> exact assertion fails');
+
 }

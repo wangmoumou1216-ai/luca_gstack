@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed（2026-10-21 · 采纳 html-prototype 中不影响 OD/CD 产出的价值）
+
+- 验收脚本新增 `--mode=external`（给 OD / CD / 用户 HTML 用）：html-prototype 专属项（spec、动态参考、审美分、状态标记、DECISION 映射）记 N/A，字体 CDN 与 emoji 只记 WARN，Lorem、内容为空、控制台错误、三视口截图仍判 FAIL；报告默认写到临时目录，不写进交付目录。为什么：默认模式拿 html-prototype 的约定去卡 OD/CD 页面，会给出误导性的 FAIL，按“只修未过项”还会驱动对用户所选字体/内容的返工。验收侧 AI Slop 复核改为只出报告、由用户决定是否修复，不自动重新生成、不计入两轮上限——**即原先“`N ≥ 3` 必须返工”这条受保护规则被移除**；`skill-invariants.md` 的对应保护条款随之修订并写明“输出中性底线”。
+- 新增轻量竞品对照 `references/competitor-scan.md`：只在能写出“竞品证据可能改变的某个具体决定”时，由 agent 一次性开放式提议，并附 2–3 个由需求推出的候选对象（标“未核实”），用户可删改补或拒绝（拒绝即终局）；同意后用现有 `quick-research` 做，≤3 个对象、整次 ≤6 次读取，得到的是文档层先例，不是看过真实界面。产出只是参考材料，不自动升 MUST，不进任何生成输入。落点：design-brief Phase 0 与 brainstorm 已有的 Optional additional research 各一句指针、plan-design-guidance 一行；系统性多维研究仍走 ux-research。成效未证：每次记录 `decision_changed`，前 5 次真实提议里被接受并执行的 ≥3 次中改变决定的不到 1 次，或拒绝率 >80%，则回退为只留 guidance 一行。
+- 明确不采纳（会塑形 UI 或已有 owner）：动效数值默认区间与“动效使用计划”宣告、状态切换器要求、生成侧禁用清单、24/30 美学自评、认知门禁、骨架确认、强制动态查询、硬编码候选池、logic-validation、2–5 变体、standalone-brief。动效规范本就由 `dev-handoff-dimensions.md` 第 4 条（事后抽取）与 `references/motion/*` 承接；claude-design 补上与 open-design 同口径的事后交接指针。
+
 ### Removed（2026-10-20 · 设计流程收敛）
 
 - 退役 `html-prototype` 与 `magicpath`（RET-20261020-001/002）：设计产出只剩 open-design 与 claude-design 两个出口，两者都不可用时返回 NEEDS_CONTEXT，不自动换工具；对这两个名字的调用被拒绝而不是派发。为什么：它们不在核心流程（原始需求 → design-brief → OD/CD → 独立浏览器验收 → 定点修）上，却让路由、graph 与测试多维护一条旁路；两个旧入口的“做个原型”类说法现在落到 design-brief。独立浏览器验收脚本与原型规格 schema 迁到中性路径（`design-output/scripts/`、`references/prototype-spec-schema.md`），不随技能删除；回滚点为本地 tag `pre-retire-html-prototype-magicpath`。随 html-prototype 一并不再提供的能力（用户已批准退役，此处如实列出）：`logic-validation` 用途与 U008 例外、2–5 个 UI 变体对比、standalone brief 直出原型、动态参考扫描、美学 24/30 门、生成侧「视觉 AI Slop 防火墙」（由 design-output 验收侧的「AI Slop 扫描」复核承接）。已知遗留：`scripts/fixtures/agent-orchestration-cases.json`（冻结的、与计划哈希绑定的 live-run 提案）仍含 12 个 html-prototype 用例，该 live 证据已无法凑齐，需新 plan 重冻；`memory/evals/matt-adaptation/method-coverage.json` 的 M09 仍把 U008 html-prototype 列为 owner（状态 PLANNED）。

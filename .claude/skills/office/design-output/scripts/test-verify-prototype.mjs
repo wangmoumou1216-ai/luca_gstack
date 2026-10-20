@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
-import { resolvePrototypeOptions, inspectPrototype, extractPortableLogic } from "./verify-prototype.mjs";
+import { resolvePrototypeOptions, inspectPrototype, extractPortableLogic, resolveMode, ALLOWED_MODES } from "./verify-prototype.mjs";
 
 const checker = fileURLToPath(new URL("./verify-prototype.mjs", import.meta.url));
 
@@ -104,6 +104,40 @@ check(failures(inspectPrototype({ ...variantInput, html: variantHtml().replace('
 check(failures(inspectPrototype({ ...variantInput, html: variantHtml().replace('data-prototype-content-id="source-role"', 'data-prototype-content-id="other"') })).includes("Variant A common content markers (static)"), "Per-key inventory omission fails, not semantic conservation proof");
 check(failures(inspectPrototype({ ...variantInput, html: variantHtml().replace("<!-- DECISION: D-001 -->", "") })).includes("Variant A common decisions mapped (static)"), "Per-key decision omission fails");
 check(failures(inspectPrototype({ ...variantInput, html: variantHtml().replace('data-prototype-variant-error', 'not-error') })).includes("UI shared floating control contract (static)"), "Unknown-key recovery contract required");
+// --- external mode: generator-agnostic acceptance for open-design / claude-design / user HTML ---
+// A plain page from a design tool: no prototype-spec.md, no DECISION/STATE markers, a font CDN and an emoji in content.
+const plainBody = "Customer list with search, filters and a detail panel. ".repeat(12);
+const plainPage = `<!doctype html><html><head><link href="https://fonts.googleapis.com/css2?family=Inter" rel="stylesheet"></head><body><main>${plainBody} \u{1F600}</main></body></html>`;
+const brief = "# Brief\n- D-001 list\n- D-002 detail\n";
+const named = (checks, name) => checks.find((c) => c.name === name);
+const failing = (checks) => checks.filter((c) => !c.passed).map((c) => c.name);
+// mode resolution is a real, mutation-testable function (the CLI used to ignore unknown modes silently)
+check(ALLOWED_MODES.has("external"), "external must be an allowed mode");
+check(resolveMode("external", "html-prototype") === "external", "explicit external must win over the inferred mode");
+check(resolveMode("not-a-mode", "html-prototype") === "html-prototype", "unknown modes still fall back to the inferred mode");
+check(resolveMode(null, "figma-demo") === "figma-demo", "no explicit mode keeps the inferred mode");
+const ext = inspectPrototype({ html: plainPage, prototypeSpec: "", designBrief: brief, mode: "external", specExists: false }).checks;
+const def = inspectPrototype({ html: plainPage, prototypeSpec: "", designBrief: brief, mode: "html-prototype", specExists: false }).checks;
+// the same input that is a false FAIL in the default mode passes in external, including a Brief with D-IDs and no DECISION markers
+check(failing(ext).length === 0, `external must accept a plain design-tool page, got: ${failing(ext).join(", ")}`);
+check(failing(def).includes("Prototype spec exists") && failing(def).includes("State coverage markers present") && failing(def).includes("Design decisions mapped"),
+  "default mode keeps its html-prototype-only checks (legacy behaviour unchanged)");
+for (const name of ["Prototype spec exists", "State coverage markers present", "Design decisions mapped"]) check(named(ext, name)?.status === "N/A", `${name} must be N/A in external`);
+check(!named(ext, "Dynamic reference recorded") && !named(ext, "Current aesthetic score >= 24/30"), "external must not run spec-only checks");
+const extWithSpec = inspectPrototype({ html: plainPage, prototypeSpec: "# spec\n", designBrief: brief, mode: "external", specExists: true }).checks;
+check(failing(extWithSpec).length === 0 && !named(extWithSpec, "Dynamic reference recorded"), "a prototype-spec.md present must not bring back html-prototype-only checks in external");
+// CDN and emoji are report-only (they must not drive rework of a design tool's chosen fonts/content); never stricter than default
+check(named(ext, "No external CDN resources")?.status === "WARN" && named(ext, "No emoji icons")?.status === "WARN", "CDN and emoji must be WARN in external");
+check(named(def, "No external CDN resources")?.passed === false, "default mode still fails on CDN");
+// real defects still FAIL in external
+const brokenLorem = inspectPrototype({ html: plainPage.replace("Customer list", "Lorem ipsum"), mode: "external", specExists: false }).checks;
+check(failing(brokenLorem).includes("No Lorem Ipsum"), "Lorem must still fail in external");
+const brokenEmpty = inspectPrototype({ html: "<html><body>x</body></html>", mode: "external", specExists: false }).checks;
+check(failing(brokenEmpty).includes("Non-empty rendered text"), "empty content must still fail in external");
+// external is never stricter than the default mode on the same input
+const strictOnlyInExternal = failing(brokenLorem).filter((n) => !failing(inspectPrototype({ html: plainPage.replace("Customer list", "Lorem ipsum"), mode: "html-prototype", specExists: false }).checks).includes(n));
+check(strictOnlyInExternal.length === 0, "external must not add a failing check the default mode lacks");
+
 console.log(`PASS ${staticAssertions} deterministic assertions; STATIC_CONTRACT_ONLY; native/browser/model semantics/real selection NOT_RUN.`);
 if (process.argv.includes("--static-only")) process.exit(0);
 // The full existing browser regression suite remains the default test entry, for authorized Htest.

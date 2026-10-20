@@ -183,11 +183,12 @@ function verifySurface() {
   for (const rel of ['.claude/agents/muse-proto-judge.md', '.codex/agents/muse-proto-judge.toml']) assert.ok(existsSync(join(root, rel)), 'independent judge retained');
   // Shared design safeguards formerly checked by check-muse-loop-sync must survive its deletion.
   // html-prototype was retired 2026-10-20 (RET-20261020-001); its generation-side slop firewall is replaced by the
-  // acceptance-side slop re-check in design-output, backed by the brief-side scan table.
+  // acceptance-side, report-only slop re-check in design-output, backed by the brief-side scan table.
   const briefSchema = readFileSync(join(root, '.claude/skills/office/design-brief/SCHEMA.md'), 'utf8');
   assert.ok(briefSchema.includes('AI Slop 扫描'), 'AI Slop 扫描');
   const outputSkill = readFileSync(join(root, '.claude/skills/office/design-output/SKILL.md'), 'utf8');
-  assert.ok(/AI Slop 扫描[\s\S]*N ≥ 3[\s\S]*必须返工/.test(outputSkill), 'design-output slop re-check');
+  assert.ok(/AI Slop 扫描[\s\S]*只取其 10 项清单[\s\S]*由用户决定是否修复[\s\S]*不自动触发重新生成/.test(outputSkill), 'design-output slop re-check is report-only');
+  assert.ok(!/N ≥ 3` 必须返工/.test(outputSkill), 'design-output must not force rework from the slop table');
   const specSchema = readFileSync(join(root, '.claude/skills/office/references/prototype-spec-schema.md'), 'utf8');
   assert.ok(specSchema.includes('DECISION: D-'), 'DECISION: D-');
   const tokens = readFileSync(join(root, '.claude/skills/office/references/html-prototype-tokens.md'), 'utf8');

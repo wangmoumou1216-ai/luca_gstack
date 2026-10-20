@@ -67,6 +67,7 @@
     "test:carrier-asset-profile": "node scripts/test-carrier-asset-profile.mjs",
     "test:design-context-retirement": "python3 scripts/test-design-context-retirement.py",
     "test:design-output-retirement": "node scripts/test-design-output-retirement.mjs --mutation",
+    "test:design-workflow-frontlight": "node scripts/test-design-workflow-frontlight.mjs --mutation",
     "check:coding-discipline": "node scripts/check-coding-discipline.mjs",
     "check:project-links": "node scripts/check-project-links.mjs",
     "build:self-model": "node scripts/build-self-model.mjs",

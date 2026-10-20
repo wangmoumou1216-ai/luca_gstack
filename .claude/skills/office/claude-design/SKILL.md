@@ -150,7 +150,8 @@ accepted motion→notes 使用 deriveFromAccepted 绑定父 final，仍重验同
 
 ## 5. 单次完成
 
-写实际 `docs/prototype/YYYY-MM-DD-<topic>/index.html` 与 `prototype-spec.md`（原始回收），
+写实际 `docs/prototype/YYYY-MM-DD-<topic>/index.html` 与 `prototype-spec.md`（原始回收）；仅下游=开发时，按
+`.claude/skills/office/references/dev-handoff-dimensions.md` 从已回收 HTML 事后补“开发交接补全”，另存为独立文件，不覆盖 raw 回收的 prototype-spec 及其 SHA（与 open-design 同口径，不改产出）。
 有 processor 则交已 resolve 的 exact final entry/spec，保留 raw 来源，不按 latest 猜。
 handoff=`docs/handoff/YYYY-MM-DD-<topic>-claude-design-handoff.md`，按共享 handoff-protocol
 完整核验；含 source=claude-design、Packet/selection/manifest path+SHA、真实 host/handoff/

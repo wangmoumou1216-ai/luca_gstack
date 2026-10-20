@@ -84,9 +84,15 @@ merely to discover it was unnecessary; its zero-question branch still has its ow
 | Product goal, scope or core solution unresolved | brainstorm | those product decisions already confirmed |
 | Consequential external fact or feasibility unknown | research matching object and question breadth, under the research gates above | evidence already sufficient; no consequential fact question |
 | Competitor design/interaction precedent needed | ux-research, with its conditional competitor method | no applicable decision/risk gap; existing evidence sufficient |
+| Light competitor comparison for one nameable decision, offered by the agent with candidate objects | competitor-scan.md, executed by quick-research after the one-time offer | no nameable decision; user declined or said no research; mechanism already settled |
 | Current interface problem unclear | ux-audit | valid existing problem/baseline can be reused under its contract |
 | Core interaction mechanism has a real unresolved tradeoff | ux-brainstorm | mechanism chosen; remaining work is specification |
 | Agreed goals/mechanism need executable design | design-brief | request ends at research/analysis, or an explicitly chosen standalone tool owns its own legal input path |
+
+The word "competitor analysis" alone names no object: market, pricing or positioning facts go to the research matching
+that object; competitor page/flow/state mechanism goes to ux-research; a light, agent-offered precedent for one decision
+goes to competitor-scan.md (a one-time, user-requested offer that reuses the entry sentence; it is not a routing
+questionnaire).
 
 Competitor analysis may end at ux-research. With a settled mechanism it may feed Brief directly;
 with an unresolved mechanism it feeds UX exploration first. A research title does not require

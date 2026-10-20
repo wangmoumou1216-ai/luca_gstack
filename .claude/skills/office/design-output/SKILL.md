@@ -43,10 +43,16 @@ python3 .claude/observability/scripts/get_rules.py design-output "*"
 两条路径均为：选工具 → 确认该工具设计规范 → 材料就位 → 生成/迭代 → 回收验收。
 回收验收由独立执行者在真实浏览器里按 Brief 的 Given/When/Then 逐条实操；未通过项只修这些项并复测，
 最多两轮，仍未通过的列为剩余项交用户，不把一轮复测当全过；复测中新报出的项也计入这两轮上限。
-确定性项可先跑验收脚本 `node .claude/skills/office/design-output/scripts/verify-prototype.mjs <index.html> [design-brief.md]`；
-其 PASS 不代替浏览器实操，实操项仍逐条独立判定。
-验收同时按 `design-brief/SCHEMA.md` 的「AI Slop 扫描」表复核生成物（视觉通用 slop 与 AI 交互反模式），
-`N ≥ 3` 必须返工并计入两轮上限；原 html-prototype 的生成侧防火墙随该 skill 退役，由这一验收侧复核承接。
+确定性项可先跑验收脚本，OD/CD 或用户 HTML 一律带 `--mode=external`：
+`node .claude/skills/office/design-output/scripts/verify-prototype.mjs <index.html> [design-brief.md] --mode=external`。
+external 只跑与生成器无关的检查（Lorem、内容为空、控制台错误、三视口截图）；html-prototype 专属项（spec、动态参考、
+审美分、状态标记、DECISION 映射）记 N/A，字体 CDN 与 emoji 只记 WARN，都不驱动返工；报告写到临时目录，不写进交付目录；
+需要把结果交给独立判官时，加 `--out-dir=<调用方给定的稳定路径>`，否则判官找不到 qa-results.json，只会记证据缺口。
+用户另有可字面核验的设计规范时可加 `--design-rules=<json>`，未提供即 N/A。
+脚本 PASS 不代替浏览器实操，实操项仍逐条独立判定；脚本不得改变 OD/CD 的产出。
+验收同时按 `design-brief/SCHEMA.md` 的「AI Slop 扫描」表**只取其 10 项清单**复核生成物，把命中项列入验收报告，
+由用户决定是否修复；不适用该表的 N 阈值与阻断/警告分级，不自动触发重新生成，也不计入两轮上限。
+原 html-prototype 的生成侧防火墙随该 skill 退役，由这一验收侧报告承接。
 实际 adapter 用同一 resolveDesignExecutionDefaults 策略继承同工具的有效设计规范确认；
 缺确认只问“沿用当前设计系统，还是指定另一套？”，OD/CD 确认不能互相迁移。
 短答续接保留完整任务；recover 不重新选择工具、规范或模板。OD 保留既有执行模式；

@@ -141,7 +141,10 @@ raw semantic FAIL 保留证据，不要求加工前 raw semantic PASS；默认�
 
 html-prototype 已于 2026-10-20 退役（RET-20261020-001），其可进化区与 U008 logic-validation 用途例外随之移除。
 
-**不可进化：** `design-output/scripts/verify-prototype.mjs` 的调用、QA 检查项列表本身、验收侧「AI Slop 扫描」复核与 `N ≥ 3` 返工规则。
+**不可进化：** `design-output/scripts/verify-prototype.mjs` 的调用、既有各模式的 QA 检查项列表本身、验收侧「AI Slop 扫描」复核的 10 项清单。
+**输出中性底线（2026-10-21）：** `external` 模式只跳过 html-prototype 专属项（记 N/A）并把 CDN / emoji 降为 WARN，不得新增比默认模式更严的检查；
+验收侧 slop 复核只出报告、由用户决定是否修复，不得自动触发重新生成。放宽或收紧这条底线须用户明确裁决。
+（本次移除的受保护内容：原“验收侧 AI Slop 扫描 `N ≥ 3` 必须返工并计入两轮上限”，按用户 2026-10-21 “采纳不得影响 OD/CD 产出”的裁决改为只报告。）
 
 ---
 

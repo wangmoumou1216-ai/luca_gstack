@@ -46,7 +46,7 @@ tools:
 
 ## Phase 1：确定性检查（复用，不重复造轮子）
 
-若原型已有 `verify-prototype.mjs` 受支持模式生成的 `qa-results.json`，先读取；能对应当前原型与该条 `deterministic` AC 的结果直接引用，不重复代码检查。缺结果、结果过期或不能覆盖该 AC 时明确证据缺口，不凭语义推断 PASS。
+若原型已有 `verify-prototype.mjs` 受支持模式（含 `external`）生成的 `qa-results.json`，先读取；能对应当前原型与该条 `deterministic` AC 的结果直接引用，不重复代码检查。缺结果、结果过期或不能覆盖该 AC 时明确证据缺口，不凭语义推断 PASS。
 
 ## Phase 2：语义检查（本 agent 的核心工作）
 

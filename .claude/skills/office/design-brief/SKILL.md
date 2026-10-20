@@ -17,7 +17,7 @@ allowed-tools:
 context-cost:
   self: 39572  # 实测字节数 wc -c，统一口径 2026-07-04（G5）；2026-07-21 复测（interaction-mechanics 挂载 + Step 1.0b + 内容语义规则）
   runtime-estimate: 24000  # 2026-07-21：+interaction-mechanics（10826B ≈ +3.6K tokens，Phase 3 挂载）
-  shared-refs: [ai-native-design-framework, ai-native-state-coverage, ai-native-taste-anchors, interaction-mechanics]
+  shared-refs: [ai-native-design-framework, ai-native-state-coverage, ai-native-taste-anchors, interaction-mechanics, competitor-scan]
   recommended-model: core-execution  # 2026-07-10 Fable手术刀：整场收敛opus；本 skill 无 judge/oracle 环节
 ---
 
@@ -95,6 +95,8 @@ python3 .claude/observability/scripts/get_rules.py design-brief "*" 2>/dev/null 
 与未决项可追溯。focused 上游沿相同输入门，不靠短摘要跳过必需来源，也不重跑已答问题。
 B/C/D 读取实际现状和修改边界，现状缺失明确报告；C 继承已确认问题和改版方向。
 D/实际 Agent 功能保留可见、暂停、接管、撤销及授权门。场景影响范围而不明时才消歧。
+若能写出一个竞品证据可能改变的具体决定，且用户未给竞品/研究，按 [competitor-scan](../references/competitor-scan.md)
+用本轮入口句提议一次（附候选对象，可删改，拒绝即终局并记入来源索引）；产出是参考材料，不自动升 MUST。
 
 完成：成熟输入被继承，关键未知未伪装成事实；仅关键缺口需要真实用户回答。
 
