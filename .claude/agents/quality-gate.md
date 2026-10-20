@@ -228,7 +228,7 @@ Handoff 标题允许以下项目内常用变体：
 - 决策：`## 核心决策`、`## 决策`、`## 关键决策`
 - 约束：`## 下游约束`、`## 核心约束`、`## 执行约束`、`## 约束`
 
-#### 前端产出检查（html-prototype, open-design, figma-demo, motion-polish, prototype-notes）
+#### 前端产出检查（open-design, figma-demo, motion-polish, prototype-notes）
 
 **processor-aware PREACCEPT（接受前候选）：** 调用方独立按 common `MR-004` 派发，提供 exact
 `candidate_ref{path,sha256}`、verified delivery root、源期望、预冻结完整 required behavior set
@@ -329,9 +329,9 @@ brainstorm Standard+ 被否定方向 ≥1，AI Native 时含 ≥1 条 AI 层拒�
 文档阶段核状态与转换是否可执行、是否覆盖原要求；这只证明规格完整。
 宣称实际行为通过时必须有真实操作证据，未观察的行为标 UNKNOWN，静态截图不代转换验证。
 
-#### Brief 合规检查（html-prototype, open-design, figma-demo —— 参考 Ruflo ADR Compliance）
+#### Brief 合规检查（open-design, figma-demo —— 参考 Ruflo ADR Compliance）
 
-**触发条件：** 当前 skill 是 html-prototype、open-design 或 figma-demo，且上游有 design-brief 的 handoff summary。
+**触发条件：** 当前 skill 是 open-design 或 figma-demo，且上游有 design-brief 的 handoff summary。
 OD 回收的真实原型同样适用；仅导出/置入材料时执行下面的材料阶段合同。
 
 | 维度 | 检查内容 | 判定标准 |

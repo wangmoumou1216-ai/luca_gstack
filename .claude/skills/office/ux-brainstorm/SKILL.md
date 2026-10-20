@@ -217,7 +217,7 @@ full 信号混合时选**更高**级别。focused 按实际任务覆盖选择规
 - **有ux-research报告**：从报告文件名或主题提取 `slug`，但不写回研究报告所在目录
 - **冷启动**：从用户设计问题中提取 `slug`
 
-固定写入 `docs/decisions/` 是强制约定，因为下游 `design-brief` 和 `html-prototype`
+固定写入 `docs/decisions/` 是强制约定，因为下游 `design-brief`
 会从该目录发现设计决策文档。
 
 Slug规则：小写、连字符分隔、去非字母数字、最长50字符。

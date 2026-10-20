@@ -287,3 +287,12 @@ Oracle/handoff 段；交接第 2 步的 stale hash / 缺恢复阻断演练。
 - 修复：只改两行 CSS（布局选择器 `.main` 误伤了 class 为 `card main` 的卡片；手机顶栏改为吸顶），约 8.1 万 token、不到 2 分钟。
 - 独立复测（新评审实例，盲评编号 hfix01）：**两处目标问题均确认修复**；T1–T7 回归全部通过；但 T8 仍判部分，理由是新发现的两处问题——每次点击整页重绘导致键盘焦点回到页面顶部、手机端"更多""重试"点击区偏小（20/24px）。第一次盲评没有报这两处。
 - 结论：回路有效且便宜，修什么就能修好什么；**但不同评审实例看到的缺陷范围不同，一轮修复不能保证全过**，通常需要预留第二轮。T 仍为 7/1/0/0。
+
+### 9.2 退役 html-prototype / magicpath 的执行记录（2026-10-20）
+
+- 依据：用户“批准B，四点都同意，开始执行”，计划见 `framework-audit/plans/2026-10-20-retire-html-prototype-magicpath-plan.md`。
+- 与批准内容的偏差（已征得用户同意）：计划写“不删目录”，但框架的墓碑机制要求已登记的 skill 不能再有目录（`check-agent-context` 报 `retired skill remains active`）。用户改选“删目录，完整退役”；回滚点为本地 tag `pre-retire-html-prototype-magicpath`（指向迁移提交 63ee211）。
+- 先于退役完成的提交：Step 0（研究默认值与指引哈希，64a3e13）、共享资产迁移（63ee211：SCHEMA 与验收脚本搬到中性路径）。
+- 独立评审（冷启动、串行、默认推翻）：契约评审首轮 FAIL（1 个 BLOCKER：`test-design-tool-routing.mjs` 有一条失效断言且不在任何 gate，所以全量 verify 假绿；M1 生成侧 slop 防火墙无人承接；M2 取消的能力未披露；M3 冻结 live-run 提案失效未登记）。均已修复并复核为 PASS_WITH_FIXES；运行时评审 PASS（路由、验收脚本、变异、生成物、残留引用、跨宿主均实跑）。
+- 已知遗留（不阻塞）：`scripts/fixtures/agent-orchestration-cases.json` 仍含 12 个 html-prototype 用例（与计划哈希绑定，需新 plan 重冻）；`memory/evals/matt-adaptation/method-coverage.json` M09 的 owner 仍是 U008 html-prototype；`memory/evals/routing/fixtures.jsonl` 的 `sem-ux-novel` 仍是旧语义标签；验收脚本里 QA 模式名仍叫 `html-prototype`（只是模式标签）；`~/.codex/skills/magicpath`（用户级，未触碰）。
+- 评审局限：评审者是 AI 代理，不是人类专家；两个评审员各自覆盖契约与运行时，没有第三方复核。

@@ -11,24 +11,21 @@ const graph = readAuthority(root, '.claude/skill-os/optional-workflow-graph.yaml
 function verifySelectionGate(value) {
   assert.equal(value.primary, 'design-output', 'keep the thin selection entry');
   assert.deepEqual(value.adapters, ['open-design', 'claude-design']);
-  assert.deepEqual(value.fallback, ['magicpath', 'html-prototype'], 'keep independent local capabilities');
+  assert.deepEqual(value.fallback, [], 'no third design-output exit');
   assert.equal(value.requires_explicit_tool_choice, true, 'explicit tool choice is required');
-  assert.deepEqual(value.fallback_trigger, [
-    'user requests local html',
-    'user explicitly selects magicpath',
-    'user approves named fallback in execution plan',
-  ], 'only actual user choice authorizes cross-tool fallback');
+  assert.equal(value.fallback_trigger, undefined, 'no cross-tool fallback trigger remains');
   assert.equal(value.od_headless_unavailable.degrade_target, 'open-design-desktop-generate',
     'headless recovery stays in OD');
 }
 verifySelectionGate(graph);
-console.log('PASS OD/CD selection entry, user-selected alternatives, same-tool desktop recovery');
+console.log('PASS OD/CD selection entry, no third exit, same-tool desktop recovery');
 
 const route = readFileSync(join(root, '.claude/skill-os/routing-chain-check.md'), 'utf8');
 const plan = readFileSync(join(root, '.claude/agents/plan-agent.md'), 'utf8');
 const designGuidance = readFileSync(join(root, '.claude/agents/references/plan-design-guidance.md'), 'utf8');
 const orchestrator = readFileSync(join(root, '.claude/agents/orchestrator.md'), 'utf8');
-assert.match(route, /已批准包含该具名备用工具的执行计划/);
+assert.match(route, /没有第三个出口/, 'routing chain must state there is no third design exit');
+assert.doesNotMatch(route, /具名备用工具/, 'routing chain must not keep a named fallback tool');
 assert.match(plan, /plan-design-guidance\.md/, 'Plan must expose the current one-hop design owner');
 assert.match(designGuidance, /failure does not\s+grant permission to switch tools/);
 assert.match(orchestrator, /故障不自动授予换工具权/);
@@ -68,10 +65,10 @@ for (const [label, before, after] of [
 console.log('PASS mature entry, template discovery and flow-choice contracts (static, not native behaviour)');
 
 for (const [name, mutate, message] of [
-  ['fault grants tool switch', (value) => value.fallback_trigger.push('open-design daemon unreachable'), /actual user choice/],
+  ['fault grants tool switch', (value) => { value.fallback_trigger = ['open-design daemon unreachable']; }, /no cross-tool fallback/],
   ['choice guard removed', (value) => delete value.requires_explicit_tool_choice, /explicit tool choice/],
   ['headless silently switches tool', (value) => { value.od_headless_unavailable.degrade_target = 'html-prototype'; }, /recovery stays in OD/],
-  ['independent capability removed', (value) => { value.fallback = ['magicpath']; }, /independent local capabilities/],
+  ['third exit added', (value) => { value.fallback = ['magicpath']; }, /no third design-output exit/],
 ]) {
   const changed = structuredClone(graph);
   mutate(changed);
@@ -102,7 +99,10 @@ try {
   assert.equal(resumed.status, 'SELECTED'); assert.equal(resumed.question, undefined);
   assert.deepEqual(resumed, selected);
   assert.throws(() => resolveDesignOutput({ packet, task, selection: selected.selection, choice: { tool: 'open-design', source_ref: 'test-user-turn:change' } }), /CONFLICT_RETURN_BRIEF/);
-  for (const tool of ['open-design', 'claude-design', 'html-prototype', 'magicpath']) {
+  for (const tool of ['html-prototype', 'magicpath']) {
+    assert.throws(() => resolveDesignOutput({ packet: { ...packet, tool, choice_source_ref: 'test-user-turn:existing' }, task }), /UNKNOWN_DESIGN_TOOL/, `${tool} is no longer a design tool`);
+  }
+  for (const tool of ['open-design', 'claude-design']) {
     const bound = { ...packet, tool, choice_source_ref: 'test-user-turn:existing' };
     assert.equal(resolveDesignOutput({ packet: bound, task }).tool, tool);
     assert.throws(() => resolveDesignOutput({ packet: bound, task, choice: { tool: tool === 'open-design' ? 'claude-design' : 'open-design', source_ref: 'test-user-turn:conflict' } }), /FROZEN_TOOL_CONFLICT_RETURN_BRIEF/);

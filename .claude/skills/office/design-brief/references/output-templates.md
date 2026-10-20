@@ -85,7 +85,7 @@
 ## Design Generation Packet（原属 Phase 6.75 Step 1）
 
 ```markdown
-## Design Generation Packet（冻结后给 MagicPath / Open Design / Claude Design / HTML 生成器）
+## Design Generation Packet（冻结后给 Open Design / Claude Design 生成器）
 
 > **唯一需求事实源：** 本块只包含来自 design-brief 正文的需求、AC、D-series、STATE、语义位置和
 > 修改/保留边界。通过 Packet 门禁后按原字节冻结；后续的 `source_packet_sha256` 指向此版本。
@@ -209,7 +209,7 @@ reference_only若运输实际结构化Packet，原型附件source_ids也必须�
 - 12 状态的覆盖策略（包含 AI 专有状态）
 - Agent 的授权边界（仅场景 D）
 
-**下游 MagicPath / Open Design / Claude Design / HTML 生成器需要知道：**
+**下游 Open Design / Claude Design 生成器需要知道：**
 - 主输入是本文件的 `Design Generation Packet`
 - 设计范围（来自实际设计源）；entry/delivery_mode/coverage_scope 与精确来源索引
 - 原型保持/生成工具自由度/模板适配旁车与关键未决项；无PRD时工程交付限制
@@ -217,7 +217,7 @@ reference_only若运输实际结构化Packet，原型附件source_ids也必须�
 - 状态覆盖策略、页面与交互位置映射路径、确认参考或 reference=none
 - Packet 已冻结；`CandidateHint` 不是 Packet 字段或最终模板 binding。carrier 仅在最终 adoption + TAC/hash 确认后存在，否则是 `reference_only`
 - `structural_carrier` 不继承视觉；`visual_carrier` 只有同时具备 viewport、基线和差异阈值时才可用
-- **AI 专有状态的 UI 形式** — 本 skill 的状态覆盖表共 12 项，其中 AI 专有 7 项（思考中 / 低置信 / 拒答 / 部分完成 / 待 Steer / 幻觉兜底 / Agent 执行中）。**html-prototype 默认只处理前 5 项（默认/空/加载/错误/成功），若本决策含 AI 功能，必须额外生成所有非 N/A 的 AI 专有状态。**
+- **AI 专有状态的 UI 形式** — 本 skill 的状态覆盖表共 12 项，其中 AI 专有 7 项（思考中 / 低置信 / 拒答 / 部分完成 / 待 Steer / 幻觉兜底 / Agent 执行中）。**生成器默认只处理前 5 项（默认/空/加载/错误/成功），若本决策含 AI 功能，必须额外生成所有非 N/A 的 AI 专有状态。**
 
 **下游工具不应该做：**
 - 不应重新设计已锁定的信息架构

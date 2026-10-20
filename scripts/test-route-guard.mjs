@@ -280,19 +280,19 @@ const cases = [
     },
   },
   {
-    name: 'html prototype routes explicitly',
+    name: 'html prototype wording routes to design-brief (html-prototype retired 2026-10-20)',
     prompt: '生成 HTML 原型',
     expect: decision => {
       assert.equal(decision.decision, 'SINGLE_SKILL');
-      assert.equal(decision.skill, '/html-prototype');
+      assert.equal(decision.skill, '/design-brief');
     },
   },
   {
-    name: '2026-07-03: figma prototype wording — magicpath demoted, /html-prototype now wins alone (no more multi-candidate)',
+    name: '2026-07-03: figma prototype wording — /html-prototype retired 2026-10-20, design-brief wins alone',
     prompt: '做一个 Figma 原型界面',
     expect: decision => {
       assert.equal(decision.decision, 'SINGLE_SKILL');
-      assert.equal(decision.skill, '/html-prototype');
+      assert.equal(decision.skill, '/design-brief');
     },
   },
   {
@@ -398,12 +398,12 @@ const cases = [
     },
   },
   {
-    name: 'G3 反例: 继续做个原型 (含实义任务词) → 照常路由 /html-prototype',
+    name: 'G3 反例: 继续做个原型 (含实义任务词) → 照常路由 /design-brief',
     prompt: '继续做个原型',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
     expect: decision => {
       assert.equal(decision.decision, 'SINGLE_SKILL');
-      assert.equal(decision.skill, '/html-prototype');
+      assert.equal(decision.skill, '/design-brief');
     },
   },
   {
@@ -412,7 +412,7 @@ const cases = [
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },
     expect: decision => {
       assert.equal(decision.decision, 'SINGLE_SKILL');
-      assert.equal(decision.skill, '/html-prototype');
+      assert.equal(decision.skill, '/design-brief');
     },
   },
   {

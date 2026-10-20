@@ -47,7 +47,6 @@ TABLE = {
     "insight-synthesis": (None,                                    [f"{D}/research/insight-synthesis-*.md"], "unobservable"),
     "ux-writing":     ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/decisions/*-voice-copy-spec.md",
                                                                     f"{D}/evaluation/*ux-writing*.md"], "weak"),
-    "html-prototype": ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/prototype-spec.md"], "weak"),
     "open-design":    ([f"{D}/decisions/*-design-brief.md"],       [f"{D}/prototype/*/index.html"], "weak"),
     "motion-polish":  ([f"{D}/prototype/*/index.html"],            [f"{D}/handoff/*-motion-polish-handoff.md"], "weak"),
     "design-output":  (None,                                    [], "unobservable"),

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source_sha256": "108d84e009f327c088a11eca07076ad27813f671259d8559431855b88b1a11a0",
+  "source_sha256": "0514234988ad40c9f9100b93113bba24aca93bdc3a6eafa0aa2f4ab8d42de1cc",
   "skill": "ux-writing",
   "group": "skills",
   "global": {
@@ -32,6 +32,6 @@
       "semantic_verbatim_layer_split",
       "verbatim_never_enters_packet"
     ],
-    "notes": "内容与语言设计，双相位：相位1 语义规范 pre-brief（产 voice-copy-spec，design-brief Step 1.0b 继承）；相位2 评审改写 standalone。逐字层仅 html-prototype 本地路径，永不进 OD 编译。"
+    "notes": "内容与语言设计，双相位：相位1 语义规范 pre-brief（产 voice-copy-spec，design-brief Step 1.0b 继承）；相位2 评审改写 standalone。逐字层不进 OD 编译。"
   }
 }

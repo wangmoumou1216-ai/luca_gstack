@@ -24,10 +24,10 @@ function route(prompt) {
   return JSON.parse(result.stdout);
 }
 
-function assertNotDispatched(result, prompt) {
+function assertNotDispatched(result, prompt, name = retired) {
   const choices = [result.skill, ...(result.candidates || []), ...(result.recommendedSkills || []),
     ...(result.softCandidates || []).map(item => item.skill)];
-  assert.ok(!choices.some(value => String(value).replace(/^\$/, '/').toLowerCase() === retired),
+  assert.ok(!choices.some(value => String(value).replace(/^\$/, '/').toLowerCase() === name),
     `retired skill dispatched for ${prompt}: ${JSON.stringify(result)}`);
 }
 
@@ -42,7 +42,15 @@ function verifyRoutes() {
   for (const prompt of ['保险层', 'figma保险层', '推到figma', '同步到Figma', '还原到figma', 'figma保险']) {
     assertNotDispatched(route(prompt), prompt);
   }
-  for (const name of ['html-prototype', 'magicpath', 'figma-demo', 'muse-req-triage', 'muse-proto-judge',
+  for (const name of ['html-prototype', 'magicpath']) {
+    for (const prompt of [`/${name}`, `$${name}`, `/${name.toUpperCase()}`, `/${name} 开始`]) {
+      const result = route(prompt);
+      assertNotDispatched(result, prompt, `/${name}`);
+      assert.equal(result.decision, 'STOP', `retired ${name} must stop: ${prompt}`);
+      assert.equal(result.reason, 'retired_skill', `retirement must be explicit: ${prompt}`);
+    }
+  }
+  for (const name of ['figma-demo', 'muse-req-triage', 'muse-proto-judge',
     'open-design', 'brainstorm', 'tech-spec', 'task-plan', 'custom-existing-skill', 'figma-layer-helper']) {
     for (const prefix of ['/', '$']) {
       const result = route(`${prefix}${name}`);
@@ -58,14 +66,17 @@ function verifyGraph() {
   const scenes = readAuthority(root, `${graphPath}#scenes`);
   for (const scene of ['A', 'B', 'C', 'D']) {
     assert.ok(scenes[scene].recommended_paths.some(path => path.includes('design-output')), `${scene}: design-output path retained`);
-    for (const tool of ['html-prototype', 'magicpath']) {
-      assert.ok(scenes[scene].fallback_paths.some(path => path.includes(tool)), `${scene}: independent ${tool} path retained`);
+    for (const key of ['recommended_paths', 'fallback_paths']) {
+      assert.ok(!(scenes[scene][key] || []).some(path => path.includes('html-prototype') || path.includes('magicpath')),
+        `${scene}: retired tool in ${key}`);
     }
   }
   const output = readAuthority(root, `${graphPath}#design_output`);
   assert.deepEqual(output.adapters, ['open-design', 'claude-design']);
+  assert.deepEqual(output.fallback, [], 'no third design-output exit');
   const gates = readAuthority(root, `${graphPath}#handoff_gates`);
-  for (const name of ['design_brief_to_open_design', 'design_brief_to_html', 'design_brief_to_magicpath']) {
+  assert.ok(!('design_brief_to_html' in gates) && !('design_brief_to_magicpath' in gates), 'retired tool gates must be removed');
+  for (const name of ['design_brief_to_open_design']) {
     for (const clause of ['design_generation_packet missing', 'tool_consumption_contract missing',
       'packet contains facts absent from design_brief', 'page_interaction_mapping missing',
       'decision_cards missing required fields', 'traceability_matrix missing', 'traceability_gate != PASS',

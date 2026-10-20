@@ -21,7 +21,7 @@ if (evidencePath && !isAbsolute(evidencePath)) throw new Error('--evidence requi
 
 const surfaces = [
   ['.claude/agents/plan-agent.md', 4],
-  ['.claude/agents/references/plan-design-guidance.md', 1],
+  ['.claude/agents/references/plan-design-guidance.md', 0],
   ['.claude/agents/references/plan-assertion-examples.md', 16],
 ];
 const quote = value => `'${value.replaceAll("'", "'\\''")}'`;

@@ -50,7 +50,7 @@ t('plan-agent 含 open-design（设计产出路由）', plan.includes('open-desi
 t('plan-agent 设计产出首选非 MagicPath', !/默认使用 MagicPath/.test(plan));
 t('preflight 检查表含 open-design 行', /\|\s*`open-design`/.test(pre));
 t('quality-gate 前端产出检查含 open-design', /前端产出检查（[^）]*open-design/.test(qg));
-t('quality-gate Brief 合规触发含 open-design', /html-prototype、open-design 或 figma-demo/.test(qg));
+t('quality-gate Brief 合规触发含 open-design', /open-design 或 figma-demo/.test(qg));
 t('已有 HTML refinement 有独立 preflight 行', /\|\s*`motion-polish`/.test(pre));
 t('motion 前端 facet 是接受前 exact candidate 验证', /前端产出检查（[^）]*motion-polish/.test(qg)
   && qg.includes('PREACCEPT') && /candidate-check --subject <candidate_ref.path> --sha256 <candidate_ref.sha256>/.test(qg));
@@ -207,7 +207,7 @@ t('QG 坏输入先拒绝且原分母不缩', qg.includes('DONE 却有 required s
 t('QG 当前产物与票绑定，最终仍跑断言', qg.includes('同 phase 换产物不能复用旧票') && qg.includes('已有 Phase 票不免最终全断言验证'));
 
 // AOR-01: each finite completion entry must explicitly replace its local write.
-const managedSkills = ['idea','challenge','evals','retro','redteam','ux-audit','html-prototype','figma-demo','open-design','design-brief','deepresearch','ux-research','ux-brainstorm','prototype-notes'];
+const managedSkills = ['idea','challenge','evals','retro','redteam','ux-audit','figma-demo','open-design','design-brief','deepresearch','ux-research','ux-brainstorm','prototype-notes'];
 for (const skill of managedSkills) {
   const body = read(`.claude/skills/office/${skill}/SKILL.md`);
   t(`${skill} 局部完成接口受管回交`, body.includes('completion_owner') && body.includes('回交') && body.includes('受管节点提交'));

@@ -308,9 +308,7 @@ Step 7  记录 eval（每个 skill 各记一条）
 | `claude-design` | `.claude/skills/office/claude-design/SKILL.md` |
 | `open-design` | `.claude/skills/office/open-design/SKILL.md` |
 | `motion-polish` | `.claude/skills/office/motion-polish/SKILL.md` |
-| `html-prototype` | `.claude/skills/office/html-prototype/SKILL.md` |
 | `figma-demo` | `.claude/skills/office/figma-demo/SKILL.md` |
-| `magicpath` | `.claude/skills/office/magicpath/SKILL.md` |
 | `task-plan` | `.claude/skills/office/task-plan/SKILL.md` |
 | `tech-spec` | `.claude/skills/office/tech-spec/SKILL.md` |
 | `ux-audit` | `.claude/skills/office/ux-audit/SKILL.md` |
@@ -361,8 +359,8 @@ Step 7  记录 eval（每个 skill 各记一条）
 在节点派发/写 state 前把入口替换成实际 `open-design` 或 `claude-design` 节点，
 不建立 design-output DONE/handoff；completion_owner=Orchestrator，验收后 adapter 一次提交。
 历史 OD 调用/节点保持，不迁移为 CD；CD 缺可信宿主/处理能力时停门，零发送、人工生成。
-`magicpath` / `html-prototype` 是独立备选能力，按 `design_output.fallback_trigger` 的真实用户选择
-或已批准的具名备用计划调用；故障不自动授予换工具权。OD 同项目桌面恢复不属于跨工具切换。
+OD / CD 是仅有的两个出口，没有第三个；两者都不可用时返回 NEEDS_CONTEXT，不自动换工具，故障不自动授予换工具权。
+OD 同项目桌面恢复不属于跨工具切换。
 
 ### 3.2 启动流程
 
@@ -405,8 +403,8 @@ Scene D            → 全量路径（Agent化本身是高复杂度）
 
 本节场景复杂度建议不能覆盖 §3.2 已选路径或就绪设计入口；Brief 仍执行全部质量门，
 短路径仅省去不适用的上游，不省略状态、来源、模板冲突、冻结或最终采用。
-各 scene 的 `fallback_paths` 只供用户明确改选或已批准具名备用计划时使用；
-OD daemon 不可达而无该授权时暂停，报告连接问题，不自动 dispatch 其他生成器。
+设计出口只有 OD 与 CD，没有 `fallback_paths`；
+OD daemon 不可达时暂停，报告连接问题，不自动 dispatch 其他生成器。
 
 ### 3.4 Skill 执行循环
 
@@ -447,7 +445,7 @@ WHILE 本次选定路径有 IN_PROGRESS 或 PENDING 节点:
         - FAIL/UNKNOWN 保持 IN_PROGRESS，按 §2.2 返修；已有产物不重跑外部效果
         - 完成后观察提取（同 2c-obs 三条检查），才允许后继消费
 
-  3.4e  human-in-the-loop 检查点：brainstorm / ux-brainstorm / design-brief / html-prototype
+  3.4e  human-in-the-loop 检查点：brainstorm / ux-brainstorm / design-brief
         有未决方案、范围或采用决定时等待真实确认；已确认事实/所选工具/后续授权直接继承。
         Brief 完成不产生新的执行授权；同一已授权链可以继续，但最终 bundle/TAC采用、
         未决产品决定及新 effect 的 Human Gate 保持，不能以“自动”绕过。

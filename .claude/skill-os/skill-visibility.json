@@ -1,18 +1,21 @@
 {
   "version": 2,
-  "visible_additions": ["office"],
+  "visible_additions": [
+    "office"
+  ],
   "hidden": [
     "careful",
     "challenge",
     "compare",
     "evals",
     "figma-demo",
-    "magicpath",
     "muse-x-digest",
     "redteam",
     "retro"
   ],
-  "internal": ["references"],
+  "internal": [
+    "references"
+  ],
   "retired": [
     {
       "name": "figma-layer",
@@ -34,6 +37,20 @@
       "replacement": null,
       "decision_id": "RET-20260920-002",
       "boundary": "The Muse Loop-only prototype generator is retired. Refuse its invocation; do not automatically select another generator. Independent design tools retain their own user-selection and quality gates."
+    },
+    {
+      "name": "html-prototype",
+      "status": "retired-unavailable",
+      "replacement": "open-design",
+      "decision_id": "RET-20261020-001",
+      "boundary": "The local HTML prototype generator is retired from the design flow. Refuse its invocation; do not automatically select another generator. Design output goes through open-design or claude-design by the user's choice. The independent acceptance script now lives under design-output/scripts/ and the shared tokens reference stays in references/."
+    },
+    {
+      "name": "magicpath",
+      "status": "retired-unavailable",
+      "replacement": "open-design",
+      "decision_id": "RET-20261020-002",
+      "boundary": "The MagicPath React prototype entry is retired from the design flow. Refuse its invocation; do not automatically select another generator. This neither verifies nor disables a user-level MagicPath plugin installed outside this repository."
     }
   ]
 }

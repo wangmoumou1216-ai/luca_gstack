@@ -24,7 +24,7 @@ REPO = pathlib.Path(__file__).resolve().parent.parent
 SKILLS = REPO / '.claude' / 'skills' / 'office'
 WRITER = SKILLS / 'references' / 'write_state.py'
 CALLER_NAMES = ('idea', 'challenge', 'retro', 'figma-demo', 'evals', 'open-design',
-                'html-prototype', 'redteam', 'ux-audit')
+                'redteam', 'ux-audit')
 TRACE = []
 CURRENT_CASE = ''
 
@@ -467,7 +467,7 @@ def prepare_caller(fixture, name, with_node=True, score='85'):
             state['nodes']['ux-audit'] = {'status': 'PENDING', 'output': 'old.md', 'custom_node': 'kept'}
             fixture.state.write_text(yaml.safe_dump(state, allow_unicode=True))
     date = time.strftime('%Y-%m-%d')
-    if name in ('figma-demo', 'html-prototype', 'open-design'):
+    if name in ('figma-demo', 'open-design'):
         relative = f'docs/prototype/{date}-t/index.html'
     else:
         directory = {'idea': 'idea', 'challenge': 'prd', 'retro': 'retro', 'evals': 'evals',

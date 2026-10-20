@@ -1,6 +1,6 @@
 # AI 专有状态清单
 
-> 共享 reference。直接消费者 = /design-brief（shared-refs 声明）；/html-prototype 经 html-prototype-tokens 间接触达。真值源以各 skill frontmatter 的 shared-refs 为准。
+> 共享 reference。直接消费者 = /design-brief（shared-refs 声明）；生成工具经 html-prototype-tokens（共享文件，原名保留）间接触达。真值源以各 skill frontmatter 的 shared-refs 为准。
 > 状态语义跨设计系统保持；颜色、字号、控件样式由当前项目/外部设计系统决定，视觉降权仍须满足文字可读性。
 > 传统的"默认/空/加载/错误/成功"不够用于 AI 功能。本文件定义 AI 专有的 7 个状态。
 
@@ -195,8 +195,8 @@ AI 专有 7 个）：
 
 ## 与下游 SKILL 的契约
 
-`/html-prototype` 读取 `/design-brief` 产出的"状态覆盖表"并为每个非 N/A
-的状态生成对应的 UI。本文件扩展的 7 个 AI 状态在 html-prototype 场景 A/B
+所选生成工具（open-design / claude-design）读取 `/design-brief` 冻结的"状态覆盖表"并为每个非 N/A
+的状态生成对应的 UI。本文件扩展的 7 个 AI 状态在场景 A/B
 的全量状态产出要求中生效。
 
 `redteam`（target 为设计决策文档或原型时）对照本清单检查：是否所有非 N/A 的状态都在原型里有对应实现。

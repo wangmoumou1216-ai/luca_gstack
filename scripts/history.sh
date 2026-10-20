@@ -9,7 +9,7 @@ if [ -z "$SKILL" ]; then
   echo "示例: bash scripts/history.sh brainstorm"
   echo ""
   echo "支持的 skill: brainstorm, deepresearch, ux-research, ux-brainstorm,"
-  echo "              design-brief, html-prototype, tech-spec, task-plan,"
+  echo "              design-brief, tech-spec, task-plan,"
   echo "              ux-audit, figma-demo, figma-layer"
   exit 1
 fi
@@ -53,10 +53,6 @@ case "$SKILL" in
   design-brief)
     FILES=$(ls -t docs/decisions/*design-brief*.md 2>/dev/null || true)
     LABEL="设计文档"
-    ;;
-  html-prototype)
-    FILES=$(find docs/prototype -name "index.html" 2>/dev/null | sort -r || true)
-    LABEL="HTML 原型"
     ;;
   tech-spec)
     FILES=$(ls -t docs/engineering/*tech-spec*.md 2>/dev/null || true)

@@ -7,7 +7,7 @@ description: |
   界面文案评审与改写——PRD 之后设计段的**内容维度方法论节点**，产规范文档不产 HTML。
   **Defining constraint：双相位——相位1「语义规范」跑在 design-brief 之前（产 voice-copy-spec，
   brief 继承其结论落正文，Packet 因此可追溯）；相位2「逐字与评审」在 brief 之后或 standalone
-  （逐字文案只喂 html-prototype 本地路径，永不进 OD 编译——逐字文案是 OD 生成期的自由度）。**
+  （逐字文案永不进 OD 编译——逐字文案是 OD 生成期的自由度；仅供人工执笔与评审使用）。**
   与 ux-audit 划界：audit 按启发式**检出**文案问题，本 skill 产语言**系统规范与改写**；
   与 design-brief 划界：不并列产同类文档——brief 有上游 voice-spec 则继承不重做，无则用其内联规则兜底。
   源：蒸馏自 Owl-Listener/designer-skills（MIT）ux-writing + 本框架既有文案碎片收拢。
@@ -36,7 +36,6 @@ python3 .claude/observability/scripts/get_rules.py ux-writing "*" 2>/dev/null ||
 |---|---|
 | ux-audit | 启发式**检出**文案问题（module-a A5 / module-b H2·H9）→ 文案类 P0/P1 多时转介本 skill |
 | design-brief | 消费相位 1 产出（Step 1.0b 继承 voice-spec 语义结论落 brief 正文）；无上游时用自己的内联规则 |
-| html-prototype | 消费「逐字层」（本地生成真实文案时逐字执行） |
 | open-design | **不直接消费本 skill 任何产出**——语义结论只经 brief 正文进 Packet；逐字文案是 OD 的自由度 |
 
 **使用节奏天然低频**：内容规范是阶段性工作，定完一版可管很久；逐字层评审又依附于真实界面产出。**长期零使用属预期，非降级信号**（对应 CLAUDE.md「使用即留任原则」豁免①）。
@@ -61,7 +60,7 @@ python3 .claude/observability/scripts/get_rules.py ux-writing "*" 2>/dev/null ||
    - **「语义层结论」**：本产品的内容语义决策——错误三要素怎么落、空态引导策略、hedging 语气线、
      语域与术语表、tone 随场景的调法。每条以「必须达成什么」句式写（design-brief 将逐条继承）。
    - **「逐字层规范」**：CTA 公式、错误/空态/确认文案模板的**本产品实例**、措辞黑名单
-     （标注：仅 html-prototype 本地路径与人工执笔用，不进 Packet/OD）。
+     （标注：仅人工执笔与评审用，不进 Packet/OD）。
 4. 落盘 `docs/decisions/YYYY-MM-DD-<topic>-voice-copy-spec.md`（同日重跑加 `-001` 序号）。
 
 ### 相位 2：评审改写（standalone）

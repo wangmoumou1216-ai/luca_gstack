@@ -8,6 +8,7 @@ const content = readFileSync('.claude/skill-os/skill-routing-map.yaml', 'utf8');
 const claudeMd = readFileSync('CLAUDE.md', 'utf8');
 const agentsMd = readFileSync('AGENTS.md', 'utf8');
 const visibility = JSON.parse(readFileSync('.claude/skill-os/skill-visibility.json', 'utf8'));
+// /html-prototype retired 2026-10-20 (RET-20261020-001); its original-requirement entry now routes to /design-brief.
 // /compare, magicpath, /figma-demo removed 2026-07-03 (full-review P2-6): demoted to
 // hidden skills (zero episodic use in 30 days) — no longer required project_skills.
 const requiredInvokes = [
@@ -20,11 +21,11 @@ const requiredInvokes = [
   '/ux-audit',
   '/ux-brainstorm',
   '/design-brief',
-  '/html-prototype',
   '/tech-spec',
   '/task-plan',
 ];
 
+assert.ok(!content.includes('invoke: "/html-prototype"'), '/html-prototype is retired and must have no route');
 for (const invoke of requiredInvokes) {
   assert.match(content, new RegExp(`invoke:\\s+"?${invoke.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"?`), `missing invoke ${invoke}`);
 }

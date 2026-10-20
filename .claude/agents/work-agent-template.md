@@ -27,7 +27,7 @@
 | `{{OUTPUT_FORMAT_SPEC}}` | 输出格式规范 | `Shell 脚本，set -euo pipefail` |
 | `{{PROTECTED_PATHS}}` | 不得修改的路径（无限制则填"无"） | `framework/、CLAUDE.md` |
 | `{{DONE_CRITERIA}}` | Done Criteria 断言（checkbox 格式） | `- [ ] scripts/verify.sh 存在` |
-| `{{AVAILABLE_SKILL_PATHS}}` | 可调用的 skill 路径列表（可选，无则省略） | `- .claude/skills/office/html-prototype/SKILL.md` |
+| `{{AVAILABLE_SKILL_PATHS}}` | 可调用的 skill 路径列表（可选，无则省略） | `- .claude/skills/office/design-brief/SKILL.md` |
 | `{{SKILL_TO_EXECUTE}}` | skill 名称（`skill_execution` 模式必填） | `deepresearch` |
 | `{{SKILL_PATH}}` | SKILL.md 完整路径（`skill_execution` 模式必填） | `.claude/skills/office/deepresearch/SKILL.md` |
 
@@ -92,7 +92,6 @@ Step 6  [Completion Report] 在既有 handoff/outputs 回交当前 artifact iden
 
 {{AVAILABLE_SKILL_PATHS}}
 <!-- 如果 Orchestrator 注入了 skill 路径，格式如下：
-- `.claude/skills/office/html-prototype/SKILL.md` — 生成 HTML 原型时调用
 - `.claude/skills/office/design-brief/SKILL.md` — 生成交互文档时调用
 如果没有注入，填写：无
 -->

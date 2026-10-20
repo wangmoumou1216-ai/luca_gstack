@@ -52,8 +52,8 @@ python3 .claude/observability/scripts/get_rules.py open-design "*" 2>/dev/null |
 > （=STAGED，不是生成）→ **已选 OD 的完整生成任务默认自动 headless** → 你说「拉回来」按 handoff ID 的指定 output root 回收」。
 > 自动模式采用 Phase 2 参数策略；实际 run 仍核当前准确授权。
 > 明确仅交接/stage 时止于 STAGED；明确桌面生成时继承。`original_copy` v1 仅 headless，不支持桌面恢复。
-> **人工判断后置**：落盘后展示即止，迭代你在 OD 桌面端自行做（回收/下游由你点名）。与 magicpath/html-prototype 关系：
-> 三者的独立能力保留；本 OD flow 不因 daemon 故障自动换工具。用户明确改选本地 HTML 或 MagicPath 时才转交。
+> **人工判断后置**：落盘后展示即止，迭代你在 OD 桌面端自行做（回收/下游由你点名）。设计出口只有 OD 与 Claude Design；
+> 本 OD flow 不因 daemon 故障自动换工具，两者都不可用时返回 NEEDS_CONTEXT。
 > **连接走 daemon HTTP（动态端口）；`od mcp` 已注册时也可用其工具，二选一即可。Codex 不因本 prose
 > 声称与 Claude 有 OD carrier parity：在各项 capability probe 提供本 harness 的证据前，Codex 对 carrier
 > stage/run/recover 必须拒绝或受控降级，不能执行或声称可达。**

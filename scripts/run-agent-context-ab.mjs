@@ -183,8 +183,8 @@ function g5UseBindings(bindings) {
 const G5_CODEX_CALIBRATION_PROFILE = 'CODEX_CALIBRATION_4_PARTIAL';
 const G5_CODEX_CALIBRATION_DECISION = 'APPROVED_CODEX_CALIBRATION_4_PARTIAL';
 const G5_PARTIAL_OUTCOME_CEILING = 'INCONCLUSIVE';
-const HTML_PROTOTYPE_SKILL = '.claude/skills/office/html-prototype/SKILL.md';
-const HTML_PROTOTYPE_INPUT_MODE = '.claude/skill-os/generated/input-modes/html-prototype.json';
+const FIXTURE_SKILL_SKILL = '.claude/skills/office/figma-demo/SKILL.md';
+const FIXTURE_SKILL_INPUT_MODE = '.claude/skill-os/generated/input-modes/figma-demo.json';
 const OPERATIONAL_FIELDS = [
   'id', 'obligation_ids', 'runtime', 'leading_words', 'condition', 'load_before',
   'target', 'contains', 'loader', 'read_to_end', 'fallback', 'truth_owner',
@@ -370,18 +370,18 @@ const fixtures = {
     isolatedRoot: true,
   },
   F10: {
-    request: 'I select $html-prototype for a future standalone local HTML prototype and supply a prototype_brief. After the required startup and contract reads, perform input preflight only; do not execute the skill. State whether framework/ may be edited, whether its template is required, whether standalone mode requires prototype_brief, whether the supplied brief satisfies that static required-input contract, and whether standalone selection activates the optional Workflow graph.',
+    request: 'I select $figma-demo for a future standalone Figma-flow demo and supply a spoken_or_written_flow. After the required startup and contract reads, perform input preflight only; do not execute the skill. State whether framework/ may be edited, whether its template is required, whether standalone mode requires spoken_or_written_flow, whether the supplied flow satisfies that static required-input contract, and whether standalone selection activates the optional Workflow graph.',
     claims: {
       framework_editable: { type: 'boolean', equals: false },
       framework_template_required: { type: 'boolean', equals: false },
-      standalone_requires_prototype_brief: { type: 'boolean', equals: true },
-      supplied_brief_satisfies_static_contract: { type: 'boolean', equals: true },
+      standalone_requires_flow_input: { type: 'boolean', equals: true },
+      supplied_flow_satisfies_static_contract: { type: 'boolean', equals: true },
       standalone_activates_graph: { type: 'boolean', equals: false },
     },
-    selectedInputModeKey: 'html-prototype',
+    selectedInputModeKey: 'figma-demo',
     candidateSourceTargets: [WORKFLOW_MODE],
-    targets: [SKILL_CATALOG, OFFICE_SKILL, HTML_PROTOTYPE_SKILL, WORKFLOW_MODE, HTML_PROTOTYPE_INPUT_MODE],
-    contractEdges: [[WORKFLOW_MODE, HTML_PROTOTYPE_INPUT_MODE]],
+    targets: [SKILL_CATALOG, OFFICE_SKILL, FIXTURE_SKILL_SKILL, WORKFLOW_MODE, FIXTURE_SKILL_INPUT_MODE],
+    contractEdges: [[WORKFLOW_MODE, FIXTURE_SKILL_INPUT_MODE]],
   },
   F11: {
     request: 'LUCA_APP=1. From the hot root/index contract, identify the focused context owner that must load before a later sidebar/page inspection. This turn does not inspect, open, navigate, or present app content, so do not load that cold owner yet.',
@@ -2993,10 +2993,10 @@ try:
     if set(groups["skills"]) & set(groups["governance_tools"]):
         raise ValueError("overlap")
     expected_keys = {
-        "auto", "handoff", "wait-what", "domain-modeling", "writing-for-agents", "magicpath",
+        "auto", "handoff", "wait-what", "domain-modeling", "writing-for-agents",
         "open-design", "motion-polish", "prototype-notes", "idea", "deepresearch", "quick-research", "brainstorm",
         "superpowers-brainstorming", "ux-research", "ux-brainstorm", "design-brief",
-        "html-prototype", "figma-demo", "claude-design", "design-output", "tech-spec", "task-plan", "grilling", "diagnosing-bugs",
+        "figma-demo", "claude-design", "design-output", "tech-spec", "task-plan", "grilling", "diagnosing-bugs",
         "resolving-merge-conflicts", "to-spec", "to-tickets", "wayfinder", "implement",
         "code-hygiene", "code-review", "codebase-design", "code-recon", "muse-req-triage",
         "insight-synthesis", "research-kit", "ux-writing", "compare", "ux-audit", "redteam",
@@ -7066,7 +7066,7 @@ if (selfTest) {
       if (id === 'F10') {
         const fallbackRoot = mkdtempSync(join(tmpdir(), `agent-context-f10-fallback-${traceKind}-`));
         try {
-          const selectedView = HTML_PROTOTYPE_INPUT_MODE;
+          const selectedView = FIXTURE_SKILL_INPUT_MODE;
           for (const path of [...new Set([ownProjectRoot, CONTEXT_MANIFEST,
             INPUT_MODE_SOURCE, ...otherTargets])]) {
             mkdirSync(dirname(join(fallbackRoot, path)), { recursive: true });
@@ -7920,14 +7920,14 @@ else {
   } finally { rmSync(edgeRoot, { recursive: true, force: true }); }
   const inputModeRoot = mkdtempSync(join(tmpdir(), 'agent-context-input-mode-'));
   try {
-    for (const path of [WORKFLOW_MODE, INPUT_MODE_SOURCE, HTML_PROTOTYPE_INPUT_MODE]) {
+    for (const path of [WORKFLOW_MODE, INPUT_MODE_SOURCE, FIXTURE_SKILL_INPUT_MODE]) {
       mkdirSync(dirname(join(inputModeRoot, path)), { recursive: true });
       cpSync(join(root, path), join(inputModeRoot, path));
     }
     const boundFixture = {
-      selectedInputModeKey: 'html-prototype',
-      targets: [HTML_PROTOTYPE_INPUT_MODE],
-      contractEdges: [[WORKFLOW_MODE, HTML_PROTOTYPE_INPUT_MODE]],
+      selectedInputModeKey: 'figma-demo',
+      targets: [FIXTURE_SKILL_INPUT_MODE],
+      contractEdges: [[WORKFLOW_MODE, FIXTURE_SKILL_INPUT_MODE]],
     };
     const admitInput = (fixture) => {
       const targets = new Set([WORKFLOW_MODE]);
@@ -7935,17 +7935,17 @@ else {
       return [...targets].sort();
     };
     assert.equal(selectedInputModeState(boundFixture, inputModeRoot).status, 'HEALTHY');
-    assert.deepEqual(admitInput(boundFixture), [HTML_PROTOTYPE_INPUT_MODE, WORKFLOW_MODE].sort());
+    assert.deepEqual(admitInput(boundFixture), [FIXTURE_SKILL_INPUT_MODE, WORKFLOW_MODE].sort());
     for (const fixture of [
       { ...boundFixture, selectedInputModeKey: undefined },
       { ...boundFixture, selectedInputModeKey: 'ux-writing' },
-      { ...boundFixture, selectedInputModeKey: '../html-prototype' },
+      { ...boundFixture, selectedInputModeKey: '../figma-demo' },
       { ...boundFixture, targets: ['.claude/skill-os/generated/input-modes/ux-writing.json'] },
-      { ...boundFixture, contractEdges: [[OFFICE_SKILL, HTML_PROTOTYPE_INPUT_MODE]] },
+      { ...boundFixture, contractEdges: [[OFFICE_SKILL, FIXTURE_SKILL_INPUT_MODE]] },
     ]) {
       assert.deepEqual(admitInput(fixture), [WORKFLOW_MODE], 'unsafe or mismatched selected-view binding was admitted');
     }
-    const viewPath = join(inputModeRoot, HTML_PROTOTYPE_INPUT_MODE);
+    const viewPath = join(inputModeRoot, FIXTURE_SKILL_INPUT_MODE);
     const healthyView = readFileSync(viewPath, 'utf8');
     for (const [name, mutated] of [
       ['duplicate JSON key', healthyView.replace('"schema_version": 1,', '"schema_version": 1,\n  "schema_version": 1,')],
@@ -7966,7 +7966,7 @@ else {
 
     const sourceText = readFileSync(join(inputModeRoot, INPUT_MODE_SOURCE), 'utf8');
     const staleTrace = [
-      { type: 'item.completed', command: `cat ${HTML_PROTOTYPE_INPUT_MODE}`, exit_code: 0,
+      { type: 'item.completed', command: `cat ${FIXTURE_SKILL_INPUT_MODE}`, exit_code: 0,
         output: readFileSync(viewPath, 'utf8') },
       { type: 'item.completed', command: `cat ${INPUT_MODE_SOURCE}`, exit_code: 0, output: sourceText },
     ];
@@ -7982,7 +7982,7 @@ else {
 
     writeFileSync(viewPath, healthyView);
     const arbitraryFailureThenSource = [
-      { type: 'item.completed', command: `cat ${HTML_PROTOTYPE_INPUT_MODE}`, exit_code: 1,
+      { type: 'item.completed', command: `cat ${FIXTURE_SKILL_INPUT_MODE}`, exit_code: 1,
         output: 'invalid offset' },
       { type: 'item.completed', command: `cat ${INPUT_MODE_SOURCE}`, exit_code: 0, output: sourceText },
     ];
@@ -7993,8 +7993,8 @@ else {
     const missingState = selectedInputModeState(boundFixture, inputModeRoot);
     assert.equal(missingState.status, 'MISSING');
     const missingThenSource = [
-      { type: 'item.completed', command: `cat ${HTML_PROTOTYPE_INPUT_MODE}`, exit_code: 1,
-        output: `cat: ${HTML_PROTOTYPE_INPUT_MODE}: No such file or directory` },
+      { type: 'item.completed', command: `cat ${FIXTURE_SKILL_INPUT_MODE}`, exit_code: 1,
+        output: `cat: ${FIXTURE_SKILL_INPUT_MODE}: No such file or directory` },
       { type: 'item.completed', command: `cat ${INPUT_MODE_SOURCE}`, exit_code: 0, output: sourceText },
     ];
     const missingRecovery = inputModeFallbackDecision(missingThenSource, boundFixture, missingState, inputModeRoot);
@@ -8007,7 +8007,7 @@ else {
       missingState, inputModeRoot).status, 'FAIL', 'non-ENOENT failure unlocked missing-view fallback');
     const sourcePath = join(inputModeRoot, INPUT_MODE_SOURCE);
     writeFileSync(sourcePath, sourceText.replace('governance_tools:\n',
-      'governance_tools:\n  html-prototype:\n    modes: {}\n'));
+      'governance_tools:\n  figma-demo:\n    modes: {}\n'));
     assert.equal(selectedInputModeState(boundFixture, inputModeRoot).status, 'INVALID',
       'missing view bypassed invalid source semantics');
     writeFileSync(sourcePath, sourceText);
@@ -8017,7 +8017,7 @@ else {
       selectedInputModeState(boundFixture, inputModeRoot), inputModeRoot).status, 'FAIL',
     'unproven stale claim unlocked source fallback');
     const partialViewThenSource = [
-      { type: 'item.completed', command: `head -n 1 ${HTML_PROTOTYPE_INPUT_MODE}`, exit_code: 0,
+      { type: 'item.completed', command: `head -n 1 ${FIXTURE_SKILL_INPUT_MODE}`, exit_code: 0,
         output: healthyView.split('\n')[0] },
       ...verbalStale,
     ];
@@ -8025,7 +8025,7 @@ else {
       selectedInputModeState(boundFixture, inputModeRoot), inputModeRoot).status, 'FAIL',
     'truncated healthy view unlocked source fallback');
     writeFileSync(sourcePath, sourceText.replace('governance_tools:\n',
-      'governance_tools:\n  html-prototype:\n    modes: {}\n'));
+      'governance_tools:\n  figma-demo:\n    modes: {}\n'));
     assert.equal(selectedInputModeState(boundFixture, inputModeRoot).status, 'INVALID',
       'cross-group duplicate source key remained scoreable');
     writeFileSync(sourcePath, `${sourceText}\nunapproved_global: true\n`);
@@ -8221,7 +8221,7 @@ else {
   assert.equal(claimsMatch(fixtures.F10, f10Claims), true, 'F10 selected input-mode claims failed');
   assert.equal(claimsMatch(fixtures.F10, { ...f10Claims, framework_template_required: true }), false,
     'F10 restored the obsolete mandatory framework-template claim');
-  assert.equal(claimsMatch(fixtures.F10, { ...f10Claims, standalone_requires_prototype_brief: false }), false,
+  assert.equal(claimsMatch(fixtures.F10, { ...f10Claims, standalone_requires_flow_input: false }), false,
     'F10 lost the standalone required input');
   assert.equal(claimsMatch(fixtures.F9, {
     static_fallback_ids: ['SF-002', 'SF-003', 'SF-005', 'SC-20260523-001', 'SC-20260523-002', 'SC-20260523-003'],

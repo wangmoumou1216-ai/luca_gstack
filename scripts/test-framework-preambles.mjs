@@ -29,7 +29,7 @@ try {
   }
   for(const key of ['implement','to-spec','to-tickets','wayfinder','tech-spec','task-plan','challenge',
     'design-brief','evals','open-design','figma-demo','idea','research-kit','quick-research',
-    'retro','insight-synthesis','ux-audit','ux-writing','html-prototype']) {
+    'retro','insight-synthesis','ux-audit','ux-writing']) {
     const body=readFileSync(join(ROOT,'.claude/skills/office',key,'SKILL.md'),'utf8');
     const preamble=body.match(/## Preamble[^\n]*[\s\S]*?```bash\n([\s\S]*?)```/)?.[1];
     assert.ok(preamble,`Missing ${key} preamble`);

@@ -32,7 +32,7 @@ python3 .claude/observability/scripts/get_rules.py brainstorm "*" 2>/dev/null ||
 <role>
 I am a Product-Lead-in-residence with deep AI Native sensibility. My job is to transform a research
 markdown (or a raw idea, in cold-start mode) into a right-sized Product Requirements Document that
-a downstream `ux-research`, `ux-brainstorm`, `design-brief`, or `html-prototype` skill can execute
+a downstream `ux-research`, `ux-brainstorm`, or `design-brief` skill can execute
 against without inventing product decisions.
 
 I interrogate before I synthesize. I ask one question at a time. I present options before
@@ -120,7 +120,7 @@ deepresearch*.md (or idea)
    builds, invoke implementation skills, or take any action that modifies source files other than
    the PRD and its supplementary spec. If the user asks mid-session "just build it," respond:
    "Brainstorm produces the PRD. Once it's handoff-ready, run `ux-research`, `ux-brainstorm`,
-   `design-brief`, or `html-prototype` next."
+   or `design-brief` next."
 
 2. **No fabrication.** Every Requirement, Acceptance Example, Demand Evidence claim, and Premise in
    the PRD must be traceable to either (a) a specific passage in `deepresearch*.md`, or (b) a
@@ -247,7 +247,7 @@ Do not ask for scope confirmation — state and proceed. The user can push back 
 - **Cold-start**: derive `slug` from the user's idea/topic.
 
 This fixed `docs/prd/` location is mandatory because downstream `ux-research`, `ux-brainstorm`,
-`design-brief`, and `html-prototype` discover PRDs from that folder.
+and `design-brief` discover PRDs from that folder.
 
 Slug rules: lowercase, hyphen-separated, strip non-alphanumeric, max 50 chars.
 
@@ -629,8 +629,7 @@ pre-Oracle in Phase 5.1). This run catches any issues Oracle resolved — especi
 - Does the Research & Decision Coverage Matrix contain every high-confidence research claim,
   selected approach decision, rejected direction, and Oracle-driven scope change?
 - Does every coverage row have a concrete PRD destination or a justified `REMOVED` disposition?
-- Is question #15 answered: "If `/ux-research`, `/ux-brainstorm`, `/design-brief`, or
-  `/html-prototype` ran on this now, what product decision would it still invent?" — must be
+- Is question #15 answered: "If `/ux-research`, `/ux-brainstorm`, or `/design-brief` ran on this now, what product decision would it still invent?" — must be
   "none."
 
 This is still a pre-write check: apply the same tier interpretation as Phase 5.1 (Lightweight
@@ -739,8 +738,7 @@ This is `challenge`'s self-declared slot (after /brainstorm, Scene A only) and i
 deterministic reach; the reader decides applicability from the line.
 
 **When gate is OPEN (Resolve Before Planning is empty):**
-1. Proceed to downstream design (invoke `/ux-research`, `/ux-brainstorm`, `/design-brief`, or
-   `/html-prototype` next) — *Recommended*
+1. Proceed to downstream design (invoke `/ux-research`, `/ux-brainstorm`, or `/design-brief` next) — *Recommended*
 2. Revise the PRD — answer more questions to sharpen it
 3. Open in editor to review manually
 4. Done for now
@@ -757,7 +755,7 @@ deterministic reach; the reader decides applicability from the line.
   re-enter Phase 5 (Oracle round, fresh) → Phase 6 (rewrite PRD) → Phase 7 (re-check gate)
 - **Revise broadly**: loop back to Phase 3 with user's choice of which questions to revisit
 - **Proceed to downstream design**: state "Handoff: pass the PRD path `{path}` to `/ux-research`,
-  `/ux-brainstorm`, `/design-brief`, or `/html-prototype`." Do NOT invoke the next skill directly
+  `/ux-brainstorm`, or `/design-brief`." Do NOT invoke the next skill directly
   unless the user chooses it.
 - **Done**: end gracefully.
 
@@ -769,7 +767,7 @@ deterministic reach; the reader decides applicability from the line.
 | Using banned sycophancy phrases ("great question!", "interesting approach") | HIGH | Signals compliance over accuracy; erodes trust |
 | Writing the PRD before Phase 5 completes | CRITICAL | Oracle review exists to catch what self-review misses; skipping it produces AI-slop PRDs |
 | Leading with recommendation before options | HIGH | Anchors conversation; user can't genuinely evaluate alternatives |
-| Renumbering stable IDs after edits | CRITICAL | Breaks downstream `ux-research`, `ux-brainstorm`, `design-brief`, or `html-prototype` skill's cross-references |
+| Renumbering stable IDs after edits | CRITICAL | Breaks downstream `ux-research`, `ux-brainstorm`, or `design-brief` skill's cross-references |
 | Inventing requirements not in research or user answers | CRITICAL | Violates rule #2; produces a PRD the user didn't consent to |
 | Dropping a high-confidence research claim without a coverage row | CRITICAL | Violates rule #2a; downstream artifacts silently lose product intent |
 | Emitting code, scaffolds, or implementation artifacts | CRITICAL | Violates rule #1 hard gate; this skill only writes PRDs |

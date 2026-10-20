@@ -147,7 +147,7 @@ This means: what the user truly needs is not {surface need}, but {deeper job, on
 
 Every high-confidence research claim and every important brainstorm decision must have a visible
 destination in this PRD. This section prevents downstream `/ux-research`, `/ux-brainstorm`,
-`/design-brief`, `/html-prototype`, `tech-spec`, or `task-plan` from losing product intent.
+`/design-brief`, `tech-spec`, or `task-plan` from losing product intent.
 
 | Claim ID | Source | Claim / Decision | Confidence | Disposition | PRD Destination | Rationale |
 |---|---|---|---|---|---|---|
@@ -308,7 +308,7 @@ Outcome-level, measurable, time-bounded where possible. Cover BOTH human outcome
 
 - {criterion — e.g., "90% of target users complete wedge flow in under 2 minutes within first session"}
 - {criterion}
-- **Handoff quality**: `/ux-research`, `/ux-brainstorm`, `/design-brief`, or `/html-prototype` can consume this PRD without requiring net-new product decisions.
+- **Handoff quality**: `/ux-research`, `/ux-brainstorm`, or `/design-brief` can consume this PRD without requiring net-new product decisions.
 
 ### Anti-Metrics (if any of these happen, the direction is wrong)
 - {anti-metric 1}: indicates {what problem — e.g., "users bypass the feature and revert to old workflow"}
@@ -392,8 +392,7 @@ Self-audit the draft against these 18 questions. If ANY answer is "no" or "uncle
 12. Is the Distribution Plan concrete (not "TBD" or "marketing handles it")?
 13. Is "The Assignment" a real-world action, not a skill invocation?
 14. Is the language matching the user's input language?
-15. **The key question**: If `/ux-research`, `/ux-brainstorm`, `/design-brief`, or
-    `/html-prototype` ran on this PRD right now, what product decision would it still have to
+15. **The key question**: If `/ux-research`, `/ux-brainstorm`, or `/design-brief` ran on this PRD right now, what product decision would it still have to
     invent? — If anything, the PRD is not done.
 16. If Phase 2.5 judged `fully_native` or `partially_native`, is the AI Native Assessment section
     filled AND does `prd-ai-spec.md` exist?

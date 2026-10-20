@@ -87,3 +87,5 @@ frontmatter 注册为 PreToolUse hook、吐 `permissionDecision:"ask"` CC-JSON�
 
 <!-- 生成源：审计 Round1 H6 agent 的 h6-result.json；重跑 scratchpad/audit/gen_uregister.py -->
 <!-- 2026-10-19 复核结案一节由人工与只读取证写入，不由生成脚本产出；重跑生成脚本会丢掉它。 -->
+
+> **2026-10-20 注：** `html-prototype` 与 `magicpath` 已退役（RET-20261020-001/002）。U-07、U-09 表中以它们为实验对象的描述保留为历史；若重开这两条，换用仍在册的 skill（如 open-design）作为 spike 对象，结论判据不变。另：冻结的 live-run 提案 `scripts/fixtures/agent-orchestration-cases.json` 仍含 12 个 html-prototype 用例，因其与计划哈希绑定而未改；这份 live 证据已无法凑齐，重开时须经新 plan 重冻（不属本次退役范围）。

@@ -104,7 +104,6 @@ Handoff 写入节的以下内容受保护：
 明确声明"不允许跳过"或"必须按顺序执行"的 Phase 编号和顺序不得改变。
 
 受保护的顺序：
-- html-prototype: Phase 0 → 1 → 2 → 2.1 → 2.25 → 2.5 → 2.75 → 3 → 4 → 4.5 → 5
 - tech-spec: Phase 0 → 1 → 2 → 3 → 4 → 5（门禁）→ 6
 - task-plan: Phase 0 → 1 → ... → 7（门禁）→ 8
 - ux-audit: Phase 0（三个询问必须按顺序）→ 1 → 2 → 3
@@ -138,23 +137,11 @@ raw semantic FAIL 保留证据，不要求加工前 raw semantic PASS；默认�
 
 ## 各 Skill 的可进化区
 
-### html-prototype（最高优先级）
+### design-output 验收（原 html-prototype Phase 4.5 的承接处）
 
-| 节 | 可进化内容 |
-|---|---|
-| Phase 2.25 审美校准 | 参考坐标列表（可增减产品）、原则描述措辞 |
-| Phase 2.1 Dynamic Reference Scan | 查询目标示例、轮次描述措辞 |
-| Phase 2.5 设计系统宣告 | 宣告模板的示例值（如"具体位置，如..."） |
-| Phase 3 HTML 生成 | 注释说明文案、检查项措辞 |
-| Phase 4.5 QA 检查项说明 | 每个检查项的 detail 文案 |
+html-prototype 已于 2026-10-20 退役（RET-20261020-001），其可进化区与 U008 logic-validation 用途例外随之移除。
 
-**不可进化：** UI 审美分 ≥24/30 门槛、QA 检查项列表本身、Phase 4.5 的 `verify-prototype.mjs` 调用（脚本已迁至 `design-output/scripts/`）。
-
-**精确用途例外（U008）：** 只有已明确 `purpose=logic-validation` 的逻辑验证原型，
-审美24/30分门和固定默认/空/加载/错误/成功五态可记 N/A。阶段顺序、骨架真实确认、
-全部需求状态/转换/错误/reset、可读性、来源/traceability、真实浏览器与 pure 模块便携证据
-继续有效。purpose 与输入 source_kind/QA mode 正交；普通 UI 和每个 UI 变体均保留完整
-24/30、五态及所有适用状态门，不能借逻辑用途、STATE 注释或自报分数降低验收。
+**不可进化：** `design-output/scripts/verify-prototype.mjs` 的调用、QA 检查项列表本身、验收侧「AI Slop 扫描」复核与 `N ≥ 3` 返工规则。
 
 ---
 

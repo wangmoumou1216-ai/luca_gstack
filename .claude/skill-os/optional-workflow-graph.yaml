@@ -6,18 +6,14 @@ design_output:
   adapters: [open-design, claude-design]
   selection: "inherit explicit choice; otherwise ask once; preserve full task; unselected frozen Packet uses bound sidecar; conflict returns Brief"
   completion: "replace entry with actual adapter node; Orchestrator commits once"
-  fallback: [magicpath, html-prototype]   # 独立能力保留；不是按故障逐级自动切换
+  fallback: []   # 没有第三个出口：OD/CD 都不可用时 NEEDS_CONTEXT，不自动换工具
   requires_explicit_tool_choice: true
-  fallback_trigger:           # 只有实际用户选择才换工具；执行条件见 plan-agent.md Gap 2
-    - "user requests local html"
-    - "user explicitly selects magicpath"
-    - "user approves named fallback in execution plan"
-  od_headless_unavailable:    # daemon UP 但 headless 不能出图 → 降级目标是 OD 桌面端生成（同栈），不退 magicpath/html-prototype
+  od_headless_unavailable:    # daemon UP 但 headless 不能出图 → 降级目标是 OD 桌面端生成（同栈），不换其他工具
     trigger:
       - "headless 实测不稳：生成慢 >2.5-3min 或 daemon SIGTERM 重启"
       - "headless /api/chat 重试 1 次仍失败（failed/canceled/narrate-but-no-file）"
     degrade_target: open-design-desktop-generate   # SKILL.md Phase 3D：项目+brief.md+DS staged，用户桌面端生成后说"拉回来" recover
-    rationale: "用户要的就是 OD 产出且桌面端 OD 走订阅会话可靠；headless 实测不稳（生成慢 >2.5-3min + daemon SIGTERM 重启；鉴权非故障原因）。daemon 既 UP，正确降级是同栈桌面端，而非换 magicpath/html-prototype。"
+    rationale: "用户要的就是 OD 产出且桌面端 OD 走订阅会话可靠；headless 实测不稳（生成慢 >2.5-3min + daemon SIGTERM 重启；鉴权非故障原因）。daemon 既 UP，正确降级是同栈桌面端，而非换其他工具。"
 
 research_default:
   effort_selection: "research_depth=focused 与 discovery_mode=focused 仅显式试验；分别沿deepresearch/ux-research与brainstorm/ux-brainstorm的当前合同，默认deep/full不变。scope不等于投入；new/mixed不自动升full，关键未知仍阻断。"
@@ -104,10 +100,6 @@ scenes:
       - ["ux-writing", "design-brief", "design-output"]  # 内容规范 pre-brief（用户原始需求本身可作 PRD 输入，无需先跑 brainstorm；交互取舍并入 Brief）：voice-copy-spec 产出后 design-brief Step 1.0b 继承（ux-writing 2026-07-21）
     engineering_paths:  # 工程链（与设计链并行，不替代）
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
-    fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
-      - ["idea", "brainstorm", "design-brief", "magicpath"]
-      - ["design-brief", "html-prototype"]
-      - ["idea", "brainstorm", "design-brief", "html-prototype"]
   B:
     name: "existing_feature_optimization"
     recommended_paths:
@@ -123,16 +115,10 @@ scenes:
       # conversation_synthesis + 完整 source_register。architecture brief 只是可选补充，不能替代。
       # 只有代码/改进意图：先 code-recon，再回实际需求 owner 澄清；不自动生成 PRD/CONV 或派发 tech-spec。
       - ["code-recon", "tech-spec", "task-plan"]
-    fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
-      - ["ux-audit", "design-brief", "magicpath"]
-      - ["ux-audit", "design-brief", "html-prototype"]
   C:
     name: "online_review_redesign"
     recommended_paths:
       - ["ux-audit", "design-brief", "design-output"]
-    fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
-      - ["ux-audit", "design-brief", "magicpath"]
-      - ["ux-audit", "design-brief", "html-prototype"]
   D:
     name: "agent_native_redesign"
     recommended_paths:
@@ -142,9 +128,6 @@ scenes:
       - ["brainstorm", "research-kit", "insight-synthesis", "ux-brainstorm", "ux-writing", "design-brief", "design-output"]  # Agent 化全链：摸用户心智 + hedging/agent 状态文案规范（2026-07-21）
     engineering_paths:
       - ["brainstorm", "design-brief", "tech-spec", "task-plan"]
-    fallback_paths:  # 仅在 design_output.fallback_trigger 的用户选择成立时使用
-      - ["ux-brainstorm", "design-brief", "magicpath"]
-      - ["ux-brainstorm", "design-brief", "html-prototype"]
 
 # Optional entrances share one convergence stage; they do not activate a workflow by themselves.
 design_entry_paths:
@@ -188,25 +171,6 @@ handoff_gates:
     decision_transfer: "继承原始来源版本与用户确认目标/核心机制；Brief可补语义位置/状态/AC，建议不自动升MUST；预期收益的执行条件进入既有Packet字段，生成器保留视觉表达。focused不豁免上述门。"
     note: "design-brief=收敛引擎：检测到 ux-brainstorm 产出时继承其 §5 AI-Native 判定 / §10 假设 / §9 被否定方向（Phase1 切交互层复核, Phase2 切 checkpoint），不重做发散；已有需求/原型入口不强制本上游门，不重做已确认机制；以当前设计源完整覆盖收敛。二者不并列产同类文档。"
 
-  design_brief_to_magicpath:
-    applies_when: "workflow_mode"
-    order_significant: false  # block_if 是集合；重排不改变语义，增删才要求 projection digest 更新
-    block_if:
-      - "design_generation_packet missing"
-      - "tool_consumption_contract missing"
-      - "packet contains facts absent from design_brief"
-      - "packet does not declare MagicPath as selected output target"
-      - "page_interaction_mapping missing"
-      - "decision_cards missing required fields"
-      - "traceability_matrix missing"
-      - "traceability_gate != PASS"
-      - "output_target_platform_scope missing"
-      - "required_state_coverage missing"
-      - "ux_brief not written to docs/decisions/"
-    allow_standalone_override: false
-    allow_parallel_start: false
-    note: "MagicPath Phase 必须等此 gate PASS 后才能启动，严禁并发；design_source或prd_end_to_end的PASS均可生成，前者不代表工程ready。"
-
   design_brief_to_open_design:
     applies_when: "workflow_mode"
     block_if:
@@ -238,31 +202,6 @@ handoff_gates:
       - "ux_brief not written to docs/decisions/"
     allow_standalone_override: false
     note: "claude-design 消费同一冻结事实；未选工具用bound sidecar，异工具硬绑定回Brief。可信Muse caller、完整附件、最终TAC/原件/bundle真实采用、零发送、精确正式导出和独立全量验收均不可跳过；能力缺失停门。recover不重编译。"
-
-  design_brief_to_html:
-    applies_when: "workflow_mode"
-    block_if:
-      - "design_generation_packet missing"
-      - "tool_consumption_contract missing"
-      - "packet contains facts absent from design_brief"
-      - "page_interaction_mapping missing"
-      - "decision_cards missing required fields"
-      - "traceability_matrix missing"
-      - "traceability_gate != PASS"
-      - "output_target_platform_scope missing"
-      - "required_state_coverage missing"
-    allow_standalone_override: true
-    standalone_override_block_if:
-      - "source is research report"
-      - "source is ux-brainstorm decisions"
-      - "user expects traceable delivery"
-    override_requires: "direct prototype brief that is not an upstream research/decision artifact, with missing traceability acknowledged"
-    standalone_alternatives:
-      - "standalone_brief"
-      - "standalone_mobile_prototype"
-      - "ux_audit"
-      - "screenshot_delta"
-      - "figma_demo_blueprint"
 
   design_brief_to_tech_spec:
     applies_when: "workflow_mode"

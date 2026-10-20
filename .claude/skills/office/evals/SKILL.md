@@ -59,7 +59,6 @@ tail -50 .claude/observability/observations.jsonl 2>/dev/null
 | /ux-research | ✅/⬜ | {路径} |
 | /ux-brainstorm | ✅/⬜ | {路径} |
 | /design-brief | ✅/⬜ | {路径} |
-| /html-prototype | ✅/⬜ | {路径} |
 | /figma-demo | ✅/⬜/N/A | {路径} |
 | /ux-audit | ✅/⬜ | {路径} |
 

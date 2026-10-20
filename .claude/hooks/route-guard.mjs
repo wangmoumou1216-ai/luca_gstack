@@ -589,6 +589,12 @@ function skillDecision(prompt, routingScope = { kind: 'ordinary' }) {
       message: `${retiredName} 已退役，不可调度；不会自动启动替代流程。独立需求分诊与原型验收能力保留，请按当前 catalog 明确选择。`,
     };
   }
+  if (['html-prototype', 'magicpath'].includes(retiredName)) {
+    return {
+      decision: 'STOP', reason: 'retired_skill', candidates: [],
+      message: `${retiredName} 已退役，不可调度；不会自动换用其他生成工具。设计产出请从 design-brief 起，在 open-design 与 claude-design 中由用户选择。`,
+    };
+  }
   if (direct) {
     const skill = direct.startsWith('$') ? `/${direct.slice(1)}` : direct;
     return { decision: 'SINGLE_SKILL', skill, candidates: [skill] };

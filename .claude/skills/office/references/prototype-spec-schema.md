@@ -230,7 +230,7 @@ production guard并移除底栏，Git归档/发送/发布需另获原生授权}
 身份真值由 `.claude/skill-os/runtime/prototype-delivery.md` 和其 schema/helper 拥有；在写本节或
 消费 `final_artifact_ref` 前完整读取。这里仅记录实际入口，不改变普通原型的既有 QA/用途门。
 
-generation.source: {实际 open-design/html-prototype/用户原件来源}
+generation.source: {实际 open-design/claude-design/用户原件来源}
 raw entry/spec/recovery receipt: {原始精确 path+sha256；保持原件，不重写旧 FAIL}
 postprocess.source: {motion-polish / prototype-notes；以实际解析 processor 为准}
 processor_id: {实际 candidate/report/certificate 的 processor；旧无字段票按 motion 默认，旧票字节不改}
@@ -258,6 +258,6 @@ OD Phase4–6 固定 caller 真实调用公开 notes/delivery APIs；当前 host
 接受前冷 QG 消费 candidate，接受后所有下游实际 resolve 最新 notes_final_ref；失效不退 raw/旧motion。
 raw_gate 仅当前精确输入机械资格；raw semantic FAIL 保留，不是加工前 PASS 前置。最终完整原
 source 行为仍 FAIL/UNKNOWN 时不能接受或完成。
-本节仅扩展 exact identity；不改变 html-prototype 平台、生成器启用、用途门或普通输出政策，也不默认接线该生成器。
+本节仅扩展 exact identity；不改变生成器启用、用途门或普通输出政策（html-prototype 已于 2026-10-20 退役，不再有该生成器）。
 
 <!-- FILE_END: references/prototype-spec-schema.md -->

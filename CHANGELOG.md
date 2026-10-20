@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed（2026-10-20 · 设计流程收敛）
+
+- 退役 `html-prototype` 与 `magicpath`（RET-20261020-001/002）：设计产出只剩 open-design 与 claude-design 两个出口，两者都不可用时返回 NEEDS_CONTEXT，不自动换工具；对这两个名字的调用被拒绝而不是派发。为什么：它们不在核心流程（原始需求 → design-brief → OD/CD → 独立浏览器验收 → 定点修）上，却让路由、graph 与测试多维护一条旁路；两个旧入口的“做个原型”类说法现在落到 design-brief。独立浏览器验收脚本与原型规格 schema 迁到中性路径（`design-output/scripts/`、`references/prototype-spec-schema.md`），不随技能删除；回滚点为本地 tag `pre-retire-html-prototype-magicpath`。随 html-prototype 一并不再提供的能力（用户已批准退役，此处如实列出）：`logic-validation` 用途与 U008 例外、2–5 个 UI 变体对比、standalone brief 直出原型、动态参考扫描、美学 24/30 门、生成侧「视觉 AI Slop 防火墙」（由 design-output 验收侧的「AI Slop 扫描」复核承接）。已知遗留：`scripts/fixtures/agent-orchestration-cases.json`（冻结的、与计划哈希绑定的 live-run 提案）仍含 12 个 html-prototype 用例，该 live 证据已无法凑齐，需新 plan 重冻；`memory/evals/matt-adaptation/method-coverage.json` 的 M09 仍把 U008 html-prototype 列为 owner（状态 PLANNED）。
+
 ### Fixed
 
 - 四个前序设计 skill 的 focused 分支及直接模板、独立审查、交接和 Brief 消费合同保持一致：继承已确认选择，不强造方案/AI 工作，保留全部关键风险及可执行恢复。为什么：消除轻量路径在下游重新变重的合同冲突；保留旧默认，效果、完整成本与双端整体验证仍待实际验证。

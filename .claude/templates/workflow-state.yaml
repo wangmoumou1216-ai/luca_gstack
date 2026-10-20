@@ -53,12 +53,6 @@ nodes:
     gate_result: ""
     handoff_path: ""
     ai_native_summary: ""
-  html-prototype:
-    status: PENDING
-    output: ""
-    completed_at: ""
-    gate_result: ""
-    handoff_path: ""
   figma-demo:
     status: PENDING
     output: ""
@@ -98,13 +92,6 @@ nodes:
     gate_result: ""
     handoff_path: ""
     description: "全自动多 Agent 编排"
-  magicpath:
-    status: IDLE
-    output: ""
-    completed_at: ""
-    gate_result: ""
-    handoff_path: ""
-    description: "设计产出（React canvas 组件）"
   superpowers-brainstorming:
     status: IDLE
     output: ""

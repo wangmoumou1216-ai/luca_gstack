@@ -245,9 +245,9 @@ carrier Packet 的结构化冻结格式与实例由 `references/output-templates
 
 ## 交接块（下游 skill 必读）
 
-> 交接块唯一真值源 = `references/output-templates.md` §交接块格式（含全量下游：MagicPath /
-> Open Design / Claude Design / HTML 生成器）。产出交接块时按 SKILL.md Phase 7
-> 指针完整读取该模板照填；本处不再内嵌正文，避免与母版分叉（此前内嵌版本只列 /html-prototype，
-> 漏掉 MagicPath / Open Design / Claude Design 主消费者）。
+> 交接块唯一真值源 = `references/output-templates.md` §交接块格式（含全量下游：
+> Open Design / Claude Design）。产出交接块时按 SKILL.md Phase 7
+> 指针完整读取该模板照填；本处不再内嵌正文，避免与母版分叉（此前内嵌版本只列已退役的 html-prototype，
+> 漏掉 Open Design / Claude Design 主消费者）。
 
 <!-- FILE_END: design-brief/SCHEMA.md -->

@@ -87,3 +87,11 @@ criteria (judged by cold reviewers, binary, evidence required):
 ## Failure policy
 
 BLOCKING failure stops the phase; three repeats of the same failure → BLOCKED with evidence. A reviewer BLOCKER surviving one repair round → stop and report to the user.
+
+## Replan R-1（2026-10-20，触发：框架检查器拒绝“已登记墓碑 + 保留目录”）
+
+- 事实：`scripts/check-agent-context.mjs` / `build-agent-context.py` 要求墓碑条目对应的 skill 不能再有目录（`retired skill remains active`），因此“不删目录”与“墓碑拒绝调用”不能同时成立。
+- 用户裁决：选择“删目录，完整退役”（原提问：退役方式；选项一为推荐项）。回滚点：本地 tag `pre-retire-html-prototype-magicpath`。
+- 随之扩大的范围（原计划 P3 前移，均为这两个 skill 的专属物）：删除 `.claude/skills/office/html-prototype/`、`.claude/skills/office/magicpath/`、`scripts/sync-magicpath-projection.mjs`、`scripts/test-magicpath-projection-sync.mjs`、`design_brief_to_magicpath` 与 `design_brief_to_html` 两个 graph 门；route-guard 增加两个硬编码退役名（与既有 figma-layer / muse-loop 先例一致）；`/html-prototype` 类措辞（做个原型 / HTML原型 / 快速原型 / 原型界面）改路由到 `/design-brief`。
+- 新增验收：`scripts/test-design-output-retirement.mjs`（含 mutation，verify S14h）、`test-design-tool-routing.mjs` 接入 verify（S14i）、验收脚本自测接入 verify（S14j）。
+- 评审结果见评估报告 §9.2。

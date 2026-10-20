@@ -106,7 +106,7 @@ Hunt for unstated assumptions masquerading as premises.
 
 ### Dimension 5: Handoff Readiness
 Hunt for gaps that would force downstream design/prototype skills to invent product behavior.
-- If `/ux-research`, `/ux-brainstorm`, `/design-brief`, or `/html-prototype` ran on this PRD, what product decision would it still have to make?
+- If `/ux-research`, `/ux-brainstorm`, or `/design-brief` ran on this PRD, what product decision would it still have to make?
 - Do Success Criteria include measurable, observable outcomes?
 - Is the Distribution Plan concrete enough that "go-to-market" is not a black box?
 - Is "The Assignment" a real-world validation step, not a platform-internal invocation?

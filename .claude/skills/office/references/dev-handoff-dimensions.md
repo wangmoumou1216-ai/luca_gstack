@@ -1,6 +1,6 @@
 # 开发交接维度清单（dev-handoff dimensions）
 
-> **横切能力，非节点非流程。** 织进已存在的 design→dev 接缝：`open-design` / `html-prototype`
+> **横切能力，非节点非流程。** 织进已存在的 design→dev 接缝：`open-design` / `claude-design`
 > 的 `prototype-spec.md` 产出（当下游=开发，即场景1）与 `tech-spec` 的 intake。
 > 源：Anthropic 官方 design-handoff skill 的 7 维（成品视觉 → 反向抽取 dev spec），
 > 采其**维度清单**，不采其独立产物形态（luca 无外部开发团队场景，见集成报告 §3）。
@@ -49,7 +49,7 @@
 
 ## 落点
 
-- **原型产出（open-design / html-prototype）**：**仅当下游=开发（场景1）**时，在 `prototype-spec.md`
+- **原型产出（open-design / claude-design）**：**仅当下游=开发（场景1）**时，在 `prototype-spec.md`
   追加一节"开发交接补全"，按上表补 4 维；纯外部设计交付且下游不进入开发时**不触发**。
 - **tech-spec intake**：这 4 维是**实现规格**（绑到 `CMP-NNN` 组件合同的附加字段），非"UI 布局描述"——
   **不破坏** tech-spec"不是设计文档、不含 UI 布局"的 defining constraint。

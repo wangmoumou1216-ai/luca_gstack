@@ -11,7 +11,7 @@ fields:
   skill_name:
     type: string
     required: true
-    examples: [brainstorm, deepresearch, html-prototype, ux-research]
+    examples: [brainstorm, deepresearch, design-brief, ux-research]
 
   topic:
     type: string

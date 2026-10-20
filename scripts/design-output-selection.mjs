@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, realpathSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
 
-const tools = new Set(['open-design', 'claude-design', 'magicpath', 'html-prototype']);
+const tools = new Set(['open-design', 'claude-design']);
 const sha = value => createHash('sha256').update(value).digest('hex');
 const fail = code => { throw new Error(code); };
 const validTool = value => tools.has(value) || fail('UNKNOWN_DESIGN_TOOL');

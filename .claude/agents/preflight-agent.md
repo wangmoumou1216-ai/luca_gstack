@@ -88,10 +88,8 @@ standalone 模式允许 topic 为空，不要求 workflow-state 或工作流上�
 | `ux-research` | PRD 文件存在，含"目标用户"和"核心功能" | 读取精确 PRD，同一文件核对两个字段 |
 | `ux-brainstorm` | brainstorm handoff 存在 | 校验精确上游 handoff |
 | `design-brief` | design_input 存在：pipeline / 已有需求 / 已有原型；仅选定 pipeline 时要求精确上游 handoff | 验证实际源及范围；已有需求/原型不强制PRD或ux-brainstorm；工程交付仍要求实际PRD |
-| `html-prototype` | design-brief handoff 存在且 gate_result PASS | 校验精确上游 handoff 及其 gate_result |
 | `open-design` | workflow 模式：design-brief handoff 存在且 gate_result PASS（standalone/adhoc 单点交接只需源产物存在，本行不执行） | 校验精确上游 handoff 及其 gate_result；recover 按同项目恢复合同核验目标 |
 | `motion-polish` | exact actual HTML/closure、真实源期望、requested scope、当前读界限及所需 copy/edit/metadata/browser 效果；OD internal 还需真实机械 recovery receipt | 完整读取 `.claude/skill-os/runtime/prototype-delivery.md`；验证单独 caller context，不以 manifest 授权，不要求 raw semantic PASS/OD DONE handoff 或旧 accepted；必要浏览器能力缺失 NEEDS_CONTEXT。Preflight 不授本地写权且不代 final runtime gate |
-| `magicpath` | 用户明确选择；workflow 的 design-brief handoff 存在且 gate_result PASS | 校验已确认平台与精确上游 handoff |
 | `figma-demo` | （隐藏，仅内部 dispatch）无特殊前置 | — |
 | `tech-spec` | input_mode=prd：实际 PRD + Brief gate PASS、coverage_scope=prd_end_to_end；conversation_synthesis：真实 register + 原始来源/独立 MUST 集 | 按 TS Phase 0 核模式、register 实际字节/hash 和完整来源；缺模式不由缺 Brief 猜 CONV，普通 PRD 门保持 |
 | `task-plan` | TS handoff/coverage PASS；input_mode=prd：Brief PASS、coverage_scope=prd_end_to_end；conversation_synthesis：真实 register 与原始 MUST 集 | 按 TP Phase 0 实际读取 register/hash、核同版原始源→TS；普通 PRD 来源/Brief 门保持，未知模式停门 |

@@ -318,12 +318,11 @@ Phase N（task_execution — 默认）:
   phase_type: task_execution
   agent_role: worker                                      # 实际入口；模型按当前 harness 合同解析
   任务: <描述>
-  产出物: <文件路径（用户选择 MagicPath 时为 canvas job_id）>
+  产出物: <文件路径>
   阶段门控: <判断标准>
   skills_needed:                                          # 可选
     - .claude/skills/office/design-output/SKILL.md       # 未选工具的薄入口；实际 Phase 绑定所选 adapter
     - .claude/skills/office/design-brief/SKILL.md
-    - .claude/skills/office/html-prototype/SKILL.md      # 设计产出（用户明确选择的本地 HTML 独立能力）
 
 Phase N（skill_execution — 执行某个 skill）:
   编排模式: Supervisor
@@ -431,8 +430,7 @@ Wave 3（U003+U005 完成后）: [U006]      ← 最终汇聚节点
 依赖只有 `status: PASS` 才解除阻塞。检查器只返回拓扑顺序、层级、残环和阻塞外部依赖，不返回
 授权或执行 ready 状态。
 
-设计产出先由 design-output 继承已选 OD/CD（含 open-design / claude-design）或只问一次，Phase 只绑定实际 adapter；入口无独立 DONE。MagicPath/HTML 仅由用户真实选择或已批准的具名备用计划
-授权；设计工具故障本身不授予切换权。精确可用性、恢复和断言写法由上述
+设计产出先由 design-output 继承已选 OD/CD（含 open-design / claude-design）或只问一次，Phase 只绑定实际 adapter；入口无独立 DONE。OD/CD 之外没有其他出口；设计工具故障本身不授予切换权。精确可用性、恢复和断言写法由上述
 `plan-design-guidance.md` owner 在相关 Phase 形成前提供。
 
 ### 块 3 — 断言列表

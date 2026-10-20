@@ -28,7 +28,7 @@ QUERIES = {
 
 
 def check_rules():
-    active = [r for r in rules.load_rules() if rules.applies(r, "html-prototype", "*")]
+    active = [r for r in rules.load_rules() if rules.applies(r, "design-brief", "*")]
     assert OLD_RULE not in {r["id"] for r in active}, "retired template rule is active"
     assert any(r.get("supersedes") == OLD_RULE for r in active), "replacement template rule must be active"
 

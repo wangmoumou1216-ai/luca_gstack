@@ -1,10 +1,10 @@
 # UX Writing — 微文案与产品语言规范（双层结构）
 
 > 来源：蒸馏改写自 [Owl-Listener/designer-skills](https://github.com/Owl-Listener/designer-skills)（MIT License）designer-toolkit/ux-writing，融合本框架既有碎片（module-a A5 反 slop 按钮规则、Granola hedging 锚点、html-prototype 真实文案禁令），2026-07-21。
-> 消费者：/ux-writing skill（全量）、html-prototype（逐字层）、design-brief（不 load 本文件——只内联语义层摘要 ≤10 行）。
+> 消费者：/ux-writing skill（全量）、design-brief（不 load 本文件——只内联语义层摘要 ≤10 行）。
 > **本文件分两层，挂载纪律不同：**
 > - **§语义层** = 「内容必须达成什么」——可经 design-brief 落 brief 正文进 Packet（陈述内容语义，不替 OD 写字）。
-> - **§逐字层** = 文案构造公式与具体措辞——**仅供 /ux-writing skill 与 html-prototype 本地生成**，永不进 OD 编译（逐字文案是 OD 生成期的自由度）。
+> - **§逐字层** = 文案构造公式与具体措辞——**仅供 /ux-writing skill 与人工执笔**，永不进 OD 编译（逐字文案是 OD 生成期的自由度）。
 
 ---
 
@@ -20,7 +20,7 @@
 6. **术语一致性**：同一概念全产品同一叫法（导航/标题/搜索/空态用词一致）；术语冲突记录在本次产物；持续词汇由 domain-modeling 依据已确认 owner、真实用户决定和精确写许可处理，学习候选另走 extraction-bar，不自动写 CONTEXT.md。
 7. **Voice 恒定、tone 随场景**：voice（品牌人格/词汇/人称）全产品一致；tone 随语境调（庆祝 vs 报错 vs 指引），报错时收敛克制，成功时轻确认不过度庆祝。
 
-## 逐字层（仅 /ux-writing 与 html-prototype 本地路径）
+## 逐字层（仅 /ux-writing 与人工执笔）
 
 具体构造公式与措辞规范，**禁入 Packet / OD 编译**：
 

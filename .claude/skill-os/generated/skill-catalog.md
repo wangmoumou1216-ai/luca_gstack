@@ -20,7 +20,6 @@
 | `domain-modeling` | Build or sharpen a domain model when language overloads distinct concepts, relationships or ownership… | `.claude/skills/office/domain-modeling/SKILL.md` |
 | `grilling` | Stress-test a plan through design-tree rounds: ask all independent ready frontier decisions with reco… | `.claude/skills/office/grilling/SKILL.md` |
 | `handoff` | 会话级交接工具：把当前对话压缩成一份可供下一个 agent 或 session 直接接手的 Markdown， 保存到操作系统临时目录。仅在用户显式要求会话交接时使用，不替代项目级流程交接。 | `.claude/skills/office/handoff/SKILL.md` |
-| `html-prototype` | HTML 原型生成与可观测 QA。仅在用户明确选择本地 HTML，或明确批准包含本地 HTML 备用路径的计划且触发条件满足时使用。三种场景行为完全不同：A（新功能，Step0认知门禁+ 原型承载方式确… | `.claude/skills/office/html-prototype/SKILL.md` |
 | `idea` | 原始语料结构化工具。输入任意形式的原始需求表达（语音转文字、会议纪要、 领导想法、讨论记录），输出诚实的结构化梳理。 不延展、不推断、不加判断。所有输出必须有原文依据。 与 /brainstorm 是独… | `.claude/skills/office/idea/SKILL.md` |
 | `implement` | Thin execution facade that compiles a gated spec and task-plan through Plan Agent, obtains approval f… | `.claude/skills/office/implement/SKILL.md` |
 | `insight-synthesis` | 一手定性综合：把**用户提供的**一手定性资料（访谈/工单/回访/开放问卷）编码成原子观察， 跨来源亲和聚类，经用户确认主题后做 observation→interpretation 跃迁，产出分层洞察… | `.claude/skills/office/insight-synthesis/SKILL.md` |
@@ -57,7 +56,6 @@
 | `compare` | 对比两个 skill 产出（或同一 skill 的两个版本），输出结构化差异分析。 适用场景：两次 brainstorm 方案对比、两个 design-brief 对比、评审迭代前后对比。 | `.claude/skills/office/compare/SKILL.md` |
 | `evals` | 质量追踪。记录每次流程的客观指标：节点完成情况/品味检查得分/假设验证状态/ 原生AI思维应用程度。来源：EVALS.md + EVALS-optimize.md。 | `.claude/skills/office/evals/SKILL.md` |
 | `figma-demo` | 口述+Figma→HTML Demo 编排器。设计师口述需求+提供Figma链接/截图， 结构化翻译→Socratic映射验证→Blueprint生成→SubAgent逐节点构建→ 组装完整HTML D… | `.claude/skills/office/figma-demo/SKILL.md` |
-| `magicpath` | MagicPath 界面产出：需求描述 → React canvas 组件。仅在用户明确选择 MagicPath，或明确批准包含 MagicPath 备用路径的计划且触发条件满足时使用（隐藏 skill… | `.claude/skills/office/magicpath/SKILL.md` |
 | `muse-x-digest` | muse app 专属：把 app 从 X 提取的 capture.md 处理成中文「完整翻译 + 深度讲述」。 五阶段：Ingest → 完整性门(COMPLETE/PARTIAL/EMPTY) →… | `.claude/skills/office/muse-x-digest/SKILL.md` |
 | `redteam` | 红队：对当前决策链路发起全面质疑。读取所有已产出文件，找出最脆弱的假设、 最大的盲点、最可能导致失败的决策。不提供解决方案，只提问题。 | `.claude/skills/office/redteam/SKILL.md` |
 | `retro` | 设计决策复盘。五问框架：核心假设验证/正确决策证据/弯路原因/下次改变/ 应该更早问到的信息。不分析 git commit，分析设计决策链路。 | `.claude/skills/office/retro/SKILL.md` |
@@ -73,6 +71,8 @@
 These discovery tombstones are not callable skills or authority-file links.
 
 - `figma-layer` — `retired-unavailable`; replacement: `open-design`; Only luca_gstack's reconstruction/write entry is retired; this neither verifies nor disables Open Design's own Figma capability. (`SC-20260905-003`)
+- `html-prototype` — `retired-unavailable`; replacement: `open-design`; The local HTML prototype generator is retired from the design flow. Refuse its invocation; do not automatically select another generator. Design output goes through open-design or claude-design by the user's choice. The independent acceptance script now lives under design-output/scripts/ and the shared tokens reference stays in references/. (`RET-20261020-001`)
+- `magicpath` — `retired-unavailable`; replacement: `open-design`; The MagicPath React prototype entry is retired from the design flow. Refuse its invocation; do not automatically select another generator. This neither verifies nor disables a user-level MagicPath plugin installed outside this repository. (`RET-20261020-002`)
 - `muse-loop-orchestrate` — `retired-unavailable`; replacement: `none`; The unused Muse Loop orchestrator is retired. Refuse its invocation; do not automatically launch a replacement tool or workflow. Standalone triage and the independent prototype judge remain available. (`RET-20260920-001`)
 - `muse-proto-gen` — `retired-unavailable`; replacement: `none`; The Muse Loop-only prototype generator is retired. Refuse its invocation; do not automatically select another generator. Independent design tools retain their own user-selection and quality gates. (`RET-20260920-002`)
 

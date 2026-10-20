@@ -49,7 +49,7 @@ python3 memory/scripts/consolidate_memory.py --json
 ```bash
 python3 memory/scripts/search_memory.py "Project Gate route guard"
 python3 memory/scripts/search_memory.py "Project Gate" --limit 5 --layer all
-python3 memory/scripts/search_memory.py "framework templates" --layer semantic --skill html-prototype
+python3 memory/scripts/search_memory.py "framework templates" --layer semantic --skill design-brief
 python3 memory/scripts/search_memory.py "quality gate fail" --layer eval --topic prototype --json
 python3 memory/scripts/search_memory.py "路由 触发词" --project muse   # 中文按词拆开 + 项目过滤
 ```

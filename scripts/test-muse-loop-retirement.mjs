@@ -54,7 +54,7 @@ function verifyRoutes() {
     }
   }
   for (const prompt of natural) noRetiredDispatch(route(prompt), prompt);
-  for (const name of ['html-prototype', 'figma-demo', 'open-design', 'magicpath', 'muse-req-triage',
+  for (const name of ['figma-demo', 'open-design', 'muse-req-triage',
     'muse-proto-judge', 'brainstorm', 'tech-spec', 'task-plan', 'custom-existing-skill', 'muse-proto-gen-helper']) {
     for (const prefix of ['/', '$']) {
       const result = route(prefix + name);
@@ -78,10 +78,10 @@ function verifyAdapter() {
     assert.match(output.hookSpecificOutput.additionalContext, /RETIRED/, 'real Codex adapter preserves refusal');
   }
   const retained = run('.codex/codex-hook-adapter.mjs', [join(scratch, hookRel)], JSON.stringify({
-    cwd: scratch, hook_event_name: 'UserPromptSubmit', prompt: '$html-prototype',
+    cwd: scratch, hook_event_name: 'UserPromptSubmit', prompt: '$open-design',
   }), { ROUTE_GUARD_DRY_RUN: '0' });
   assert.equal(retained.status, 0, retained.stderr);
-  assert.match(JSON.parse(retained.stdout).hookSpecificOutput.additionalContext, /html-prototype/);
+  assert.match(JSON.parse(retained.stdout).hookSpecificOutput.additionalContext, /open-design/);
   assert.doesNotMatch(retained.stdout, /RETIRED/);
 }
 const htmlPath = join(scratch, 'qa/index.html');
@@ -182,8 +182,14 @@ function verifySurface() {
   for (const name of retired) assert.ok(catalog.includes('`' + name + '` — `retired-unavailable`'));
   for (const rel of ['.claude/agents/muse-proto-judge.md', '.codex/agents/muse-proto-judge.toml']) assert.ok(existsSync(join(root, rel)), 'independent judge retained');
   // Shared design safeguards formerly checked by check-muse-loop-sync must survive its deletion.
-  const htmlSkill = readFileSync(join(root, '.claude/skills/office/html-prototype/SKILL.md'), 'utf8');
-  for (const needle of ['AI Slop 防火墙', 'DECISION: D-']) assert.ok(htmlSkill.includes(needle), needle);
+  // html-prototype was retired 2026-10-20 (RET-20261020-001); its generation-side slop firewall is replaced by the
+  // acceptance-side slop re-check in design-output, backed by the brief-side scan table.
+  const briefSchema = readFileSync(join(root, '.claude/skills/office/design-brief/SCHEMA.md'), 'utf8');
+  assert.ok(briefSchema.includes('AI Slop 扫描'), 'AI Slop 扫描');
+  const outputSkill = readFileSync(join(root, '.claude/skills/office/design-output/SKILL.md'), 'utf8');
+  assert.ok(/AI Slop 扫描[\s\S]*N ≥ 3[\s\S]*必须返工/.test(outputSkill), 'design-output slop re-check');
+  const specSchema = readFileSync(join(root, '.claude/skills/office/references/prototype-spec-schema.md'), 'utf8');
+  assert.ok(specSchema.includes('DECISION: D-'), 'DECISION: D-');
   const tokens = readFileSync(join(root, '.claude/skills/office/references/html-prototype-tokens.md'), 'utf8');
   for (const needle of ['FILE_END: html-prototype-tokens.md', '思考中', '低置信', '拒答', '部分完成', 'Steer',
     '幻觉兜底', 'Agent 执行中', 'prefers-reduced-motion']) assert.ok(tokens.includes(needle), needle);

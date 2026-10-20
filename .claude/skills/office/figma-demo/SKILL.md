@@ -150,7 +150,7 @@ Preamble 的旧资产探测只供参考，不是生成前置；未采用母版/t
 ┌──────────────────────────────────────────────────────────┐
 │ Phase 6: 审查衔接                                        │
 │   • 生成 prototype-spec.md（供下游交付审查消费）         │
-│   • 运行 html-prototype QA 脚本                           │
+│   • 运行原型 QA 脚本                           │
 │   • 更新 workflow-state.yaml                              │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -837,14 +837,14 @@ cat .claude/skills/office/figma-demo/templates/demo-template.html
 读取 SCHEMA.md，填充产出规格文件。
 写入 `docs/prototype/YYYY-MM-DD-<topic>/prototype-spec.md`
 
-**格式必须与 html-prototype 的 SCHEMA 兼容**（供下游交付审查消费）。
+**格式必须与 `references/prototype-spec-schema.md` 兼容**（供下游交付审查消费）。
 
 ### Step 6.1.5：可观测 QA
 
-生成 `index.html` 和 `prototype-spec.md` 后，运行现有 html-prototype QA 脚本：
+生成 `index.html` 和 `prototype-spec.md` 后，运行现有原型 QA 脚本（`design-output/scripts/verify-prototype.mjs`）：
 
 ```bash
-node .claude/skills/office/html-prototype/scripts/verify-prototype.mjs \
+node .claude/skills/office/design-output/scripts/verify-prototype.mjs \
   "docs/prototype/YYYY-MM-DD-<topic>/index.html" \
   --mode=figma-demo
 ```

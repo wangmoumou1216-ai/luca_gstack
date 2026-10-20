@@ -54,8 +54,7 @@ HTML/Figma/链接是输入格式，不是目标设计工具选择；明确整体
 OD 的 standalone 与历史 recover 直接调用仍兼容：有 design-brief 产物走 chain 入口，
 用户点名单点产物走 OD adhoc 交接。CD 按独立 claude-design 的冻结 Packet chain / 精确 recover 合同；
 adhoc 不扩展到 CD。无源且要可追踪交付 → 建议先
-`/design-brief`。工具选择按 `design_output.fallback_trigger`：用户明确选择本地 HTML / MagicPath，
-或已批准包含该具名备用工具的执行计划，才转交相应独立能力。daemon 不可达、鉴权失败或非 React
+`/design-brief`。设计出口只有 OD 与 Claude Design（没有第三个出口）。daemon 不可达、鉴权失败
 本身只报告阻塞，不自动替用户换工具；OD headless 失败的同项目桌面恢复仍按 OD 合同执行。
 
 **R3 · 流程选择与续接（真实选择门）**
@@ -137,7 +136,7 @@ SHA-256 冻结，由 Plan Agent 编译 exact U-ID，并让用户对同一 payloa
 - 路由层只问「要不要加上游 / 走哪条链」中仍未决定的**一个**分歧；已选不重问。
 - 输入、场景、深度**由各 skill Phase 0 自问**——路由层问了就是双重打扰（唯一反例：R1 那一句
   是"加不加上游"的决定，不是要输入）。
-- 硬门禁 skill（design-brief / open-design / html-prototype / tech-spec / task-plan）自拦，
+- 硬门禁 skill（design-brief / open-design / tech-spec / task-plan）自拦，
   路由层不预拦；最多一句提前提示前置（体验优化，非门）。
 - idea 与 brainstorm 相互独立（idea SKILL.md 显式声明），永不作为其前置。
 - headless 编排场景不插计划外卡点，写入产出即可（tech-spec seam 先例）。

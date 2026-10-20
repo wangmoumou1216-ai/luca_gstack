@@ -24,7 +24,7 @@ version: 2.1.0
 - 用户的需求触发了多个 skill 关键词（route-guard 输出了多条提示）
 
 **不激活，走 standalone skill：**
-- 用户点名具体 skill（「用 MagicPath 做个原型」→ magicpath；「本地 HTML」→ /html-prototype）
+- 用户点名具体 skill（「用 OD 做个原型」→ /open-design；「用 Claude Design」→ /claude-design）
 - 单一任务（只需一个 skill）
 
 ---
@@ -72,8 +72,8 @@ prototype_visual_refinement 均从 design-brief → 已选生成工具开始。�
 >
 > design-output 仅在未选时问一次 OD/CD，已选直接继承，保留完整原任务。
 > 它没有独立完成节点；Phase 绑定实际 open-design 或 claude-design adapter 后才执行与验收。
-> OD 不可达、认证失败或非 React/Canvas 场景不授权自动换工具；仅在用户明确选择 MagicPath / 本地 HTML，
-> 或明确批准包含相应备用路径的计划且触发条件满足时，才 dispatch 对应能力；否则报告 `BLOCKED` 并交还用户。
+> OD 不可达或认证失败不授权自动换工具；设计出口只有 OD 与 Claude Design，两者都不可用时
+> 返回 `NEEDS_CONTEXT` 并交还用户。
 > figma-demo 已降级为隐藏 skill，不作默认推荐。
 
 #### 场景 B — 跳过研究阶段（快速原型模式）
@@ -229,7 +229,7 @@ Work Agent 收到指令后必须按以下顺序执行：
 #### Phase 失败处理（W9，含主会话与后台阶段）
 
 **工具授权先于重试分流：** 以下重试只限同一已授权工具，不得借 `BLOCKED` 改走未授权备用工具。
-缺少工具切换授权时暂停并交还用户；已有计划明确批准的备用路径可在其触发条件满足时继续，无需重复确认。
+缺少工具切换授权时暂停并交还用户；用户已明确在 OD 与 CD 之间改选的，无需重复确认。
 CD stage 零发送、人工生成；未知上传/下载先核专用 status，不按 W9 重放外部效果。
 OD original_copy v1 是 HEADLESS_ONLY：在该阶段 profile/外部 stage/run 前，由主会话按 OD
 Phase 0 继承已选 OD 的默认 headless，并核独立当前 run grant；不再问自动模式许可，明确桌面或缺授权
@@ -320,8 +320,6 @@ OD Phase 3H：桌面生成/回收不支持，不能套 W9 的普通恢复；耗�
 | /design-output | ✅（薄入口） |
 | /claude-design | ✅（须实际宿主能力） |
 | /open-design | ✅ |
-| magicpath | ✅ |
-| /html-prototype | ✅ |
 | /ux-audit | ✅ |
 
 /auto 是编排器，不是替代者。用户随时可以绕过 /auto 直接用单个 skill。

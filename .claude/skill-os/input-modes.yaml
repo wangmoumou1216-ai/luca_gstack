@@ -90,16 +90,6 @@ skills:
     quality_gates: ["explicit_wizard_selection", "complete_manual_contract_human_confirmed", "exact_script_path_authorized", "real_journey_and_recovery", "all_values_classified_and_targeted", "template_library_byte_preservation", "stages_complete_and_total_equal", "runtime_confirm_before_each_effect", "secret_not_in_script_or_logs", "fresh_static_validation", "not_run_by_agent", "actual_context_cost_handoff"]
     notes: "仅制作人运行的 Bash 向导；目标服务、阶段、值分类/来源/落点与精确路径真实确认后写 STAGES。Agent 可直接完成的自动化/排障/实现归原 owner。生成不授予读取真实 secret、浏览器/服务写入、安装、Git 或执行脚本权限；服务配置仍待人运行。"
 
-  magicpath:
-    modes:
-      standalone:
-        required: ["ui_requirement"]
-        optional: ["design_brief_artifact", "external_design_system"]
-      workflow:
-        required: ["design_brief_artifact"]
-        optional: ["ux_brainstorm_artifact"]
-    quality_gates: ["design_generation_packet", "tool_consumption_contract", "page_interaction_mapping", "state_coverage", "no_packet_fact_drift", "component_rendered", "react_canvas_valid"]
-
   design-output:
     modes:
       standalone:
@@ -274,20 +264,6 @@ skills:
         note: "May omit PRD, but must not claim end-to-end traceable delivery."
     quality_gates: ["design_coordinate_system", "ai_native_layers", "eight_field_decision_cards", "state_coverage", "page_interaction_mapping", "output_target_platform_scope_sources", "traceability_gate", "design_generation_packet", "tool_consumption_contract", "single_entry_contract", "source_inheritance", "prototype_preservation_when_applicable", "template_adaptation_before_freeze", "scoped_traceability"]
     notes: "读取当前必需PRD/已选方案/handoff完整版本；建议不自动成为MUST。0–3显著决定的证据边界、收益/代价/翻转条件复用D.rationale与AC，所有关键风险保留；收益执行条件进入实际Packet既有字段，丢条件停止冻结。"
-
-  html-prototype:
-    modes:
-      standalone:
-        required: ["prototype_brief"]
-        optional: ["design_brief", "ux_audit_report", "screenshots", "figma_demo_blueprint", "purpose", "ui_variant_count"]
-      workflow:
-        required: []
-        optional: ["design_brief", "ux_audit_report", "prd_artifact", "purpose", "ui_variant_count"]
-    purposes: ["ui", "logic-validation"]
-    ui_variant_count: {default: 0, explicit_comparison_default: 3, allowed: [0, 2, 3, 4, 5], logic_validation_required: 0}
-    source_kinds: ["design_brief", "ux_audit", "screenshot_delta", "figma_demo_blueprint", "standalone_brief", "standalone_mobile_prototype"]
-    quality_gates: ["step0_cognitive_gate", "source_scope_contract", "current_design_system_when_provided", "design_generation_packet_gate", "prototype_carrier_respected", "decision_mapping_coverage", "state_mapping_coverage", "dynamic_reference_when_triggered", "prototype_qa", "purpose_count_source_contract", "logic_portability_and_real_walkthrough_when_selected", "ui_per_variant_state_content_and_aesthetic_qa", "real_variant_choice_when_comparison"]
-    notes: "purpose 和 ui_variant_count 是同 key 输入/CLI属性，不是 Workflow mode。普通 ui/0 保持；显式对比才默认3、合法2–5；logic-validation 必须0且仅固定五态/24分门 N/A，其余门有效。冲突回原 owner，不切 standalone 绕 Packet。"
 
   figma-demo:
     modes:
@@ -522,7 +498,7 @@ skills:
         required: ["prd_artifact"]
         optional: ["ux_brainstorm_artifact"]
     quality_gates: ["semantic_verbatim_layer_split", "verbatim_never_enters_packet"]
-    notes: "内容与语言设计，双相位：相位1 语义规范 pre-brief（产 voice-copy-spec，design-brief Step 1.0b 继承）；相位2 评审改写 standalone。逐字层仅 html-prototype 本地路径，永不进 OD 编译。"
+    notes: "内容与语言设计，双相位：相位1 语义规范 pre-brief（产 voice-copy-spec，design-brief Step 1.0b 继承）；相位2 评审改写 standalone。逐字层不进 OD 编译。"
 
 governance_tools:
   compare:

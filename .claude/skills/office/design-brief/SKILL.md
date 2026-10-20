@@ -85,7 +85,7 @@ python3 .claude/observability/scripts/get_rules.py design-brief "*" 2>/dev/null 
 | 交付模式 | 必要来源 | 能力边界 |
 |---|---|---|
 | traceable_delivery | 实际 PRD R/AE + 设计输入 | 设计生成与工程，须过完整 PRD 追踪门 |
-| design_generation | 已有需求/原型的来源索引、明确范围与 AC | 可交 OD / MagicPath / Claude Design / HTML；不宣称 PRD 工程 ready |
+| design_generation | 已有需求/原型的来源索引、明确范围与 AC | 可交 OD / Claude Design；不宣称 PRD 工程 ready |
 | standalone_light | 只要求探索性文档，关键输入仍未齐 | LIMITED，不能冒充可直接生成或开发的最终契约 |
 
 缺 ID 用本轮 REQ-/AC-/SRC-；已有 ID 原样保留，不伪造 PRD R/AE。tech-spec/task-plan
@@ -253,7 +253,7 @@ DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED。NO_PIN 框架维护不跑项目 pream
 ## Phase 8：按已授权目标交接
 
 用户已明确目标及后续范围则继续；要生成但工具未定交 design-output，只问一次 OD 或 Claude Design。
-明确选择 MagicPath、本地 HTML 或停在文档仍沿实际选择。冻结 Packet 尚未选择工具时，用
+明确选择停在文档仍沿实际选择。冻结 Packet 尚未选择工具时，用
 design-output 的 path/hash-bound sidecar 记录后续选择，不改正文；硬绑定异工具回本 Brief 修订重冻。
 不重复许可、不自动换工具。工具不可达保留材料并报告具体状态。
 Brief DONE 只表示契约完成，不表示 OD/CD 已生成或验收通过。

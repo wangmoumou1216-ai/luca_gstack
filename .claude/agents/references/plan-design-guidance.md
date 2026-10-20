@@ -60,8 +60,6 @@ Use skills according to evidence, not a fixed script:
 | `claude-design` | trusted Muse Design staging; manual generation; exact export/recovery | main_agent |
 | `open-design` | explicitly selected OD; headless by default, preserve explicit desktop/stage-only scope | main_agent |
 | `motion-polish` | refine motion in actual existing HTML within confirmed scope | main_agent |
-| `magicpath` | user-selected React component prototype alternative | subagent |
-| `html-prototype` | user-selected local HTML alternative | subagent |
 | `muse-req-triage` | user has a requirement corpus needing human triage first | main_agent |
 
 `muse-req-triage` keeps its own AskUserQuestion decision gate. Plan may schedule its position but
@@ -146,7 +144,7 @@ contains target users and core features, and no blocking `[待确认]` remains. 
 Use `design-output` to inherit the actual tool or ask once between OD/CD. It retains the full task,
 binds an unselected frozen Packet via sidecar, and returns conflicting frozen targets to Brief.
 Replace the entry with the actual adapter node; it has no second DONE/handoff. Only the user's
-actual choice or an already approved named fallback plan authorizes a different tool. A daemon, authentication, platform, or framework failure does not
+actual choice between OD and CD, or an already approved named plan between them, authorizes a different tool. A daemon, authentication, platform, or framework failure does not
 grant permission to switch tools. `skills_needed` must match the approved choice. Tool switching
 does not waive the upstream handoff gate or expand external write authority.
 
@@ -164,29 +162,8 @@ does not waive the upstream handoff gate or expand external write authority.
   Missing host/recovery/processor capability stops the dependent gate; formal exact artifact/revision
   export, original-copy integrity, independent full-source semantics and final resolution precede DONE.
   OD headless/desktop receipts cannot stand in for CD manual-generation provenance.
-- `magicpath`: use its own availability and execution contract. Require the job status to be
-  `completed` and inspect the actual generated filename; platform casing must not be hard-coded.
-- `html-prototype`: use its input/output and QA contract. Require the exact output and Phase 4.5 QA.
-
-MagicPath completion example, only after the user selected it:
-
-```bash
-# [BLOCKING] <ID> — MagicPath component build completed
-if ( set -o pipefail;
-  npx -y magicpath-ai code status <jobId> -o json \
-    | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get('status')=='completed' else 1)"
-); then
-  echo "PASS <ID>"
-else
-  check_rc=$?
-  echo "FAIL <ID>"
-  exit "$check_rc"
-fi
-```
-
-After `code start`, list `src/components/generated/` before binding a component filename. When a
-plan compares a generated name with the design brief, use a `[WARNING]` case-insensitive assertion;
-reasonable platform casing must not block the Phase.
+There is no third design exit: when neither OD nor CD is available, return NEEDS_CONTEXT with the actionable next step
+(start OD, or use CD inside the Luca app Design) and do not switch tools.
 
 ## Phase shape reminder
 

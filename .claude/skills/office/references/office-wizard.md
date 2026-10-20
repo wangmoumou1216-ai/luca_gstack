@@ -31,8 +31,8 @@ AskUserQuestion：
 
 设计产出经 design-output 继承已选 OD/CD；未选只问一次并保留完整原任务，入口无独立完成节点。
 下列原型工具均是推荐选项，以用户已选工具为准；「备选」不表示故障后自动切换。
-OD 不可达、认证失败或非 React/Canvas 场景只报告阻塞并暂停；只有用户明确选择 MagicPath / 本地 HTML，
-或明确批准包含相应备用路径的计划且触发条件满足，才启用对应能力。缺授权则 `BLOCKED` 交还用户；
+OD 不可达或认证失败只报告阻塞并暂停；设计出口只有 OD 与 Claude Design，没有第三个出口，
+两者都不可用时 `NEEDS_CONTEXT` 交还用户；
 已有明确授权不重复询问。OD headless 失败保留「一次 retry → 同一项目 OD 桌面端恢复」。
 
 **用户选 A（新功能）：**
@@ -52,7 +52,6 @@ OD 不可达、认证失败或非 React/Canvas 场景只报告阻塞并暂停；
 5. /ux-brainstorm  → UX设计方案编排器（7个UX逼问，2-3方案，Oracle审查）
 6. /design-brief    → 轻量交互文档与原型决策（不跑 ux-brainstorm 时可独立使用）
 7. /design-output   → 继承已选工具，未选时选 OD 或 Claude Design；实际 adapter 负责回收和验收
-   /html-prototype → （备选）生成 HTML 原型
 
 从哪里开始都可以。/deepresearch 的报告可以直接传给 /brainstorm 作为输入。
 需求范围明确、不需要重型拷问时，可以用 superpowers:brainstorming 替代第3步。
@@ -81,7 +80,6 @@ AskUserQuestion：
 5. /ux-brainstorm  → UX设计方案编排器
 6. /design-brief    → 轻量交互文档与原型决策
 7. /design-output   → 继承已选工具，未选时选 OD 或 Claude Design；实际 adapter 负责回收和验收
-   /html-prototype → （备选）生成改版原型
 /brainstorm 可以直接用，不需要先跑 /idea。需求范围明确时可用 superpowers:brainstorming 替代。
 ```
 
@@ -100,7 +98,6 @@ AskUserQuestion：
 2. /ux-audit   → 系统评审页面（视觉/交互/业务三个维度）
 3. /design-brief → 基于评审结论生成轻量交互文档
 4. /design-output   → 继承已选工具，未选时选 OD 或 Claude Design；实际 adapter 负责回收和验收
-   /html-prototype → （备选）按评审清单逐条生成改版原型
 从 /idea 开始？
 ```
 
@@ -123,7 +120,6 @@ AskUserQuestion：
 6. /ux-brainstorm  → UX设计方案编排器（含Agent控制边界逼问）
 7. /design-brief → 轻量交互文档与原型决策（Cursor 锚点强制通过：可见/暂停/接管/撤销）
 8. /design-output   → 继承已选工具，未选时选 OD 或 Claude Design；实际 adapter 负责回收和验收
-   /html-prototype → （备选）生成原型
 Agent 化设计的核心红线：用户必须始终能 看见 / 暂停 / 接管 / 撤销 AI 的动作。
 ```
 
@@ -278,20 +274,12 @@ luca_gstack — 一级可见 Skill 列表
                输入模式：standalone 或 workflow。输入 design-brief 交互文档；
                继承显式 desktop / stage-only 范围；模式与实际执行授权按 open-design Phase 0/2/3 合同，回收后独立验收。
                说明：设计系统由用户在 OD 配置；交接需求与已确认参考，OD 不可达或认证失败时报告并暂停。
-               隐藏 skill `magicpath` 仅按用户明确选择或已批准备用路径内部 dispatch，非一级入口
 
 /motion-polish A B C D 已有 HTML 的动效与微交互：保留真实产品行为，返回精确产物给独立验收；不生成新 UI
 
 /prototype-notes —     给已有本地 HTML 加交互说明、标注和人工编辑入口，可单独调用
                输入模式：standalone / workflow / internal；真实当前版本确认后按新增范围生成，
                人工可编辑整个支持原型；独立验收后返回父 caller 或完成本次 notes 调用
-
-/html-prototype A B C  生成可在浏览器查看的 HTML 原型（用户明确选择或已批准的本地 HTML 备用路径）
-               输入模式：standalone 或 workflow。可接 design-brief / ux-audit /
-               screenshot_delta / figma-demo blueprint / standalone brief
-               质量 gate：Step0认知门禁、实际设计规范与参考来源、动态参考、QA
-               不因 standalone 取消；同 key purpose=ui|logic-validation 与 ui_variant_count，
-               仅显式 UI 对比才2–5（未给数默认3），逻辑必须0且只两门 N/A，仍实际浏览器验证
 
 ── 工程落地 ────────────────────────────────────────────────────
 
@@ -377,7 +365,7 @@ superpowers:brainstorming  A B   轻量设计文档（来自 superpowers plugin�
                适用：需求范围明确的中小型需求，想快速收敛而不需要重型苏格拉底拷问
                产出：设计文档（docs/plans/ 目录，superpowers 默认路径）
                前置：需要已安装 superpowers plugin（/plugin install superpowers@claude-plugins-official）
-               说明：产出可作为下游 /ux-research、/design-brief、/html-prototype 的输入
+               说明：产出可作为下游 /ux-research、/design-brief 的输入
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```

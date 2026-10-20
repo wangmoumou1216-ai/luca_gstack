@@ -335,7 +335,7 @@ SessionStart，workflow-runner 的已有激活检查保持原合同。App 的受
                 → insight-synthesis（洞察）→ 回到设计链
 
 内容维度   ux-writing（语义规范产在 design-brief 之前、被其继承进 Packet；
-                逐字文案只喂 html-prototype 本地路径——OD 的生成自由度不被锁）
+                逐字文案不进 OD 编译——OD 的生成自由度不被锁）
 
 工程链     brainstorm → design-brief → tech-spec → task-plan → implement → code-review
 工程补充   已解决的工程讨论 → to-spec；获批任务计划 → to-tickets（显式发布入口）
@@ -347,8 +347,8 @@ SessionStart，workflow-runner 的已有激活检查保持原合同。App 的受
 已有需求或原型精修无需伪造 PRD 或重跑发散。`design_source` 的设计生成追踪与 `prd_end_to_end`
 的工程追踪分别验证，设计生成 PASS 不等于工程已就绪。
 
-`open-design` 是推荐的设计产出路径；本地 HTML 与 MagicPath 仅在你明确选择，或已批准的具名备用计划
-满足触发条件时使用。OD 故障本身不授权换工具；已退役的 `figma-layer` 不再参与设计链。
+设计产出只有 `open-design` 与 `claude-design` 两个出口，由你选择；两者都不可用时返回 NEEDS_CONTEXT，
+OD 故障本身不授权换工具；已退役的 `html-prototype`、`magicpath` 不再参与设计链；已退役的 `figma-layer` 不再参与设计链。
 设计系统来自当前项目或外部工具配置，`framework/` 只作为可选只读参考。
 
 动效验收绑定候选与报告的路径、SHA 和全部必需行为；下游消费明确的 `final_artifact_ref` 时重新核验。
@@ -410,7 +410,6 @@ standalone 不强制启动整条流程，但仍遵守 skill 自身的输入、�
 | `design-brief` | 三类入口统一收敛，冻结可追溯的设计 Packet |
 | `ux-writing` | 内容语义、voice/tone、微文案与文案评审 |
 | `open-design` | 冻结 Packet 与模板绑定后交接到指定 OD 项目，执行获批的生成与回收 |
-| `html-prototype` | 用户明确选择的本地 HTML 原型与可观测 QA |
 | `prototype-notes` | 为已确认的本地 HTML 增改交互说明、标注与人工编辑入口 |
 | `motion-polish` | 检查或改善现有 HTML 的动效、微交互及交付质量 |
 | `ux-audit` | 按选定模块评审页面 UX |
@@ -448,7 +447,7 @@ standalone 不强制启动整条流程，但仍遵守 skill 自身的输入、�
 
 触发规则见 [路由表](.claude/skill-os/skill-routing-map.yaml)；各宿主根契约分别为
 [CLAUDE.md](CLAUDE.md) 与 [AGENTS.md](AGENTS.md)。
-隐藏入口包括 `careful`、`challenge`、`compare`、`evals`、`figma-demo`、`magicpath`、`muse-x-digest`、
+隐藏入口包括 `careful`、`challenge`、`compare`、`evals`、`figma-demo`、`muse-x-digest`、
 `redteam`、`retro`，按各自合同按需使用；`references` 只供内部读取。
 `figma-layer`、`muse-loop-orchestrate` 和 `muse-proto-gen` 已退役，不可调用。
 
