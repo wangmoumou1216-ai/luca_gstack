@@ -5,7 +5,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
-import { resolvePrototypeOptions, inspectPrototype, extractPortableLogic, resolveMode, ALLOWED_MODES } from "./verify-prototype.mjs";
+import { resolvePrototypeOptions, inspectPrototype, extractPortableLogic, resolveMode, ALLOWED_MODES, normalizeArgs } from "./verify-prototype.mjs";
 
 const checker = fileURLToPath(new URL("./verify-prototype.mjs", import.meta.url));
 
@@ -137,6 +137,29 @@ check(failing(brokenEmpty).includes("Non-empty rendered text"), "empty content m
 // external is never stricter than the default mode on the same input
 const strictOnlyInExternal = failing(brokenLorem).filter((n) => !failing(inspectPrototype({ html: plainPage.replace("Customer list", "Lorem ipsum"), mode: "html-prototype", specExists: false }).checks).includes(n));
 check(strictOnlyInExternal.length === 0, "external must not add a failing check the default mode lacks");
+// a short but real page: reported (WARN) in external, still FAIL in the default mode; only an effectively blank page fails in external
+const shortPage = "<!doctype html><html><body><main><h1>Sign in</h1><label>Email</label><label>Password</label><button>Continue</button></main></body></html>";
+const shortExt = inspectPrototype({ html: shortPage, mode: "external", specExists: false }).checks;
+check(!failing(shortExt).includes("Non-empty rendered text"), "a short real page must not fail in external");
+check(named(shortExt, "Substantial rendered text (> 200 characters)")?.status === "WARN", "a short page must be reported as WARN in external");
+check(failing(inspectPrototype({ html: shortPage, mode: "html-prototype", specExists: false }).checks).includes("Non-empty rendered text"), "the default mode keeps the > 200 characters rule");
+check(failing(inspectPrototype({ html: "<html><body></body></html>", mode: "external", specExists: false }).checks).includes("Non-empty rendered text"), "a blank page must fail in external");
+check(named(inspectPrototype({ html: plainPage, mode: "external", specExists: false }).checks, "Substantial rendered text (> 200 characters)")?.status === "PASS", "a substantial page passes the report-only check");
+// the blank-page boundary is pinned: 9 characters fail, 10 pass, and a <title> never makes an empty body pass
+const bodyOf = (text) => inspectPrototype({ html: `<!doctype html><html><head><title>Untitled design</title></head><body>${text}</body></html>`, mode: "external", specExists: false }).checks;
+check(failing(bodyOf("a".repeat(9))).includes("Non-empty rendered text"), "9 body characters must fail in external");
+check(!failing(bodyOf("a".repeat(10))).includes("Non-empty rendered text"), "10 body characters must pass in external");
+check(failing(bodyOf("")).includes("Non-empty rendered text"), "a <title> must not make an empty body pass in external");
+// value flags accept both `--flag value` and `--flag=value`; the value must never be read as the brief path
+assert.deepEqual(normalizeArgs(["a.html", "--out-dir", "d"]), ["a.html", "--out-dir=d"]); staticAssertions += 1;
+assert.deepEqual(normalizeArgs(["a.html", "b.md", "--mode", "external", "--out-dir=d"]), ["a.html", "b.md", "--mode=external", "--out-dir=d"]); staticAssertions += 1;
+assert.deepEqual(normalizeArgs(["a.html", "--design-rules", "r.json"]), ["a.html", "--design-rules=r.json"]); staticAssertions += 1;
+assert.deepEqual(normalizeArgs(["--mode", "x"]), ["--mode", "x"]); staticAssertions += 1; // the first argument is the input path, never a flag
+assert.deepEqual(normalizeArgs(["a.html", "--ui-variants", "--purpose=ui"]), ["a.html", "--ui-variants", "--purpose=ui"]); staticAssertions += 1;
+for (const bad of [["a.html", "--out-dir"], ["a.html", "--out-dir", "--mode=external"]]) {
+  const run = spawnSync(process.execPath, [checker, ...bad], { encoding: "utf8" });
+  check(run.status === 2 && /Missing value for --out-dir/.test(run.stderr), `a value flag without a value must be a usage error, not a stack trace: ${bad.join(" ")}`);
+}
 
 console.log(`PASS ${staticAssertions} deterministic assertions; STATIC_CONTRACT_ONLY; native/browser/model semantics/real selection NOT_RUN.`);
 if (process.argv.includes("--static-only")) process.exit(0);

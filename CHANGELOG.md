@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-21 · 收口 html-prototype/magicpath 退役后的已知坑）
+- 验收脚本 `--out-dir DIR`（空格写法）不再把目录当成 Brief 路径而 EISDIR 崩溃；缺值给用法报错。为什么：真实调用方会用空格写法，崩溃堆栈既无诊断价值又会被误判为页面失败。
+- external 模式下“非空文本 > 200”改为 < 10 字符才 FAIL、短页只 WARN。为什么：设计工具产出的登录页/单控件页是合法短页，不应被迫返工；默认模式不变，仍是 > 200。
+- design-brief 路由补回“高保真原型”触发词（退役后落到 NONE），并加路由回归用例。
+
 ### Changed（2026-10-21 · 采纳 html-prototype 中不影响 OD/CD 产出的价值）
 
 - 验收脚本新增 `--mode=external`（给 OD / CD / 用户 HTML 用）：html-prototype 专属项（spec、动态参考、审美分、状态标记、DECISION 映射）记 N/A，字体 CDN 与 emoji 只记 WARN，Lorem、内容为空、控制台错误、三视口截图仍判 FAIL；报告默认写到临时目录，不写进交付目录。为什么：默认模式拿 html-prototype 的约定去卡 OD/CD 页面，会给出误导性的 FAIL，按“只修未过项”还会驱动对用户所选字体/内容的返工。验收侧 AI Slop 复核改为只出报告、由用户决定是否修复，不自动重新生成、不计入两轮上限——**即原先“`N ≥ 3` 必须返工”这条受保护规则被移除**；`skill-invariants.md` 的对应保护条款随之修订并写明“输出中性底线”。

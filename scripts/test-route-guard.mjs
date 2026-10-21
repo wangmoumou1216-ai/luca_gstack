@@ -407,6 +407,15 @@ const cases = [
     },
   },
   {
+    name: '退役后: 高保真原型 → /design-brief (不落到 NONE)',
+    prompt: '做一个高保真原型',
+    extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: 'testproj' },
+    expect: decision => {
+      assert.equal(decision.decision, 'SINGLE_SKILL');
+      assert.equal(decision.skill, '/design-brief');
+    },
+  },
+  {
     name: 'G3: route guard no longer requires a pin before skill routing',
     prompt: '继续做个原型',
     extraEnv: { ROUTE_GUARD_CURRENT_PROJECT: '' },

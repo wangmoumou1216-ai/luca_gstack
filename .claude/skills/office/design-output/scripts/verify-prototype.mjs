@@ -243,7 +243,16 @@ if (isExternal) {
 }
 
 const textLength = html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().length;
-addCheck("Non-empty rendered text", textLength > 200, `Approximate text length: ${textLength}.`);
+if (isExternal) {
+  // external: a short but real page (a login form, a single control demo) is the design tool's choice; only an effectively blank page fails.
+  // Count <body> text only: a <title> must not make an empty body pass. 10 characters is about one short word or label.
+  const bodyHtml = (html.match(/<body[^>]*>([\s\S]*)<\/body>/i) || [null, html])[1];
+  const bodyTextLength = bodyHtml.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().length;
+  addCheck("Non-empty rendered text", bodyTextLength >= 10, `Approximate body text length: ${bodyTextLength}; an effectively blank page (< 10 characters) fails.`);
+  softCheck("Substantial rendered text (> 200 characters)", bodyTextLength > 200, `Approximate body text length: ${bodyTextLength}; short pages are reported, not failed, in external mode.`);
+} else {
+  addCheck("Non-empty rendered text", textLength > 200, `Approximate text length: ${textLength}.`);
+}
 
 
 const portableLogic = extractPortableLogic(html);
@@ -436,7 +445,27 @@ async function probeBrowser({ htmlPath, screenshotDir, purpose, variants, checks
   return result;
 }
 
-export async function verifyPrototype(args = process.argv.slice(2)) {
+// Flags that carry a value may be written `--flag value` or `--flag=value`; normalize so a value is never mistaken for the brief path.
+const VALUE_FLAGS = new Set(["--out-dir", "--mode", "--design-rules"]);
+export function normalizeArgs(raw) {
+  const out = [];
+  for (let i = 0; i < raw.length; i += 1) {
+    const arg = raw[i];
+    if (i > 0 && VALUE_FLAGS.has(arg)) {
+      const value = raw[i + 1];
+      if (value === undefined || value.startsWith("--")) {
+        console.error(`Missing value for ${arg}; write ${arg}=<value> or ${arg} <value>.`);
+        process.exit(2);
+      }
+      out.push(`${arg}=${value}`);
+      i += 1;
+    } else out.push(arg);
+  }
+  return out;
+}
+
+export async function verifyPrototype(rawArgs = process.argv.slice(2)) {
+const args = normalizeArgs(rawArgs);
 const input = args[0];
 if (!input) {
   console.error("Usage: verify-prototype.mjs <docs/prototype/.../index.html> [design-brief.md] [--mode=external] [--out-dir=DIR] [--purpose=ui|logic-validation] [--ui-variants=N]");
