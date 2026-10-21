@@ -132,7 +132,7 @@ project_skills:
   design_brief:
     invoke: "/design-brief"
     weight: 6
-    triggers: [轻量交互, 原型决策, design brief, 方案落地, 交互文档, 落地方案, 方案细化, 已有需求转设计契约, 原型植入模板, 原型UI精修契约, 做个原型, HTML原型, 快速原型, 原型界面, 生成HTML, 本地原型]
+    triggers: [轻量交互, 原型决策, design brief, 方案落地, 交互文档, 落地方案, 方案细化, 已有需求转设计契约, 原型植入模板, 原型UI精修契约, 做个原型, HTML原型, 快速原型, 原型界面, 生成HTML, 本地原型, 高保真原型]
 
   ux_audit:
     invoke: "/ux-audit"
