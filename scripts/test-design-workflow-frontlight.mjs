@@ -34,6 +34,7 @@ const paths = {
   method: '.claude/skills/office/ux-research/references/competitor-analysis.md',
   cd: '.claude/skills/office/claude-design/SKILL.md',
   od: '.claude/skills/office/open-design/SKILL.md',
+  dout: '.claude/skills/office/design-output/SKILL.md',
 };
 const diskSource = Object.fromEntries(Object.entries(paths).map(([key, path]) => [key, readFileSync(resolve(root, path), 'utf8')]));
 const baseline = args.includes('--baseline') ? execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() : null;
@@ -289,6 +290,12 @@ check('F14-reference-images-as-attachments', 'CD/OD state the reference-only rol
 });
 
 
+check('F15-repair-cap-covers-every-return-path', 'the two-round repair cap has one owner and CD/OD-return repairs are bound to it', s => {
+  has(s.dout, /最多两轮，仍未通过的列为剩余项交用户/);
+  has(s.dout, /OD 的 adhoc 与 recover 回收后的返修、CD 回收后的返修，同样受这个上限约束/);
+  has(s.cd, /至多两轮（同 design-output），仍未过的列为剩余项交用户/);
+});
+
 check('FIXTURE-separation', 'subject prompts and grader expectations are separate finite sets', () => {
   assert.equal(fixture.evidence_class, 'BOUNDED_NATIVE_PROBES_NOT_FULL_SKILL_RUNS');
   assert.deepEqual(fixture.subject_cases.map(row => row.id), fixture.grader_expectations.map(row => row.id));
@@ -358,6 +365,9 @@ if (args.includes('--mutation') && results.every(row => row.ok)) {
     ['guidance-row-removed', 'guidance', 'competitor-scan.md, run by the main agent with the Mobbin tools', 'competitor-scan.md, executed by quick-research', 'F13-competitor-scan-landing'],
     ['method-calls-mobbin', 'method', '本方法不自己调用 Mobbin', '本方法也自己调用 Mobbin', 'F13-competitor-scan-landing'],
     ['cd-drops-reference-only', 'cd', '只作结构与交互参考，不覆盖 D/STATE/AC、用户描述与设计系统', '可覆盖 D/STATE/AC', 'F14-reference-images-as-attachments'],
+    ['dout-cap-owner-weakened', 'dout', '最多两轮，仍未通过的列为剩余项交用户', '视情况多轮，仍未通过的列为剩余项交用户', 'F15-repair-cap-covers-every-return-path'],
+    ['dout-return-paths-unbound', 'dout', 'OD 的 adhoc 与 recover 回收后的返修、CD 回收后的返修，同样受这个上限约束', 'OD 的 adhoc 与 recover 回收后的返修不受这个上限约束', 'F15-repair-cap-covers-every-return-path'],
+    ['cd-cap-dropped', 'cd', '至多两轮（同 design-output），仍未过的列为剩余项交用户', '可继续多轮，仍未过的列为剩余项交用户', 'F15-repair-cap-covers-every-return-path'],
     ['od-drops-reference-only', 'od', '随附件，只作结构与交互参考，\n不覆盖 D/STATE/AC、用户描述与设计系统', '随附件，可覆盖 D/STATE/AC', 'F14-reference-images-as-attachments'],
   ];
   for (const [name, key, before, after, expected] of mutations) {

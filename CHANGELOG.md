@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed（2026-10-21 · 验收返修“至多两轮”的覆盖范围）
+- design-output 写明：OD 的 adhoc/recover 回收后的返修、CD 回收后的返修，同样受“至多两轮”约束；claude-design 第 4 节补同一句并指回 design-output。为什么：这条上限原先只写在 design-output，走 OD adhoc/recover 或 CD 回收的路径不经过它，返修理论上没有上限。
+- open-design/SKILL.md 本次未加字：它已贴近 45KB 预算（B2），要加需先精简既有措辞，待用户裁决。
+
 ### Changed（2026-10-21 · 竞品分析改为 Mobbin 设计参考节点）
 - `references/competitor-scan.md` 重写：进入设计链时必问用户一次，用户说要分析就必进 Mobbin 节点，由主 agent 用 Mobbin 工具看真实界面，产出带图的设计参考包（每条设计指导对应一张图和一条可采纳的 Brief 条目）；用户采纳的条目才写成 D/STATE/AC，对应的图作为 `interaction-reference` 附件交给 OD/CD（标作“设计参考”）。为什么：原轻量对照只有文档层先例，看不到真实界面，也交不到设计工具手里。
 - 范围只含界面和交互，不含动效（动效仍归 `motion-polish`）；Mobbin 不可用一律 NEEDS_CONTEXT，不静默换办法。

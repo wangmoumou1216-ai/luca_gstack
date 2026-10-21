@@ -43,6 +43,7 @@ python3 .claude/observability/scripts/get_rules.py design-output "*"
 两条路径均为：选工具 → 确认该工具设计规范 → 材料就位 → 生成/迭代 → 回收验收。
 回收验收由独立执行者在真实浏览器里按 Brief 的 Given/When/Then 逐条实操；未通过项只修这些项并复测，
 最多两轮，仍未通过的列为剩余项交用户，不把一轮复测当全过；复测中新报出的项也计入这两轮上限。
+OD 的 adhoc 与 recover 回收后的返修、CD 回收后的返修，同样受这个上限约束，不另起一套轮数。
 确定性项可先跑验收脚本，OD/CD 或用户 HTML 一律带 `--mode=external`：
 `node .claude/skills/office/design-output/scripts/verify-prototype.mjs <index.html> [design-brief.md] --mode=external`。
 external 只跑与生成器无关的检查（Lorem、内容为空、控制台错误、三视口截图）；html-prototype 专属项（spec、动态参考、

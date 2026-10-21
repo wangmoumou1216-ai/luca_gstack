@@ -138,6 +138,7 @@ PREACCEPT 后 sealAccepted；每次消费传 authenticateClaudeDesignSelection�
 accepted motion→notes 使用 deriveFromAccepted 绑定父 final，仍重验同一 raw 收据和采用依据；
 不调用 OD 专用授权包装。CLI 缺上述真实 API 上下文时 NEEDS_CONTEXT，不走 raw/旧证书兜底。
 独立浏览器验全部原 D/STATE/AC/KEEP；机械 PASS、用户生成报告和下载均不等于 DONE。
+未通过项只修这些项并复测，至多两轮（同 design-output），仍未过的列为剩余项交用户。
 支持的 DC 运行库额外冻结 `RUNTIME:DC_EXPORT_V1`：独立核真实顶层环境、本地运行库加载、
 自重取请求/响应的同入口字节、无重定向/外部请求与配置覆写。缺该项或 FAIL/UNKNOWN 不 seal；
 运行库 hash 只标识审过版本，不能代替环境证明。不注入配置或改 raw 来跳过自重取。
