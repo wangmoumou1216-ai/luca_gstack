@@ -296,3 +296,13 @@ Oracle/handoff 段；交接第 2 步的 stale hash / 缺恢复阻断演练。
 - 独立评审（冷启动、串行、默认推翻）：契约评审首轮 FAIL（1 个 BLOCKER：`test-design-tool-routing.mjs` 有一条失效断言且不在任何 gate，所以全量 verify 假绿；M1 生成侧 slop 防火墙无人承接；M2 取消的能力未披露；M3 冻结 live-run 提案失效未登记）。均已修复并复核为 PASS_WITH_FIXES；运行时评审 PASS（路由、验收脚本、变异、生成物、残留引用、跨宿主均实跑）。
 - 已知遗留（不阻塞）：`scripts/fixtures/agent-orchestration-cases.json` 仍含 12 个 html-prototype 用例（与计划哈希绑定，需新 plan 重冻）；`memory/evals/matt-adaptation/method-coverage.json` M09 的 owner 仍是 U008 html-prototype；`memory/evals/routing/fixtures.jsonl` 的 `sem-ux-novel` 仍是旧语义标签；验收脚本里 QA 模式名仍叫 `html-prototype`（只是模式标签）；`~/.codex/skills/magicpath`（用户级，未触碰）。
 - 评审局限：评审者是 AI 代理，不是人类专家；两个评审员各自覆盖契约与运行时，没有第三方复核。
+
+### 9.3 补充复核与收尾修复（2026-10-21，另一条 session 对已落地退役再做的冷启动评审）
+
+- 范围：`64a3e13..a00878dc`（含当时工作区未提交改动）。契约评审与运行时评审各一个冷启动代理，串行、默认推翻；二者结论均为 APPROVE_WITH_FIXES，均无 BLOCKER。
+- 契约评审的 MAJOR：`.claude/observability/rules.yaml` 的 R-20260616-001（作用于 open-design，active）仍写“非 magicpath/html-prototype(后者仅 daemon 真不可达)”，等于在 OD 流程里把已退役工具当出口。已改为“不换其他工具，OD/CD 之外没有第三个出口”；`test-design-output-retirement.mjs` 新增断言：任何 active 规则不得再出现这两个名字（对旧版规则文件实测会失败）。
+- 运行时评审的 MINOR：`.claude/skills/magicpath` 是被 git 跟踪的悬空软链（指向已删的 `.agents/skills/magicpath`）。已删除，并在退役测试里加“三个入口目录不得有悬空软链”的断言。
+- 其他小项：补回旧触发词“生成HTML”“本地原型”到 design-brief 路由；`html-prototype-tokens.md` 的陈旧措辞改为已退役说明；`promoted-facts.yaml` 的 SC-20260905-003 把“保留独立 HTML、MagicPath 的已授权用法”改为已退役。
+- 有意不改：`external-skill-scout.js` 的“已有 skill”名单（退役名字留在名单里是为了不被重复推荐，与 figma-layer 先例一致）；`agent-orchestration-cases.json` 的 html-prototype 用例（与 plan 哈希绑定，见 §9.2）；记忆条目 SC-20260527-002/003 措辞偏旧但不诱导调用工具。
+- 已知小缺口：`verify-prototype.mjs` 的 flag 只认 `--out-dir=DIR`，写成 `--out-dir DIR` 会抛 `EISDIR` 堆栈而不是用法提示。该脚本属不可进化保护项，未改。
+- 评审局限：评审者仍是 AI 代理，不是人类专家。

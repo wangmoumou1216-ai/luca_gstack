@@ -39,6 +39,10 @@ function verifyEntriesGone() {
     'scripts/sync-magicpath-projection.mjs',
   ]) assert.ok(gone(rel), `${rel} must not exist`);
   assert.ok(!('magicpath' in (JSON.parse(read('skills-lock.json')).skills || {})), 'skills-lock still pins magicpath');
+  for (const dir of ['.claude/skills', '.agents/skills', '.claude/commands']) {
+    const found = spawnSync('find', [dir, '-maxdepth', '1', '-type', 'l', '!', '-exec', 'test', '-e', '{}', ';', '-print'], { cwd: root, encoding: 'utf8' });
+    assert.equal(found.stdout.trim(), '', `dangling symlink in ${dir}: ${found.stdout}`);
+  }
   const routing = read('.claude/skill-os/skill-routing-map.yaml');
   assert.ok(!/invoke:\s+"?\/(html-prototype|magicpath)"?/.test(routing), 'routing map still routes a retired skill');
   assert.match(routing, /做个原型/, 'prototype wording must still route somewhere');
@@ -88,6 +92,15 @@ function verifyNoLiveReaders() {
   assert.equal(result.status, 1, `live readers of retired paths remain:\n${result.stdout}`);
 }
 
+function verifyActiveRulesDoNotOfferRetiredExits() {
+  const blocks = read('.claude/observability/rules.yaml').split(/^- id: /m).slice(1);
+  for (const block of blocks) {
+    if (!/^\s*status: active\b/m.test(block)) continue;
+    const id = block.split('\n', 1)[0].trim();
+    assert.ok(!/magicpath|html-prototype/i.test(block), `active rule ${id} still names a retired tool`);
+  }
+}
+
 const visibility = JSON.parse(read('.claude/skill-os/skill-visibility.json'));
 const catalog = read('.claude/skill-os/generated/skill-catalog.md');
 verifyTombstones(visibility, catalog);
@@ -95,6 +108,7 @@ verifyEntriesGone();
 verifySharedAssets();
 verifyGraphAndSelection();
 verifyNoLiveReaders();
+verifyActiveRulesDoNotOfferRetiredExits();
 console.log('PASS html-prototype/magicpath retired: tombstones, entries gone, shared assets kept, OD/CD only, no live readers');
 
 if (process.argv.includes('--mutation')) {

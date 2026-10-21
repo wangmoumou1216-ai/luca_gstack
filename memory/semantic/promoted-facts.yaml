@@ -930,7 +930,7 @@ facts:
     tags: ["skill-os", "ui-spec", "HTML", "规范", "template", "architecture", "DRY", "brand-tokens"]
   - id: SC-20260905-003
     domain: skill-rule
-    fact: "figma-layer 已从 luca_gstack 的 skill、命令、Codex alias 与活动路由退役；已有 HTML 原型也不再路由到它，不执行其原型文件 preflight。现有原型保留独立 HTML、figma-demo、MagicPath 与 muse-proto-gen 的已授权用法；用户明确要求独立 Figma 设计时，按当前可用的官方 Figma skill 与工具合同执行，先核对真实用户意图及目标权限，不把关键词 Figma 或 HTML 原型存在当作工具切换或外部写入授权。"
+    fact: "figma-layer 已从 luca_gstack 的 skill、命令、Codex alias 与活动路由退役；已有 HTML 原型也不再路由到它，不执行其原型文件 preflight。html-prototype、magicpath、muse-proto-gen 已另行退役（RET-20261020-001/002、RET-20260920-002），figma-demo 仍按其合同使用；用户明确要求独立 Figma 设计时，按当前可用的官方 Figma skill 与工具合同执行，先核对真实用户意图及目标权限，不把关键词 Figma 或 HTML 原型存在当作工具切换或外部写入授权。"
     confidence: high
     stable: true
     added: 2026-09-05
