@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed（2026-10-21 · 竞品分析改为 Mobbin 设计参考节点）
+- `references/competitor-scan.md` 重写：进入设计链时必问用户一次，用户说要分析就必进 Mobbin 节点，由主 agent 用 Mobbin 工具看真实界面，产出带图的设计参考包（每条设计指导对应一张图和一条可采纳的 Brief 条目）；用户采纳的条目才写成 D/STATE/AC，对应的图作为 `interaction-reference` 附件交给 OD/CD（标作“设计参考”）。为什么：原轻量对照只有文档层先例，看不到真实界面，也交不到设计工具手里。
+- 范围只含界面和交互，不含动效（动效仍归 `motion-polish`）；Mobbin 不可用一律 NEEDS_CONTEXT，不静默换办法。
+- 联动更新 design-brief、brainstorm、claude-design、open-design、ux-research 竞品方法和 plan-design-guidance 的指针，并补测试与变异用例。
+
 ### Fixed（2026-10-21 · 收口 html-prototype/magicpath 退役后的已知坑）
 - 验收脚本 `--out-dir DIR`（空格写法）不再把目录当成 Brief 路径而 EISDIR 崩溃；缺值给用法报错。为什么：真实调用方会用空格写法，崩溃堆栈既无诊断价值又会被误判为页面失败。
 - external 模式下“非空文本 > 200”改为 < 10 字符才 FAIL、短页只 WARN。为什么：设计工具产出的登录页/单控件页是合法短页，不应被迫返工；默认模式不变，仍是 > 200。

@@ -253,7 +253,7 @@ check S14f "页面库身份、原件逐字节复制、载体闭包与决策门�
 check S14h "html-prototype/magicpath 退役：墓碑、入口清除、共享资产保留、仅 OD/CD（含 mutation）" "npm run test:design-output-retirement --silent"
 check S14i "OD/CD 选择入口：无第三出口、同工具桌面恢复、选择 seam（含 mutation）" "node scripts/test-design-tool-routing.mjs"
 check S14j "独立浏览器验收脚本自测（迁至 design-output/scripts，含 external 模式）" "node .claude/skills/office/design-output/scripts/test-verify-prototype.mjs"
-check S14k "前段设计流程合同与轻量竞品对照：命名决定、问一次、预算、输出中性（含 mutation）" "npm run test:design-workflow-frontlight --silent"
+check S14k "前段设计流程合同与 Mobbin 设计参考节点：必问一次、仅 UI 与交互、带图参考包、采纳后才交付（含 mutation）" "npm run test:design-workflow-frontlight --silent"
 check S14g "原件保真交接/编辑回收、九页预览与静态分支隔离" "npm run test:page-context-preview --silent && npm run test:original-adapter --silent"
 check S15 "coding discipline 合同检查通过"        "npm run check:coding-discipline --silent"
 check S17 "Loop 退役不可调度且独立能力/共享 QA 保留（含 mutation）" "npm run test:loop-retirement --silent"

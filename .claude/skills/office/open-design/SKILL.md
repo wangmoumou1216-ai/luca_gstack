@@ -137,7 +137,8 @@ reference_only带实际结构化Packet时也核对附件source_ids存在，并�
 `handoffs/<handoff-id>/` namespace 中拥有不可变 `input/`、`control/` 与 `output/` 根；
 `base-template.html` 只能在 carrier 的 `input/`，不允许回写 framework。`reference_only` 也使用独立
 namespace/输出根，但没有 base/assets/TAC/carrier hash。正文、受控 PNG 与位置说明必须实际作为附件，
-本机路径不算接收方可达材料。旧明确仅导出请求只导出相应包及附件清单，明确“已导出，尚未导入/生成”；
+本机路径不算接收方可达材料。采纳的 Mobbin 参考图随附件，只作结构与交互参考，
+不覆盖 D/STATE/AC、用户描述与设计系统。旧明确仅导出请求只导出相应包及附件清单，明确“已导出，尚未导入/生成”；
 完整 CD 任务由 claude-design 继续，同包和全部范围不丢失，不调用 OD。
 
 **helper 调用合同（从仓库根导入；调用方先读实现，不把示例当已执行）：**

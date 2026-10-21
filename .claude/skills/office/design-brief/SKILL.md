@@ -95,8 +95,10 @@ python3 .claude/observability/scripts/get_rules.py design-brief "*" 2>/dev/null 
 与未决项可追溯。focused 上游沿相同输入门，不靠短摘要跳过必需来源，也不重跑已答问题。
 B/C/D 读取实际现状和修改边界，现状缺失明确报告；C 继承已确认问题和改版方向。
 D/实际 Agent 功能保留可见、暂停、接管、撤销及授权门。场景影响范围而不明时才消歧。
-若能写出一个竞品证据可能改变的具体决定，且用户未给竞品/研究，按 [competitor-scan](../references/competitor-scan.md)
-用本轮入口句提议一次（附候选对象，可删改，拒绝即终局并记入来源索引）；产出是参考材料，不自动升 MUST。
+竞品与设计参考分析是必问项：用户未给竞品/研究材料时，按 [competitor-scan](../references/competitor-scan.md)
+用本轮入口句问一次（拒绝即终局并记入来源索引）；用户说要分析，直接进 Mobbin 节点，产出设计参考包。
+已在 brainstorm 问过的，继承那次回答，不重问。
+参考包是参考材料，不自动升 MUST；用户采纳的条目才写成 D/STATE/AC。
 
 完成：成熟输入被继承，关键未知未伪装成事实；仅关键缺口需要真实用户回答。
 
@@ -223,6 +225,8 @@ Given/When/Then 核可观察结果，丢条件即停止冻结；不新增 Packet
 Packet 不含 CandidateHint、最终模板/模块 binding、TAC/hash/adoption、OD 项目或收据。
 原型版本与入口 provenance 放 Brief 来源登记；行为保持事实完整进入 Packet，不能只放附件路径。
 原型 HTML/截图/状态说明用独立不可变证据附件运输实际 bytes；本机路径不是已上传附件，HTML 不执行。
+用户采纳的 Mobbin 设计参考图同走该通道：image/png、用途固定 `interaction-reference`、`source_ids` 取被采纳条目的 D/STATE/AC ID；
+未采纳的图不带，不用 `visual-reference`，不新增 Packet 字段（见 competitor-scan 第 5 节）。
 
 Packet 冻结后按 page-context 执行正式 carrier-binding / 原件适配、TAC 和 bundle 真人采用；
 有效的模板/位置确认重用，不让用户重述。冻结后核验版本/执行承诺，不重做产品或模板选型。

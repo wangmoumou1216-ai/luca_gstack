@@ -39,6 +39,7 @@ Claude/Codex 分别取得真实运行证据后才报告相应能力。
 
 Packet 是唯一需求事实，完整原文及全部 D/STATE/AC/KEEP 分母不可缩减。
 实际附件 bytes、MIME、purpose、source_ids、hash 进入 immutable manifest；本机路径不是上传。
+用户采纳的 Mobbin 设计参考图（`interaction-reference`）只作结构与交互参考，不覆盖 D/STATE/AC、用户描述与设计系统。
 设计系统由用户在目标工具配置，原型/模板不是隐含视觉授权。
 有模板先完整读取 page-context 的中立模板/采用合同；有效模板/位置选择继承，最终 binding、
 TAC、原件及完整 bundle 的真实采用与传输授权分别核依据。CD 使用自身收据和执行合同，

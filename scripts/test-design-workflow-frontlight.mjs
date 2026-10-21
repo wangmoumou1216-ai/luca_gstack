@@ -6,6 +6,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { deflateSync } from 'node:zlib';
+import { preparePrototypeEvidence } from './design-flow-handoff.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -30,6 +32,8 @@ const paths = {
   scan: '.claude/skills/office/references/competitor-scan.md',
   guidance: '.claude/agents/references/plan-design-guidance.md',
   method: '.claude/skills/office/ux-research/references/competitor-analysis.md',
+  cd: '.claude/skills/office/claude-design/SKILL.md',
+  od: '.claude/skills/office/open-design/SKILL.md',
 };
 const diskSource = Object.fromEntries(Object.entries(paths).map(([key, path]) => [key, readFileSync(resolve(root, path), 'utf8')]));
 const baseline = args.includes('--baseline') ? execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() : null;
@@ -196,69 +200,94 @@ check('F10-legacy', 'legacy depths and default full stay explicit', s => {
 const fixturePath = 'framework-audit/design-workflow-frontlight/u002-replay-fixtures.json';
 const fixtureText = readFileSync(resolve(root, fixturePath), 'utf8');
 const fixture = JSON.parse(fixtureText);
-// Light competitor comparison: agent-offered, user-decided, output-neutral (user premise 2026-10-21).
-check('F12-competitor-scan', 'light competitor scan is named-decision gated, asked once, capped, honest and output-neutral', s => {
+// Competitor and design-reference analysis: a mandatory one-time ask, a "yes" always enters the Mobbin node,
+// UI and interaction only (motion ruled out by the user 2026-10-21), a guiding pack with images, and adopted
+// images reach CD/OD as interaction-reference attachments (user ruling 2026-10-21).
+check('F12-competitor-scan', 'the Mobbin node is a mandatory one-time ask, UI and interaction only, honest, with a guiding image pack', s => {
   const t = s.scan;
-  has(t, /命名决定测试/);
-  has(t, /写不出就整句不出现，也不问/);
-  has(t, /一次、开放、纯文本/);
-  has(t, /“不用”＝终局，本任务不再问/);
-  has(t, /标“凭已有认识、未核实”/);
-  has(t, /≤3 个对象，整次 ≤6 次读取/);
-  has(t, /评论\/论坛只用来定位，不作结论依据/);
-  has(t, /文档层先例/);
-  has(t, /UNVERIFIED/);
-  has(t, /证据日期超过约 18 个月或版本不明，标 stale/);
-  has(t, /competitor-analysis\.md\]\(\.\.\/ux-research\/references\/competitor-analysis\.md\)/);
-  has(t, /Layer C（信任）与 Layer D（代理）/);
-  has(t, /decision_changed/);
-  has(t, /不由 agent 自评/);
-  has(t, /前 5 次真实提议/);
-  has(t, /不新增 Packet\/TAC 字段，不自动升 MUST/);
-  // The user's own constraints: light, agent-offered, candidate-bearing, decline is final, never a questionnaire.
+  has(t, /必问一次，用户要才做/);
+  has(t, /任务进入设计链时必须问一次，不要求先写出“某个具体决定”/);
+  has(t, /用户已说“不用研究 \/ 直接做 \/ 不看竞品”：终局，本任务不再问/);
+  has(t, /视为同意，直接进入第 3 节，不再问/);
+  has(t, /一句话、开放、纯文本/);
   has(t, /不出选项菜单，不问预算、深度、维度/);
-  has(t, /2–3 个由需求推出的候选对象/);
-  has(t, /至少一个机制与其余不同/);
-  has(t, /不编造产品/);
-  has(t, /没有固定候选池/);
-  has(t, /已成形的截图\/录屏\/分析 → 只摄取，不扫描/);
-  has(t, /视为同意，直接按下面的预算做，不再问/);
-  has(t, /超过 3 个 → 按可比性取前 3/);
-  has(t, /没有已锁定项目（NO_PIN）——此时不发起扫描/);
-  has(t, /执行体用现有 `quick-research`/);
-  has(t, /用户说“看一眼”即同意本次读取/);
-  has(t, /没有浏览器/);
-  has(t, /不写效果主张/);
-  has(t, /没有增量就如实写，不强造差异/);
-  has(t, /`decision: <命名决定>` 与 `decision_changed: pending`/);
-  has(t, /一律沿用/);
+  has(t, /“不用”＝终局/);
+  has(t, /没点名就按需求搜同类，不编造产品/);
+  has(t, /没有已锁定项目（NO_PIN）：照问；同意则只在对话里交付，不写项目文件，也不下载图片/);
+  has(t, /已经给了成形的截图 \/ 录屏 \/ 分析：只摄取/);
+  has(t, /`search_flows` 看交互/);
+  has(t, /`search_screens` 看界面/);
+  has(t, /不交给后台子 agent，因为必须看图/);
+  has(t, /一律返回 NEEDS_CONTEXT/);
+  has(t, /不自动改用别的办法/);
+  has(t, /整次至多 6 次搜索调用/);
+  has(t, /同一任务里 `task_intent`、`output_destination`（取 `doc`）、`output_tool` 必须保持一致/);
+  has(t, /先看图再下结论/);
+  has(t, /不凭记忆描述它，也不拿别家的图顶替/);
+  has(t, /competitor-analysis\.md\]\(\.\.\/ux-research\/references\/competitor-analysis\.md\)/);
   has(t, /这里不复述/);
-  has(t, /不进入任何生成输入/);
-  has(t, /它不改变 open-design \/ claude-design 的产出/);
-  has(t, /这不是 skill、模式、审批或 Packet\/TAC 字段/);
-  has(t, /同意、拒绝和文件路径记进既有来源索引/);
+  has(t, /Layer C（信任）与\s*Layer D（代理）/);
+  has(t, /动效不在本节点，归 `motion-polish`/);
+  // The pack must guide design, not list examples.
+  has(t, /decision_changed: pending/);
+  has(t, /每条设计指导必须指向一张实际看过的图，没有图支撑的不写/);
+  has(t, /每条都带可直接采纳的 Brief 条目/);
+  has(t, /没有增量就如实写，不强造差异/);
+  has(t, /干净的 8 位 RGB PNG/);
+  has(t, /每包至多 8 张/);
+  has(t, /图片仅作设计参考，不进入产品交付/);
+  // What reaches CD/OD, and what does not.
+  has(t, /用途固定为 `interaction-reference`（设计参考）/);
+  has(t, /不使用 `visual-reference`；没采纳的图不带/);
+  has(t, /不新增 Packet \/ TAC 字段，不自动升 MUST/);
+  has(t, /附件只在用户采纳后才交付/);
+  has(t, /同意、拒绝和参考包路径记进既有来源索引/);
   has(t, /competitor-scan: declined/);
   has(t, /docs\/research\/competitor-scan-log\.md/);
-  has(t, /不到 1 次，\n或拒绝率超过 80%，则本文件回退为只保留 plan-design-guidance 里的一行/);
-  has(t, /本文件不新建 skill、模式或审批/);
-  lacks(t, /2–4|预算档/);
-  lacks(t, /无额外门|不另加预算档外的审批/);
+  has(t, /不由 agent 自评/);
+  has(t, /执行满 5 次分析后/);
+  has(t, /它不自己调用 Mobbin/);
+  has(t, /本节点不新建 skill、模式或审批/);
+  lacks(t, /命名决定测试|写不出就整句不出现/);
   lacks(t, /动效默认|默认动效|固定阈值|\d+\s?ms\b|缓动|时长/);
 });
 check('F13-competitor-scan-landing', 'one owner, pointers only, no second ask point and no questionnaire', s => {
   const brief = s.brief.split('competitor-scan.md').length - 1;
-  assert.ok(brief >= 1 && /按 \[competitor-scan\]\(\.\.\/references\/competitor-scan\.md\)\n用本轮入口句提议一次/.test(s.brief), 'design-brief Phase 0 pointer');
+  assert.ok(brief >= 1 && /按 \[competitor-scan\]\(\.\.\/references\/competitor-scan\.md\)\n用本轮入口句问一次/.test(s.brief), 'design-brief Phase 0 pointer');
   const phase0 = section(s.brief, '## Phase 0：输入继承与缺口核对', '## Phase A');
   has(phase0, /competitor-scan/);
+  has(phase0, /竞品与设计参考分析是必问项/);
+  has(s.brief, /用途固定 `interaction-reference`/);
+  has(s.brief, /未采纳的图不带，不用 `visual-reference`/);
   const optional = section(s.product, '**Optional: additional research.**', '## Phase 2');
   has(optional, /competitor-scan\.md/);
-  has(optional, /offer a\nlight comparison once/);
+  has(optional, /the ask is mandatory/);
   assert.equal(s.product.split('competitor-scan.md').length - 1, 1, 'brainstorm names the reference exactly once (no second intake question)');
-  has(s.guidance, /competitor-scan\.md, executed by quick-research after the one-time offer/);
+  has(s.guidance, /competitor-scan\.md, run by the main agent with the Mobbin tools/);
   has(s.guidance, /competitor analysis" alone names no object/);
+  has(s.guidance, /Adopted reference images reach the design tool only as `interaction-reference`/);
   has(s.method, /走 `\.\.\/\.\.\/references\/competitor-scan\.md`，不进本方法/);
+  has(s.method, /本方法不自己调用 Mobbin/);
   lacks(s.input, /competitor-scan/);
 });
+check('F14-reference-images-as-attachments', 'CD/OD state the reference-only role, and the real handoff validator accepts the contract', s => {
+  has(s.cd, /只作结构与交互参考，不覆盖 D\/STATE\/AC、用户描述与设计系统/);
+  has(s.od, /只作结构与交互参考，\s*不覆盖 D\/STATE\/AC、用户描述与设计系统/);
+  // Behaviour, not wording: a clean RGB PNG with this purpose and a Packet source ID is accepted; other media or purposes are not.
+  const crcTable = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc = buf => { let c = 0xffffffff; for (const byte of buf) c = crcTable[(c ^ byte) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const chunk = (type, data) => { const body = Buffer.concat([Buffer.from(type, 'ascii'), data]); const out = Buffer.alloc(body.length + 8); out.writeUInt32BE(data.length, 0); body.copy(out, 4); out.writeUInt32BE(crc(body), body.length + 4); return out; };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(2, 0); ihdr.writeUInt32BE(2, 4); ihdr[8] = 8; ihdr[9] = 2;
+  const rows = Buffer.concat([Buffer.from([0, 255, 0, 0, 0, 255, 0]), Buffer.from([0, 0, 0, 255, 255, 255, 0])]);
+  const png = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(rows)), chunk('IEND', Buffer.alloc(0))]);
+  const attach = over => ({ path: 'mobbin/contact-create-01.png', media_type: 'image/png', purpose: 'interaction-reference', source_ids: ['D-001'], bytes: png, ...over });
+  const accepts = item => { try { preparePrototypeEvidence([item], { factIds: ['D-001'], sourceIndexVerified: true }); return true; } catch { return false; } };
+  assert.ok(accepts(attach({})), 'a clean RGB PNG with interaction-reference and a Packet ID must be accepted');
+  assert.ok(!accepts(attach({ path: 'mobbin/a.webp', media_type: 'image/webp' })), 'webp must be rejected: the node converts to PNG');
+  assert.ok(!accepts(attach({ purpose: 'mobbin-reference' })), 'an unknown purpose must be rejected');
+  assert.ok(!accepts(attach({ source_ids: ['D-404'] })), 'an ID that is not in the frozen Packet must be rejected');
+});
+
 
 check('FIXTURE-separation', 'subject prompts and grader expectations are separate finite sets', () => {
   assert.equal(fixture.evidence_class, 'BOUNDED_NATIVE_PROBES_NOT_FULL_SKILL_RUNS');
@@ -299,27 +328,37 @@ if (args.includes('--mutation') && results.every(row => row.ok)) {
     ['impatience-waives-unknown', 'pressure', '关键未知不能改成安全假设', '关键未知可以改成安全假设', 'F07-escape'],
     ['brief-restores-rejection-quota', 'briefSchema', '无实质取舍时填有源 N/A', '始终至少编写一项排除备选', 'F09-brief-retained'],
     ['drop-state-invalidation', 'brief', '写明失效触发及失效后的呈现', '保持原样即可', 'F11-brief-state-invalidation'],
-    ['scan-always-ask', 'scan', '写不出就整句不出现，也不问', '写不出也照问', 'F12-competitor-scan'],
-    ['scan-uncap-reads', 'scan', '整次 ≤6 次读取', '读取不设上限', 'F12-competitor-scan'],
+    ['scan-optional-ask', 'scan', '任务进入设计链时必须问一次，不要求先写出“某个具体决定”', '只在能写出具体决定时才问', 'F12-competitor-scan'],
+    ['scan-decline-not-final', 'scan', '“不用”＝终局', '“不用”＝本次先放过', 'F12-competitor-scan'],
+    ['scan-yes-needs-reconfirm', 'scan', '视为同意，直接进入第 3 节，不再问', '视为同意，但仍再确认一次', 'F12-competitor-scan'],
+    ['scan-restores-option-menu', 'scan', '不出选项菜单，不问预算、深度、维度', '给出预算、深度、维度的选项菜单', 'F12-competitor-scan'],
+    ['scan-no-pin-writes-files', 'scan', '同意则只在对话里交付，不写项目文件，也不下载图片', '同意则照常写项目文件', 'F12-competitor-scan'],
+    ['scan-allows-invention', 'scan', '没点名就按需求搜同类，不编造产品', '没点名就补充常见产品', 'F12-competitor-scan'],
+    ['scan-always-rescans-materials', 'scan', '用户已经给了成形的截图 / 录屏 / 分析：只摄取', '用户已经给了成形的材料也一律再搜', 'F12-competitor-scan'],
+    ['scan-subagent-executes', 'scan', '不交给后台子 agent，因为必须看图', '交给后台子 agent 执行', 'F12-competitor-scan'],
+    ['scan-silent-fallback', 'scan', '不自动改用别的办法', '失败时自动改用别的办法', 'F12-competitor-scan'],
+    ['scan-uncap-budget', 'scan', '整次至多 6 次搜索调用', '整次不限搜索次数', 'F12-competitor-scan'],
+    ['scan-claims-without-image', 'scan', '先看图再下结论', '凭元数据即可下结论', 'F12-competitor-scan'],
+    ['scan-drops-image-evidence-rule', 'scan', '每条设计指导必须指向一张实际看过的图，没有图支撑的不写', '每条设计指导可以不配图', 'F12-competitor-scan'],
+    ['scan-drops-brief-lines', 'scan', '每条都带可直接采纳的 Brief 条目', '只给例子清单', 'F12-competitor-scan'],
+    ['scan-non-png-images', 'scan', '干净的 8 位 RGB PNG', '原始 webp 图', 'F12-competitor-scan'],
+    ['scan-visual-purpose', 'scan', '用途固定为 `interaction-reference`（设计参考）', '用途为 `visual-reference`', 'F12-competitor-scan'],
+    ['scan-attaches-unadopted', 'scan', '没采纳的图不带', '全部图都带', 'F12-competitor-scan'],
     ['scan-auto-must', 'scan', '不自动升 MUST', '自动升 MUST', 'F12-competitor-scan'],
     ['scan-agent-self-grades', 'scan', '不由 agent 自评', '由 agent 自评即可', 'F12-competitor-scan'],
-    ['scan-motion-default', 'scan', '本文件只新增一条：', '本文件只新增一条（动效默认 200ms）：', 'F12-competitor-scan'],
-    ['scan-claims-ui-observation', 'scan', '文档层先例', '已观察真实界面', 'F12-competitor-scan'],
-    ['scan-restores-option-menu', 'scan', '不出选项菜单，不问预算、深度、维度', '给出预算、深度、维度的选项菜单', 'F12-competitor-scan'],
-    ['scan-drops-no-browser', 'scan', '没有浏览器', '有浏览器', 'F12-competitor-scan'],
-    ['scan-drops-consent-record', 'scan', '同意、拒绝和文件路径记进既有来源索引', '同意、拒绝不用记', 'F12-competitor-scan'],
-    ['scan-drops-stop-threshold', 'scan', '不到 1 次', '不限次数', 'F12-competitor-scan'],
-    ['scan-decline-not-final', 'scan', '“不用”＝终局，本任务不再问', '“不用”＝本次先放过，之后还会再问', 'F12-competitor-scan'],
-    ['scan-no-pin-still-scans', 'scan', '此时不发起扫描', '此时照常发起扫描', 'F12-competitor-scan'],
-    ['scan-allows-invention', 'scan', '不编造产品', '可补充常见产品', 'F12-competitor-scan'],
-    ['scan-executor-ux-research', 'scan', '执行体用现有 `quick-research`', '执行体用现有 `ux-research`', 'F12-competitor-scan'],
-    ['scan-enters-generation', 'scan', '不进入任何生成输入', '可进入生成输入', 'F12-competitor-scan'],
-    ['scan-restates-method', 'scan', '一律沿用', '改为在此重新定义', 'F12-competitor-scan'],
-    ['scan-drops-header-fields', 'scan', '`decision: <命名决定>` 与 `decision_changed: pending`', '一份摘要', 'F12-competitor-scan'],
-    ['scan-adds-budget-tier', 'scan', '本文件不新建 skill、模式或审批', '本文件新建 deep 预算档', 'F12-competitor-scan'],
-    ['scan-always-scans-materials', 'scan', '已成形的截图/录屏/分析 → 只摄取，不扫描', '已成形的材料一律再扫描', 'F12-competitor-scan'],
-    ['brief-pointer-removed', 'brief', '按 [competitor-scan](../references/competitor-scan.md)\n用本轮入口句提议一次', '按相关规则\n用本轮入口句提议一次', 'F13-competitor-scan-landing'],
-    ['guidance-row-removed', 'guidance', 'competitor-scan.md, executed by quick-research after the one-time offer', 'ux-research after the one-time offer', 'F13-competitor-scan-landing'],
+    ['scan-adds-motion', 'scan', '动效不在本节点，归 `motion-polish`', '动效也在本节点做', 'F12-competitor-scan'],
+    ['scan-research-calls-mobbin', 'scan', '它不自己调用 Mobbin', '它也自己调用 Mobbin', 'F12-competitor-scan'],
+    ['scan-drops-consent-record', 'scan', '同意、拒绝和参考包路径记进既有来源索引', '同意、拒绝不用记', 'F12-competitor-scan'],
+    ['scan-drops-review-threshold', 'scan', '执行满 5 次分析后', '不设复核', 'F12-competitor-scan'],
+    ['scan-restates-method', 'scan', '这里不复述', '此处重新定义', 'F12-competitor-scan'],
+    ['scan-adds-new-skill', 'scan', '本节点不新建 skill、模式或审批', '本节点新建 deep 预算档', 'F12-competitor-scan'],
+    ['brief-pointer-removed', 'brief', '按 [competitor-scan](../references/competitor-scan.md)\n用本轮入口句问一次', '按相关规则\n用本轮入口句问一次', 'F13-competitor-scan-landing'],
+    ['brief-ask-optional', 'brief', '竞品与设计参考分析是必问项', '竞品对照按需才问', 'F13-competitor-scan-landing'],
+    ['brief-attach-visual', 'brief', '未采纳的图不带，不用 `visual-reference`', '未采纳的图也带，用 `visual-reference`', 'F13-competitor-scan-landing'],
+    ['guidance-row-removed', 'guidance', 'competitor-scan.md, run by the main agent with the Mobbin tools', 'competitor-scan.md, executed by quick-research', 'F13-competitor-scan-landing'],
+    ['method-calls-mobbin', 'method', '本方法不自己调用 Mobbin', '本方法也自己调用 Mobbin', 'F13-competitor-scan-landing'],
+    ['cd-drops-reference-only', 'cd', '只作结构与交互参考，不覆盖 D/STATE/AC、用户描述与设计系统', '可覆盖 D/STATE/AC', 'F14-reference-images-as-attachments'],
+    ['od-drops-reference-only', 'od', '随附件，只作结构与交互参考，\n不覆盖 D/STATE/AC、用户描述与设计系统', '随附件，可覆盖 D/STATE/AC', 'F14-reference-images-as-attachments'],
   ];
   for (const [name, key, before, after, expected] of mutations) {
     assert.equal(source[key].split(before).length, 2, `mutation anchor must occur exactly once: ${name}`);

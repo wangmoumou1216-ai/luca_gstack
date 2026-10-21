@@ -339,9 +339,9 @@ agent to fetch external context before Phase 3 — but only if the gap is about 
 probably doesn't have (market size, competitive landscape), not about product decisions (only the
 user can answer those).
 
-For competitor *feature or interaction precedent* (not market facts) that could change one nameable decision, offer a
-light comparison once, per `.claude/skills/office/references/competitor-scan.md`: propose candidate objects, let the user
-edit or decline, and record the answer in Source Research. Market size and landscape facts stay with the librarian above.
+For competitor *UI and interaction precedent* (not market facts), ask the user once whether to run the competitor and design
+reference analysis, per `.claude/skills/office/references/competitor-scan.md`: the ask is mandatory, a "yes" enters the Mobbin
+node, a decline is final, and the answer is recorded in Source Research. Market size and landscape facts stay with the librarian above.
 
 ## Phase 2: Internal Pressure Test
 
