@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added（2026-10-22 · 本地 markdownlint 检查）
+
+- `scripts/verify.sh` 新增 D6：用与 CI `validate-markdown` 相同的命令和文件列表检查 README / CHANGELOG / CONTRIBUTING / SECURITY，pre-commit 会跑到它。为什么：10 月 21 日连续四次推送都因 CHANGELOG 标题后缺空行（MD022/MD032）在 CI 才发现，本地没有这道检查。首次运行需联网取 markdownlint-cli；离线或只改无关文档时可用 `FAST_COMMIT=1` 跳过。
+
 ### Fixed（2026-10-21 · 验收返修“至多两轮”的覆盖范围）
 
 - design-output 写明：OD 的 adhoc/recover 回收后的返修、CD 回收后的返修，同样受“至多两轮”约束；claude-design 第 4 节补同一句并指回 design-output。为什么：这条上限原先只写在 design-output，走 OD adhoc/recover 或 CD 回收的路径不经过它，返修理论上没有上限。
