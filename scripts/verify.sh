@@ -193,6 +193,7 @@ check D2 "CHANGELOG.md 存在" "[ -f CHANGELOG.md ]"
 check D3 "SECURITY.md 存在" "[ -f SECURITY.md ]"
 check D4 "CONTRIBUTING.md 存在" "[ -f CONTRIBUTING.md ]"
 check D5 "LICENSE 存在" "[ -f LICENSE ]"
+check D6 "标准文档通过 markdownlint（与 CI validate-markdown 同命令；首次需联网取包）" "npx --yes markdownlint-cli README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md --ignore node_modules"
 echo ""
 
 echo "[ Claude Code 配置 ]"
