@@ -164,3 +164,6 @@ design-system/
 
 # record_eval.py 的 flock 锁文件：空文件、不持有锁（锁随 fd 关闭释放），纯本机运行时痕迹。
 memory/evals/.eval-log.lock
+
+# 候选 ID 分配的 flock 锁文件：空文件、不持有锁，纯本机运行时痕迹（同上理由）。
+memory/semantic/.candidate-id.lock
