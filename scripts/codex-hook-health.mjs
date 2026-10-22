@@ -8,6 +8,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SOURCE_SCAN, sourceDigest, readSourceApproval } from '../.codex/hook-source-integrity.mjs';
 import { approvedJavaScript, snapshotSourceInventory, sourceInventory, snapshotInventory, equalArtifact } from './source-guard-review.mjs';
+import { evaluateHookDocument } from './lib/codex-hook-contract.mjs';
 export { SOURCE_SCAN, sourceDigest } from '../.codex/hook-source-integrity.mjs';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -26,10 +27,6 @@ const LEGACY_REGISTRATION_CONTRACTS = new Set([
 const STABLE_REGISTRATION_CONTRACTS = new Set([
   '217d8a0116f375282aa67e0b59415e3ca742b42bc24685082c2b17fcb7635189',
   'b2292c4ac201eb4fe2b5222fd9f45204070173b6a622f9e76e03ee02ca84496c',
-]);
-const NATIVE_REGISTRATION_CONTRACTS = new Set([
-  '071dcae5ae935ce15318dea12d1deaee3cddec60c74bda6d82ec1c422eb885e4',
-  'c6ef2efa3fcb18e91163f4c2dd25277d8c568ae82c490949d47aeff549601c45',
 ]);
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
@@ -112,7 +109,8 @@ export function inspectHookHealth(root, { sourceOnly = false,
     const bytes = fileBytes(join(root, '.codex', 'hooks.json'));
     report.registration.config_sha256 = sha(bytes);
     const config = JSON.parse(bytes);
-    if (!keys(config, ['description', 'hooks']) || typeof config.description !== 'string') throw new Error('invalid registration config keys');
+    const native = evaluateHookDocument(bytes);
+    if (!native.recognized && (!keys(config, ['description', 'hooks']) || typeof config.description !== 'string')) throw new Error('invalid registration config keys');
     if (!config.hooks || typeof config.hooks !== 'object' || Array.isArray(config.hooks)) throw new Error('invalid hooks object');
     const commands = Object.values(config.hooks).flatMap(groups => {
       if (!Array.isArray(groups)) throw new Error('invalid groups');
@@ -124,12 +122,12 @@ export function inspectHookHealth(root, { sourceOnly = false,
         });
       });
     });
-    if (commands.length !== 11) throw new Error(`expected 11 registrations, found ${commands.length}`);
+    if (!native.recognized && commands.length !== 11) throw new Error(`expected 11 registrations, found ${commands.length}`);
     const fullContract = sha(JSON.stringify(canonical(config.hooks)));
     const digests = [];
-    if (NATIVE_REGISTRATION_CONTRACTS.has(fullContract)) {
+    if (native.recognized) {
       report.registration.protocol = 'native-trust-v1';
-      report.registration.contract_sha256 = fullContract;
+      report.registration.contract_sha256 = native.semanticDigest;
       report.registration.trust_owner = 'Codex native trusted command';
     } else if (STABLE_REGISTRATION_CONTRACTS.has(fullContract)) {
       report.registration.protocol = 'stable-v3';

@@ -31,13 +31,14 @@ function fixture(t, mode = 'ok', { stable = false } = {}) {
   const guardHome = realpathSync(mkdtempSync(join(tmpdir(), 'hook-trust-home-')));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   t.after(() => rmSync(guardHome, { recursive: true, force: true }));
-  for (const dir of ['scripts', '.codex', 'home', 'bin', 'memory/scripts', '.claude/hooks',
+  for (const dir of ['scripts/lib', '.codex', 'home', 'bin', 'memory/scripts', '.claude/hooks',
     '.claude/skill-os', '.claude/skills/office', '.claude/agents']) {
     mkdirSync(join(root, dir), { recursive: true, mode: 0o700 });
   }
   writeFileSync(join(root, 'CLAUDE.md'), 'isolated trust fixture');
   cpSync(new URL('./codex-trust-hooks.mjs', import.meta.url), join(root, 'scripts/codex-trust-hooks.mjs'));
   cpSync(new URL('./codex-hook-health.mjs', import.meta.url), join(root, 'scripts/codex-hook-health.mjs'));
+  cpSync(new URL('./lib/codex-hook-contract.mjs', import.meta.url), join(root, 'scripts/lib/codex-hook-contract.mjs'));
   cpSync(new URL('./source-guard-review.mjs', import.meta.url), join(root, 'scripts/source-guard-review.mjs'));
   cpSync(new URL('../.codex/hook-source-integrity.mjs', import.meta.url), join(root, '.codex/hook-source-integrity.mjs'));
   for (const name of ['bootstrap', 'loader']) cpSync(new URL(`../.codex/codex-source-guard-${name}.mjs`, import.meta.url),

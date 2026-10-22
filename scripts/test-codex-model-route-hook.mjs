@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import {createHash, randomUUID} from 'node:crypto';
-import {spawnSync} from 'node:child_process';
+import {spawn, spawnSync} from 'node:child_process';
 import {cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
@@ -760,24 +760,68 @@ try {
   }
   const profileEnv = {...env, TMPDIR: profileFixture, CODEX_HOME: profileHome, LUCA_MODEL_ROUTE_TRANSCRIPT_ROOT: '',
     LUCA_CHILD_PROJECT_STORE_ROOT: profileStore, LUCA_CHILD_PROJECT_TEST_CODEX_HOME: profileChildHome};
+  const profileAttempt = (payload, extraEnv = {}) => spawnSync(process.execPath,
+    [join(profileRoot, '.codex/model-route-hook.mjs')],
+    {cwd: profileRoot, env: {...profileEnv, ...extraEnv}, encoding: 'utf8',
+      input: JSON.stringify({...payload, cwd: profileRoot})});
   const profileRun = payload => {
-    const result = spawnSync(process.execPath, [join(profileRoot, '.codex/model-route-hook.mjs')],
-      {cwd: profileRoot, env: profileEnv, encoding: 'utf8', input: JSON.stringify({...payload, cwd: profileRoot})});
+    const result = profileAttempt(payload);
     assert.equal(result.status, 0, result.stderr);
     return JSON.parse(result.stdout);
   };
-  const grantProfile = (session, grantSession = session) => {
+  const grantProfile = (session, grantSession = session, delayMs = 0) => {
     const launch = randomUUID(), homeStat = statSync(profileHome);
     const bytes = Buffer.from(JSON.stringify({schemaVersion: 1, provider: 'codex',
       launchId: launch, sessionId: grantSession, cwd: profileRoot,
       sourceRoot: {realpath: profileHome, dev: String(homeStat.dev), ino: String(homeStat.ino)}}));
-    writeFileSync(join(profileJournal, `${launch}.source.json`), bytes, {mode: 0o600});
-    writeFileSync(join(profileRoot, '.claude', `.session-project-${session}`), JSON.stringify({
+    const receiptPath = join(profileJournal, `${launch}.source.json`);
+    const pinPath = join(profileRoot, '.claude', `.session-project-${session}`);
+    const pin = JSON.stringify({
       schema_version: 3, state: 'NO_PIN', session_id: session,
       host_launch_source: {launch_id: launch, sha256: createHash('sha256').update(bytes).digest('hex')},
       event_control: {candidates: [], current: null, cursor: null, consumed_events: []},
-    }));
+    });
+    if (delayMs) return spawn(process.execPath, ['-e',
+      'const fs=require("node:fs"),x=JSON.parse(process.argv[1]);setTimeout(()=>{fs.writeFileSync(x.receiptPath,x.receipt,{mode:0o600});fs.writeFileSync(x.pinPath,x.pin);},x.delayMs);',
+      JSON.stringify({receiptPath, receipt: bytes.toString(), pinPath, pin, delayMs})],
+    {env: profileEnv, stdio: 'ignore'});
+    writeFileSync(receiptPath, bytes, {mode: 0o600});
+    writeFileSync(pinPath, pin);
   };
+  for (const variant of ['delayed', 'missing', 'foreign']) {
+    const session = `root-profile-start-${variant}`;
+    const path = join(profileSessions, `${session}.jsonl`);
+    cpSync(rootTranscript(session, {metaCwd: profileRoot, contextCwd: profileRoot}), path);
+    let writerDone;
+    if (variant === 'delayed') {
+      const writer = grantProfile(session, session, 300);
+      writerDone = new Promise(resolve => writer.once('close', resolve));
+    } else if (variant === 'foreign') grantProfile(session, 'foreign-native-session');
+    const result = profileAttempt({hook_event_name: 'SessionStart', session_id: session,
+      model: 'gpt-5.6-sol', source: 'startup', transcript_path: path},
+    {MUSE_HOST_LAUNCH_ID: 'fixture-host-launch'});
+    if (writerDone) equal(await writerDone, 0, 'delayed authoritative writer completed normally');
+    if (variant === 'delayed') {
+      equal(result.status, 0, 'host startup waits for the same verified source grant');
+      equal(state(session)?.status, 'active', 'verified delayed startup establishes activation');
+    } else {
+      equal(result.status, 2, `${variant} host source fails closed`);
+      if (variant === 'missing') equal(result.stderr.includes('HOST_SOURCE_SCOPE_NOT_READY'), true,
+        'missing host source has a bounded explicit failure rather than default-home fallback');
+      equal(state(session), null, `${variant} host source cannot create activation`);
+    }
+  }
+  for (const marker of ['MUSE_HOST_LAUNCH_ID', 'MUSE_HOST_LAUNCH_HANDLE']) {
+    for (const corrupt of [false, true]) {
+      const session = `host-no-transcript-${marker.endsWith('ID') ? 'id' : 'handle'}-${corrupt}`;
+      if (corrupt) writeFileSync(join(profileRoot, '.claude', `.session-project-${session}`), '{invalid');
+      const result = profileAttempt({hook_event_name: 'SessionStart', session_id: session,
+        model: 'gpt-5.6-sol', source: 'startup'}, {[marker]: 'fixture-host-launch'});
+      equal(result.status, 2, 'host startup without transcript cannot bypass source admission');
+      equal(result.stderr.includes('TRANSCRIPT_MISSING'), true, 'missing host transcript fails explicitly');
+      equal(state(session), null, 'missing host transcript never creates activation, even with corrupt pin');
+    }
+  }
   for (const variant of ['correct-home', 'wrong-home', 'foreign-sid']) {
     const session = `root-profile-${variant}`, agent = `agent-profile-${variant}`;
     profileRun({hook_event_name: 'SessionStart', session_id: session, model: 'gpt-5.6-sol', source: 'startup'});

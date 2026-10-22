@@ -211,6 +211,8 @@ function routeForAgent(payload, agentType, recovery_id) {
 
 function handleSessionStart(payload) {
   if (!text(payload.session_id) || !text(payload.model)) throw new Error('ROOT_IDENTITY_MISSING');
+  if ((process.env.MUSE_HOST_LAUNCH_ID || process.env.MUSE_HOST_LAUNCH_HANDLE)
+      && !text(payload.transcript_path)) throw new Error('TRANSCRIPT_MISSING');
   if(text(payload.transcript_path)) {
     const {meta}=nativeMeta(payload.transcript_path,payload.session_id);
     if(text(meta.parent_thread_id)) {
@@ -458,7 +460,18 @@ function handleSubagentStart(payload) {
 }
 
 function nativeTranscriptRoot(sessionId) {
-  const scope = readHostLaunchSourceScope(ROOT, sessionId);
+  let scope = readHostLaunchSourceScope(ROOT, sessionId);
+  if (!scope && (process.env.MUSE_HOST_LAUNCH_ID || process.env.MUSE_HOST_LAUNCH_HANDLE)) {
+    // Native SessionStart hooks run concurrently. The HostLaunch attach hook
+    // publishes the protected source grant; never substitute CODEX_HOME for it.
+    const deadline = performance.now() + 5000;
+    const pause = new Int32Array(new SharedArrayBuffer(4));
+    while (!scope && performance.now() < deadline) {
+      Atomics.wait(pause, 0, 0, 25);
+      scope = readHostLaunchSourceScope(ROOT, sessionId);
+    }
+    if (!scope) throw new Error('HOST_SOURCE_SCOPE_NOT_READY');
+  }
   const expectedRoot = scope ? resolvePath(scope.sourceRoot.realpath, 'sessions') : TRANSCRIPT_ROOT;
   const root = realpathSync(expectedRoot);
   if (root !== resolvePath(expectedRoot)) throw new Error('TRANSCRIPT_ROOT_NOT_CANONICAL');

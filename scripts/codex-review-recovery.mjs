@@ -109,7 +109,7 @@ export function attestCurrentNativeCall({events,context,actual,source_identity},
   }
   let args;
   if(kind==='command') {
-    if(call.type==='custom_tool_call'&&call.namespace==='functions'&&call.name==='exec') args=wrapperArguments(call.input);
+    if(call.type==='custom_tool_call'&&(call.namespace===undefined||call.namespace==='functions')&&call.name==='exec') args=wrapperArguments(call.input);
     else if(call.type==='function_call'&&call.name==='exec_command'&&(!call.namespace||call.namespace==='functions')
         &&call.call_id===payload.tool_use_id) args=JSON.parse(call.arguments);
     else throw Error('CURRENT_NATIVE_CALL_MISMATCH');
@@ -158,17 +158,27 @@ p.stdin.on('error',()=>finish(1));p.stdin.write(JSON.stringify({jsonrpc:'2.0',id
     {encoding:'utf8',timeout:9000,maxBuffer:2*1024*1024});
   if(result.status!==0)throw Error('RECOVERY_REGISTRATION_NEEDS_CONTEXT');
   const data=JSON.parse(result.stdout).data?.find(x=>x.cwd===root);
+  assertRecoveryRegistration(root,data);
+}
+export function assertRecoveryRegistration(root,data) {
   if(!data||data.errors?.length)throw Error('RECOVERY_REGISTRATION_NEEDS_CONTEXT');
-  const path=resolve(root,'.codex/hooks.json'),definition=JSON.parse(readFileSync(path));
+  const local=resolve(root,'.codex/hooks.json'),bytes=canonicalFile(local);
+  const git=spawnSync('/usr/bin/git',['-C',root,'rev-parse','--path-format=absolute','--git-common-dir'],
+    {encoding:'utf8',timeout:5000,env:Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith('GIT_')))});
+  if(git.status!==0||basename(git.stdout.trim())!=='.git')throw Error('RECOVERY_REGISTRATION_NEEDS_CONTEXT');
+  const path=resolve(dirname(realpathSync(git.stdout.trim())),'.codex/hooks.json');
+  if(!canonicalFile(path).equals(bytes))throw Error('RECOVERY_REGISTRATION_SOURCE_DRIFT');
+  const definition=JSON.parse(bytes);
   const group=definition.hooks.PreToolUse.find(g=>g.matcher?.includes('followup_task')&&g.matcher?.includes('send_message'));
   if(!group)throw Error('RECOVERY_FENCE_NOT_REGISTERED');
   for(const name of ['collaborationfollowup_task','collaborationsend_message']) {
     if(!new RegExp(group.matcher).test(name))throw Error('RECOVERY_FENCE_NOT_REGISTERED');
   }
-  for(const g of [group,...(definition.hooks.SessionStart||[])]) for(const expected of g.hooks) {
-    const matches=data.hooks.filter(h=>h.sourcePath===path&&h.command===expected.command);
+  for(const [event,g] of [['preToolUse',group],...(definition.hooks.SessionStart||[]).map(g=>['sessionStart',g])]) for(const expected of g.hooks) {
+    const matches=data.hooks.filter(h=>h.sourcePath===path&&h.eventName===event&&h.command===expected.command
+      &&h.matcher===(g.matcher??null));
     if(matches.length!==1||matches[0].enabled!==true||matches[0].trustStatus!=='trusted'
-        ||(g.matcher&&matches[0].matcher!==g.matcher)||matches[0].async)throw Error('RECOVERY_FENCE_NOT_TRUSTED');
+        ||matches[0].async!==false)throw Error('RECOVERY_FENCE_NOT_TRUSTED');
   }
 }
 function main() {

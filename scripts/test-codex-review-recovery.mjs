@@ -11,7 +11,7 @@ import {tmpdir} from 'node:os';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import * as host from './model-route-host.mjs';
-import {attestCurrentNativeCall,readRecoveryDescriptor,recoveryCommand,parseRecoveryReport} from './codex-review-recovery.mjs';
+import {attestCurrentNativeCall,readRecoveryDescriptor,recoveryCommand,parseRecoveryReport,assertRecoveryRegistration} from './codex-review-recovery.mjs';
 const sha = value => createHash('sha256').update(value).digest('hex');
 const ownedRoots=[];
 function temporaryRoot(prefix) {
@@ -43,6 +43,10 @@ if (process.argv.includes('--mutation')) {
     ['legacy refusal', 'model-route-host.mjs', 'if (previous?.version === 1 && (previous.critical_failure || unresolvedWork(previous)))', 'if (false)', 'C07 legacy locked ledger'],
     ['current native identity', 'codex-review-recovery.mjs', '&&call.call_id===payload.tool_use_id', '&&true', 'C03 current native command'],
     ['current command bytes', 'codex-review-recovery.mjs', 'args.cmd!==payload.tool_input?.command', 'false', 'C03 current native command'],
+    ['native omitted namespace', 'codex-review-recovery.mjs', "(call.namespace===undefined||call.namespace==='functions')", "call.namespace==='functions'", 'C03 current native command'],
+    ['primary registration identity', 'codex-review-recovery.mjs', "resolve(dirname(realpathSync(git.stdout.trim())),'.codex/hooks.json')", 'local', 'C03 native fence'],
+    ['native event identity', 'codex-review-recovery.mjs', '&&h.eventName===event', '', 'C03 native fence'],
+    ['shared registration drift', 'codex-review-recovery.mjs', '!canonicalFile(path).equals(bytes)', 'false', 'C03 native fence'],
     ['frozen source hash', 'codex-review-recovery.mjs', 'digest(canonicalFile(file.path))!==file.sha256', 'false', 'C03 descriptor source'],
     ['canonical path', 'codex-review-recovery.mjs', 'realpathSync(path)!==path || ', '', 'C03 descriptor source'],
     ['quality-gate report framing', 'codex-review-recovery.mjs', 'if(tail) {', 'if(false) {', 'C05 recovery report framing'],
@@ -271,6 +275,19 @@ test('C03 current native command binding rejects fake hooks, completed replay, a
   const wrapped={...records,events:[records.events[0],wrapper]};
   const a=attestCurrentNativeCall(wrapped,{...payload,tool_use_id:'exec-a'}),b=attestCurrentNativeCall(wrapped,{...payload,tool_use_id:'exec-b'});
   assert.equal(a.operation_id,b.operation_id,'synthetic Bash ID cannot mint a second operation');
+  // Native Codex records functions.exec as custom_tool_call name=exec without
+  // a namespace. Keep binding its exact pending wrapper, not the synthetic ID.
+  const unqualified=structuredClone(wrapped); delete unqualified.events[1].payload.namespace;
+  const observed=attestCurrentNativeCall(unqualified,payload);
+  assert.equal(observed.operation_id,a.operation_id);
+  for(const namespace of ['other','',null]) {
+    const wrong=structuredClone(unqualified);wrong.events[1].payload.namespace=namespace;
+    assert.throws(()=>attestCurrentNativeCall(wrong,payload),/CURRENT_NATIVE_CALL_MISMATCH/);
+  }
+  assert.throws(()=>attestCurrentNativeCall(unqualified,{...payload,turn_id:'other-turn'}),/MISMATCH/);
+  assert.throws(()=>attestCurrentNativeCall(unqualified,{...payload,tool_input:{command:'other-command'}}),/MISMATCH/);
+  assert.throws(()=>attestCurrentNativeCall({...unqualified,events:[...unqualified.events,
+    {type:'response_item',payload:{type:'custom_tool_call_output',call_id:'outer_1',output:'done'}}]},payload),/NOT_PENDING/);
   assert.throws(()=>attestCurrentNativeCall({...wrapped,events:[records.events[0],{...wrapper,payload:{...wrapper.payload,input:'const cmd="unsafe"; text(await tools.exec_command({cmd}));'}}]},payload),/UNSUPPORTED_RECOVERY_WRAPPER/);
 });
 test('C03 descriptor source and authorization are checked by exact bytes and criterion IDs',()=>{
@@ -289,6 +306,28 @@ test('C03 descriptor source and authorization are checked by exact bytes and cri
   descriptor.criteria.push(descriptor.criteria[0]);writeFileSync(path,JSON.stringify(descriptor));
   assert.throws(()=>readRecoveryDescriptor(path,auth),/CRITERIA_INVALID/);
   assert.throws(()=>recoveryCommand('node scripts/codex-review-recovery.mjs reserve; echo bypass',cwd,cwd),/UNSAFE_RECOVERY_COMMAND/);
+});
+
+test('C03 native fence uses the Git primary registration and distinguishes repeated commands by event',()=>{
+  const root=temporaryRoot('recovery-worktree.'),primary=join(root,'primary'),linked=join(root,'linked');
+  fs.mkdirSync(join(primary,'.codex'),{recursive:true});
+  const run=args=>{const result=spawnSync('/usr/bin/git',args,{encoding:'utf8',env:Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith('GIT_')))});assert.equal(result.status,0,result.stderr);};
+  run(['init','-q',primary]);run(['-C',primary,'config','user.name','Fixture']);run(['-C',primary,'config','user.email','fixture@example.invalid']);
+  const definition={hooks:{SessionStart:[{hooks:[{command:'same-native-command'}]}],PreToolUse:[{
+    matcher:'^(collaborationfollowup_task|collaborationsend_message)$',hooks:[{command:'same-native-command'}]}]}};
+  const source=join(primary,'.codex/hooks.json');writeFileSync(source,JSON.stringify(definition));
+  run(['-C',primary,'add','.codex/hooks.json']);run(['-C',primary,'-c','core.hooksPath=/dev/null','commit','-qm','fixture']);
+  run(['-C',primary,'worktree','add','--detach',linked]);
+  const hooks=[['sessionStart',null],['preToolUse',definition.hooks.PreToolUse[0].matcher]].map(([eventName,matcher])=>({
+    sourcePath:source,eventName,matcher,command:'same-native-command',enabled:true,trustStatus:'trusted',async:false}));
+  assertRecoveryRegistration(primary,{hooks});assertRecoveryRegistration(linked,{hooks});
+  for(const edit of [h=>h.enabled=false,h=>h.trustStatus='untrusted',h=>h.async=true,h=>delete h.async,
+    h=>h.sourcePath=join(root,'foreign/hooks.json'),h=>h.matcher='.*',h=>h.eventName='stop']) {
+    const changed=structuredClone(hooks);edit(changed[1]);assert.throws(()=>assertRecoveryRegistration(linked,{hooks:changed}),/FENCE_NOT_TRUSTED/);
+  }
+  assert.throws(()=>assertRecoveryRegistration(linked,{hooks:[...hooks,hooks[1]]}),/FENCE_NOT_TRUSTED/);
+  writeFileSync(join(linked,'.codex/hooks.json'),JSON.stringify({...definition,description:'drift'}));
+  assert.throws(()=>assertRecoveryRegistration(linked,{hooks}),/SOURCE_DRIFT/);
 });
 test('C01 recovery interception leaves ordinary references and tests untouched',()=>{
   const root=temporaryRoot('ordinary-recovery-entry.');

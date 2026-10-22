@@ -243,6 +243,7 @@ Codex 另用原生 `SubagentStart` / `SubagentStop` 关联子 Agent 身份、项
 动态目标、f-string、附加语句、无引号 heredoc 和其他解释器代码继续按保守路径检查。
 
 Codex Hook 更新后，先运行只读体检 `node scripts/codex-hook-health.mjs`。
+
 体检独立固定已审注册协议：事件、matcher、完整加载/恢复命令、超时和上下文限制；
 主动改变注册协议时，须同审并更新体检中的协议指纹。
 默认 `native-trust-v1` 的 11 条命令由 Codex 原生 Hook 授信执行当前 Git 工作区代码，
@@ -255,6 +256,31 @@ Stop 失败时保留原始输入供恢复处理；无法恢复则安全停止，
 授信脚本在读取官方状态后、写入前和完成前重查注册健康，失配时拒绝授信。
 它保留用户的关闭设置。Luca App 要求三个 Host Launch 条目同时精确匹配、已授信且
 `enabled === true`；已授信但已关闭的钩子不会再被误报为就绪。
+
+使用 App 消费框架钩子时，受支持的框架发布入口还包括 `.githooks/pre-push` 的消费者检查。
+先构建兼容的候选 App，再由发布维护者在本地 Git 配置中登记实际资产（使用规范化绝对路径，不能是符号链接）：
+
+```bash
+git config --local luca.hookConsumerAppRoot /canonical/consumer/app
+git config --local luca.hookConsumerBundle /canonical/output/Consumer.app
+```
+
+`hookConsumerAppRoot` 必须含消费者提供的固定 `hook-compatibility-gate.mjs`；检查执行候选或已安装
+`.app/Contents/Resources/app.asar` 中的真实模块。框架不指定产品、安装位置或远程名。
+钩子注册、合同 owner/CLI、health 依赖、历史 fixtures 或此发布 gate 的变更会触发检查：
+实际包 × 当前框架 × 旧/新 owned profile × system/sidecar/direct 各自选定的 CLI。
+缺少资产或任一模式能力记 GAP 并阻止推送；仅源代码测试或换一个可用模式不能替代。
+该检查仅在隔离临时目录运行原生配置探针，不迁移用户 profile，也不发起模型请求。
+
+gate 读取 Git 传入的每个真实本地/远端 ref 和 object，初次推送也检查；删除 ref 不运行消费者。
+远端基线在本地不可读时保守要求检查，不自动 fetch。每个待推送提交的合同输入必须与当前
+工作树及消费者证据逐字节相同，变更期间再次复核；脏工作树不能给另一个提交出具证明。
+不同合同的多个 ref 需分别从对应 checkout 发布。全部检查绑定实际 asar 摘要和提交对象；
+App-only 回滚不等于框架、App、已迁移 profile 的联合回退。
+
+这是启用 `core.hooksPath=.githooks` 的本地受支持发布流程，不是远端 branch protection。
+`--no-verify`、未安装 hook 的其他 clone、直接改 live 框架会绕过它；这些入口只保证运行时识别
+漂移并拒绝不兼容启动，不承诺会话不中断。既有会话退出、受审采用和现场验收仍是发布步骤。
 
 从旧注册升级时，正常重载受影响会话并授信新的完整命令。新进程可用不代表旧会话已刷新。
 如果启动钩子曾失败而缺少模型激活记录，模型路由仅能从同一会话、工作区和当前回合的真实
