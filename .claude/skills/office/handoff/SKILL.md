@@ -64,6 +64,8 @@ python3 .claude/observability/scripts/get_rules.py handoff "*" 2>/dev/null || tr
 
 已有内容一律引用路径、commit 或 URL，不复制长段正文。引用本地路径时使用绝对路径，方便新
 session 直接定位；不要为了交接而额外改写那些制品。
+交付前检查接续必需的本地引用是否存在；对依赖精确字节身份的文件记录当前 hash，并让
+接收者先核对。缺失、不可读或身份未知的来源写明具体缺口与首个恢复动作，不当作已验证。
 
 ### 3. 脱敏
 

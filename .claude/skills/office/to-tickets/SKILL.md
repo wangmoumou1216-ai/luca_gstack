@@ -47,7 +47,8 @@ task-plan ownership and authority model intact.
 
 1. Resolve the exact task-plan path from the user's argument or a verified handoff. Do not select a
    plan by fuzzy topic matching when more than one candidate exists.
-2. Read the file through its final line and verify `TASK PLAN GATE PASS` is present.
+2. Read the file through its final line and verify `TASK PLAN GATE PASS` is present. If it is absent,
+   return `NEEDS_CONTEXT` before any ticket or relationship write and identify the missing gate.
 3. Compute the lowercase SHA-256 after reading. If a handoff supplies `task_plan_sha256`, require an
    exact match. Any byte drift invalidates the projection and requires the task-plan owner to re-gate.
 4. Enumerate every MUST `DEV-NNN`, its paired `TEST-NNN`, bound assertions, MVP status, and structured
@@ -146,6 +147,11 @@ create with unknown outcome, read back by operation identity/provider evidence f
 retry and duplicate issues. Record partial successes and exact mismatches; unresolved readback means
 BLOCKED, never a completed batch. The approval authorizes only declared local/issue creates and
 relationships; it does not authorize chat/email/comments or label creation.
+
+On a partial batch, bind the approved target and each created issue's actual identity from readback.
+Reconcile each approved parent and blocker edge separately; create only a missing relationship within
+the original grant. If a relationship write has an unknown outcome, read that edge back before retrying;
+if its identity or state cannot be established, remain BLOCKED instead of recreating the issue.
 
 Finish with the canonical completion status plus the local paths or remote issue URLs. Published
 tickets are a projection, not execution authority: implementation still enters through `implement`

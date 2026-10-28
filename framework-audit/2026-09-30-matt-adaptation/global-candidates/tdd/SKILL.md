@@ -39,6 +39,11 @@ A **seam** is the public boundary you test at: the interface where you observe b
 
 Ask: "What's the public interface, and which seams should we test?"
 
+When a seam choice remains open, briefly explain for each feasible option the behaviour it can
+observe, known omissions, and what is still unknown from the actual path and fixtures. Do not
+promise coverage that has not been established. Reuse a valid existing seam agreement without
+asking the user to confirm it again.
+
 When the shape of that interface is itself in question (how deep the module is, where the seam belongs, what the interface should expose), read the actual authorized codebase-design SKILL.md through EOF for the vocabulary; this reference lookup does not run a design session. It is the shared source of the module, interface, depth, seam, adapter, leverage and locality terms, and it is a reference to consult, not a session to run.
 
 ## Anti-patterns
